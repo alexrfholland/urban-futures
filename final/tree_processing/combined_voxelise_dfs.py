@@ -97,15 +97,23 @@ def process_trees(tree_templates_DF, voxel_size = 0.25, resetCount = False):
     
     # For each row, voxelize the template dataframe
     for _, row in tree_templates_DF.iterrows():
+        # Print row information (excluding template column)
+        row_info = row.drop('template').to_dict()
+        print(f"Processing tree: {row_info}")
+        
         originalTemplate = row['template']
         originalTemplate = aa_tree_helper_functions.verify_resources_columns(originalTemplate)
+        print(f"Original template length: {len(originalTemplate)} points")
+        
         voxelized_tree_df = assign_voxel_coordinates(originalTemplate, voxel_size)
         voxelized_tree_df = count_resources_by_voxel(voxelized_tree_df, resetCount)
+        print(f"Voxelized template length: {len(voxelized_tree_df)} voxels")
         
         # Create a new row with the processed template
         new_row = row.copy()
         extractedVoxelDF = voxelized_tree_df[['x', 'y', 'z'] + aa_tree_helper_functions.resource_names()]
         extractedVoxelDF = aa_tree_helper_functions.create_resource_column(extractedVoxelDF)
+        print(f"Extracted voxel DF sample:")
         print(extractedVoxelDF.head())
         new_row['template'] = extractedVoxelDF
         processed_templates.append(new_row)
@@ -119,7 +127,7 @@ def process_trees(tree_templates_DF, voxel_size = 0.25, resetCount = False):
    
 
 if __name__ == "__main__":
-    voxel_size = 0.25
+    voxel_size = 1
 
     # Load existing voxelised templates
     #combined_templates = pd.read_pickle('data/revised/trees/combined_templateDF.pkl')
@@ -127,10 +135,7 @@ if __name__ == "__main__":
 
     voxelised_templates_DF = process_trees(combined_templates, voxel_size=voxel_size, resetCount=True)
 
-    
-    
-    ##SAVE OUTPUTS
-    """# Check that output directory exists, create if not
+    # Check that output directory exists, create if not
     output_dir = Path('data/revised/trees') 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -139,6 +144,6 @@ if __name__ == "__main__":
     output_path = output_dir / outputName
     voxelised_templates_DF.to_pickle(output_path)
     print(voxelised_templates_DF.head())
-    print(f'Voxelized templates dataframe saved at {output_path}')"""
+    print(f'Voxelized templates dataframe saved at {output_path}')
 
     print(f'done')

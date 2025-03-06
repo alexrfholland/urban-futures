@@ -89,12 +89,95 @@ def preprocess_logLibrary():
 
     return logLibrary
 
-def preprocess_logLocationsDF(logLocationsDF, logLibraryDF, seed=42):
+def voxelise_log_library(logLibrary, voxel_size):
+    """
+    Voxelises the log library by grouping points into voxels for each log.
+    
+    Parameters:
+        logLibrary (pd.DataFrame): The log library DataFrame
+        voxel_size (float): The voxel size to use for voxelisation
+        
+    Returns:
+        pd.DataFrame: Voxelised log library
+    """
+    print(f'Voxelising log library with voxel size {voxel_size}')
+    
+    # Print column names to debug
+    print(f"Log library columns: {logLibrary.columns.tolist()}")
+    
+    # Create a list to store voxelised logs
+    voxelised_logs = []
+    
+    # Define coordinate columns mapping based on actual columns in logLibrary
+    # Assuming the coordinates are in 'X', 'Y', 'Z' columns
+    coord_columns = {
+        'X': 'voxel_X',
+        'Y': 'voxel_Y',
+        'Z': 'voxel_Z'
+    }
+    
+    # Process each log group separately
+    for log_no, log_group in logLibrary.groupby('logNo'):
+        print(f'Voxelising log {log_no} with {len(log_group)} points')
+        
+        # Create a copy to avoid modifying the original
+        voxel_group = log_group.copy()
+        
+        # Assign voxel coordinates using the correct column names
+        for orig_col, voxel_col in coord_columns.items():
+            if orig_col in voxel_group.columns:
+                voxel_group[voxel_col] = np.floor(voxel_group[orig_col] / voxel_size) * voxel_size
+            else:
+                print(f"Warning: Column {orig_col} not found in log data")
+        
+        # Get resource columns
+        resource_cols = [col for col in voxel_group.columns if col.startswith('resource_')]
+        
+        # Group by voxel coordinates and sum all resource columns
+        group_cols = list(coord_columns.values())
+        try:
+            voxelised_log = voxel_group.groupby(group_cols)[resource_cols].sum().reset_index()
+            
+            # Rename coordinate columns to match expected format for later processing
+            voxelised_log = voxelised_log.rename(columns={
+                'voxel_X': 'X',
+                'voxel_Y': 'Y',
+                'voxel_Z': 'Z'
+            })
+            
+            # Add back the logNo column
+            voxelised_log['logNo'] = log_no
+            
+            # Add to the list
+            voxelised_logs.append(voxelised_log)
+        except Exception as e:
+            print(f"Error voxelising log {log_no}: {e}")
+            print(f"Columns available: {voxel_group.columns.tolist()}")
+            print(f"Group columns: {group_cols}")
+            print(f"Resource columns: {resource_cols}")
+    
+    if not voxelised_logs:
+        print("Warning: No logs were successfully voxelised")
+        return logLibrary  # Return original if voxelisation failed
+        
+    # Combine all voxelised logs
+    voxelised_logLibrary = pd.concat(voxelised_logs, ignore_index=True)
+    
+    print(f'Voxelisation complete. Original points: {len(logLibrary)}, Voxelised points: {len(voxelised_logLibrary)}')
+    
+    return voxelised_logLibrary
+
+def preprocess_logLocationsDF(logLocationsDF, logLibraryDF, seed=42, voxel_size=None):
     """
     Preprocesses the log locations DataFrame by assigning appropriate log models using Dask.
+    If voxel_size is provided, voxelises the log library first.
     """
     # Set random seed
     np.random.seed(seed)
+    
+    # Voxelise the log library if voxel_size is provided
+    if voxel_size is not None:
+        logLibraryDF = voxelise_log_library(logLibraryDF, voxel_size)
     
     # Remove log groups 1, 2, 3, 4
     logLibraryDF = logLibraryDF[~logLibraryDF['logNo'].isin([1, 2, 3, 4])]
@@ -184,9 +267,10 @@ def process_single_log(row, log_templates):
     
     return template
 
-def create_log_resource_df(logLocationsDF, logLibraryDF):
+def create_log_resource_df(logLocationsDF, logLibraryDF, voxel_size=None):
     """
     Creates the final log resource DataFrame using Dask for parallel processing.
+    Optionally voxelizes the output if voxel_size is provided.
     """
     # First rename the columns in logLibraryDF
     logLibraryDF = logLibraryDF.rename(columns={
@@ -230,24 +314,66 @@ def create_log_resource_df(logLocationsDF, logLibraryDF):
     # Ensure coordinates are numeric
     logResourceDF[['x', 'y', 'z']] = logResourceDF[['x', 'y', 'z']].astype(float)
     
-    #create pyvista polydata object out of x y z
-    """points = logResourceDF[['x', 'y', 'z']].values
-    print("\nPoints array shape:", points.shape)
-    print("Points array dtype:", points.dtype)
-    print("First few points:\n", points[:5])
+    # Voxelize if needed
+    if voxel_size is not None:
+        print(f"Voxelizing log resource DF with voxel size {voxel_size}")
+        logResourceDF = voxelize_log_resource_df(logResourceDF, voxel_size)
     
-    poly = pv.PolyData(points)
-    print("Created PolyData object from log resource points.")
-    
-    # Add all columns as point data attributes
-    for col in logResourceDF.columns:
-        if col not in ['x', 'y', 'z']:  # Skip coordinate columns
-            poly.point_data[col] = logResourceDF[col].values
-            print(f"Added column '{col}' as point data attribute to PolyData.")
-    
-    print(f"PolyData object created with {len(poly.points)} points and {len(logResourceDF.columns) - 3} point data attributes")
-    poly.plot()"""
     return logResourceDF
+
+def voxelize_log_resource_df(df, voxel_size):
+    """
+    Voxelizes the log resource DataFrame.
+    
+    Parameters:
+        df (pd.DataFrame): Log resource DataFrame with x, y, z coordinates
+        voxel_size (float): Voxel size for discretization
+        
+    Returns:
+        pd.DataFrame: Voxelized log resource DataFrame
+    """
+    print(f"Original log resource DF size: {len(df)}")
+    
+    # Make a copy to avoid modifying the original
+    df_copy = df.copy()
+    
+    # Add voxel coordinate columns
+    df_copy['voxel_x'] = np.floor(df_copy['x'] / voxel_size) * voxel_size
+    df_copy['voxel_y'] = np.floor(df_copy['y'] / voxel_size) * voxel_size
+    df_copy['voxel_z'] = np.floor(df_copy['z'] / voxel_size) * voxel_size
+    
+    # Identify resource columns (those starting with 'resource_')
+    resource_cols = [col for col in df_copy.columns if col.startswith('resource_')]
+    
+    # Identify other columns (non-coordinate, non-resource)
+    other_cols = [col for col in df_copy.columns if col not in resource_cols + 
+                 ['x', 'y', 'z', 'voxel_x', 'voxel_y', 'voxel_z']]
+    
+    print(f"Resource columns: {resource_cols}")
+    print(f"Other columns: {other_cols}")
+    
+    # Group by voxel coordinates
+    grouped = df_copy.groupby(['voxel_x', 'voxel_y', 'voxel_z'])
+    
+    # Aggregate resource columns by sum
+    agg_resources = grouped[resource_cols].sum()
+    
+    # For other columns, take the first row in each group
+    agg_others = grouped[other_cols].first()
+    
+    # Combine the aggregated DataFrames
+    voxelized_df = pd.concat([agg_resources, agg_others], axis=1).reset_index()
+    
+    # Rename voxel coordinates back to x, y, z
+    voxelized_df = voxelized_df.rename(columns={
+        'voxel_x': 'x',
+        'voxel_y': 'y',
+        'voxel_z': 'z'
+    })
+    
+    print(f"Voxelized log resource DF size: {len(voxelized_df)}")
+    
+    return voxelized_df
 
 def initialise_and_translate_log(log_template, row):
     """
@@ -314,69 +440,6 @@ def update_old_template(tree_templateDF):
     print('Finished updating template with resource columns')
     return tree_templateDF
 
-def convert_dict_to_dataframe(tree_templates, updated_elm_tree_templates):
-    """
-    Converts the dictionary of (tuple: template) to a DataFrame for easier querying.
-    """
-    rows = []
-    for key, template in tree_templates.items():
-        precolonial, size, control, tree_id = key
-        
-        if not precolonial and size not in ['snag', 'fallen','propped']:
-            print(f"\nSearching for template with: precolonial={precolonial}, size={size}, control={control}, tree_id={tree_id}")
-            
-            # Start with full dataset and progressively filter
-            current_matches = updated_elm_tree_templates.copy()
-            
-            # Check precolonial
-            if len(current_matches[current_matches['precolonial'] == precolonial]) > 0:
-                print(f"✓ Precolonial={precolonial} matches")
-                current_matches = current_matches[current_matches['precolonial'] == precolonial]
-            else:
-                print(f"✗ Precolonial={precolonial} not found. Available values in dataset: {current_matches['precolonial'].unique()}")
-                raise ValueError("No matching precolonial value")
-            
-            # Check size
-            if len(current_matches[current_matches['size'] == size]) > 0:
-                print(f"✓ Size={size} matches")
-                current_matches = current_matches[current_matches['size'] == size]
-            else:
-                print(f"✗ Size={size} not found. Available sizes for current matches: {current_matches['size'].unique()}")
-                raise ValueError("No matching size")
-            
-            # Handle improved-tree conversion
-            if control == 'improved-tree':
-                control = 'reserve-tree'
-                print("Converting 'improved-tree' to 'reserve-tree'")
-
-            
-            # Check control
-            if len(current_matches[current_matches['control'] == control]) > 0:
-                print(f"✓ Control={control} matches")
-                current_matches = current_matches[current_matches['control'] == control]
-            else:
-                print(f"✗ Control={control} not found. Available controls for current matches: {current_matches['control'].unique()}")
-                raise ValueError("No matching control")
-            
-            # Check tree_id
-            if len(current_matches[current_matches['tree_id'] == tree_id]) > 0:
-                print(f"✓ TreeID={tree_id} matches")
-                current_matches = current_matches[current_matches['tree_id'] == tree_id]
-            else:
-                print(f"✗ TreeID={tree_id} not found. Available TreeIDs for current matches: {current_matches['tree_id'].unique()}")
-                # Instead of raising error, use the first available tree_id
-                replacement_tree_id = current_matches['tree_id'].iloc[0]
-                print(f"Using replacement TreeID={replacement_tree_id}")
-                current_matches = current_matches[current_matches['tree_id'] == replacement_tree_id]
-            
-            template = current_matches.iloc[0]['template']
-            print("Successfully found matching template")
-        
-        rows.append({'precolonial': precolonial, 'size': size, 'control': control, 'tree_id': tree_id, 'template': template})
-    
-    df = pd.DataFrame(rows)
-    return df
-
 def query_tree_template(df, precolonial, size, control, tree_id, rng):
     """
     Attempts to query the tree template using fallbacks if necessary.
@@ -424,7 +487,7 @@ def query_tree_template(df, precolonial, size, control, tree_id, rng):
     print(f"No match found for: {(precolonial, size, control, tree_id)}")
     return None
 
-def process_single_tree(row, tree_templates_df, tree_templates_dict, rng):
+def process_single_tree(row, tree_templates_df, rng):
     """
     Processes a single tree using fallbacks.
     """
@@ -440,7 +503,7 @@ def process_single_tree(row, tree_templates_df, tree_templates_dict, rng):
         print(f"No match found for: {(precolonial, size, control, tree_id)}")
         return None
 
-    # You can now use the retrieved template and apply it in your logic
+    # Use the retrieved template and apply it in your logic
     return initialise_and_translate_tree(template, row)
 
 def process_all_trees(locationDF, voxel_size=0.5):
@@ -449,41 +512,32 @@ def process_all_trees(locationDF, voxel_size=0.5):
     """
     print(f'Loading tree templates of voxel size {voxel_size}')
     
-    #file paths
+    # File paths
     templateDir = Path('data/revised/trees') 
     
-    euc_voxelised_name = f'{voxel_size}_euc_voxel_tree_dict.pkl'
-    elm_voxelised_name = f'{voxel_size}_elm_voxel_templateDF.pkl'
+    # New combined template paths
+    combined_voxelised_name = f'{voxel_size}_combined_voxel_templateDF.pkl'
+    combined_original_name = 'edited_combined_templateDF.pkl'
 
-    euc_original_name = 'updated_tree_dict.pkl'
-    elm_original_name = 'elm_tree_dict.pkl'
-
+    # Load the appropriate template based on voxel size
     if voxel_size == 0:
-        print(f'loading original tree templates')
-        euc_input_path = templateDir / euc_original_name
-        elm_input_patth = templateDir / elm_original_name
-        euc_tree_templates = pickle.load(open(euc_input_path, 'rb'))
-        elm_tree_templates = pd.read_pickle(elm_input_patth)
-        print(f'loaded euc tree templates from {euc_input_path}')
-        print(f'loaded elm tree templates from {elm_input_patth}')
+        print(f'Loading original combined tree templates')
+        input_path = templateDir / combined_original_name
+        tree_templates_df = pd.read_pickle(input_path)
+        print(f'Loaded combined tree templates from {input_path}')
     else:
-        euc_input_path = templateDir / euc_voxelised_name
-        elm_input_patth = templateDir / elm_voxelised_name
-        euc_tree_templates = pickle.load(open(euc_input_path, 'rb'))
-        elm_tree_templates = pd.read_pickle(elm_input_patth)
-        print(f'loaded voxel size {voxel_size} euc tree templates from {euc_input_path}')
-        print(f'loaded voxel size {voxel_size} elm tree templates from {elm_input_patth}')
+        input_path = templateDir / combined_voxelised_name
+        tree_templates_df = pd.read_pickle(input_path)
+        print(f'Loaded voxel size {voxel_size} combined tree templates from {input_path}')
     
     # Debug the loaded DataFrame
-    print("DataFrame columns:", elm_tree_templates.columns)
-    print("First row:", elm_tree_templates.iloc[0])
+    print("DataFrame columns:", tree_templates_df.columns)
+    print("DataFrame info:", tree_templates_df.info())
+    print("First row:", tree_templates_df.iloc[0])
     
     # Get the first template
-    first_template = elm_tree_templates.iloc[0]['template']
-    print(f'template df is {first_template.head()}')
-
-    # Convert the dictionary to a DataFrame for querying
-    tree_templates_df = convert_dict_to_dataframe(euc_tree_templates, elm_tree_templates)
+    first_template = tree_templates_df.iloc[0]['template']
+    print(f'Template df is {first_template.head()}')
 
     # Enforce Python native types and strip potential hidden characters
     locationDF['precolonial'] = locationDF['precolonial'].astype(bool)  # Convert to Python bool
@@ -500,7 +554,7 @@ def process_all_trees(locationDF, voxel_size=0.5):
     # Use TQDM to show progress during map_partitions
     delayed_results = []
     for _, row in tqdm(dask_df.iterrows(), total=len(locationDF)):
-        delayed_results.append(delayed(process_single_tree)(row, tree_templates_df, euc_tree_templates, rng))
+        delayed_results.append(delayed(process_single_tree)(row, tree_templates_df, rng))
 
     # Use Dask's ProgressBar
     with dask.diagnostics.ProgressBar():
@@ -603,7 +657,7 @@ def rotate_resource_structures(locationDF, resourceDF):
 if __name__ == "__main__":
     site = 'city'
     scenarioVoxelSize = 1
-    outputVoxelSize = .25
+    outputVoxelSize = 1
     year = 30
     
     # Load tree data
@@ -619,21 +673,50 @@ if __name__ == "__main__":
     # Process logs
     logLibrary = preprocess_logLibrary()
     logLocationsDF = preprocess_logLocationsDF(logLocationsDF, logLibrary)
-    logResourceDF = create_log_resource_df(logLocationsDF, logLibrary)
-    
+    # Pass voxel size to create_log_resource_df for voxelization at the end
+    logResourceDF = create_log_resource_df(logLocationsDF, logLibrary, voxel_size=outputVoxelSize)
     
     # Process trees
     locationDF, resourceDF = process_all_trees(treeDF, voxel_size=outputVoxelSize)
     resourceDF = rotate_resource_structures(locationDF, resourceDF)
     
-   
     # Combine resources
     combined_resourceDF = pd.concat([resourceDF, logResourceDF], ignore_index=True)
     
     # Convert to PolyData and save
     poly = convertToPoly(combined_resourceDF)
     polyfilePath = f'data/revised/final/{site}/{site}_{outputVoxelSize}_treeDF_{year}_poly.vtk'
-    poly.plot(scalars='resource_fallen log', render_points_as_spheres=True)
+
+    # Create a plotter
+    plotter = pv.Plotter()
+
+    # Option 1: Simple point cloud visualization
+    # plotter.add_mesh(poly, scalars='resource_fallen log', render_points_as_spheres=True, 
+    #                 point_size=5.0, cmap='viridis')
+
+    # Option 2: Voxel visualization with cubes
+    # Create a cube glyph with the correct voxel size
+    cube = pv.Cube(x_length=outputVoxelSize, y_length=outputVoxelSize, z_length=outputVoxelSize)
+
+    # Create glyphs at each point
+    glyphs = poly.glyph(geom=cube, orient=False, scale=False)
+
+    # Add the glyphs to the plotter with a colormap based on a data attribute
+    plotter.add_mesh(glyphs, scalars='resource_fallen log', cmap='turbo', 
+                    show_scalar_bar=True)
+    # Enable eye-dome lighting for better depth perception
+    plotter.enable_eye_dome_lighting()
+
+    # Add axes for reference
+    plotter.add_axes()
+
+    # Set a good camera position
+    plotter.camera_position = 'xy'
+    plotter.reset_camera()
+
+    # Show the plot
+    plotter.show()
+
     print(f'saving polydata to {polyfilePath}')
     poly.save(polyfilePath)
     print(f'exported poly to {polyfilePath}')
