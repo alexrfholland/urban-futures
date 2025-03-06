@@ -1,0 +1,40 @@
+site = 'city'
+
+sitePolyPath = f"data/revised/final/{site}-siteVoxels-masked.vtk"
+roadPolyPath = f"data/revised/final/{site}-roadVoxels-coloured.vtk"
+
+import pyvista as pv
+import numpy as np
+
+# Function to compute center and width of boxes along a specified axis
+def compute_boxes(polydata, axis='x', num_boxes=5):
+    # Get bounds of the polydata (xmin, xmax, ymin, ymax, zmin, zmax)
+    bounds = polydata.bounds
+    axis_bounds = {'x': (bounds[0], bounds[1]), 'y': (bounds[2], bounds[3])}
+    
+    # Select the correct bounds based on the axis
+    selected_bounds = axis_bounds[axis]
+    total_width = selected_bounds[1] - selected_bounds[0]
+    
+    # Calculate the width of each box
+    box_width = total_width / num_boxes
+    
+    # Generate center points and box widths
+    centers = []
+    for i in range(num_boxes):
+        box_start = selected_bounds[0] + i * box_width
+        box_end = box_start + box_width
+        center = (box_start + box_end) / 2
+        centers.append(center)
+        print(f"Box {i+1}: Center = {center}, Width = {box_width}")
+
+# Load the polydata file (modify the file path as needed)
+filename = "your_file.vtk"  # Replace with your actual file path
+polydata = pv.read(filename)
+
+# Set axis and number of boxes
+axis = 'x'  # 'x' or 'y'
+num_boxes = 5  # Number of boxes
+
+# Call the function to compute boxes along the specified axis
+compute_boxes(polydata, axis, num_boxes)

@@ -1,0 +1,12 @@
+DataName: tree.xyz
+TreeHeight: 24.5377	TreeVolume: 182.275	TreeDBH: 279.14	BranchesNum: 63425	BranchLength: 13464.6	BranchVolume: 143.159	TrunkLength: 25.6219	TrunkVolume: 39.1159	CBH: 5.76794	TrunkSurfaceArea: 667.242	BranchesSurfaceArea: 1360.94	TotalArea: 2028.18	CrownWidth: 20.8889	
+
+DataName: tree-cropped.xyz
+TreeHeight: 24.0871	TreeVolume: 3571.36	TreeDBH: 6559.01	BranchesNum: 20889	BranchLength: 8935.66	BranchVolume: 2703.77	TrunkLength: 26.4717	TrunkVolume: 867.599	CBH: 13.8215	TrunkSurfaceArea: 8249.34	BranchesSurfaceArea: 1203.54	TotalArea: 9452.87	CrownWidth: 20.8188	CrownAreaConv2D: 128	CrownAreaConv3D: 489.376	CrownVolumeConv: 810.039	CrownAreaAshape: 37.1717	CrownVolumeAshape: 623.714	
+
+DataName: tree-cropped.xyz
+TreeHeight: 24.3759	TreeVolume: 95.5748	TreeDBH: 151.796	BranchesNum: 20382	BranchLength: 8728.13	BranchVolume: 77.7276	TrunkLength: 25.9424	TrunkVolume: 17.8471	CBH: 3.11021	TrunkSurfaceArea: 77.9559	BranchesSurfaceArea: 1334.98	TotalArea: 1412.93	CrownWidth: 20.8257	
+
+DataName: Large Elm B - 1 mil.xyz
+TreeHeight: 25.5939	TreeVolume: 54.1135	TreeDBH: 130.666	BranchesNum: 13030	BranchLength: 5844.82	BranchVolume: 39.3721	TrunkLength: 29.6112	TrunkVolume: 14.7414	CBH: 8.75347	TrunkSurfaceArea: 142.645	BranchesSurfaceArea: 701.732	TotalArea: 844.377	CrownWidth: 18.4101	CrownAreaConv2D: 233	CrownAreaConv3D: 957.467	CrownVolumeConv: 2349.65	CrownAreaAshape: 326.583	CrownVolumeAshape: 1329.82	
+

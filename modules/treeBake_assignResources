@@ -1,0 +1,743 @@
+# Voxel_properties_df is a dataframe of coordinates of voxels describing branches in a tree. In this df, there is column called 'resource' initialised with 'other'
+## for a given resource, look up the resource_dict and obtain a percentage
+## calculate how many voxels in voxel_properties_df need to change from 'other' to achieve this percentage
+## write and call the clustering conversion function. We want the voxels to be converted in logical clusters (ie. a side of a tree), rather than random. To do so, this function should take a resource, quantity, patchiness level and the df as arguments. and convert 'other' voxels into the resource
+
+#if patchiness is 'cluster', do the below...
+    #count the number of voxels in each cluster (the ID of the cluster the row belongs to is in the cluster column).
+    #have an optional exclude parameter in format exclude = {'branch order': [0]}. The key is the column to look up in the dataframe, the list of values are the values to look up. 
+    #if all voxels in the group have 'other' as their resource column and the cluster does not have any voxels with the excluded propreties, keep converting groups so eachr rows' 'other' resource is now the 'resource' argument.
+    # Keep count and check that you are not about to exceed the number of voxels to convert by converting an entire next cluster. 
+    # For this last conversion, order this group by the inverse of branchOrder and convert the first n rows so the number of voxels is correctly converted
+    #make sure you print informative debug statements saying the resource that will convert, the percentage that should be converted for that resource, how many voxels to convert for that resource, each group converted, the final amount of voxels converted and the % of all voxels are now that resource. 
+    #make performant but keep to the standard numpy/pandas libraries
+    #do a test where we get an example dictionary that has 'dead branch : 30' as input dictionary and do a patch level of 20
+
+#if patchiness level is 'branch', we will do this next
+
+import os
+import numpy as np
+import pandas as pd
+import pyvista as pv
+import matplotlib.pyplot as plt
+
+import random
+import trimesh
+
+import numpy as np
+import pandas as pd
+import trimesh
+from sklearn.decomposition import PCA
+from scipy.ndimage import gaussian_filter
+from skimage import measure
+
+from scipy.ndimage import label
+
+
+
+def check_exclusion(cluster, exclude_conditions):
+    """
+    Check if a cluster should be excluded based on given conditions.
+
+    Parameters:
+    ----------
+    cluster : pd.DataFrame
+        A subset of the voxel_properties_df representing a specific cluster.
+    
+    exclude_conditions : list of dict
+        A list of dictionaries, where each dictionary specifies a column and 
+        the condition for exclusion. The conditions can be:
+
+        1. **Equality Check**:
+           - Format: `{'column_name': [value1, value2, ...]}`
+           - Excludes the cluster if any row in the specified column has a value 
+             that matches one in the list.
+           - Example: `{'branch_order': [0, 1]}` excludes clusters with 
+             `branch_order` equal to 0 or 1.
+
+        2. **Comparison Check**:
+           - Format: `{'column_name': ('operator', threshold)}`
+           - Excludes the cluster if any row in the specified column satisfies 
+             the comparison with the threshold.
+           - Supported operators: '<', '>', '<=', '>='
+           - Example: `{'Z': ('<', 5)}` excludes clusters with `Z` values less 
+             than 5.
+           - Example: `{'Y': ('>', 10)}` excludes clusters with `Y` values 
+             greater than 10.
+
+    Returns:
+    -------
+    bool
+        True if the cluster meets any exclusion criteria, otherwise False.
+    """
+    for condition in exclude_conditions:
+        for col, values in condition.items():
+            if isinstance(values, list):
+                # Handle list of values for equality checks
+                if col in cluster.columns and cluster[col].isin(values).any():
+                    #print(f"Excluding cluster due to condition on column '{col}' with values {values}.")
+                    return True
+            elif isinstance(values, tuple) and len(values) == 2:
+                # Handle range or comparison operations
+                operator, threshold = values
+                if operator == '<' and (cluster[col] < threshold).any():
+                    #print(f"Excluding cluster due to condition on column '{col}' with '{operator}{threshold}'.")
+                    return True
+                elif operator == '>' and (cluster[col] > threshold).any():
+                    #print(f"Excluding cluster due to condition on column '{col}' with '{operator}{threshold}'.")
+                    return True
+                elif operator == '<=' and (cluster[col] <= threshold).any():
+                    #print(f"Excluding cluster due to condition on column '{col}' with '{operator}{threshold}'.")
+                    return True
+                elif operator == '>=' and (cluster[col] >= threshold).any():
+                    #print(f"Excluding cluster due to condition on column '{col}' with '{operator}{threshold}'.")
+                    return True
+    return False
+
+def convert_voxels_to_resource(voxel_properties_df, resource_dict, patchiness_level, exclude_conditions=None):
+    total_voxels = len(voxel_properties_df)
+
+    for resource, percentage in resource_dict.items():
+        quantity_to_convert = int(np.ceil((percentage / 100) * total_voxels))
+        converted_voxels = 0
+
+        patch = patchiness_level[resource]
+
+        if patch == 'cluster':
+            cluster_clusters = voxel_properties_df.groupby('cluster')
+            cluster_ids = cluster_clusters.size().index.tolist()
+
+            for cluster_id in cluster_ids:
+                cluster = cluster_clusters.get_group(cluster_id)
+                cluster_size = len(cluster)
+
+                resource_exclude_conditions = exclude_conditions.get(resource, [])
+
+                if check_exclusion(cluster, resource_exclude_conditions):
+                    continue
+
+                if cluster['resource'].eq('other').all():
+                    if converted_voxels + cluster_size <= quantity_to_convert:
+                        voxel_properties_df.loc[cluster.index, 'resource'] = resource
+                        converted_voxels += cluster_size
+                        print(f"Converted entire cluster with cluster {cluster_id}: {cluster_size} voxels")
+                    else:
+                        remaining_voxels = quantity_to_convert - converted_voxels
+                        sorted_cluster = cluster.sort_values(by='branchOrder', ascending=False)
+                        voxel_properties_df.loc[sorted_cluster.index[:remaining_voxels], 'resource'] = resource
+                        converted_voxels += remaining_voxels
+                        print(f"Partially converted cluster with cluster {cluster_id}: {remaining_voxels} voxels")
+                        break
+
+            final_percentage = (converted_voxels / total_voxels) * 100
+            if final_percentage < percentage:
+                print(f"Warning: Could not achieve the target percentage for {resource}. Final conversion percentage: {final_percentage:.2f}%")
+                # Sum up remaining 'other' voxels per cluster
+                remaining_clusters = voxel_properties_df[voxel_properties_df['resource'] == 'other'].groupby('cluster').size()
+                remaining_clusters = remaining_clusters.sort_values(ascending=False)
+
+                for cluster_id in remaining_clusters.index:
+                    cluster = voxel_properties_df[voxel_properties_df['cluster'] == cluster_id]
+                    remaining_voxels = len(cluster)
+
+                    if converted_voxels + remaining_voxels <= quantity_to_convert:
+                        voxel_properties_df.loc[cluster.index, 'resource'] = resource
+                        converted_voxels += remaining_voxels
+                        print(f"Converted remaining 'other' voxels in cluster {cluster_id}: {remaining_voxels} voxels")
+                    else:
+                        sorted_cluster = cluster.sort_values(by='branchOrder', ascending=False)
+                        remaining_to_convert = quantity_to_convert - converted_voxels
+                        voxel_properties_df.loc[sorted_cluster.index[:remaining_to_convert], 'resource'] = resource
+                        converted_voxels += remaining_to_convert
+                        print(f"Converted remaining 'other' voxels in cluster {cluster_id} up to limit: {remaining_to_convert} voxels")
+                        break
+
+            print(f"Total converted voxels for {resource}: {converted_voxels} ({final_percentage:.2f}%)")
+
+    # Convert remaining 'other' voxels with angle < 20 to 'perch branch'
+    perch_condition = (voxel_properties_df['resource'] == 'other') & (voxel_properties_df['angle'] < 20)
+    perch_count = perch_condition.sum()
+    voxel_properties_df.loc[perch_condition, 'resource'] = 'perch branch'
+    print(f"Converted {perch_count} voxels to 'perch branch' based on angle < 20")
+
+    return voxel_properties_df
+
+import math
+
+def get_ground_resources(resources_dict, tree_template_df, point_area=0.1):
+    def generate_leaf_litter(ground_resource_val: float, radius: float = 10.0) -> np.ndarray:
+        num_points = int((ground_resource_val / 100.0) * (radius**2 * np.pi) / point_area)
+        
+        grid_size = int(np.ceil(2 * radius / point_area))
+        x = np.linspace(-radius, radius, grid_size)
+        y = np.linspace(-radius, radius, grid_size)
+        xx, yy = np.meshgrid(x, y)
+        
+        points = np.column_stack((xx.ravel(), yy.ravel(), np.zeros_like(xx.ravel())))
+        
+        mask = np.sum(points[:, :2]**2, axis=1) <= radius**2
+        points = points[mask]
+        
+        if len(points) > num_points:
+            indices = np.random.choice(len(points), num_points, replace=False)
+            points = points[indices]
+        else:
+            extra_points = num_points - len(points)
+            extra_indices = np.random.choice(len(points), extra_points, replace=True)
+            points = np.vstack((points, points[extra_indices]))
+        
+        points[:, :2] = np.round(points[:, :2] / point_area) * point_area
+        
+        print(f"Leaf Litter: Original Resource Val: {ground_resource_val}, Number of Points: {num_points}, Total Area Covered: {num_points * point_area} m²")
+        
+        return points
+
+    def generate_log(noLogs: int, radius_range=(0.1, 0.25), length_range=(0.75, 3), point_area: float = 0.1, radius: float = 10.0) -> np.ndarray:
+        if noLogs <= 0:
+            print("No logs to generate.")
+            return np.array([])  # Return an empty array if no logs are to be generated
+        
+        logs = []
+        for _ in range(noLogs):
+            # Step 1: Create start points (x, y) coords randomly in a circle of radius 10
+            angle = np.random.uniform(0, 2 * np.pi)
+            r = radius * np.sqrt(np.random.uniform(0, 1))
+            x = r * np.cos(angle)
+            y = r * np.sin(angle)
+            start_point = np.array([x, y, 0])
+
+            # Step 2: Create a direction vector, a random 2D vector in the x, y plane
+            direction_angle = np.random.uniform(0, 2 * np.pi)
+            direction_vector = np.array([np.cos(direction_angle), np.sin(direction_angle), 0.1])
+
+            # Normalize direction vector
+            direction_vector /= np.linalg.norm(direction_vector)
+
+            # Step 3: Create a length randomly chosen from the length range
+            length = np.random.uniform(length_range[0], length_range[1])
+
+            # Step 4: Create radius randomly chosen from the radius range
+            log_radius = np.random.uniform(radius_range[0], radius_range[1])
+
+            # Calculate the end point based on the direction vector and length
+            end_point = start_point + direction_vector * length
+
+            # Step 5: Create the cylinder between the start and end points
+            cylinder = trimesh.creation.cylinder(radius=log_radius, height=length, sections=20)
+
+            # Align the cylinder along the direction vector
+            transform = trimesh.geometry.align_vectors([0, 0, 1], direction_vector)
+            cylinder.apply_transform(transform)
+            cylinder.apply_translation(start_point)
+
+            # Voxelize the log
+            voxelized = cylinder.voxelized(pitch=point_area)
+            logs.append(voxelized.points)
+
+        if logs:
+            all_points = np.vstack(logs)
+            print(f"Fallen Log: Number of Logs: {noLogs}, Points Generated: {len(all_points)}")
+        else:
+            all_points = np.array([])
+
+        return all_points
+
+    # Accumulate all points for new ground resources
+    new_rows = []
+    
+    if 'leaf litter' in resources_dict:
+        leaf_litter_points = generate_leaf_litter(resources_dict['leaf litter'])
+        leaf_litter_resources = np.full(leaf_litter_points.shape[0], 'leaf litter')
+        new_rows.append(np.column_stack((leaf_litter_points, leaf_litter_resources)))
+
+    if 'fallen log' in resources_dict:
+        no_logs = math.ceil(resources_dict['fallen log'])
+        log_points = generate_log(no_logs)
+        if log_points.size > 0:  # Check if any points were generated
+            log_resources = np.full(log_points.shape[0], 'fallen log')
+            new_rows.append(np.column_stack((log_points, log_resources)))
+
+    if new_rows:
+        new_rows = np.vstack(new_rows)
+        new_df = pd.DataFrame(new_rows, columns=['X', 'Y', 'Z', 'resource'])
+        
+        # Ensure X, Y, Z are numeric
+        new_df[['X', 'Y', 'Z']] = new_df[['X', 'Y', 'Z']].apply(pd.to_numeric)
+        
+        # Copy the remaining columns from the template DataFrame
+        for col in tree_template_df.columns:
+            if col not in new_df.columns:
+                new_df[col] = tree_template_df[col].iloc[0]
+        
+        print(new_df)
+        
+        tree_template_df = pd.concat([tree_template_df, new_df], ignore_index=True)
+    
+    return tree_template_df
+
+
+def get_canopy_resources(resource_dict, voxel_properties_df, exclude_conditions=None):
+    for resource in ['hollow', 'epiphyte']:
+        n = round(resource_dict.get(resource, 0))  # Get the number of resources to assign
+        
+        if n > 0:
+            print(f"Resource: {resource}")
+            print(f"Number to assign: {n}")
+
+            # Group by 'branch'
+            branches = voxel_properties_df.groupby('branch')
+
+            # Order branches based on 'isPrecolonial' and 'cylinderOrderInBranch'
+            if not voxel_properties_df['isPrecolonial'].iloc[0]:
+                branch_order = voxel_properties_df.sort_values('cylinderOrderInBranch', ascending=False).groupby('branch').apply(lambda x: x.index.tolist())
+            else:
+                branch_order = voxel_properties_df.sort_values('cylinderOrderInBranch').groupby('branch').apply(lambda x: x.index.tolist())
+
+            eligible_branches = []
+
+            for branch_id, branch_indexes in branch_order.items():
+                branch = voxel_properties_df.loc[branch_indexes]
+                if not check_exclusion(branch, exclude_conditions.get(resource, [])):
+                    eligible_branches.append(branch_id)
+            
+            # Randomly select n eligible branches to assign the resource
+            selected_branches = random.sample(eligible_branches, min(n, len(eligible_branches)))
+            print(f"Number of branches selected: {len(selected_branches)}")
+
+            maxVoxels = 500
+
+            total_voxels_assigned = 0
+            for branch_id in selected_branches:
+                branch_df = voxel_properties_df[voxel_properties_df['branch'] == branch_id]
+                branch_voxel_count = len(branch_df)
+
+                selected_voxel_indexes = []
+                
+                if branch_voxel_count > maxVoxels:
+                    print(f'too many voxels in branch to assign to {resource}, culling... ')
+                    selected_voxel_indexes = branch_df.index[:maxVoxels]
+                else:
+                    # Call the modified assign_resource_cluster function
+                    print(f'not enough voxels in branch to assign to {resource}, gathering more... ')
+                    selected_voxel_indexes = assign_resource_cluster(voxel_properties_df, branch_df.index[0], max_voxels=maxVoxels, radius=0.5)
+                
+                # Assign resource to selected voxels
+                voxel_properties_df.loc[selected_voxel_indexes, 'resource'] = resource
+                
+                total_voxels_assigned += len(selected_voxel_indexes)
+            
+            print(f"Total voxels assigned: {total_voxels_assigned}")
+
+    return voxel_properties_df
+
+def assign_resource_cluster(df, seed_index, max_voxels=500, radius=0.5):
+    # Initialize an empty list to store selected voxel indexes
+    selected_voxel_indexes = []
+    
+    # Get the coordinates of the selected voxel by its index
+    seed_point = df.loc[seed_index, ['X', 'Y', 'Z']].values.reshape(1, -1)
+    
+    # Ensure the coordinates are float64 to avoid type errors
+    all_points = df[['X', 'Y', 'Z']].values.astype(np.float64)
+    seed_point = seed_point.astype(np.float64)
+    
+    # Compute the Euclidean distance from the seed voxel to all other voxels
+    distances = np.sqrt(((all_points - seed_point) ** 2).sum(axis=1))
+    
+    # Select voxels within the specified radius
+    nearby_voxels = df[distances <= radius]
+    
+    # Limit to max_voxels
+    if len(nearby_voxels) > max_voxels:
+        nearby_voxels = nearby_voxels.sample(n=max_voxels)
+    
+    # Add the selected voxel indexes to the list
+    selected_voxel_indexes.extend(nearby_voxels.index)
+    
+    # Return the list of selected voxel indexes
+    return selected_voxel_indexes
+
+def get_canopy_resources2(resource_dict, voxel_properties_df, exclude_conditions=None):
+    #potentially - make these further away from each other, make closer to end trips for visualisation
+    for resource in ['hollow', 'epiphyte']:
+        
+        n = round(resource_dict.get(resource, 0))  # Get the number of resources to assign
+        
+        if n > 0:
+            print(f"Resource: {resource}")
+            print(f"Number to assign: {n}")
+
+            # Group by 'branch'
+            branches = voxel_properties_df.groupby('branch')
+            #order branch groups by... 
+                    # if voxel_properties_df first row 'isPrecolonial' is False, 
+                    #order branch group by inverse of voxel_properties_df[cylinderOrderInBranch]
+
+                    # if voxel_properties_df first row 'isPrecolonial' is False, 
+                    #order branch group by inverse of voxel_properties_df[cylinderOrderInBranch]
+
+
+            eligible_branches = []
+
+            for branch_id, branch in branches:
+                if not check_exclusion(branch, exclude_conditions.get(resource, [])):
+                    eligible_branches.append(branch_id)
+            
+            # Randomly select n eligible branches to assign the resource
+            selected_branches = random.sample(eligible_branches, min(n, len(eligible_branches)))
+            print(f"Number of branches selected: {len(selected_branches)}")
+
+            maxVoxels = 500
+
+            total_voxels_assigned = 0
+            for branch_id in selected_branches:
+                branch_voxel_count = len(branches.get_group(branch_id))
+
+                # if branch_voxel_count > maxVoxels:
+                        #get first maxVoxel number of rows/indexes
+                
+                # if branch_voxel_count < maxVoxels
+                        #get first index of branch rows
+                        #assign_resource_cluster(voxel_properties_df, resource, selected_voxel_index, max_voxels=branch_voxel_count-,maxVoxels, radius=0.5):
+
+                #update
+                branch_voxel_count = len(branches.get_group(branch_id))
+
+ 
+                
+                total_voxels_assigned += branch_voxel_count
+                voxel_properties_df.loc[branches.get_group(branch_id).index, 'resource'] = resource
+
+                
+            
+            print(f"Total voxels assigned: {total_voxels_assigned}")
+
+    return voxel_properties_df
+
+#you might have to modify this to work with the above
+def assign_resource_cluster2(df, resource, selected_voxel_indexes, max_voxels=500, radius=0.5):
+    # Initialize the debug DataFrame
+    debug_df = df.copy()
+    debug_df['detected_cluster'] = 'none'  # Initialize all as 'none'
+
+    for idx in selected_voxel_indexes:
+        # Get the coordinates of the selected voxel by its index
+        seed_point = df.loc[idx, ['X', 'Y', 'Z']].values.reshape(1, -1)
+        
+        # Ensure the coordinates are float64 to avoid type errors
+        all_points = df[['X', 'Y', 'Z']].values.astype(np.float64)
+        seed_point = seed_point.astype(np.float64)
+        
+        # Compute the Euclidean distance from the seed voxel to all other voxels
+        distances = np.sqrt(((all_points - seed_point) ** 2).sum(axis=1))
+        
+        # Select voxels within the specified radius
+        nearby_voxels = df[distances <= radius]
+        
+        # Limit to max_voxels
+        if len(nearby_voxels) > max_voxels:
+            nearby_voxels = nearby_voxels.sample(n=max_voxels)
+        
+        # Assign the resource to the selected cluster points
+        df.loc[nearby_voxels.index, 'resource'] = resource
+
+        # Mark the detected clusters in the debug DataFrame
+        debug_df.loc[nearby_voxels.index, 'detected_cluster'] = 'cluster'  # Mark assigned cluster voxels
+
+        # Mark the selected seed voxel
+        debug_df.loc[idx, 'detected_cluster'] = 'seed'
+
+        # Print the assigned resource for this cluster
+        print(f"Total voxels assigned for {resource} in this cluster: {len(nearby_voxels)}")
+
+    # Call the PyVista plot function after all clusters have been processed
+    #plot_detected_clusters(debug_df)
+    
+    return df
+
+def convert_df_to_pyvista_polydata(voxel_properties_df):
+    points = voxel_properties_df[['X', 'Y', 'Z']].values
+    polydata = pv.PolyData(points)
+    
+    for column in voxel_properties_df.columns:
+        if column not in ['X', 'Y', 'Z']:
+            polydata.point_data[column] = voxel_properties_df[column].values
+    
+    return polydata
+
+def visualize_grid(polydata_list):
+    num_datasets = len(polydata_list)
+    grid_size = int(np.ceil(np.sqrt(num_datasets)))
+
+    # Initialize the plotter with the grid size
+    plotter = pv.Plotter(shape=(grid_size, grid_size), notebook=False)
+
+    for i, polydata in enumerate(polydata_list):
+        row = i // grid_size
+        col = i % grid_size
+        plotter.subplot(row, col)
+        plotter.add_mesh(
+            polydata,
+            render_points_as_spheres=True,
+            point_size=10,
+            scalars='resource',
+            cmap='Set2',
+            show_scalar_bar=False  # Disable individual scalar bars
+        )
+        plotter.add_text(f"Dataset {i+1}", font_size=10, color="white")  # Label for each dataset
+
+    # Create a shared scalar bar (legend) above all viewports
+    plotter.add_scalar_bar(
+        title='Resource',
+        vertical=False,  # Make the scalar bar horizontal
+        position_y=0.9,  # Position it near the top of the window
+        title_font_size=12,
+        label_font_size=10
+    )
+
+    plotter.link_views()  # Link the views across the grid
+    plotter.show()
+
+
+#CHATGPT TO DO:
+#load the resource dictionary from data/treeOutputs/tree_resources.json
+
+# ------------------------------------------------------------------------------------------------------------
+# Structure and Keys of `all_tree_resources_dict`:
+# ------------------------------------------------------------------------------------------------------------
+# The `all_tree_resources_dict` is a dictionary where:
+# - The **keys** are tuples containing four elements:
+#   1. **is_precolonial**: A boolean value (`True` or `False`) indicating whether the tree is precolonial.
+#   2. **size**: A string representing the size of the tree (`'small'`, `'medium'`, or `'large'`).
+#   3. **control**: A string representing the control category (`'street-tree'`, `'park-tree'`, or `'reserve-tree'`).
+#   4. **improvement**: A boolean value (`True` or `False`) indicating whether the improvement logic has been applied.
+# 
+# - The **values** are dictionaries where:
+#   - The keys are resource names (`'peeling bark'`, `'dead branch'`, `'fallen log'`, `'leaf litter'`, `'hollow'`, `'epiphyte'`).
+#   - The values are the computed resource counts for that specific tree configuration.
+# ------------------------------------------------------------------------------------------------------------
+
+
+#load the euc dfs data/treeInputs/trunks/processed/'
+#load the elm dfs 'data/treeInputs/trunks-elms/processed/'
+#create a combined list called  combined_trees
+
+#create a combined dictionary called tree_templates
+
+#interate over the dfs. For each voxel_properties_df, 
+    #create a copy of it- voxel_properties_df_instance
+    #extract the Size, isPrecolonial, and Tree.ID values from the first row
+        #iterate through the remaining dictionary keys in (ie. control (`'street-tree'`, `'park-tree'`, or `'reserve-tree'`), and improvement (True or False))
+            #create a resource_level_key by combining (is_precolonial, size, control, improvement). 
+            #obtain the resource_dict dictionary by looking up the value of this key in the all_tree_resources_dict
+            #add columns 'Control' and 'Improvement'to voxel_properties_df_instance , initialised with these values from the resource_level_key
+            
+            #distribute resources using 
+            #voxel_properties_df_instance = convert_voxels_to_resource(voxel_properties_df, resource_dict, patchiness_level, exclude_conditions)
+            #voxel_properties_df_instance = get_canopy_resources(resource_dict, voxel_properties_df_instance, exclude_conditions)
+            #voxel_properties_df_instance = get_ground_resources(resource_dict, voxel_properties_df_instance)
+       
+        #create a tree_level_key by creating a tuple (is_precolonial, size, control, improvement, Tree.ID). 
+        #add the voxel_properties_df_instance to tree_templates with the key tree_level_key 
+
+#pickle tree_templates to data/TreeOutputs
+
+
+
+import os
+import numpy as np
+import pandas as pd
+import pickle
+import json
+
+# Define the main function
+def main():
+    exclude_conditions = {
+    'dead branch': [{'branch_order': [0, 1]}, {'Z': ('<', 5)}],
+    'hollow' : [{'Z': ('<', 10)}],
+    'epiphyte' : [{'Z': ('<', 10)}],
+    }
+
+    patchiness_level = {
+        'dead branch' : 'cluster',
+        'peeling bark' : 'cluster',
+        'perch branch' : 'cylinder',
+        'hollow' : 'point',
+        'epiphyte' : 'point',
+        'leaf litter' : 'ground',
+        'fallen log' : 'ground_percentage'}
+    
+    # Load the resource dictionary
+    with open('data/treeOutputs/tree_resources.json', 'r') as file:
+        all_tree_resources_dict = json.load(file)
+
+    # Define the paths to the datasets
+    euc_path = 'data/treeInputs/trunks/processed/'
+    elm_path = 'data/treeInputs/trunks-elms/processed/'
+
+    # Load the datasets
+    euc_dfs = [pd.read_csv(os.path.join(euc_path, f)) for f in os.listdir(euc_path) if f.endswith('.csv')]
+    elm_dfs = [pd.read_csv(os.path.join(elm_path, f)) for f in os.listdir(elm_path) if f.endswith('.csv')]
+
+    # Combine the datasets into one list
+    combined_trees = euc_dfs + elm_dfs
+
+    # Initialize the combined dictionary to hold processed trees
+    tree_templates = {}
+
+    # Iterate over the combined datasets
+    for i, voxel_properties_df in enumerate(combined_trees):
+        # Extract tree metadata
+        is_precolonial = voxel_properties_df.iloc[0]['isPrecolonial']
+        size = voxel_properties_df.iloc[0]['Size']
+        tree_id = voxel_properties_df.iloc[0]['Tree.ID']
+
+        print(f"\nProcessing Tree ID: {tree_id}, Size: {size}, Is Precolonial: {is_precolonial}")
+
+        import math
+
+        # Iterate over the control and improvement conditions
+        for control in ['street-tree', 'park-tree', 'reserve-tree']:
+            for improvement in [True, False]:
+                # Construct the resource level key
+                resource_level_key = (is_precolonial, size, control, improvement)
+
+                # Obtain the resource dictionary for this configuration
+                resource_dict = all_tree_resources_dict.get(str(resource_level_key), {})
+
+                # Create a new dictionary with ceiling values
+                resource_dict_ceiling = {key: math.ceil(value) for key, value in resource_dict.items()}
+
+                # Debug statement showing resource distribution for this configuration
+                print(f"\nTree ID: {tree_id} - Resource Level Key: {resource_level_key}")
+                print(f"Original Resource Distribution: {resource_dict}")
+                print(f"Ceiling Resource Distribution: {resource_dict_ceiling}")
+
+                # Create a copy of the original DataFrame for this tree instance
+                voxel_properties_df_instance = voxel_properties_df.copy()
+
+                # Add 'Control' and 'Improvement' columns
+                voxel_properties_df_instance['Control'] = control
+                voxel_properties_df_instance['Improvement'] = improvement
+
+                # Distribute resources based on the ceiling resource dictionary
+                voxel_properties_df_instance = convert_voxels_to_resource(
+                    voxel_properties_df_instance, 
+                    resource_dict_ceiling, 
+                    patchiness_level, 
+                    exclude_conditions
+                )
+                voxel_properties_df_instance = get_canopy_resources(
+                    resource_dict_ceiling, 
+                    voxel_properties_df_instance, 
+                    exclude_conditions
+                )
+                voxel_properties_df_instance = get_ground_resources(
+                    resource_dict_ceiling, 
+                    voxel_properties_df_instance
+                )
+
+                # Construct the tree level key
+                tree_level_key = (is_precolonial, size, control, improvement, tree_id)
+
+                # Add the processed DataFrame to the tree_templates dictionary
+                tree_templates[tree_level_key] = voxel_properties_df_instance
+
+                # Debug statement confirming the processing completion for this configuration
+                print(f"Completed processing for Tree ID: {tree_id} with Resource Level Key: {resource_level_key}")
+
+    # Save the tree_templates dictionary as a pickle file
+    output_path = 'data/treeOutputs/tree_templates.pkl'
+    with open(output_path, 'wb') as file:
+        pickle.dump(tree_templates, file)
+
+    print(f"Processed tree data has been saved to {output_path}")
+
+# Run the main function
+if __name__ == "__main__":
+    main()
+
+
+def main2():
+    folder_path = 'data/treeInputs/trunks/processed/'
+    #folder_path = 'data/treeInputs/trunks-elms/processed/'
+
+    exclude_conditions = {
+    'dead branch': [{'branch_order': [0, 1]}, {'Z': ('<', 5)}],
+    'hollow' : [{'Z': ('<', 10)}],
+    'epiphyte' : [{'Z': ('<', 10)}],
+    }
+
+    patchiness_level = {
+        'dead branch' : 'cluster',
+        'peeling bark' : 'cluster',
+        'perch branch' : 'cylinder',
+        'hollow' : 'point',
+        'epiphyte' : 'point',
+        'leaf litter' : 'ground',
+        'fallen log' : 'ground_percentage'}
+
+    resource_dict = {'dead branch': 30, 
+                     'peeling bark' : 20,
+                     'hollow' : 4,
+                     'epiphyte' : 4,
+                     'leaf litter' : 10,
+                     'fallen log' : 4}
+    
+    polydata_list = []
+    senescing_list = []
+    snag_list = []
+    fallen_list = []
+
+
+    # Iterate through all CSV files in the folder
+    for filename in os.listdir(folder_path):
+        if filename.endswith('.csv'):
+            file_path = os.path.join(folder_path, filename)
+            voxel_properties_df = pd.read_csv(file_path)
+
+            print(voxel_properties_df)
+            
+            voxel_properties_df = convert_voxels_to_resource(voxel_properties_df, resource_dict, patchiness_level, exclude_conditions)
+            voxel_properties_df = get_canopy_resources(resource_dict, voxel_properties_df, exclude_conditions)
+            voxel_properties_df = get_ground_resources(resource_dict, voxel_properties_df)
+
+                    
+            polydata = convert_df_to_pyvista_polydata(voxel_properties_df)
+            polydata_list.append(polydata)
+
+
+            #check if first row Size is large
+            if voxel_properties_df.iloc[0]['Size'] == 'large':  # Adjust threshold as needed
+                #good settings for elms
+                #senescing_df = senescingTree(voxel_properties_df,2)
+                #age2_df = treeAge(voxel_properties_df,1)
+
+                #good settings for eucs
+                #senescing_df = treeAge(voxel_properties_df,2)
+                #senescing_df = treeAge(voxel_properties_df,1)
+
+                senescing_df = senescingTree(voxel_properties_df)
+                senescing_poly = convert_df_to_pyvista_polydata(senescing_df)
+                senescing_list.append(senescing_poly)
+
+                snag_df = snagTree(voxel_properties_df)
+                snag_poly = convert_df_to_pyvista_polydata(snag_df)
+                snag_list.append(snag_poly)
+
+                #regular fallen branches
+                #fallen_df = simulate_fallen_branches(snag_df)
+
+                #makes funny angles
+                fallen_df = simulate_fallen_branches(snag_df, angle=30)
+                fallen_poly = convert_df_to_pyvista_polydata(fallen_df)
+                fallen_list.append(fallen_poly)
+
+                #age2_poly = convert_df_to_pyvista_polydata(age2_df)
+                #age2_list.append(age2_poly)
+        
+    # Visualize all the processed point clouds in a grid
+    #visualize_grid(polydata_list)
+    #visualize_grid(senescing_list)
+    #visualize_grid(snag_list)
+    visualize_grid(fallen_list)

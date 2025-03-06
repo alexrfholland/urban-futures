@@ -1,0 +1,313 @@
+import pickle
+import pandas as pd
+import pyvista as pv
+import cameraSetUpRevised, treeBake_glyphs
+
+
+# Function to load the tree templates from a pickle file
+def load_tree_templates(filepath):
+    with open(filepath, 'rb') as file:
+        return pickle.load(file)
+
+# Function to get specific tree versions based on TreeNo
+# Function to get specific tree versions based on TreeNo and save the keys
+def gather_tree_dfs(isPrecolonial, tree_no, tree_templates):
+    park_df = None
+    street_df = None
+    reserve_df = None
+    saved_keys = []
+    
+    for key, df in tree_templates.items():
+        is_precolonial, size, control, improvement, tree_id = key
+        
+        if is_precolonial == isPrecolonial and not improvement and tree_id == tree_no:
+            saved_keys.append(key)  # Save the key
+            if control == 'park-tree':
+                park_df = df
+            elif control == 'street-tree':
+                street_df = df
+            elif control == 'reserve-tree':
+                reserve_df = df
+    
+    return [park_df, street_df, reserve_df], saved_keys
+
+
+
+# Function to create a multiblock from a DataFrame
+def create_multiblock_from_df(df):
+    print(f'creating multiblock')
+    print(df)
+
+    def create_polydata(df):
+        points = df[['X', 'Y', 'Z']].values
+        polydata = pv.PolyData(points)
+
+        for col in df.columns.difference(['X', 'Y', 'Z']):
+            sanitized_data = []
+            for val in df[col]:
+                if isinstance(val, str):
+                    sanitized_val = val.encode('ascii', 'ignore').decode()
+                    sanitized_data.append(sanitized_val)
+                else:
+                    sanitized_data.append(val)
+            polydata.point_data[col] = sanitized_data
+
+        polydata.point_data['ScanZ'] = df['Z']
+        return polydata
+
+    df['resource'] = df['resource'].replace('perch branch', 'perchable branch')
+
+    branches_df = df[df['resource'].isin(['perchable branch', 'peeling bark', 'dead branch', 'other'])]
+    ground_resources_df = df[df['resource'].isin(['fallen log', 'leaf litter'])]
+    canopy_resources_df = df[df['resource'].isin(['epiphyte', 'hollow'])]
+    leaf_cluster_df = df[df['resource'].isin(['leaf cluster'])]
+
+    # Print the count of unique resource values in each subset
+    print("Branches:")
+    branches_counts = branches_df['resource'].value_counts().to_dict()
+    for resource, count in branches_counts.items():
+        print(f"{resource}: {count}")
+
+    print("\nGround Resources:")
+    ground_resources_counts = ground_resources_df['resource'].value_counts().to_dict()
+    for resource, count in ground_resources_counts.items():
+        print(f"{resource}: {count}")
+
+    print("\nCanopy Resources:")
+    canopy_resources_counts = canopy_resources_df['resource'].value_counts().to_dict()
+    for resource, count in canopy_resources_counts.items():
+        print(f"{resource}: {count}")
+
+    print("\nLeaf Clusters:")
+    leaf_cluster_counts = leaf_cluster_df['resource'].value_counts().to_dict()
+    for resource, count in leaf_cluster_counts.items():
+        print(f"{resource}: {count}")
+    if leaf_cluster_counts == 0:
+        print("No leaf clusters")
+
+    branches_polydata = create_polydata(branches_df)
+    ground_resources_polydata = create_polydata(ground_resources_df)
+    canopy_resources_polydata = create_polydata(canopy_resources_df)
+    leaf_clusters_polydata = create_polydata(leaf_cluster_df)
+
+    multiblock = pv.MultiBlock()
+    multiblock['branches'] = branches_polydata
+    multiblock['ground resources'] = ground_resources_polydata
+    multiblock['canopy resources'] = canopy_resources_polydata
+    multiblock['green biovolume'] = leaf_clusters_polydata
+
+    return multiblock
+
+# Function to plot the gathered DataFrames generically
+def plot_gathered_trees(dfs, plot_title="Tree Plot", max_cols=3):
+    # Calculate the number of rows and columns for the plotter
+    num_dfs = len(dfs)
+    num_cols = min(max_cols, num_dfs)
+    num_rows = (num_dfs + max_cols - 1) // max_cols
+
+    # Initialize PyVista plotter with calculated shape
+    plotter = pv.Plotter(shape=(num_rows, num_cols))
+
+    # Iterate over the DataFrames and plot them
+    for i, df in enumerate(dfs):
+        if df is not None:
+            # Create multiblock
+            multiblock = create_multiblock_from_df(df)
+
+            # Set the current subplot
+            row = i // num_cols
+            col = i % num_cols
+            plotter.subplot(row, col)
+
+            # Add trees to the current subplot
+            treeBake_glyphs.add_trees_to_plotter(plotter, multiblock, (0, 0, 0))
+
+        else:
+            print(f"No data available for subplot {i}")
+
+    # Set up the camera for all subplots
+    cameraSetUpRevised.setup_camera(plotter, 30, 600)
+
+    # Link views and show the plot
+    plotter.link_views()
+    plotter.show()
+
+def count_resource_rows(tree_templates):
+    resource_counts = {}
+
+    # Iterate over each tree's DataFrame in the tree templates
+    for key, df in tree_templates.items():
+        # Get the resource counts for the current DataFrame
+        resource_count = df['resource'].value_counts()
+
+        # Add counts to the cumulative resource_counts dictionary
+        if key not in resource_counts:
+            resource_counts[key] = resource_count
+        else:
+            resource_counts[key] += resource_count
+
+    # Print the counts for each tree
+    for key, counts in resource_counts.items():
+        print(f"Tree {key}:")
+        for resource, count in counts.items():
+            print(f"  {resource}: {count}")
+        print()
+
+
+
+def gather_fallen_trees(dfs):
+    
+    keys = [
+        (False, 10, 'senescing') 
+    ]
+    
+
+    keys = [
+        (False, 10, 'senescing'), 
+        (True, 11, 'senescing'),
+        (False, 10, 'snag'), 
+        (True, 11, 'snag'),
+        (False, 10, 'fallen'), 
+        (True, 11, 'fallen'),
+        (False, 10, 'propped'), 
+        (True, 11, 'propped'),
+    ]
+    values = []
+    
+    for key in keys:
+        if key in dfs:
+            print(f"Key {key} found, adding to values.")
+            values.append(dfs[key])
+        else:
+            print(f"Key {key} not found in the dictionary.")
+
+    print(values)
+
+    
+    return values
+
+
+def GatherDfsToPlot(dfDict, keys):
+    values = []
+    for key in keys:
+        if key in dfDict:
+            print(f"Key {key} found, adding to values.")
+            values.append(dfDict[key])
+        else:
+            print(f"Key {key} not found in the dictionary.")
+    return values
+
+
+#OUTPUTS
+
+#Elm across different life stages
+
+def PlotEuc(tree_templates, senescing_templates):
+    treeKeys = [
+        (True, 'large', 'reserve-tree', False, 11)
+        ]
+
+    treeDfs = GatherDfsToPlot(tree_templates, treeKeys)
+
+    toPlot = treeDfs
+
+    plot_gathered_trees(toPlot)
+
+
+def PlotElmCycle(tree_templates, senescing_templates):
+    treeKeys = [
+        (False, 'small', 'street-tree', False, 4),
+        (False, 'medium', 'street-tree', False, 1),
+        (False, 'large', 'street-tree', False, 12),
+    ]
+
+    logKeys = [(False, 12, 'senescing'),
+            (False, 12, 'snag'),
+            (False, 12, 'propped')]
+    
+
+    logDfs = GatherDfsToPlot(senescing_templates, logKeys)
+
+    treeDfs = GatherDfsToPlot(tree_templates, treeKeys)
+
+    toPlot = treeDfs + logDfs
+
+    plot_gathered_trees(toPlot)
+
+
+def PlotEucCycle(tree_templates, senescing_templates):
+    treeKeys = [
+        (True, 'small', 'street-tree', False, 1),
+        (True, 'medium', 'reserve-tree', False, 6),
+        (True, 'large', 'reserve-tree', False, 11)
+        ]
+
+    logKeys = [(True, 11, 'senescing'),
+            (True, 11, 'snag'),
+            (False, 11, 'propped')]
+    
+
+    logDfs = GatherDfsToPlot(senescing_templates, logKeys)
+
+    treeDfs = GatherDfsToPlot(tree_templates, treeKeys)
+
+    toPlot = treeDfs + logDfs
+
+    plot_gathered_trees(toPlot)
+
+def PlotEucConditions(tree_templates, senescing_templates):
+    treeKeys = [
+        #(True, 'small', 'street-tree', False, 1),
+        #(True, 'medium', 'street-tree', False, 6),
+        #(True, 'medium', 'reserve-tree', False, 6),
+        (True, 'large', 'street-tree', False, 15),
+        (True, 'large', 'park-tree', False, 13),
+        (True, 'large', 'reserve-tree', False, 11)
+        ]
+    
+    treeDfs = GatherDfsToPlot(tree_templates, treeKeys)
+
+    plot_gathered_trees(treeDfs)
+
+
+def PlotImprovements(tree_templates, senescing_templates):
+    treeKeys = [
+        (True, 'medium', 'street-tree', False, 6),
+        (True, 'large', 'street-tree', False, 11),
+        (False, 'large', 'street-tree', False, 12),
+        (True, 'medium', 'park-tree', True, 6),
+        (True, 'large', 'street-tree', True, 11),
+        (False, 'large', 'street-tree', True, 12),
+        ]
+    
+    treeDfs = GatherDfsToPlot(tree_templates, treeKeys)
+
+    plot_gathered_trees(treeDfs)
+
+# Main execution
+if __name__ == "__main__":
+    tree_templates = load_tree_templates('data/treeOutputs/adjusted_tree_templates.pkl')
+    print('tree_templates keys ares')
+    print('\n'.join(map(str, tree_templates.keys())))
+    
+
+    senescing_templates = load_tree_templates('data/treeOutputs/fallen_trees_dict.pkl')
+    print('senescing_templates keys ares')
+    print('\n'.join(map(str, senescing_templates.keys())))
+
+    PlotElmCycle(tree_templates, senescing_templates)
+
+
+
+    print('plotting Eucs')
+    #PlotEucCycle(tree_templates, senescing_templates)
+
+
+    #PlotEucConditions(tree_templates, senescing_templates)
+
+    #PlotImprovements(tree_templates, senescing_templates)
+
+    #PlotEuc(tree_templates, senescing_templates)
+
+
+

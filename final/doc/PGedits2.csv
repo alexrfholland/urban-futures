@@ -1,0 +1,40 @@
+﻿page number,body text,comment
+2,[no body text],"Consider instead citing the Kunming-Montreal Global Biodiversity Framework (CBD, 2022) in which the Parties to the convention on Biodiversity committed to reduce the impact of urbanisation on biodiversity and human wellbeing by 2030."
+2,"States have pledged to achieve a vision of ""Living in harmony with nature"" by 2050 (IPBES, 2019). Multiple large-scale assessments show rapid environmental change means achieving such visions demands substantial changes in human and nonhuman individuals, institutions, societies, and cultures",Consider briefer here.
+3,[no body text],It's not clear why this is relevant for your study.
+5,3.3 Opportunity,"Typically journal articles explain specific objectives or present questions here, so this would fit better here."
+6,[no body text],Consider whether this is too Melbourne-centric for a broader (international?) audience.
+7,Arboreal resources linked to nonhuman stakeholders,be more specific about habitat resources rather than modelling
+7,Generated resistance scores under tree canopies and other urban elements that inform where and how design interventions can be implemented safely or practically,is it really clear?
+7,"The model provides a spatially explicit framework to simulate above-ground arboreal habitat resources at any location in the City of Melbourne. It uses multi-resolution voxels to simulate distributions at woodland baselines, current site conditions, and future trajectories.",source? source of data?
+7,Trees can: Grow according to trunk growth rates,source?
+7,Trees approaching end of life expectancy enter senescence,source of data?
+7,Senescent trees either: Age-in-place if site resistance is low,I'm not sure this is realistic given exotic trees: (i) allow better solar access in winter (when the sun is low and they lose their leaves) (ii) provide better shade in summer
+7,Get replaced with young eucalyptus if site resistance is high,Eucalyptus (italicised)
+7,[no body text],and thus some mix of native/exotic is probably more acceptable
+8,"Senescing trees may: Receive design supports, including: Ground depaving and the creation of under-canopy habitat islands in low resistance areas (ie, street parking, laneways, and median strips)",I don't think you define 'resistance' nor explain how it is calculated and then used in modelling.
+8,"The model also searches urban elements capable of improving arboreal habitat resources, implementing: Rewilding of larger ground areas",or you could give examples of where needed? what effective?
+9,[no body text],by 'epiphytes' do you mean mistletoe? (I couldn't follow modelling epiphytes).
+9,[no body text],mistletoe is a parasite so overtaking will kill the tree and only grows on eucalypts
+10,"Our analysis considers a subset of capabilities related to niche and habitat. We focus specifically on above-ground arboreal habitat resources, considering resources as elements in an environment that a capability can convert into a benefit for an agent.",Can you be a little more succinct given you only model a subset of 'capabilities'?
+10,"Data sources include urban forest inventories, GIS data (roads, footways, tramways, powerlines, building footprints), lidar for building envelopes and tree canopies, and estimates of precolonial baselines. High-resolution laser scans of elm and eucalyptus trees, ecological surveys, and custom implementations for branch detection and senescence simulation inform resource distribution.",[cannot translate]
+10,[no body text],make ref. ref. all specific species names must be italicised
+12,[no body text],This is part of 'model description'
+13,Model Output Verification [147 words],Does this section describe 'verification' or does it describe a range of scenarios for comparison?
+13,Validates our ability to accurately model current arboreal resource distributions,I don't think it does this
+17,"The tree persona exhibits continuous regeneration through overlapping lifecycles. The loamy soil provides plenty of opportunities for seedlings to sprout. A robust cohort of 2,014 saplings and 255 mid-phase trees ensures ongoing canopy renewal.","Here you model recruitment, needs to be included in a description of your model."
+17,"The woodland bird persona benefits from extensive resources found in intact woodlands. Each large tree produces [x-x] number of hollows for nesting, 309‚Äì807m¬≤ of peeling bark forming sources of invertebrate prey, and 619‚Äì1,763m¬≤ of perching branches for observation and rest.",These are from what? What are these numbers based on?
+18,"Both scenarios begin along a 500m stretch of Royal Parade, where intensive management of 40 mature elm trees prevents natural habitat development.",write for an international audience to describe this generally
+19,5.2.2 Trending,Summarising these results as figures would be good.
+19,The trending scenario considers outcomes if current management practices are continued.,This scenario wasn't described in Methods - they need to be consistent
+19,The positive scenario considers management practices and actions that enhance woodland capabilities.,This scenario wasn't described in Methods - they need to be consistent to be contrasted
+19,"An artificial mistletoe program establishes [x] epiphytes. The overall look remains recognizably a street, but accumulated ground resources expand lizard habitat to 45% of the site, up from 15% in the trending scenario.",Is this feasible?
+20,"At year 30, increased wildlife builds public trust, enabling two traffic lanes (3,000m¬≤) to be depaved. Twenty-five additional elms have entered late senescence, with 15 having died. Rather than being removed, 12 remain as standing snags (each 15-20m tall), providing approximately [x]m¬≤ of coarse woody debris (yellow canopies, Figure 3).",needs defining in methods
+23,[no body text],these relationships need to be defined in Methods. eg. what [cannot translate]
+23,Epiphytes (green),reconsider including mistletoe (a parasite that reduces the longevity of eucalypts)
+26,Our analysis reveals five significant limitations:,"Usually you discuss these towards the end of this section, or raise them at pivotal places throughout this section."
+28,"6.2 Designing beyond the status quo: directions for future research [1800, actual: 2089]","again, usually this is the last item to discuss in this section"
+29,"For instance, male wall lizards mark favourable urban locations with femoral gland secretions, while blue-tongued skinks leave chemical trails to indicate preferred shelter sites. Yet this also presents challenges because humans must translate and interpret these expressions. Biases in this translation are inevitable.",you must cite a reference for statements such as this
+32,"Human preferences, while including legitimate concerns about safety, injury, and death, remain heavily biased. For example, tree branch fall remains a risk, yet ecologists understand multiple approaches to eliminate it, such as creating habitat islands under tree canopies to redirect human movement",arborists
+33,"Figure 9. Potential implementation of artificial tree habitats on utility poles (highlighted in red). The sequence begins with pilot installations to build community acceptance, followed by gradual removal as natural trees mature and develop comparable arboreal resources over centuries.",These figures would be more informative if focused on the same location for each time period. As currently illustrated you are confounding space + time.
+37,[no body text],"Again, you are confounding space and time in these figures"

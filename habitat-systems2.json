@@ -1,0 +1,324 @@
+{
+    "remnant canopy provider": 
+    {
+        "existing": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [true],
+                "_Tree_size": ["large"]
+            },
+            "subtypes": 
+            {
+                "street": 
+                {
+                    "_Control": ["street-tree"]
+                },
+                "park": 
+                {
+                    "_Control": ["park-tree"]
+                },
+                "vacant lot": 
+                {
+                    "_Control": ["reserve-tree"],
+                    "extraTree" : [true]
+                }
+            }
+        },
+        "future": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [true],
+                "_Tree_size": ["medium"]
+            },
+            "subtypes": 
+            {
+                "street": 
+                {
+                    "_Control": ["street-tree"]
+                },
+                "park": 
+                {
+                    "_Control": ["park-tree"]
+                },
+                "vacant lot": 
+                {
+                    "_Control": ["reserve-tree"],
+                    "extraTree" : [true]
+                }
+            }
+        }
+        
+    },
+
+    "exotic canopy provider": 
+    {
+        "existing": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [false],
+                "_Tree_size": ["large"]
+            },
+            "subtypes": 
+            {
+                "street": 
+                {
+                    "_Control": ["street-tree"]
+                },
+                "park": 
+                {
+                    "_Control": ["park-tree"]
+                },
+                "vacant lot": 
+                {
+                    "_Control": ["reserve-tree"],
+                    "extraTree" : [true]
+                }
+            }
+        },
+        "future": {
+            "search": 
+            {
+                "isPrecolonial": [false],
+                "_Tree_size": ["medium"]
+            },
+            "subtypes": 
+            {
+                "street": 
+                {
+                    "_Control": ["street-tree"]
+                },
+                "park": 
+                {
+                    "_Control": ["park-tree"]
+                },
+                "vacant lot": 
+                {
+                    "_Control": ["reserve-tree"],
+                    "extraTree" : [true]
+                }
+            }
+        }
+    },
+    
+    "remnant ground": 
+    {
+        "footpath": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [true],
+                "_Control": ["street-tree"]
+            },
+            "subtypes": 
+            {
+                
+                "existing": 
+                {
+                    "_Tree_size": ["large"]
+                },
+                "future": 
+                {
+                    "_Tree_size": ["medium"]
+                }            
+            }
+        },
+
+        "turf": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [true],
+                "_Control": ["park-tree"]
+            },
+            "subtypes": 
+            {
+                
+                "existing": 
+                {
+                    "_Tree_size": ["large"]
+                },
+                "future": 
+                {
+                    "_Tree_size": ["medium"]
+                }            
+            }
+        },
+
+        "vacant lot": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [true],
+                "_Control": ["reserve-tree"]
+            },
+            "subtypes": 
+            {
+                
+                "existing": 
+                {
+                    "_Tree_size": ["large"]
+                },
+                "future": 
+                {
+                    "_Tree_size": ["medium"]
+                }            
+            }
+        }
+    },
+
+    "exotic ground": 
+    {
+        "footpath": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [false],
+                "_Control": ["street-tree"]
+            },
+            "subtypes": 
+            {
+                
+                "existing": 
+                {
+                    "_Tree_size": ["large"]
+                },
+                "future": 
+                {
+                    "_Tree_size": ["medium"]
+                }            
+            }
+        },
+
+        "turf": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [false],
+                "_Control": ["park-tree"]
+            },
+            "subtypes": 
+            {
+                
+                "existing": 
+                {
+                    "_Tree_size": ["large"]
+                },
+                "future": 
+                {
+                    "_Tree_size": ["medium"]
+                }            
+            }
+        },
+
+        "vacant lot": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [false],
+                "_Control": ["reserve-tree"]
+            },
+            "subtypes": 
+            {
+                
+                "existing": 
+                {
+                    "_Tree_size": ["large"]
+                },
+                "future": 
+                {
+                    "_Tree_size": ["medium"]
+                }            
+            }
+        }
+    },
+
+    "buildings": 
+    {
+        "roof": 
+        {
+            "search": 
+            {
+                "dip (degrees)": [[0.0, 20.0]],
+                "blocktype": ["buildings"]
+            },
+            "subtypes": 
+            {
+                "Load bearing": 
+                {
+                    "extensive_green_roof-RATING": ["Excellent", "Good", "Moderate"]
+                },
+                "Lightweight": 
+                {
+                    "intensive_green_roof-RATING": ["Excellent", "Good", "Moderate"]
+                }
+            }
+        },
+
+        "wall": {
+            "search": 
+            {
+                "dip (degrees)": [[70, 90]],
+                "blocktype": ["buildings"]
+            },
+            "subtypes": 
+            {
+                "habitat ready": 
+                {
+                    "solar": [[0.2, 1.0]] 
+                }
+            }
+        }
+    },
+
+    "street features": 
+    {
+        "street parking": 
+        {
+            "search": 
+            {
+                "isparking": [1.0]
+            },
+            "subtypes": 
+            {
+                "street parking": 
+                {
+                    "isparking": [1.0]
+                }
+            }
+        },
+
+        "road carriageway": 
+        {
+            "search": 
+            {
+                "road_types-type": ["Carriageway"],
+                "isparking": [0]
+            },
+            "subtypes": 
+            {
+                "road carriageway": 
+                {
+                    "road_types-type": ["Carriageway"]
+                }
+            }
+        },
+
+        "utility pole": 
+        {
+            "search": 
+            {
+                "ispylons": [true]
+            },
+            "subtypes": 
+            {
+                "utility pole": 
+                {
+                    "ispylons": [true]
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,6 @@
+
+		begin
+      f = addfile("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/output_with_kde.nc","r")
+      print(f)
+		end
+    

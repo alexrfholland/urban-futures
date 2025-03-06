@@ -1,0 +1,134 @@
+import pickle
+import numpy as np
+import xarray as xr
+from collections import defaultdict
+
+# Path to the pickle file
+pickle_file = 'data/treeOutputs/adjusted_tree_templates.pkl'
+
+# Function to analyze tree template combinations
+def analyze_tree_template_combinations(filepath):
+    with open(filepath, 'rb') as file:
+        tree_templates = pickle.load(file)
+
+    # Initialize defaultdicts to store valid combinations
+    valid_combinations = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(set))))
+
+    # Analyze the keys
+    for key in tree_templates.keys():
+        is_precolonial, size, control, improvement, tree_id = key
+        valid_combinations[is_precolonial][size][control][improvement].add(tree_id)
+
+    # Analyze is_precolonial - size combinations
+    print("is_precolonial - size combinations:")
+    for is_precolonial in [False, True]:
+        for size in ['small', 'medium', 'large']:
+            tree_ids = set()
+            improvements = set()
+            for control in valid_combinations[is_precolonial][size]:
+                for improvement in valid_combinations[is_precolonial][size][control]:
+                    tree_ids.update(valid_combinations[is_precolonial][size][control][improvement])
+                    improvements.add(improvement)
+            if tree_ids:
+                print(f"  {is_precolonial} - {size}:")
+                print(f"    tree_id range: {get_ranges(tree_ids)}")
+                print(f"    improvement range: {sorted(improvements)}")
+
+    # Analyze improvement = True combinations
+    print("\nImprovement = True combinations:")
+    for is_precolonial in [False, True]:
+        for size in ['small', 'medium', 'large']:
+            for control in valid_combinations[is_precolonial][size]:
+                if True in valid_combinations[is_precolonial][size][control]:
+                    tree_ids = valid_combinations[is_precolonial][size][control][True]
+                    print(f"  {is_precolonial} - {size} - {control}:")
+                    print(f"    tree_id range: {get_ranges(tree_ids)}")
+
+# Helper function to get ranges
+def get_ranges(numbers):
+    numbers = sorted(numbers)
+    ranges = []
+    start = end = numbers[0]
+    for num in numbers[1:]:
+        if num == end + 1:
+            end = num
+        else:
+            ranges.append(f"{start}-{end}" if start != end else str(start))
+            start = end = num
+    ranges.append(f"{start}-{end}" if start != end else str(start))
+    return ", ".join(ranges)
+
+# Main function to load pickle and convert to xarray
+def convert_pickle_to_xarray(pickle_file):
+    print(f"Loading tree templates from {pickle_file}...")
+
+    # Load the pickle file
+    with open(pickle_file, 'rb') as file:
+        tree_templates = pickle.load(file)
+
+    print(f"Loaded {len(tree_templates)} tree templates.")
+
+    # Extract unique values for each coordinate dimension
+    is_precolonial_values = list(set(key[0] for key in tree_templates.keys()))
+    size_values = list(set(key[1] for key in tree_templates.keys()))
+    control_values = list(set(key[2] for key in tree_templates.keys()))
+    improvement_values = list(set(key[3] for key in tree_templates.keys()))
+    tree_id_values = list(set(key[4] for key in tree_templates.keys()))
+
+    # Sort the values for consistency
+    is_precolonial_values.sort()
+    size_values.sort()
+    control_values.sort()
+    improvement_values.sort()
+    tree_id_values.sort()
+
+    # Create empty arrays to store the data (assuming each template has x, y, z columns and 100 points)
+    # Use NaN or some marker value for empty combinations
+    x_data = np.full((len(is_precolonial_values), len(size_values), len(control_values), len(improvement_values), len(tree_id_values), 100), np.nan)
+    y_data = np.full_like(x_data, np.nan)
+    z_data = np.full_like(x_data, np.nan)
+
+    # Populate the arrays
+    for key, df in tree_templates.items():
+        is_precolonial_idx = is_precolonial_values.index(key[0])
+        size_idx = size_values.index(key[1])
+        control_idx = control_values.index(key[2])
+        improvement_idx = improvement_values.index(key[3])
+        tree_id_idx = tree_id_values.index(key[4])
+
+        # Assuming df contains columns 'x', 'y', 'z', populate the arrays
+        x_data[is_precolonial_idx, size_idx, control_idx, improvement_idx, tree_id_idx, :len(df)] = df['x'].values
+        y_data[is_precolonial_idx, size_idx, control_idx, improvement_idx, tree_id_idx, :len(df)] = df['y'].values
+        z_data[is_precolonial_idx, size_idx, control_idx, improvement_idx, tree_id_idx, :len(df)] = df['z'].values
+
+    print("Finished populating data arrays.")
+
+    # Create the xarray Dataset
+    tree_templates_ds = xr.Dataset(
+        {
+            'x': (['is_precolonial', 'size', 'control', 'improvement', 'tree_id', 'points'], x_data),
+            'y': (['is_precolonial', 'size', 'control', 'improvement', 'tree_id', 'points'], y_data),
+            'z': (['is_precolonial', 'size', 'control', 'improvement', 'tree_id', 'points'], z_data)
+        },
+        coords={
+            'is_precolonial': is_precolonial_values,
+            'size': size_values,
+            'control': control_values,
+            'improvement': improvement_values,
+            'tree_id': tree_id_values,
+            'points': np.arange(100)  # Assuming 100 points per tree template
+        }
+    )
+
+    print("Xarray Dataset created successfully.")
+    
+    # Save the dataset for later use
+    save_path = 'data/revised/tree_templates.nc'
+    tree_templates_ds.to_netcdf(save_path)
+    print(f"Dataset saved to {save_path}")
+
+    # Analyze the combinations
+    analyze_tree_template_combinations(pickle_file)
+
+if __name__ == "__main__":
+    convert_pickle_to_xarray(pickle_file)

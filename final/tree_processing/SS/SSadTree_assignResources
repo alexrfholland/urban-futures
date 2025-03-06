@@ -1,0 +1,321 @@
+import pandas as pd
+import pyvista as pv
+import os
+import numpy as np
+import networkx as nx
+
+def create_tree_id_filename_dict(point_cloud_files):
+    """
+    Creates a new dictionary with tree ID as key and processed filename as value.
+    
+    :param point_cloud_files: Dictionary with filename as key and tree ID as value
+    :return: New dictionary with tree ID as key and processed filename as value
+    """
+    tree_id_filename_dict = {}
+    for filename, tree_id in point_cloud_files.items():
+        processed_filename = filename.split('_')[0]
+        print(f"Tree ID: {tree_id}, Filename: {processed_filename}")
+        tree_id_filename_dict[tree_id] = processed_filename
+    return tree_id_filename_dict
+
+if __name__ == "__main__":
+    folderPath = 'data/revised/lidar scans/elm/adtree'
+    point_cloud_files = {
+        "Small A_skeleton.ply": 4,
+        "Small B_skeleton.ply": 5,
+        "Small C_skeleton.ply": 6,
+        "Med A 1 mil_skeleton.ply": 1,
+        "Med B 1 mil_skeleton.ply": 2,
+        "Med C 1 mil_skeleton.ply": 3,
+        "ElmL1_skeleton.ply": 7,
+        "Elm L3_skeleton.ply": 9,
+        "Elm L4_skeleton.ply": 10,
+        "Elm L5_skeleton.ply": 11,
+        "Large Elm A 1 mil_skeleton.ply": 12,
+        "Large Elm B - 1 mil_skeleton.ply": 13,
+        "Large Elm C 1 mil_skeleton.ply": 14
+    }
+
+    
+    fileNameDic = create_tree_id_filename_dict(point_cloud_files)
+
+    """selectedTreeIDs = [12]
+    selected_fileNameDic = {tree_id: filename for tree_id, filename in fileNameDic.items() if tree_id in selectedTreeIDs}
+    fileNameDic = selected_fileNameDic"""
+
+    # Seed for reproducibility
+    np.random.seed(42)
+
+    for tree_id, filename in fileNameDic.items():
+        print(f"Processing tree ID: {tree_id}, filename: {filename}")
+        voxelDF = pd.read_csv(f'{folderPath}/elmVoxelDFs/{filename}_voxelDF.csv')
+        clusterGraph = nx.read_graphml(f'{folderPath}/processedQSMs/{filename}_clusterGraph.graphml')
+        clusterInfoDF = pd.read_csv(f'{folderPath}/processedQSMs/{filename}_clusterInfoDF.csv')
+
+
+        # Create consideredBranchesDF which filters for voxels with 'start_radius' > 0.01
+        consideredBranchesDF = voxelDF[voxelDF['start_radius'] > 0.01]
+
+        # Exclude any segments that have rows with order == 0
+        segments_with_order_zero = consideredBranchesDF[consideredBranchesDF['order'] == 0]['largeSegment_id'].unique()
+        consideredBranchesDF = consideredBranchesDF[~consideredBranchesDF['largeSegment_id'].isin(segments_with_order_zero)]
+
+        # Initialize dictionary for resource assignment
+        resourceDic = {
+            'dead branches': 0.5,  # percentage
+            'peeling bark': 0.25,  # percentage
+            'hollow': 4,  # count
+            'epiphyte': 3  # count
+        }
+        totalVoxels = consideredBranchesDF.shape[0]
+        voxelsToConvertDic = {}
+
+        # Calculating voxels to convert for each resource type
+        for resourceType, resourcePercent in resourceDic.items():
+            if isinstance(resourcePercent, float):  # For percentage-based resources
+                voxelsToConvert = int(totalVoxels * resourcePercent)
+            else:  # For count-based resources (hollow, epiphyte)
+                voxelsToConvert = resourcePercent
+            voxelsToConvertDic[resourceType] = voxelsToConvert
+            print(f"Resource type: {resourceType}, Total voxels to convert: {voxelsToConvert}")
+
+        ### DEAD BRANCHES ###
+        voxelDF['dead_branch'] = False
+        voxelsConverted = 0
+        
+        # Group by largeSegment_id and cluster_id, and count voxels
+        segment_counts = consideredBranchesDF.groupby(['largeSegment_id', 'cluster_id']).size().reset_index(name='voxel_count')
+
+        # Shuffle largeSegment_ids for random selection
+        large_segments = segment_counts['largeSegment_id'].unique()
+        np.random.seed(43)  # Different seed for each resource type
+        np.random.shuffle(large_segments)
+
+        for largeSegment_id in large_segments:
+            if voxelsConverted >= voxelsToConvertDic['dead branches']:
+                break
+
+            segment_voxels = consideredBranchesDF[consideredBranchesDF['largeSegment_id'] == largeSegment_id]
+
+            if len(segment_voxels) + voxelsConverted <= voxelsToConvertDic['dead branches']:
+                voxelDF.loc[segment_voxels.index, 'dead_branch'] = True
+                voxelsConverted += len(segment_voxels)
+            else:
+                cluster_counts = segment_voxels.groupby('cluster_id').size().reset_index(name='voxel_count')
+                remaining_voxels = voxelsToConvertDic['dead branches'] - voxelsConverted
+                clusters_to_convert = cluster_counts.sample(frac=1, random_state=44)  # Different seed
+
+                for _, row in clusters_to_convert.iterrows():
+                    if voxelsConverted >= voxelsToConvertDic['dead branches']:
+                        break
+                    cluster_id = row['cluster_id']
+                    cluster_voxels = segment_voxels[segment_voxels['cluster_id'] == cluster_id]
+                    if len(cluster_voxels) + voxelsConverted <= voxelsToConvertDic['dead branches']:
+                        voxelDF.loc[cluster_voxels.index, 'dead_branch'] = True
+                        voxelsConverted += len(cluster_voxels)
+                    else:
+                        extra_voxels = voxelsConverted + len(cluster_voxels) - voxelsToConvertDic['dead branches']
+                        voxelDF.loc[cluster_voxels.index[:-extra_voxels], 'dead_branch'] = True
+                        break
+        print(f"Total dead branches converted: {voxelsConverted}/{voxelsToConvertDic['dead branches']}")
+
+        ### PERCH BRANCHES ###
+        voxelDF['perch_branch'] = False
+        maxTerminal = 50  # Max number of voxels to convert per cluster
+
+        # Step 1: Set 'perch_branch' for terminal clusters
+        # Filter where 'is_terminal' is True
+        terminal_clusters = consideredBranchesDF[consideredBranchesDF['is_terminal'] == True]
+
+        # Sort terminal clusters by 'branch_id' in descending order
+        sorted_terminal_clusters = terminal_clusters.sort_values(by=['cluster_id', 'branch_id'], ascending=[True, False])
+
+        # Convert the first maxTerminal voxels for each terminal cluster to 'perch_branch' = True
+        terminal_top_voxels = sorted_terminal_clusters.groupby('cluster_id').head(maxTerminal)
+        voxelDF.loc[terminal_top_voxels.index, 'perch_branch'] = True
+
+        # Print information about the terminal clusters conversion
+        print(f"Converted up to {maxTerminal} voxels per terminal cluster to perch_branch.")
+
+        # Step 2: Set 'perch_branch' for clusters with Q1(angle) < 20
+        # Calculate the lower quartile (Q1) of 'angle' for each cluster
+        angle_stats = consideredBranchesDF.groupby('cluster_id')['angle'].quantile(0.25).reset_index(name='Q1_angle')
+
+        # Filter clusters where Q1_angle < 20
+        low_angle_clusters = angle_stats[angle_stats['Q1_angle'] < 20]['cluster_id']
+
+        # Convert all voxels in clusters with Q1_angle < 20 to 'perch_branch' = True
+        voxelDF.loc[consideredBranchesDF[consideredBranchesDF['cluster_id'].isin(low_angle_clusters)].index, 'perch_branch'] = True
+
+        # Print information about the low angle clusters conversion
+        print(f"Converted all voxels in clusters with Q1(angle) < 20 to perch_branch.")
+
+
+        ### PEELING BARK ###
+        voxelDF['peeling_bark'] = False
+        voxelsConverted = 0
+        np.random.seed(45)  # Different seed for peeling bark
+        np.random.shuffle(large_segments)
+
+        for largeSegment_id in large_segments:
+            if voxelsConverted >= voxelsToConvertDic['peeling bark']:
+                break
+
+            segment_voxels = consideredBranchesDF[consideredBranchesDF['largeSegment_id'] == largeSegment_id]
+
+            if len(segment_voxels) + voxelsConverted <= voxelsToConvertDic['peeling bark']:
+                voxelDF.loc[segment_voxels.index, 'peeling_bark'] = True
+                voxelsConverted += len(segment_voxels)
+            else:
+                cluster_counts = segment_voxels.groupby('cluster_id').size().reset_index(name='voxel_count')
+                remaining_voxels = voxelsToConvertDic['peeling bark'] - voxelsConverted
+                clusters_to_convert = cluster_counts.sample(frac=1, random_state=46)  # Different seed
+
+                for _, row in clusters_to_convert.iterrows():
+                    if voxelsConverted >= voxelsToConvertDic['peeling bark']:
+                        break
+                    cluster_id = row['cluster_id']
+                    cluster_voxels = segment_voxels[segment_voxels['cluster_id'] == cluster_id]
+                    if len(cluster_voxels) + voxelsConverted <= voxelsToConvertDic['peeling bark']:
+                        voxelDF.loc[cluster_voxels.index, 'peeling_bark'] = True
+                        voxelsConverted += len(cluster_voxels)
+                    else:
+                        extra_voxels = voxelsConverted + len(cluster_voxels) - voxelsToConvertDic['peeling bark']
+                        voxelDF.loc[cluster_voxels.index[:-extra_voxels], 'peeling_bark'] = True
+                        break
+        print(f"Total peeling bark converted: {voxelsConverted}/{voxelsToConvertDic['peeling bark']}")
+
+        ### HOLLOW AND EPIPHYTE ###
+        for resourceType in ['hollow', 'epiphyte']:
+            voxelDF[resourceType] = False
+            np.random.seed(47 if resourceType == 'hollow' else 48)  # Different seed for hollow and epiphyte
+            # Filter clusters with z position > 10
+            valid_clusters = consideredBranchesDF[consideredBranchesDF['z'] > 10].groupby('cluster_id').mean().reset_index()
+
+            # If no valid clusters with z > 10, relax to z > 5
+            if valid_clusters.empty:
+                print(f"No valid clusters found with z > 10 for {resourceType}, trying with z > 5.")
+                valid_clusters = consideredBranchesDF[consideredBranchesDF['z'] > 5].groupby('cluster_id').mean().reset_index()
+
+            if valid_clusters.empty:
+                print(f"No valid clusters found even with z > 5 for {resourceType}. Skipping resource assignment.")
+                continue  # Skip to the next resource if no valid clusters are found
+
+            # Sort by z position
+            sorted_clusters = valid_clusters.sort_values(by='z', ascending=False)
+
+            # Adjust sample size if there are fewer clusters than needed
+            sample_size = min(len(sorted_clusters), voxelsToConvertDic[resourceType])
+            
+            if sample_size == 0:
+                print(f"Not enough clusters to convert for {resourceType}. Skipping.")
+                continue
+
+            selected_clusters = sorted_clusters.sample(n=sample_size, random_state=49 if resourceType == 'hollow' else 50)
+
+            for cluster_id in selected_clusters['cluster_id']:
+                cluster_voxels = consideredBranchesDF[consideredBranchesDF['cluster_id'] == cluster_id]
+                voxelDF.loc[cluster_voxels.index, resourceType] = True
+
+            print(f"Total {resourceType} clusters converted: {sample_size}/{voxelsToConvertDic[resourceType]}")
+
+                ### PERCH BRANCHES
+            #initialise perch_branch column as False
+            #Group by clusterID
+            #Get all clusterIDds that have 'is_terminal' = True.
+            #have a max number of voxels per cluster to convert. maxTerminal = 50
+            #for each clusterID, order by descending branch_id (ie. largest first)
+            #convert the first maxTerminal voxels to perch_branch = True
+
+            #Group again by clusterID
+            #find the median and IQR of angle of each clusterID
+
+            #set all branches with a lower quartile < 20 to perch branch = True
+
+            ### PEELING BARK BRANCHES
+            #like with dead branches, group by clusterID, get number of voxels per clusterID, 
+            #randomly select clusterIDs to convert until voxelsConverted > voxelsToConvert
+
+            #hollow and epiphytes are different. The values in resourceDic are counts rather than percentages.
+            #group by clusterID
+            #sort clusters by z position
+            #only include clusters that have all voxels z position > 10
+            #shuffle using a known seed
+            #select the number of clusters needed to reach the  count for hollows and epiphytes
+
+
+
+            # Informative print
+            #print(f"Total voxels converted for {resourceType}: {voxelsConverted}/{voxelsToConvert}")
+                #group by largeSegment_id and then group by cluster_id
+                #count the number of voxels in each cluster_id and each largeSegment_id
+                #determine how many largeSegment_ids will be needed to get the required number of voxels
+                #chose a random largeSegment_id from consideredBranchesDF
+                    #if the number of voxels in the chosen largeSegment_id is less than the remaining voxels needed, assign all voxels in the largeSegment_id to the resourceType
+                    #else, count the nunber of voxels in each clusterID of this segment
+                    # ranomly select clusterIDs to convert until voxelsConverted > voxelsToConvert
+                    #convert all rows in these clusterIDs to deadBranch = True
+                    # extraVoxelNo: determine how many voxels over the required number of voxels there is (ie. voxelsConverted - voxelsToConvert)
+                    # order the final converted clusterID by branch_id
+                    # select extraVoxelNo voxel rows from this final converted clusterID (but from the end)
+                    # assign these as deadBranch = False
+
+
+
+        
+        
+
+
+
+
+
+
+
+
+        #assign perch branches to voxelDF
+        
+        
+
+        #choose large branches
+
+
+        
+
+        #create pyvista polydata from updated_verticesDF and assign columns_to_transfer as point_data attributes
+        treePoly = pv.PolyData(voxelDF[['x', 'y', 'z']].values)
+        columns_to_transfer = voxelDF.columns.drop(['x', 'y', 'z']).tolist()        
+        for col in columns_to_transfer:
+            treePoly.point_data[col] = voxelDF[col].values
+
+        # Step 1: Get unique cluster IDs and assign random colors
+        unique_clusters = voxelDF['cluster_id'].unique()
+        num_clusters = len(unique_clusters)
+        cluster_colors = np.random.randint(0, 256, size=(num_clusters, 3), dtype=np.uint8)
+
+        # Step 2: Create a mapping from clusterID to color using pandas
+        cluster_id_to_color = pd.Series([cluster_colors[i] for i in range(num_clusters)], index=unique_clusters)
+
+        # Step 3: Map clusterID in voxelDF to colors using vectorized operation
+        color_array = np.vstack(cluster_id_to_color.loc[voxelDF['cluster_id']].values)
+
+        # Step 4: Assign the color array to point data
+        treePoly.point_data['colors'] = color_array
+
+        # Optionally, set the active scalars to 'Colors' to visualize this
+        # treePoly.active_scalars_name = 'Colors'
+
+
+        outputPolyPath = f'{folderPath}/initialVTKs/{filename}_initialVTK.vtk'
+        print(f"Saving initial treeVTK to: {outputPolyPath}")
+        os.makedirs(os.path.dirname(outputPolyPath), exist_ok=True)
+        treePoly.save(outputPolyPath)
+        print(f"Processed {filename} and saved successfully")
+        print("--------------------")
+
+
+
+
+        
+
+        
+

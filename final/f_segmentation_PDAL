@@ -1,0 +1,417 @@
+import pdal
+import json
+import open3d as o3d
+import numpy as np
+import os
+import tempfile
+import matplotlib.pyplot as plt
+from rGeoTiffGetter import get_site_coordinates, parse_kml, convert_to_latlon, find_tiles_within_radius
+from scipy.spatial import cKDTree
+import numpy.lib.recfunctions as rfn
+from sklearn.cluster import DBSCAN
+
+
+import os
+import pdal
+import shutil
+# Step 1: Classify ground points using CSF
+
+
+import laspy
+import numpy as np
+import laspy
+import numpy as np
+
+import os
+import pdal
+import numpy as np
+from scipy.spatial import cKDTree
+import laspy
+
+import numpy as np
+from sklearn.cluster import DBSCAN
+from scipy.spatial import distance_matrix
+from scipy.sparse.csgraph import minimum_spanning_tree
+# Save the NumPy array to LAS file
+def save_numpy_to_las(data, file_path):
+    """Save a NumPy array to LAS format manually, handling all dimensions in data.dtype.names."""
+    # Extract X, Y, Z coordinates to calculate offsets
+    x_vals = data['X']
+    y_vals = data['Y']
+    z_vals = data['Z']
+
+    # Create a LAS header with offsets for X, Y, Z
+    header = laspy.LasHeader(point_format=3, version="1.2")
+    header.offsets = np.array([np.min(x_vals), np.min(y_vals), np.min(z_vals)])
+    header.scales = np.array([0.01, 0.01, 0.01])
+
+    # Create a LAS file from the NumPy array
+    las = laspy.LasData(header)
+    las.x = x_vals
+    las.y = y_vals
+    las.z = z_vals
+
+    # Add extra dimensions if they exist
+    for field in data.dtype.names:
+        if field not in ['X', 'Y', 'Z']:  # 'X', 'Y', 'Z' already added
+            dtype = data[field].dtype
+            if np.issubdtype(dtype, np.float32) or np.issubdtype(dtype, np.float64):
+                las.add_extra_dim(laspy.ExtraBytesParams(name=field, type=np.float32))
+            elif np.issubdtype(dtype, np.int32) or np.issubdtype(dtype, np.uint32):
+                las.add_extra_dim(laspy.ExtraBytesParams(name=field, type=np.int32))
+            elif np.issubdtype(dtype, np.uint8):
+                las.add_extra_dim(laspy.ExtraBytesParams(name=field, type=np.uint8))
+            elif np.issubdtype(dtype, np.int8):
+                las.add_extra_dim(laspy.ExtraBytesParams(name=field, type=np.int8))
+            elif np.issubdtype(dtype, np.int64) or np.issubdtype(dtype, np.uint64):
+                las.add_extra_dim(laspy.ExtraBytesParams(name=field, type=np.int64))
+            # Write the field data into the LAS file
+            setattr(las, field, data[field])
+            # Print the field name
+            print(f"Field saved: {field}")
+
+    # Write to the LAS file
+    las.write(file_path)
+    print(f"Saved NumPy array to LAS file: {file_path}")
+
+    return file_path
+
+# Classify ground using CSF
+def ClassifyGround(input_file, temp_las_filepath):
+    print(f"Classifying ground for {input_file} using CSF...")
+    csf_pipeline = {
+        "pipeline": [
+            {
+                "type": "readers.las",
+                "filename": input_file
+            },
+            {
+                "type": "filters.assign",
+                "assignment": "Classification[:]=0"
+            },
+            {
+                "type": "filters.csf",
+                "resolution": 1.0,
+                "threshold": 0.5,
+                "rigidness": 1,
+                "step": 0.65,
+                "iterations": 500
+            },
+            {
+                "type": "writers.las",
+                "filename": temp_las_filepath
+            }
+        ]
+    }
+
+    # Execute the PDAL pipeline
+    pipeline = pdal.Pipeline(json.dumps(csf_pipeline))
+    pipeline.execute()
+    print("CSF ground classification completed.")
+    
+    # Verify ground points classification
+    reader = pdal.Reader(temp_las_filepath)
+    pipeline = reader.pipeline()
+    pipeline.execute()
+    full_data = pipeline.arrays[0]
+    
+    return full_data
+
+# Compute Height Above Ground (HAG)
+def computeHAG(csf_data, temp_las_filepath):
+    print("Starting Height Above Ground (HAG) calculation using KD-tree nearest neighbors...")
+
+    # Extract ground and non-ground points
+    ground_mask = csf_data['Classification'] == 2
+    ground_points = csf_data[ground_mask]
+    non_ground_mask = csf_data['Classification'] != 2
+    non_ground_points = csf_data[non_ground_mask]
+
+    if len(ground_points) == 0:
+        print("No ground points available for HAG calculation.")
+        return None, None
+
+    # Build KD-tree from ground points and calculate HAG for non-ground points
+    tree = cKDTree(np.vstack((ground_points['X'], ground_points['Y'])).T)
+    distances, indices = tree.query(np.vstack((non_ground_points['X'], non_ground_points['Y'])).T, k=5)
+    avg_ground_elevation = np.mean(ground_points['Z'][indices], axis=1)
+    height_above_ground = non_ground_points['Z'] - avg_ground_elevation
+
+    # Update data
+    new_non_ground_data = np.lib.recfunctions.append_fields(non_ground_points, 'HeightAboveGround', height_above_ground, usemask=False)
+    ground_points_with_hag = np.lib.recfunctions.append_fields(ground_points, 'HeightAboveGround', np.zeros(len(ground_points)), usemask=False)
+    full_data_with_hag = np.concatenate((ground_points_with_hag, new_non_ground_data))
+
+    # Save updated LAS file
+    save_numpy_to_las(full_data_with_hag, temp_las_filepath)
+
+    return full_data_with_hag
+# Apply DBSCAN clustering
+def apply_dbscan(coords, eps=2.0, min_samples=50):
+    print("Applying DBSCAN clustering...")
+    db = DBSCAN(eps=eps, min_samples=min_samples).fit(coords)  # eps and min_samples can be adjusted
+    cluster_labels = db.labels_
+    return cluster_labels
+
+def cluster_buildings_and_vegetation(point_data, eps=2.0, min_samples=50):
+    print("Starting clustering process with DBSCAN and MST pruning...")
+
+    # Filter points based on HeightAboveGround > 1.5
+    non_ground_mask = point_data['HeightAboveGround'] > 1.5
+    non_ground_points = point_data[non_ground_mask]
+    
+    # Extract the X, Y, Z coordinates for clustering
+    coords = np.vstack((non_ground_points['X'], non_ground_points['Y'], non_ground_points['Z'])).T
+
+    # Print dimensions and number of points
+    print(f"Segmentation: Coords shape: {coords.shape}, Number of points: {coords.shape[0]}")
+    
+    # Apply DBSCAN clustering
+    cluster_labels = apply_dbscan(coords, eps=eps, min_samples=min_samples)
+    print(f"DBSCAN clustering resulted in {len(np.unique(cluster_labels))} clusters.")
+    
+    # Add the cluster labels as a new dimension to the original point data
+    point_data = np.lib.recfunctions.append_fields(
+        point_data, 'ClusterID', np.full(len(point_data), -1), usemask=False
+    )
+    point_data['ClusterID'][non_ground_mask] = cluster_labels
+    
+    print(f"Clustering process completed. Total points processed: {len(point_data)}")
+
+    return point_data
+
+import random
+import numpy as np
+import hdbscan
+from scipy.spatial import distance_matrix
+from scipy.sparse.csgraph import minimum_spanning_tree
+import networkx as nx
+from scipy.spatial import KDTree
+
+
+# Downscale the point cloud by taking every nth point
+def downscale_pointcloud(coords, n=10):
+    downscaled_coords = coords[::n]  # Take every nth point
+    return downscaled_coords
+
+# Function to apply HDBSCAN clustering to the full point cloud
+def apply_hdbscan(coords):
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=10, min_samples=1)
+    cluster_labels = clusterer.fit_predict(coords)
+    return cluster_labels
+
+
+# Prune bridges using MST operations on the downscaled points
+def prune_bridges(coords, cluster_labels):
+    # Compute distance matrix
+    dist_matrix = distance_matrix(coords, coords)
+    
+    # Build MST
+    mst = minimum_spanning_tree(dist_matrix)
+    
+    # Convert MST to a networkx graph for further processing
+    mst_graph = nx.from_scipy_sparse_array(mst)
+    
+    # Remove edges (prune) with high weights that might represent bridges
+    threshold = np.percentile(mst.data, 50)  # Remove top 50% highest distance edges (adjustable)
+    edges_to_remove = [(u, v) for u, v, d in mst_graph.edges(data=True) if d['weight'] > threshold]
+    mst_graph.remove_edges_from(edges_to_remove)
+    
+    # Extract new clusters based on the pruned MST
+    connected_components = list(nx.connected_components(mst_graph))
+    
+    # Reassign cluster labels
+    pruned_labels = np.full(len(cluster_labels), -1)
+    for cluster_idx, component in enumerate(connected_components):
+        for point_idx in component:
+            pruned_labels[point_idx] = cluster_idx
+    
+    return pruned_labels
+
+# Main function to process point cloud clustering and MST refinement
+"""def cluster_buildings_and_vegetation(point_data):
+    print("Starting clustering process with DBSCAN and MST pruning...")
+
+    # Filter points based on HeightAboveGround > 1.5
+    non_ground_mask = point_data['HeightAboveGround'] > 1.5
+    non_ground_points = point_data[non_ground_mask]
+    
+    # Extract the X, Y, Z coordinates for clustering
+    coords = np.vstack((non_ground_points['X'], non_ground_points['Y'], non_ground_points['Z'])).T
+
+    # Step 1: Apply HDBSCAN to the full point cloud
+    cluster_labels = apply_hdbscan(coords)
+    print(f"HDBSCAN clustering resulted in {len(np.unique(cluster_labels))} clusters.")
+
+    # Step 1: Apply DBSCAN to the full point cloud
+    cluster_labels = apply_dbscan(coords)
+    print(f"DBSCAN clustering resulted in {len(np.unique(cluster_labels))} clusters.")
+    
+    # Step 2: Downscale the point cloud for refinement
+    downscaled_coords = downscale_pointcloud(coords, n=10)
+    print(f"Downscaled point cloud to {len(downscaled_coords)} points for MST pruning.")
+    
+    # Step 3: Refine clusters by pruning bridges using MST
+    pruned_cluster_labels = prune_bridges(downscaled_coords, cluster_labels)
+    print(f"After pruning, {len(np.unique(pruned_cluster_labels))} clusters remain.")
+    
+    # Reassign the clusters to the original non-ground points
+    non_ground_points_with_clusters = np.lib.recfunctions.append_fields(
+        non_ground_points, 'ClusterID', cluster_labels, usemask=False
+    )
+
+    # Combine non-ground points with cluster IDs back with the ground points (which have ClusterID = -1)
+    ground_points = point_data[~non_ground_mask]
+    ground_points_with_clusters = np.lib.recfunctions.append_fields(
+        ground_points, 'ClusterID', np.full(len(ground_points), -1), usemask=False
+    )
+
+    # Combine ground and clustered non-ground points back together
+    full_data_with_clusters = np.concatenate((ground_points_with_clusters, non_ground_points_with_clusters))
+    
+    print(f"Clustering process with MST pruning completed. Total points processed: {len(full_data_with_clusters)}")
+
+    return full_data_with_clusters
+"""
+# Example usage
+# point_data: The full point cloud data to be clustered
+
+# Main process for LAS Tile
+def processLasTile(input_file, output_file, preview=False):
+    # Define the temporary LAS file path
+    temp_las_filepath = 'data/revised/temp/temp_data.las'
+    
+    # Ensure the temp directory exists
+    temp_dir = os.path.dirname(temp_las_filepath)
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+
+    print(f"Starting process for LAS tile: {input_file}...")
+
+    # Step 1: Classify ground using the function ClassifyGround
+    point_data = ClassifyGround(input_file, temp_las_filepath)
+    print("Ground classification completed.")
+
+    if preview:
+        visualize_filtered_point_cloud(point_data, "Classification")
+
+    # Step 2: Compute HAG using KD-Tree nearest neighbors
+    point_data = computeHAG(point_data, temp_las_filepath)
+    print(f"HAG computation completed and saved at {temp_las_filepath}")
+
+    if preview:
+        visualize_filtered_point_cloud(point_data, "HeightAboveGround")
+
+    # Step 3: Perform clustering
+    point_data = cluster_buildings_and_vegetation(point_data)
+    print("Clustering completed.")
+
+    if preview:
+        visualize_filtered_point_cloud(point_data, "Clustering")
+
+    # Save the processed data
+    save_numpy_to_las(point_data, output_file)
+    print(f"Processed data saved to {output_file}")
+
+# Visualization functions (unchanged)
+def visualize_filtered_point_cloud(points, title):
+    # Create a PointCloud object
+    pcd = o3d.geometry.PointCloud()
+    
+    # Extract X, Y, Z coordinates from the input NumPy array
+    xyz = np.vstack((points['X'], points['Y'], points['Z'])).transpose()
+    pcd.points = o3d.utility.Vector3dVector(xyz)
+    
+    if "HeightAboveGround" in title:
+        hag = points['HeightAboveGround']
+        print(f"Coloring by HeightAboveGround. Range: {np.min(hag):.2f} to {np.max(hag):.2f}")
+        colors = plt.cm.viridis((hag - np.min(hag)) / (np.max(hag) - np.min(hag)))[:, :3]
+    elif "Classification" in title:
+        classifications = points['Classification']
+        colors = np.zeros((len(classifications), 3))
+        colors[classifications == 2] = [0, 1, 0]  # Green for ground
+        colors[classifications != 2] = [1, 0, 0]  # Red for non-ground
+        print("Coloring by Classification")
+    elif "Clustering" in title:
+        cluster_ids = points['ClusterID']
+        unique_clusters = np.unique(cluster_ids)
+        num_clusters = len(unique_clusters)
+        print(f"Coloring by ClusterID. Total clusters: {num_clusters}")
+        
+        # Generate colors for each unique cluster
+        colors = np.zeros((len(cluster_ids), 3))
+        cmap = plt.get_cmap("tab20")  # Using a colormap to assign colors to clusters
+        for i, cluster in enumerate(unique_clusters):
+            cluster_mask = cluster_ids == cluster
+            colors[cluster_mask] = cmap(i % cmap.N)[:3]  
+    else:
+        print("No valid coloring method specified.")
+        return
+
+    pcd.colors = o3d.utility.Vector3dVector(colors)
+    o3d.visualization.draw_geometries([pcd], window_name=title)
+
+def print_dimensions(file_path):
+    try:
+        reader = pdal.Reader(file_path)
+        pipeline = reader.pipeline()
+        pipeline.execute()
+        arrays = pipeline.arrays
+        points = arrays[0]
+        print(f"Dimensions in {file_path}:")
+        for name in points.dtype.names:
+            print(f"  {name}: {points[name].dtype}")
+    except Exception as e:
+        print(f"Error reading dimensions from {file_path}: {str(e)}")
+    finally:
+        if 'reader' in locals():
+            del reader
+
+# Main function to process tiles based on KML files
+def process_tiles(las_folder, las_kml_path, center, radius_meters, preview=False):
+    print("Starting process_tiles function...")
+    las_tiles = parse_kml(las_kml_path)
+    print(f"Parsed KML file. Found {len(las_tiles)} LAS tiles.")
+    
+    lat, lon = convert_to_latlon(center[0], center[1])
+    print(f"Converted center coordinates to lat/lon: {lat}, {lon}")
+    las_tile_names = find_tiles_within_radius((lat, lon), las_tiles, radius_meters)
+    
+    print(f"Found {len(las_tile_names)} LAS tiles within the radius of {radius_meters} meters.")
+    
+    processed_las_folder = os.path.join(os.path.dirname(las_folder), "processedLAS")
+    if not os.path.exists(processed_las_folder):
+        os.makedirs(processed_las_folder)
+    
+    for las_tile_name in las_tile_names:
+        input_file = os.path.join(las_folder, f"{las_tile_name}.las")
+        output_file = os.path.join(processed_las_folder, f"{las_tile_name}.las")
+        
+        if not os.path.exists(input_file):
+            print(f"Warning: LAS file not found for tile {las_tile_name}")
+            continue
+        
+        if os.path.exists(output_file):
+            print(f"Skipping already processed tile: {las_tile_name}")
+            continue
+        
+        print(f"Processing LAS tile: {las_tile_name}")
+        
+        processLasTile(input_file, output_file, preview)
+
+    print("Finished processing all tiles.")
+
+# Main program entry point
+if __name__ == "__main__":
+    las_folder = "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/LAS"
+    las_kml_path = "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/LAS/Tile_Index.KML"
+
+    site_names = ['uni', 'parade-trimmed', 'city']
+    radius_meters = 2000  # Changed to 2000 meters
+
+    print("Starting point cloud segmentation process...")
+    for site_name in site_names:
+        print(f"\nProcessing site: {site_name}")
+        easting, northing = get_site_coordinates(site_name)
+        process_tiles(las_folder, las_kml_path, (easting, northing), radius_meters, preview=False)
+    print("Point cloud segmentation process completed for all sites.")

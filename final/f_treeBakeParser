@@ -1,0 +1,180 @@
+"""
+The tree_templates is a dictionary where:
+
+The keys are tuples containing five elements:
+
+is_precolonial: A boolean value (True or False) indicating whether the tree is precolonial.
+size: A string representing the size of the tree ('small', 'medium', or 'large').
+control: A string representing the control category ('street-tree', 'park-tree', or 'reserve-tree').
+improvement: A boolean value (True or False) indicating whether the improvement logic has been applied.
+tree_id: A unique identifier for the tree.
+
+The values are pandas DataFrames (voxel_properties_df_instance) containing the processed tree data, with column names:
+- X
+- Y
+- Z
+- resource
+- Tree.ID
+- isPrecolonial
+- Size
+- radius
+- length
+- angle
+- transformX
+- transformY
+- transformZ
+- cylinder
+- cylinderOrder
+- inverseCylinderOrder
+- cylinderOrderInBranch
+- inverseCylinderOrderInBranch
+- branch
+- branchOrder
+- cluster
+- cylinderOrderInCluster
+- inverseCylinderOrderInCluster
+- branchOrderInCluster
+- inverseBranchOrderInCluster
+- clusterOrder
+- _branch_ID
+- _branch_order
+- _segment_ID
+- _parent_segment_ID
+- _growth_volume
+- _growth_length
+- _ID
+- _length_to_leave
+- _inverse_branch_order
+- _length_of_segment
+- _branch_order_cum
+- _origX
+- _origY
+- _origZ
+- Control
+- Improvement
+
+"""
+
+
+"""
+is_precolonial - size combinations:
+  False - small:
+    tree_id range: 4-6
+    improvement range: [False, True]
+  False - medium:
+    tree_id range: 1-3
+    improvement range: [False, True]
+  False - large:
+    tree_id range: 7-14
+    improvement range: [False, True]
+  True - small:
+    tree_id range: 1-4
+    improvement range: [False, True]
+  True - medium:
+    tree_id range: 5-10
+    improvement range: [False, True]
+  True - large:
+    tree_id range: 11-16
+    improvement range: [False, True]
+
+
+Improvement = True combinations:
+  False - small - street-tree:
+    tree_id range: 4-6
+  False - small - park-tree:
+    tree_id range: 4-6
+  False - small - reserve-tree:
+    tree_id range: 4-6
+  False - medium - street-tree:
+    tree_id range: 1-3
+  False - medium - park-tree:
+    tree_id range: 1-3
+  False - medium - reserve-tree:
+    tree_id range: 1-3
+  False - large - street-tree:
+    tree_id range: 7-14
+  False - large - park-tree:
+    tree_id range: 7-14
+  False - large - reserve-tree:
+    tree_id range: 7-14
+  True - small - street-tree:
+    tree_id range: 1-4
+  True - small - park-tree:
+    tree_id range: 1-4
+  True - small - reserve-tree:
+    tree_id range: 1-4
+  True - medium - street-tree:
+    tree_id range: 5-10
+  True - medium - park-tree:
+    tree_id range: 5-10
+  True - medium - reserve-tree:
+    tree_id range: 5-10
+  True - large - street-tree:
+    tree_id range: 11-16
+  True - large - park-tree:
+    tree_id range: 11-16
+  True - large - reserve-tree:
+    tree_id range: 11-16
+"""
+
+
+
+def analyze_tree_template_combinations(filepath):
+    import pickle
+    from collections import defaultdict
+
+    with open(filepath, 'rb') as file:
+        tree_templates = pickle.load(file)
+
+    # Initialize defaultdicts to store valid combinations
+    valid_combinations = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(set))))
+
+    # Analyze the keys
+    for key in tree_templates.keys():
+        is_precolonial, size, control, improvement, tree_id = key
+        valid_combinations[is_precolonial][size][control][improvement].add(tree_id)
+
+    # Analyze is_precolonial - size combinations
+    print("is_precolonial - size combinations:")
+    for is_precolonial in [False, True]:
+        for size in ['small', 'medium', 'large']:
+            tree_ids = set()
+            improvements = set()
+            for control in valid_combinations[is_precolonial][size]:
+                for improvement in valid_combinations[is_precolonial][size][control]:
+                    tree_ids.update(valid_combinations[is_precolonial][size][control][improvement])
+                    improvements.add(improvement)
+            if tree_ids:
+                print(f"  {is_precolonial} - {size}:")
+                print(f"    tree_id range: {get_ranges(tree_ids)}")
+                print(f"    improvement range: {sorted(improvements)}")
+
+    # Analyze improvement = True combinations
+    print("\nImprovement = True combinations:")
+    for is_precolonial in [False, True]:
+        for size in ['small', 'medium', 'large']:
+            for control in valid_combinations[is_precolonial][size]:
+                if True in valid_combinations[is_precolonial][size][control]:
+                    tree_ids = valid_combinations[is_precolonial][size][control][True]
+                    print(f"  {is_precolonial} - {size} - {control}:")
+                    print(f"    tree_id range: {get_ranges(tree_ids)}")
+
+def get_ranges(numbers):
+    numbers = sorted(numbers)
+    ranges = []
+    start = end = numbers[0]
+    for num in numbers[1:]:
+        if num == end + 1:
+            end = num
+        else:
+            ranges.append(f"{start}-{end}" if start != end else str(start))
+            start = end = num
+    ranges.append(f"{start}-{end}" if start != end else str(start))
+    return ", ".join(ranges)
+
+# Add this to your main execution block
+if __name__ == "__main__":
+    # ... (existing code) ...
+
+    # Add this line to analyze the tree template combinations
+    analyze_tree_template_combinations('data/treeOutputs/adjusted_tree_templates.pkl')

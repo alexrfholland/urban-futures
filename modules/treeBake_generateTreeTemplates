@@ -1,0 +1,355 @@
+import pandas as pd
+import numpy as np
+import logging
+from typing import List, Tuple, Dict, Union
+import pickle
+import pyvista as pv
+import os
+import numpy as np
+from scipy.spatial import KDTree
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def generate_resources_dict(field_data: Dict[str, any], leroux_df: pd.DataFrame) -> Dict[str, float]:
+    tree_size = field_data['_Tree_size'][0]
+    control = field_data['_Control'][0]
+
+    print(f'tree size is {tree_size} and control is {control}')
+    print(leroux_df)
+
+    leroux_df = leroux_df.rename(columns={control: 'quantity'})
+
+    mask = (leroux_df['name'].isin(['peeling bark', 'dead branch', 'fallen log', 'leaf litter', 'hollow', 'epiphyte'])) & (leroux_df['Tree Size'] == tree_size)
+    
+    grouped = leroux_df[mask].groupby('name')['quantity']
+    
+    resourceFactor = 1
+    if not field_data['isPrecolonial'][0]:
+        colonialFactor = 1
+        resourceFactor = colonialFactor
+        print(f'non precolonial tree, reducing resources by {colonialFactor}')
+
+    resources_dict = {}
+    for name, (min_val, max_val) in grouped.agg(['min', 'max']).iterrows():
+        print(f'max val for {name} resource is {max_val}')
+        if name in ['dead branch']:
+            resources_dict[name] = (max_val + min_val)/2
+        else:
+            resources_dict[name] = (max_val + min_val)/2 * resourceFactor
+    
+    logging.info(f'resources for tree {tree_size} and {control} are:')
+    logging.info(resources_dict)
+
+    print(f'resource dict is {resources_dict}')
+
+    return resources_dict
+
+def update_tree_sample_attributes(tree_sample, resources_dict, tree_id, tree_size, control, precolonial):
+    tree_sample = tree_sample.copy(deep=True)
+    
+    total_branches = len(tree_sample)
+
+    target_num_peeling_bark = int(resources_dict['peeling bark'] * total_branches / 100)
+    target_num_dead_branches = int(resources_dict['dead branch'] * total_branches / 100)
+
+    live_branch_indices = tree_sample.index[tree_sample['Branch.type'] == 'live']
+    dead_branch_indices = tree_sample.index[tree_sample['Branch.type'] == 'dead']
+
+    if (tree_sample['Branch.type'] == 'dead').sum() < target_num_dead_branches:
+        num_dead_branches_to_update = target_num_dead_branches - (tree_sample['Branch.type'] == 'dead').sum()
+        dead_branch_indices_to_update = np.random.choice(live_branch_indices, num_dead_branches_to_update, replace=False)
+        tree_sample.loc[dead_branch_indices_to_update, 'Branch.type'] = 'dead'
+    elif (tree_sample['Branch.type'] == 'dead').sum() > target_num_dead_branches:
+        num_live_branches_to_update = (tree_sample['Branch.type'] == 'dead').sum() - target_num_dead_branches
+        live_branch_indices_to_update = np.random.choice(dead_branch_indices, num_live_branches_to_update, replace=False)
+        tree_sample.loc[live_branch_indices_to_update, 'Branch.type'] = 'live'
+
+    tree_sample['peelingBark'] = False
+    non_peeling_bark_indices = tree_sample.index[tree_sample['peelingBark'] == False]
+    num_peeling_bark_to_update = target_num_peeling_bark - tree_sample['peelingBark'].sum()
+    peeling_bark_indices_to_update = np.random.choice(non_peeling_bark_indices, num_peeling_bark_to_update, replace=False)
+    tree_sample.loc[peeling_bark_indices_to_update, 'peelingBark'] = True
+    
+    conditions = [
+        tree_sample['Branch.type'] == 'dead',
+        (tree_sample['Branch.angle'] <= 20) & (tree_sample['z'] > 10),
+        tree_sample['peelingBark']
+    ]
+    choices = ['dead branch', 'perchable branch', 'peeling bark']
+    tree_sample['resource'] = np.select(conditions, choices, default='other')
+
+    return tree_sample[['Tree.ID', 'Tree.size', 'Branch.angle', 'Branch.length', 'DBH', 'transform', 'x', 'y', 'z', 'resource']]
+
+def voxelize_branches(df, voxel_size):
+    voxelized_df = df.copy()
+    
+    for col in ['x', 'y', 'z']:
+        voxelized_df[col] = (voxelized_df[col] // voxel_size) * voxel_size
+    
+    voxelized_df = voxelized_df.drop_duplicates(subset=['x', 'y', 'z'])
+    
+    return voxelized_df
+
+def addCanopy(tree_id, tree_template_df, voxel_size, resourceName):
+    file_path = f'data/treeInputs/leaves/{tree_id}.csv'
+    
+    if not os.path.exists(file_path):
+        print(f"Warning: Canopy file for tree_id {tree_id} not found.")
+        return tree_template_df
+    
+    canopy_df = pd.read_csv(file_path)
+    canopy_df = canopy_df[['x', 'y', 'z']]
+    
+    voxelized_canopy = voxelize_branches(canopy_df, voxel_size)
+    
+    new_rows = []
+    for _, row in voxelized_canopy.iterrows():
+        new_row = tree_template_df.iloc[0].copy()
+        new_row['x'], new_row['y'], new_row['z'] = row['x'], row['y'], row['z']
+        new_row['resource'] = resourceName
+        new_rows.append(new_row)
+    
+    new_canopy_df = pd.DataFrame(new_rows)
+    print(f'Number of leaf cluster rows: {len(new_canopy_df)}')
+    updated_tree_template_df = pd.concat([tree_template_df, new_canopy_df], ignore_index=True)
+    
+    return updated_tree_template_df
+
+def generate_tree_templates(branch_data, leroux_df):
+    controls = ['street-tree', 'park-tree', 'reserve-tree']
+    precolonial_states = [True, False]
+
+    tree_templates = {}
+    tree_level_resources = {}
+
+    for tree_id in branch_data['Tree.ID'].unique():
+        tree_branches = branch_data[branch_data['Tree.ID'] == tree_id]
+        tree_size = tree_branches['Tree.size'].iloc[0]
+
+        voxel_size = 0.1
+        tree_branches = voxelize_branches(tree_branches, voxel_size)
+
+        for precolonial in precolonial_states:
+            for control in controls:
+                field_data = {
+                    '_Tree_size': [tree_size],
+                    '_Control': [control],
+                    'isPrecolonial': [precolonial]
+                }
+
+                resources_dict = generate_resources_dict(field_data, leroux_df)
+                
+                updated_tree_sample = update_tree_sample_attributes(tree_branches, resources_dict, tree_id, tree_size, control, precolonial)
+
+                updated_tree_sample = get_ground_resources(resources_dict, updated_tree_sample, 0.25)
+
+                updated_tree_sample = get_canopy_resources(resources_dict, updated_tree_sample)
+
+                updated_tree_sample = addCanopy(tree_id, updated_tree_sample, 1, 'leaf cluster')
+                
+                state_key = (tree_size, precolonial, control, tree_id)
+
+                tree_templates[state_key] = updated_tree_sample
+
+                tree_level_resources[state_key] = resources_dict
+
+                resource_counts = updated_tree_sample['resource'].value_counts()
+                print(f"\nResource counts for tree {tree_id} ({tree_size}, {'precolonial' if precolonial else 'colonial'}, {control}):")
+                print(resource_counts.to_string())
+            
+    return tree_templates, tree_level_resources
+
+def get_ground_resources(resources_dict, tree_template_df, point_area):
+    def generate_ground_cover_points(ground_resource_val: float, point_area: float, ground_cover_type: str, radius: float = 10.0) -> np.ndarray:
+        num_points = -1
+        
+        if ground_cover_type == 'leaf litter':
+            num_points = int((ground_resource_val / 100.0) * (radius**2 * np.pi) / point_area)
+        elif ground_cover_type == 'fallen log':
+            num_points = int(ground_resource_val)
+        
+        grid_size = int(np.ceil(2 * radius / point_area))
+        x = np.linspace(-radius, radius, grid_size)
+        y = np.linspace(-radius, radius, grid_size)
+        xx, yy = np.meshgrid(x, y)
+        
+        points = np.column_stack((xx.ravel(), yy.ravel(), np.zeros_like(xx.ravel())))
+        
+        mask = np.sum(points[:, :2]**2, axis=1) <= radius**2
+        points = points[mask]
+        
+        if len(points) > num_points:
+            indices = np.random.choice(len(points), num_points, replace=False)
+            points = points[indices]
+        else:
+            extra_points = num_points - len(points)
+            extra_indices = np.random.choice(len(points), extra_points, replace=True)
+            points = np.vstack((points, points[extra_indices]))
+        
+        points[:, :2] = np.round(points[:, :2] / point_area) * point_area
+        
+        logging.info(f"Ground Cover Type: {ground_cover_type}")
+        logging.info(f"Original Resource Val: {ground_resource_val} Number of Points: {num_points}, Total Area Covered: {num_points * point_area} m²")
+        
+        return points
+    
+    new_rows = []
+    
+    for ground_resource in ['fallen log', 'leaf litter']:
+        ground_cover_points = generate_ground_cover_points(resources_dict[ground_resource], point_area, ground_resource)
+        
+        for voxel in ground_cover_points:
+            new_row = tree_template_df.iloc[0].copy()
+            new_row['x'], new_row['y'], new_row['z'] = voxel
+            new_row['resource'] = ground_resource
+            new_rows.append(new_row)
+    
+    new_rows_df = pd.DataFrame(new_rows, columns=tree_template_df.columns)
+    print(new_rows_df)
+    tree_template_df = pd.concat([tree_template_df, new_rows_df], ignore_index=True)
+    
+    return tree_template_df
+
+def mark_neighbors_as_resources(tree_template_df, resource_type, radius=1):
+    """
+    Mark all rows within a given radius from resources (hollow or epiphyte) as the same resource.
+
+    Parameters:
+    - tree_template_df: DataFrame containing tree data with x, y, z coordinates and resource labels.
+    - resource_type: The resource type to search and mark ('hollow' or 'epiphyte').
+    - radius: The radius within which to mark neighboring points as the same resource.
+    """
+    # Extract points marked as the specified resource
+    resource_points = tree_template_df.loc[tree_template_df['resource'] == resource_type, ['x', 'y', 'z']].values
+    
+    if len(resource_points) == 0:
+        return tree_template_df  # No points to process
+
+    # Build a KDTree for fast spatial search
+    tree = KDTree(tree_template_df[['x', 'y', 'z']].values)
+
+    # Find all points within the specified radius of each resource point
+    indices_to_mark = set()
+    for point in resource_points:
+        indices = tree.query_ball_point(point, radius)
+        indices_to_mark.update(indices)
+
+    # Mark the found indices as the specified resource type
+    tree_template_df.loc[list(indices_to_mark), 'resource'] = resource_type
+
+    return tree_template_df
+
+def get_canopy_resources(resources_dict, tree_template_df):
+    import random
+
+    for resource in ['hollow', 'epiphyte']:
+        eligible_rows = tree_template_df[(tree_template_df['resource'] == 'other') & (tree_template_df['z'] > 10)]
+        
+        n = round(resources_dict[resource])
+        
+        if n > 0:
+            selected_indices = random.sample(eligible_rows.index.tolist(), min(n, len(eligible_rows)))
+            
+            tree_template_df.loc[selected_indices, 'resource'] = resource
+
+        # Use the helper function to mark neighboring points within a 0.5 radius
+        tree_template_df = mark_neighbors_as_resources(tree_template_df, resource, radius=0.5)
+
+    return tree_template_df
+
+def create_multiblock_from_df(df):
+    print(f'creating multiblock')
+
+    def create_polydata(df):
+        points = df[['x', 'y', 'z']].values
+        polydata = pv.PolyData(points)
+
+        for col in df.columns.difference(['x', 'y', 'z']):
+            sanitized_data = []
+            for val in df[col]:
+                if isinstance(val, str):
+                    sanitized_val = val.encode('ascii', 'ignore').decode()
+                    sanitized_data.append(sanitized_val)
+                else:
+                    sanitized_data.append(val)
+            polydata.point_data[col] = sanitized_data
+
+        polydata.point_data['ScanZ'] = df['z']
+        return polydata
+
+    branches_df = df[df['resource'].isin(['perchable branch', 'peeling bark', 'dead branch'])]
+    ground_resources_df = df[df['resource'].isin(['fallen log', 'leaf litter'])]
+    print(f'ground resource df is {ground_resources_df}')
+    canopy_resources_df = df[df['resource'].isin(['epiphyte', 'hollow'])]
+    leaf_cluster_df = df[df['resource'].isin(['leaf cluster'])]
+
+    print('creating branches polydata')
+    branches_polydata = create_polydata(branches_df)
+
+    print('creating ground polydata')
+    ground_resources_polydata = create_polydata(ground_resources_df)
+
+    print('creating canopy polydata')
+    canopy_resources_polydata = create_polydata(canopy_resources_df)
+
+    print('creating leaf clusters')
+    leaf_clusters_polydata = create_polydata(leaf_cluster_df)
+    print(f'leaf cluster has {leaf_clusters_polydata.n_points} points')
+
+    multiblock = pv.MultiBlock()
+    multiblock['branches'] = branches_polydata
+    multiblock['ground resources'] = ground_resources_polydata
+    multiblock['canopy resources'] = canopy_resources_polydata
+    multiblock['green biovolume'] = leaf_clusters_polydata
+
+    return multiblock
+
+def generate_statistics(tree_samples_with_voxels):
+    stats = []
+    for key, df in tree_samples_with_voxels.items():
+        resource_counts = df['resource'].value_counts().to_dict()
+        stats.append({
+            'key': key,
+            'total_voxels': len(df),
+            **resource_counts
+        })
+    
+    stats_df = pd.DataFrame(stats)
+    stats_df.set_index('key', inplace=True)
+    
+    print(stats_df)
+    return stats_df
+
+
+# Main execution
+if __name__ == "__main__":
+    branch_data = pd.read_csv('data/csvs/branchPredictions - adjusted.csv')
+    leroux_df = pd.read_csv('data/csvs/lerouxdata-update.csv')
+
+    # For scanned trees, create versions with different control and precolonial versions, 
+    # as well as the resource dictionary for other resources
+    tree_voxel_templates, tree_level_resources_dics = generate_tree_templates(branch_data, leroux_df)
+
+    # Generate statistics
+    stats_df = generate_statistics(tree_voxel_templates)
+
+    # Save the final result
+    with open('data/treeSim.pkl', 'wb') as f:
+        pickle.dump({
+            'tree_voxel_templates': tree_voxel_templates,
+            'tree_level_resources_dics': tree_level_resources_dics
+        }, f)
+
+    # Export statistics to CSV
+    stats_df.to_csv('outputs/tree_statistics.csv')
+    print('Statistics exported to outputs/tree_statistics.csv')
+
+    print('Tree simulation completed and saved to data/treeSim.pkl')
+
+# Structure of the pickle file:
+# The pickle file contains a dictionary with two keys:
+# 1. 'tree_voxel_templates': A dictionary where each key is a tuple (tree_size, precolonial, control, tree_id)
+#    and the value is a DataFrame containing the voxelized tree data with columns:
+#    ['Tree.ID', 'Tree.size', 'Branch.angle', 'Branch.length', 'DBH', 'transform', 'x', 'y', 'z', 'resource']
+# 2. 'tree_level_resources_dics': A dictionary with the same keys as 'tree_voxel_templates',
+#    where each value is another dictionary containing the resource counts for that tree configuration.

@@ -1,0 +1,17 @@
+Structure,Leaf clumps,other,peeling bark,dead branch,epiphyte,leaf litter,perchable branch,hollow,fallen log,Cubic meters,Geometry approximation
+Support.Habitat island,1.0,12.0,2.5,11.5,0.5,9.0,5.5,0.5,3.0,5,"Crust, horizontal"
+Support.Tree exoskeleton,1.0,12.0,2.5,11.5,0.5,9.0,0.0,0.5,0.0,5,"Volume, large tree"
+Enhance.Epiphyte,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,1,Point
+Enhance.Injured branch,0.0,6.0,1.25,5.75,0.0,4.5,2.75,0.0,1.5,1,Point
+Enhance.3D printed hollow,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,1,Point
+Enhance.3D printed bark,0.0,0.0,2.5,11.5,0.5,0.0,5.5,0.0,0.0,1,Point
+Plug in.Living roof,1.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,30,"Crust, horizontal"
+Plug in.Brown roof,0.0,6.0,1.25,5.75,0.0,4.5,2.75,0.5,0.0,10,"Crust, horizontal"
+Plug in.Living façade,1.0,0.0,0.0,0.0,0.5,4.5,0.0,0.0,0.0,10,"Crust, vertical"
+Plug in.Habitat brick,0.0,6.0,1.25,5.75,0.0,4.5,2.75,0.5,0.0,1,"Crust, vertical"
+Plug in.Elevated perch,0.0,12.0,2.5,11.5,0.0,0.0,5.5,0.5,0.0,3,"Crust, horizontal"
+Plug in.Prosthetic canopy,0.5,12.0,2.5,11.5,0.5,9.0,5.5,0.5,3.0,5,"Volume, medium tree"
+Deploy.Tree sapling,0.5,6.0,2.5,11.5,0.5,9.0,5.5,0.5,3.0,2,"Volume, medium tree"
+Deploy.Translocated dead tree,0.5,6.0,2.5,11.5,0.5,9.0,5.5,0.5,3.0,2,"Volume, medium tree"
+Deploy.Deployable structure,0.5,6.0,2.5,11.5,0.5,9.0,5.5,0.5,3.0,2,"Volume, medium tree"
+Baseline.large remnant tree,,24.0,5.0,23.0,1.0,18.0,11.0,1.0,6.0,20,"Volume, large tree"

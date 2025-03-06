@@ -1,0 +1,326 @@
+import os
+import pandas as pd
+import numpy as np
+from typing import List, Tuple, Dict, Union
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+"""Cylinders:
+- Cylinders are the smallest units of tree structure, representing individual segments extracted from point cloud data.
+- 'cylinder': The ID of the cylinder, derived from 'branch_ID'.
+- 'cylinderOrder': Represents the order of cylinders, with the lowest being the cylinder at the bottom of the main stem and the highest being the end cylinders of the tip branches.
+- 'inverseCylinderOrder': The reverse order of 'cylinderOrder', with the lowest being the end cylinders of the tip branches and the highest being at the bottom of the main stem.
+- 'cylinderOrderInBranch': The order of cylinders within each branch, where the lowest are at the beginning of branches and the highest are at the end.
+- 'inverseCylinderOrderInBranch': The reverse order of 'cylinderOrderInBranch', with the lowest at the end of branches and the highest at the beginning.
+
+Branches:
+- Branches are formed by groups of connected cylinders, representing larger segments of the tree.what 
+- 'branch': The ID of the branch, derived from 'segment_ID'.
+- 'branchOrder': Indicates the order of branches, with the lowest being the main stem branch and the highest being the end tip branches.
+
+Clusters:
+- Clusters are higher-level aggregations of branches, typically representing significant substructures such as major offshoots from the main stem.
+- 'cluster': The ID of the cluster, calculated by dividing the range of segment IDs into groups.
+- 'cylinderOrderInCluster': The order of cylinders within each cluster, with the lowest connecting the cluster to the main stem and the highest at the end tip branches.
+- 'inverseCylinderOrderInCluster': The reverse order of 'cylinderOrderInCluster', with the highest connecting the cluster to the main stem and the lowest at the end tip branches.
+- 'branchOrderInCluster': The order of branches within each cluster, with the lowest connecting the cluster to the main stem and the highest at the end tip branches.
+- 'inverseBranchOrderInCluster': The reverse order of 'branchOrderInCluster', with the highest connecting the cluster to the main stem and the lowest at the end tip branches.
+- 'clusterOrder': The overall order of clusters, with the lowest representing the main stem.
+
+Other Topological Properties:
+- These properties capture additional hierarchical relationships within the tree structure beyond individual cylinders, branches, and clusters.
+- 'cylinderOrderInBranch': The order of cylinders within each branch, from the base to the tip.
+- 'inverseCylinderOrderInBranch': The reverse order of 'cylinderOrderInBranch'.
+- 'branchOrderInCluster': The order of branches within a cluster, from the main stem to the tip branches.
+- 'inverseBranchOrderInCluster': The reverse order of 'branchOrderInCluster'.
+- 'clusterOrder': The overall hierarchical position of clusters, with the main stem being the lowest.
+"""
+
+# Paths to the input directories
+input_elm_dfs_path = 'data/treeInputs/trunks-elms/initial templates'
+input_euc_dfs_path = 'data/treeInputs/trunks/initial_templates'
+canopy_dfs_path = 'data/treeInputs/leaves/'
+
+def load_dfs(input_folder):
+    """
+    Load all CSV files from a folder into a dictionary with Tree.ID as the key.
+    """
+    dfs = {}
+    for file in os.listdir(input_folder):
+        if file.endswith(".csv"):
+            file_path = os.path.join(input_folder, file)
+            df = pd.read_csv(file_path, delimiter=';')
+            tree_id = df['Tree.ID'].iloc[0]  # Assuming Tree.ID is in the first row
+            dfs[tree_id] = df
+    return dfs
+
+def load_canopy_dfs(canopy_folder):
+    """
+    Load canopy CSV files from a folder into a dictionary with Tree.ID as the key.
+    """
+    canopy_dfs = {}
+    for file in os.listdir(canopy_folder):
+        if file.endswith(".csv"):
+            tree_id = int(file.replace('.csv', ''))
+            file_path = os.path.join(canopy_folder, file)
+            canopy_dfs[tree_id] = pd.read_csv(file_path)
+    return canopy_dfs
+
+def transform_euc_df(df):
+
+    #dataframes have already been transformed, get orig
+    df.rename(columns={'transform_x': 'transformX', 'transform_y': 'transformY', 'transform_z': 'transformZ', 'treeSize' : 'Size'}, inplace=True)
+
+    print(df)
+
+    # Add new columns for original coordinates
+    df['origX'] = df['X'] - df['transformX']
+    df['origY'] = df['Y'] - df['transformY']
+    df['origZ'] = df['Z'] -df['transformZ']
+
+    print(f'transformed euc df')
+
+    return df
+
+
+def transform_elm_df(df):
+    """
+    Apply transformation to move the minimum Z point to (0,0,0) exactly,
+    without centering based on mean X and Y.
+    """
+    # Rename original coordinates
+    df.rename(columns={'X': 'origX', 'Y': 'origY', 'Z': 'origZ'}, inplace=True)
+
+    # Find the coordinates of the point with the minimum Z value
+    lowest_z_point = df.loc[df['origZ'].idxmin()]
+
+    # Calculate the transformation to move this point to (0,0,0)
+    transformX = -lowest_z_point['origX']
+    transformY = -lowest_z_point['origY']
+    transformZ = -lowest_z_point['origZ']
+
+    # Save the transform columns to the DataFrame
+    df['transformX'] = transformX
+    df['transformY'] = transformY
+    df['transformZ'] = transformZ
+
+
+    # Apply the transformation to the DataFrame
+    df['X'] = df['origX'] + transformX
+    df['Y'] = df['origY'] + transformY
+    df['Z'] = df['origZ'] + transformZ
+
+    print(f'transformed elm df')
+
+    return df
+
+
+
+def format_df(voxel_properties_df):
+    """
+    Format the EUC dataframe by moving all columns except X, Y, Z, resource, Tree.ID, isPrecolonial, radius, length, 
+    and specific properties (cylinder, cylinderOrder, etc.) to the end, appending '_'.
+    """
+    columns_to_keep = ['X', 'Y', 'Z', 'resource', 'Tree.ID', 'isPrecolonial', 'Size', 'radius', 'length','angle','transformX','transformY','transformZ']
+    properties = [
+        'cylinder',
+        'cylinderOrder',
+        'inverseCylinderOrder',
+        'cylinderOrderInBranch',
+        'inverseCylinderOrderInBranch',
+        'branch',
+        'branchOrder',
+        'cluster',
+        'cylinderOrderInCluster',
+        'inverseCylinderOrderInCluster',
+        'branchOrderInCluster',
+        'inverseBranchOrderInCluster',
+        'clusterOrder'
+    ]
+    
+    # Combine columns to keep and properties to form the list of columns to keep as is
+    columns_to_keep += properties
+    
+    # Identify columns to be moved to the end and append an underscore to their names
+    other_columns = [col for col in voxel_properties_df.columns if col not in columns_to_keep]
+    renamed_columns = {col: f'_{col}' for col in other_columns}
+    
+    # Rename the columns and reorder the dataframe
+    voxel_properties_df = voxel_properties_df.rename(columns=renamed_columns)
+    voxel_properties_df = voxel_properties_df[columns_to_keep + list(renamed_columns.values())]
+
+    return voxel_properties_df
+
+def process_eucalypt_dfs(euc_dfs, canopy_dfs):
+    """
+    Process each EUC dataframe, transform and save it.
+    """
+    for tree_id, df in euc_dfs.items():
+        canopyDF = canopy_dfs[tree_id]
+        df = transform_euc_df(df)
+
+        df = assign_euc_graph_properties(df)
+        df = format_df(df)
+        output_path = f'data/treeInputs/trunks/processed/{tree_id}.csv'
+        df.to_csv(output_path, index=False)
+
+def assign_euc_graph_properties(voxel_properties_df):
+    #####CYLINDERS#####
+    # Individual lines extracted from the point cloud with structural properties
+
+    # 'cylinder': ID of cylinder
+    voxel_properties_df['cylinder'] = voxel_properties_df['branch_ID']
+
+    # 'cylinderOrder': Lowest is the cylinder at the bottom of the main stem, highest are the end cylinders of the end tip branches
+    # 'inverseCylinderOrder': Lowest are the end cylinders of the end tip branches, highest is cylinder at the bottom of the main stem, highest a    
+    # NOTE: In the eucs QSM data, 'branch order cum' is the inverse_branch_order. Ie, highest is the bottom of the main stem, lowest are the end cylinders of the end tip branches 
+    voxel_properties_df['inverseCylinderOrder'] = voxel_properties_df['branch_order_cum']
+    voxel_properties_df['cylinderOrder'] = voxel_properties_df['inverseCylinderOrder'].max() + 1 - voxel_properties_df['inverseCylinderOrder']
+
+    #####BRANCHES#####
+    # Connecting cylinders form a group called a branch
+
+    # 'branch': ID of the branch
+    voxel_properties_df['branch'] = voxel_properties_df['segment_ID'] 
+
+    # 'branchOrder': The lowest is the main stem branch, the highest is the end tip branches
+    voxel_properties_df['branchOrder'] = voxel_properties_df.groupby('branch')['cylinderOrder'].transform('min')
+
+    # 'cylinderOrderInBranch': The lowest are cylinders at the beginning of branches, the highest are cylinders at the end of the branches
+    voxel_properties_df['cylinderOrderInBranch'] = voxel_properties_df.groupby('branch')['cylinderOrder'].rank(method='first').astype(int)
+    # 'inverseCylinderOrderInBranch': The lowest are cylinders at the end of branches, the highest are cylinders at the beginning of the branches
+    voxel_properties_df['inverseCylinderOrderInBranch'] = voxel_properties_df.groupby('branch')['cylinderOrderInBranch'].transform(lambda x: x.max() + 1 - x).astype(int)
+
+    ####CLUSTERS####
+    # Clusters are larger aggregations of branches with a common larger stem, ie. an offshoot of the main stem
+
+    cluster_number = 20
+    # 'cluster' is the ID of the cluster
+    voxel_properties_df = create_euc_clusters(voxel_properties_df, cluster_number)
+
+    ###OTHER TOPOLOGICAL GROUPINGS####
+    # Additional hierarchical relationships within the tree structure beyond individual cylinders, branches, and clusters.
+
+    #'cylinderOrderInCluster'. Lowest are the cylinders connecting the cluster to the main sten. Highest are the cylinders at the end tip branches
+    #'inverseCylinderOrderInCluster'. Highest are the cylinders connecting the cluster to the main sten. Lowest are the cylinders at the end tip branches  
+    #'branchOrderInCluster'. Lowest are the branches connecting the cluster to the main sten. Highest are the branches at the end tip branches
+    #'inverseBranchOrderInCluster'. Highest are the branches connecting the cluster to the main sten. Lowest are the branches at the end tip branches
+    #'clusterOrder'. Lowest is the main stem.
+    voxel_properties_df = calculate_topological_groupings(voxel_properties_df)
+
+    return voxel_properties_df
+
+def create_euc_clusters(voxel_properties_df, cluster_number):
+    # Determine the range of segment IDs and create groups based on the cluster number
+    min_segment_id = voxel_properties_df['segment_ID'].min()
+    max_segment_id = voxel_properties_df['segment_ID'].max()
+    segment_id_range = max_segment_id - min_segment_id + 1
+    
+    # Create bins for the segment IDs based on the cluster number
+    bins = np.linspace(min_segment_id, max_segment_id + 1, cluster_number + 1)
+    voxel_properties_df['cluster'] = np.digitize(voxel_properties_df['segment_ID'], bins) - 1
+
+    # Assign any rows with branchOrder = 0 to the first cluster
+    voxel_properties_df.loc[voxel_properties_df['branchOrder'] == 0, 'cluster'] = 0
+
+    return voxel_properties_df
+
+def calculate_topological_groupings(voxel_properties_df):    
+    # 'cylinderOrderInCluster': The lowest are the cylinders connecting the cluster to the main stem. Highest are the cylinders at the end tip branches.
+    voxel_properties_df['cylinderOrderInCluster'] = voxel_properties_df.groupby('cluster')['cylinderOrder'].rank(method='first').astype(int)
+    
+    # 'inverseCylinderOrderInCluster': Highest are the cylinders connecting the cluster to the main stem. Lowest are the cylinders at the end tip branches.
+    voxel_properties_df['inverseCylinderOrderInCluster'] = voxel_properties_df.groupby('cluster')['cylinderOrderInCluster'].transform(lambda x: x.max() + 1 - x).astype(int)
+
+    # 'branchOrderInCluster': The lowest are the branches connecting the cluster to the main stem. Highest are the branches at the end tip branches.
+    voxel_properties_df['branchOrderInCluster'] = voxel_properties_df.groupby('cluster')['branchOrder'].transform('min')
+
+    # 'inverseBranchOrderInCluster': Highest are the branches connecting the cluster to the main stem. Lowest are the branches at the end tip branches.
+    voxel_properties_df['inverseBranchOrderInCluster'] = voxel_properties_df.groupby('cluster')['branchOrderInCluster'].transform(lambda x: x.max() + 1 - x).astype(int)
+
+    # 'clusterOrder': The overall order of clusters, with the lowest representing the main stem.
+    voxel_properties_df['clusterOrder'] = voxel_properties_df.groupby('cluster')['branchOrder'].transform('min')
+    return voxel_properties_df
+
+def process_elm_dfs(elm_dfs):
+    """
+    Process each ELM dataframe, transform and save it.
+    """
+    for tree_id, df in elm_dfs.items():
+        df = transform_elm_df(df)
+        df = assign_elm_graph_properties(df)
+        df = format_df(df)
+        output_path = f'data/treeInputs/trunks-elms/processed/{tree_id}.csv'
+        df.to_csv(output_path, index=False)
+
+def assign_elm_graph_properties(voxel_properties_df):
+
+    #some don't work. But I think logic can be
+        #clusterOrder. exclude main stem by doing clusterOrder>1
+        #branchOrder. in cluster, sort by branchOrder. Remove from top.
+        #if overshoot, readd cylinders from last branch based on cylinderOrder
+        
+        #may have issue with very large cluster and removing only the top branches?
+
+
+
+
+    # 'cylinder': ID of cylinder
+    # NOTE: In elm QSMMs, branchID is the list of cylinders, in order with 0 being the base of the tree and the highest being the end tips.
+    voxel_properties_df['cylinder'] = voxel_properties_df['branch_ID']
+
+    # 'branch': ID of the branch
+    voxel_properties_df['branch'] = voxel_properties_df['branch'] 
+
+    # 'branchOrder': The lowest is the main stem branch, the highest is the end tip branches
+    voxel_properties_df['branchOrder'] = voxel_properties_df['BranchOrder']
+
+    # 'cylinderOrderInBranch': The lowest are cylinders at the beginning of branches, the highest are cylinders at the end of the branches
+    voxel_properties_df['cylinderOrderInBranch'] = voxel_properties_df['PositionInBranch']
+
+    # 'inverseCylinderOrderInBranch': The lowest are cylinders at the end of branches, the highest are cylinders at the beginning of the branches
+    voxel_properties_df['inverseCylinderOrderInBranch'] = voxel_properties_df['cylinderOrderInBranch'].max() + 1 - voxel_properties_df['cylinderOrderInBranch']
+
+    # 'cylinderOrder': Lowest is the cylinder at the bottom of the main stem, highest are the end cylinders of the end tip branches
+    # 'cylinderOrder': Assign sequential index by cylinderOrderInBranch within each branch group
+    voxel_properties_df = voxel_properties_df.sort_values(['branch', 'cylinderOrderInBranch']).reset_index(drop=True)
+    voxel_properties_df['cylinderOrder'] = voxel_properties_df.groupby('branch').cumcount() + 1
+
+
+
+    # 'inverseCylinderOrder': Lowest are the end cylinders of the end tip branches, highest is the cylinder at the bottom of the main stem
+    voxel_properties_df['inverseCylinderOrder'] = voxel_properties_df['cylinderOrder'].max() + 1 - voxel_properties_df['cylinderOrder']
+
+    cluster_number = 20
+    # 'cluster': ID of the cluster
+    voxel_properties_df['cluster'] = voxel_properties_df['segment']
+
+    # Calculate other topological groupings
+    voxel_properties_df = calculate_topological_groupings(voxel_properties_df)
+    
+    return voxel_properties_df
+
+
+
+def main():
+    # Load the dataframes for ELM, EUC, and Canopy datasets
+    elm_dfs = load_dfs(input_elm_dfs_path)
+    euc_dfs = load_dfs(input_euc_dfs_path)
+    canopy_dfs = load_canopy_dfs(canopy_dfs_path)
+
+    # Print column names for the first ELM and EUC dataframes
+    first_elm_key = next(iter(elm_dfs))
+    first_euc_key = next(iter(euc_dfs))
+
+    print(f"Columns in the first ELM dataframe (Tree.ID = {first_elm_key}):", elm_dfs[first_elm_key].columns)
+    print(f"Columns in the first EUC dataframe (Tree.ID = {first_euc_key}):", euc_dfs[first_euc_key].columns)
+
+    # Process and save the EUC dataframes
+    process_eucalypt_dfs(euc_dfs, canopy_dfs)
+    process_elm_dfs(elm_dfs)
+
+if __name__ == "__main__":
+    main()
+

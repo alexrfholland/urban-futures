@@ -1,0 +1,76 @@
+import pickle
+import pandas as pd
+import numpy as np
+from pathlib import Path
+
+#new structure is 
+#precolonial
+#size (small, medium, large, senescing, snag, fallen, propped)
+#control (reserve-tree, park-tree, street-tree, improved-tree)
+#treeID
+
+# Function to load the tree templates from a pickle file
+def load_tree_templates(filepath):
+    with open(filepath, 'rb') as file:
+        return pickle.load(file)
+    
+def getNewKey(tree_key):
+    print(f"\nProcessing tree {tree_key}...")
+
+    # Check if tree_key has a tuple of 5 elements
+    if len(tree_key) == 5:
+        isPreColonial = tree_key[0]
+        size = tree_key[1]
+        control = tree_key[2]
+        isImproved = tree_key[3]
+        treeID = tree_key[4]
+                
+        print(f'original tree key: isColonial: {isPreColonial}, size: {size}, control: {control}, isImproved: {isImproved}, treeID: {treeID}')
+
+        if isImproved:
+            control = 'improved-tree'
+        
+        newKey = (isPreColonial, size, control, treeID)
+    else:
+        isPreColonial = tree_key[0]
+        treeID = tree_key[1]
+        size = tree_key[2]
+        control = 'improved-tree'
+
+        print(f'original tree key: isColonial: {isPreColonial}, treeID: {treeID}, size: {size}')
+
+        newKey = (isPreColonial, size, control, treeID)
+
+    print(f'new key is {newKey}')
+    return newKey
+
+
+
+# Main execution
+if __name__ == "__main__":
+    tree_templates = load_tree_templates('data/treeOutputs/adjusted_tree_templates.pkl')
+    senescing_templates = load_tree_templates('data/treeOutputs/fallen_trees_dict.pkl')
+
+    # Output directory for VTK files
+    output_dir = Path('data/revised') 
+
+    adjustedTreeDict = {}
+
+    # Create a single VTK for each tree in the templates
+    print("Processing tree templates...")
+    for tree_key, tree_df in tree_templates.items():
+        newKey = getNewKey(tree_key)
+        adjustedTreeDict[newKey] = tree_df
+
+    print("Processing senescing tree templates...")
+    for senescing_key, senescing_df in senescing_templates.items():
+        newKey = getNewKey(senescing_key)
+        adjustedTreeDict[newKey] = senescing_df
+
+    filename = 'revised_tree_dict.pkl'
+    filepath = output_dir / filename
+    
+    with open(filepath, 'wb') as f:
+        pickle.dump(adjustedTreeDict, f)
+
+    print(f'saved dictionary to {filepath}')

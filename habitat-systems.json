@@ -1,0 +1,140 @@
+{
+    "support": {
+        "evolved large old tree": {
+            "search": {
+                "isPrecolonial": [true]
+            },
+            "subtypes": {
+                "Street": {
+                    "_Tree_size": ["large"],
+                    "_Control": ["street-tree"]
+                },
+                "Park": {
+                    "_Tree_size": ["large"],
+                    "_Control": ["park-tree"]
+                },
+                "Vacant lot": {
+                    "_Tree_size": ["large"],
+                    "_Control": ["reserve-tree"],
+                    "extraTree" : [true]
+                },
+                "Vacant lot - future" : {
+                    "_Tree_size": ["medium"],
+                    "_Control": ["reserve-tree"],
+                    "extraTree" : [true]
+                }
+            }
+        }
+    },
+
+    "enhance": {
+        "other canopy ready street tree": {
+            "search": {
+                "_Control": ["street-tree"]
+            },
+            "subtypes": {
+                "evolved medium": {
+                    "isPrecolonial": [true], 
+                    "_Tree_size": ["medium"]
+                },
+                "nonevolved large": {
+                    "isPrecolonial": [false], 
+                    "_Tree_size": ["large"]
+                },
+                "nonevolved medium": {
+                    "isPrecolonial": [false], 
+                    "_Tree_size": ["medium"]
+                }
+            }
+        },
+        "other canopy ready park tree": {
+            "search": {
+                "_Control": ["park-tree"]
+            },
+            "subtypes": {
+                "evolved medium": {
+                    "isPrecolonial": [true], 
+                    "_Tree_size": ["medium"]
+                },
+                "nonevolved large": {
+                    "isPrecolonial": [false], 
+                    "_Tree_size": ["large"]
+                },
+                "nonevolved medium": {
+                    "isPrecolonial": [false], 
+                    "_Tree_size": ["medium"]
+                }
+            }
+        }
+    },
+
+
+    "plug in": {
+        "habitat-ready roof": {
+            "search": {
+                "dip (degrees)": [[0.0, 20.0]],
+                "blocktype": ["buildings"]
+            },
+            "subtypes": {
+                "heavy": {
+                    "extensive_green_roof-RATING": ["Excellent", "Good", "Moderate"]
+                },
+                "light": {
+                    "intensive_green_roof-RATING": ["Excellent", "Good", "Moderate"]
+                }
+            }
+        },
+
+        "habitat ready walls": {
+            "search": {
+                "dip (degrees)": [[70, 90]],
+                "blocktype": ["buildings"]
+            },
+            "subtypes": {
+                "sunny": {
+                    "solar": [[0.2, 1.0]] 
+                }
+            }
+        }
+    },
+
+    "build": {
+        "street parking": {
+            "search": {
+                "isparking": [1.0]
+            },
+            "subtypes": {
+                "street parking": {
+                    "isparking": [1.0]
+                }
+            }
+        },
+        "utility pole": {
+            "search": {
+                "ispylons": [true]
+            },
+            "subtypes": {
+                "utility pole": {
+                    "ispylons": [true]
+                }
+            }
+        },
+        "treeGround": {
+            "search": {
+                "isPrecolonial": [true],
+                "iscanopy" : [1]
+            },
+            "subtypes": {
+                "Street": {
+                    "_Control": ["street-tree"]
+                },
+                "Park": {
+                    "_Control": ["park-tree"]
+                },
+                "Vacant lot": {
+                    "_Control": ["reserve-tree"]
+                }
+            }
+        }
+    }
+}

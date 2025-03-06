@@ -1,0 +1,404 @@
+import xarray as xr
+import numpy as np
+import matplotlib.pyplot as plt
+import pyvista as pv
+from numba import njit, prange
+from scipy.ndimage import label
+import a_helper_functions  # Ensure this module is available and contains the required functions
+
+def precompute_neighbors(voxel_coords, coord_to_idx):
+    """
+    Precompute the neighboring voxels for each voxel, including first-shell and second-shell neighbors.
+    Returns flat neighbor array and pointer array.
+    
+    Args:
+    - voxel_coords (np.ndarray): Array of voxel coordinates (N, 3).
+    - coord_to_idx (dict): Dictionary mapping voxel coordinate tuples to their indices.
+    
+    Returns:
+    - neighbors_flat (np.ndarray): 1D array of all neighbor indices.
+    - neighbors_ptr (np.ndarray): 1D array where neighbors_ptr[i] is the start index in neighbors_flat for voxel i.
+    """
+    directions_1st_shell = [(-1, 0, 0), (1, 0, 0), 
+                             (0, -1, 0), (0, 1, 0), 
+                             (0, 0, -1), (0, 0, 1)]
+    directions_2nd_shell = [
+        (-2, 0, 0), (2, 0, 0), 
+        (0, -2, 0), (0, 2, 0), 
+        (0, 0, -2), (0, 0, 2),
+        (-1, -1, 0), (1, 1, 0), (-1, 1, 0), (1, -1, 0), 
+        (0, -1, -1), (0, 1, 1), (0, -1, 1), (0, 1, -1),
+        (-1, 0, -1), (1, 0, 1), (-1, 0, 1), (1, 0, -1),
+        (-2, -2, -2), (2, 2, 2), (2, -2, -2), (-2, 2, 2)
+    ]
+    
+    num_voxels = len(voxel_coords)
+    neighbors_ptr = np.zeros(num_voxels + 1, dtype=np.int32)
+    neighbors_list = []
+    
+    for idx in range(num_voxels):
+        i, j, k = voxel_coords[idx]
+        # First-shell neighbors
+        for di, dj, dk in directions_1st_shell:
+            neighbor = (i + di, j + dj, k + dk)
+            neighbor_idx = coord_to_idx.get(neighbor, -1)
+            if neighbor_idx != -1:
+                neighbors_list.append(neighbor_idx)
+        
+        # Second-shell neighbors
+        for di, dj, dk in directions_2nd_shell:
+            neighbor = (i + di, j + dj, k + dk)
+            neighbor_idx = coord_to_idx.get(neighbor, -1)
+            if neighbor_idx != -1:
+                neighbors_list.append(neighbor_idx)
+        
+        neighbors_ptr[idx + 1] = len(neighbors_list)
+    
+    neighbors_flat = np.array(neighbors_list, dtype=np.int32)
+    return neighbors_flat, neighbors_ptr
+
+def encode_initial_energy(initial_energy_dict, node_sizes, node_types):
+    """
+    Encodes the initial energy based on node sizes and types into an array.
+    
+    Args:
+    - initial_energy_dict (dict): Dictionary with keys as (size, type) tuples and values as energies.
+    - node_sizes (np.ndarray): Array of node sizes.
+    - node_types (np.ndarray): Array of node types.
+    
+    Returns:
+    - initial_energy (np.ndarray): Array of initial energies for each voxel.
+    """
+    num_voxels = len(node_sizes)
+    initial_energy = np.full(num_voxels, 1000.0, dtype=np.float32)  # Default energy
+    
+    for i in range(num_voxels):
+        size = node_sizes[i]
+        type_ = node_types[i]
+        key = (size, type_)
+        if key in initial_energy_dict:
+            initial_energy[i] = initial_energy_dict[key]
+        else:
+            initial_energy[i] = 1000.0  # Default energy
+    
+    return initial_energy
+
+def initialize_grid(xarray_dataset):
+    """
+    Extracts grid data from the xarray dataset.
+    Includes first-shell and second-shell neighbors.
+    Returns flat neighbor array and pointer array.
+    
+    Args:
+    - xarray_dataset (xr.Dataset): The input xarray dataset.
+    
+    Returns:
+    - grid_data (dict): Dictionary containing all necessary grid data.
+    """
+    voxel_coords = np.vstack([xarray_dataset['voxel_I'].values, 
+                              xarray_dataset['voxel_J'].values, 
+                              xarray_dataset['voxel_K'].values]).T
+    coord_to_idx = {tuple(voxel): idx for idx, voxel in enumerate(voxel_coords)}
+    start_voxels = np.where(xarray_dataset['analysis_nodeID'].values != -1)[0]
+    node_ids = xarray_dataset['analysis_nodeID'].values
+    resistances = xarray_dataset['analysis_combined_resistance'].values
+
+    # Extract nodeSize and nodeType from dataset
+    node_sizes = xarray_dataset['analysis_nodeSize'].values
+    node_types = xarray_dataset['analysis_nodeType'].values
+
+    neighbors_flat, neighbors_ptr = precompute_neighbors(voxel_coords, coord_to_idx)
+
+    return {
+        'num_voxels': len(voxel_coords),
+        'voxel_coords': voxel_coords,
+        'coord_to_idx': coord_to_idx,
+        'start_voxels': start_voxels,
+        'neighbors_flat': neighbors_flat,
+        'neighbors_ptr': neighbors_ptr,
+        'analysis_nodeID': node_ids,
+        'analysis_combined_resistance': resistances,
+        'analysis_nodeSize': node_sizes,
+        'analysis_nodeType': node_types
+    }
+
+@njit(parallel=True)
+def grow_plants_optimized(
+    num_voxels,
+    start_voxels,
+    node_ids,
+    resistances,
+    neighbors_flat,
+    neighbors_ptr,
+    initial_energy,
+    resistance_factor,
+    resistance_threshold,
+    high_resistance_cutoff,
+    high_termination_chance,
+    fast_growth_split_chance,
+    split_chance,
+    termination_chance,
+    max_turns
+):
+    """
+    Numba-optimized function to simulate voxel growth.
+    
+    Args:
+    - num_voxels (int): Total number of voxels.
+    - start_voxels (np.ndarray): Array of starting voxel indices.
+    - node_ids (np.ndarray): Array of node IDs for each voxel.
+    - resistances (np.ndarray): Array of combined resistances for each voxel.
+    - neighbors_flat (np.ndarray): 1D array of all neighbor indices.
+    - neighbors_ptr (np.ndarray): 1D array of pointer indices for neighbors_flat.
+    - initial_energy (np.ndarray): Array of initial energies for each voxel.
+    - resistance_factor (float): Factor for energy loss due to resistance.
+    - resistance_threshold (float): Resistance below this means no energy loss.
+    - high_resistance_cutoff (float): Above this resistance, termination chance is high.
+    - high_termination_chance (float): Termination chance when resistance > high_resistance_cutoff.
+    - fast_growth_split_chance (float): Split chance when resistance is low.
+    - split_chance (float): Default split chance.
+    - termination_chance (float): Default termination chance.
+    - max_turns (int): Maximum number of turns for the simulation.
+    
+    Returns:
+    - growth_origin (np.ndarray): Array indicating the origin node ID for each voxel.
+    - growth_turn (np.ndarray): Array indicating the turn number when each voxel was rewilded.
+    """
+    growth_origin = np.full(num_voxels, -1, dtype=np.int32)
+    growth_turn = np.full(num_voxels, -1, dtype=np.int32)
+    energy = np.full(num_voxels, -1.0, dtype=np.float32)
+    
+    # Initialize starting voxels
+    for i in prange(len(start_voxels)):
+        idx = start_voxels[i]
+        growth_origin[idx] = node_ids[idx]
+        growth_turn[idx] = 0
+        energy[idx] = initial_energy[idx]
+    
+    # Initialize wavefront: starting voxels
+    wavefront = np.zeros(num_voxels, dtype=np.bool_)
+    for i in prange(len(start_voxels)):
+        idx = start_voxels[i]
+        wavefront[idx] = True
+    
+    for turn in range(1, max_turns + 1):
+        # Check if any voxel is active in the wavefront
+        any_active = False
+        for i in prange(num_voxels):
+            if wavefront[i]:
+                any_active = True
+                break
+        if not any_active:
+            break
+    
+        # Temporary array for the next wavefront
+        next_wavefront = np.zeros(num_voxels, dtype=np.bool_)
+    
+        for voxel in prange(num_voxels):
+            if wavefront[voxel]:
+                # Get neighbors for this voxel
+                start = neighbors_ptr[voxel]
+                end = neighbors_ptr[voxel + 1]
+                for n in range(start, end):
+                    neighbor = neighbors_flat[n]
+                    if growth_origin[neighbor] == -1:
+                        # Calculate energy loss and determine growth conditions
+                        resistance = resistances[neighbor]
+                        if resistance <= resistance_threshold:
+                            energy_loss = 0.0
+                            current_split_chance = fast_growth_split_chance
+                            current_termination_chance = 0.0
+                        elif resistance > high_resistance_cutoff:
+                            energy_loss = resistance / resistance_factor
+                            current_split_chance = split_chance
+                            current_termination_chance = high_termination_chance
+                        else:
+                            energy_loss = resistance / resistance_factor
+                            current_split_chance = split_chance
+                            current_termination_chance = termination_chance
+                        
+                        new_energy = energy[voxel] - energy_loss
+                        if new_energy <= 0.0:
+                            continue
+                        
+                        # Random termination
+                        rand_val = np.random.random()
+                        if resistance > high_resistance_cutoff:
+                            if rand_val < current_termination_chance:
+                                continue
+                        else:
+                            if rand_val < current_termination_chance:
+                                continue
+                        
+                        # Random split
+                        rand_split = np.random.random()
+                        if rand_split < current_split_chance:
+                            # Assign growth origin and turn
+                            growth_origin[neighbor] = node_ids[voxel]
+                            growth_turn[neighbor] = turn
+                            energy[neighbor] = new_energy
+                            next_wavefront[neighbor] = True
+                        else:
+                            # Single growth
+                            growth_origin[neighbor] = node_ids[voxel]
+                            growth_turn[neighbor] = turn
+                            energy[neighbor] = new_energy
+                            next_wavefront[neighbor] = True
+    
+        # Update wavefront for the next turn
+        wavefront = next_wavefront
+    
+    return growth_origin, growth_turn
+
+def save_results_to_xarray(xarray_dataset, growth_origin, growth_turn, output_path):
+    """
+    Add the simulation results to the xarray dataset and save it.
+    
+    Args:
+    - xarray_dataset (xr.Dataset): The original xarray dataset.
+    - growth_origin (np.ndarray): Array indicating the origin node ID for each voxel.
+    - growth_turn (np.ndarray): Array indicating the turn number when each voxel was rewilded.
+    - output_path (str): Path to save the updated NetCDF file.
+    """
+    # Add the growth_origin array as 'simResults_origin' to the dataset
+    xarray_dataset['simResults_origin'] = (['voxel'], growth_origin)
+    
+    # Add the growth_turn array as 'simResults_turn' to the dataset
+    xarray_dataset['simResults_turn'] = (['voxel'], growth_turn)
+    
+    # Save the updated dataset to a new NetCDF file
+    xarray_dataset.to_netcdf(output_path)
+    print(f"Results saved to {output_path}")
+
+def plot_growth_turns(growth_turn, voxel_coords):
+    """
+    Plots the voxel growth turn numbers in 3D.
+    
+    Args:
+    - growth_turn (np.ndarray): Array indicating the turn each voxel was rewilded.
+    - voxel_coords (np.ndarray): Array of voxel coordinates (N, 3).
+    """
+    I, J, K = voxel_coords[:, 0], voxel_coords[:, 1], voxel_coords[:, 2]
+    rewilded = growth_turn != -1
+    turns = growth_turn[rewilded]
+    
+    fig = plt.figure(figsize=(12, 10))
+    ax = fig.add_subplot(111, projection='3d')
+    scatter = ax.scatter(I[rewilded], J[rewilded], K[rewilded], 
+                         c=turns, cmap='viridis', s=5, alpha=0.6)
+    ax.set_xlabel('I')
+    ax.set_ylabel('J')
+    ax.set_zlabel('K')
+    plt.colorbar(scatter, ax=ax, label='Turn Number')
+    plt.title("3D Voxel Growth Simulation by Turn Number")
+    plt.show()
+
+def create_starting_nodes_array(grid_data):
+    """
+    Create an array that marks the starting nodes for each voxel.
+    1 for starting nodes, 0 for others.
+    
+    Args:
+    - grid_data (dict): Dictionary containing grid data.
+    
+    Returns:
+    - starting_nodes (np.ndarray): Array marking starting nodes.
+    """
+    starting_nodes = np.zeros(grid_data['num_voxels'], dtype=int)
+    starting_nodes[grid_data['start_voxels']] = 1  # Mark starting nodes as 1
+    return starting_nodes
+
+# Main Execution
+if __name__ == "__main__":
+    sites = ['trimmed-parade', 'uni', 'city']
+    voxel_size = 1
+    xarrays = {}
+    polydatas = {}
+    
+    for site in sites:
+        print(f'Processing rewilding for {site}')
+        input_folder = f'data/revised/final/{site}'
+        filepath = f'{input_folder}/{site}_{voxel_size}_voxelArray_withResistance.nc'
+        
+        # Load the xarray dataset
+        xarray_dataset = xr.open_dataset(filepath)
+        grid_data = initialize_grid(xarray_dataset)
+        
+        # Encode initial energy
+        initial_energy = encode_initial_energy(
+            initial_energy_dict={
+                ('large', 'tree'): 2500,
+                ('medium', 'tree'): 2000,
+                ('small', 'tree'): 1000,
+                ('large', 'log'): 750,
+                ('medium', 'log'): 500,
+                ('small', 'log'): 250,
+                ('medium', 'pole'): 125
+            },
+            node_sizes=grid_data['analysis_nodeSize'],
+            node_types=grid_data['analysis_nodeType']
+        )
+        
+        # Define simulation parameters
+        params_sim = {
+            'resistance_factor': 50,            # Factor for energy loss due to resistance
+            'resistance_threshold': 50,         # Resistance below this means no energy loss
+            'high_resistance_cutoff': 80,       # Above this resistance, termination chance is high
+            'high_termination_chance': 0.8,     # Termination chance when resistance > 80
+            'fast_growth_split_chance': 0.65,   # Split chance when resistance is low
+            'split_chance': 0.35,               # Default split chance
+            'termination_chance': 0.2           # Default termination chance
+        }
+        
+        # Run optimized simulation
+        growth_origin, growth_turn = grow_plants_optimized(
+            num_voxels=grid_data['num_voxels'],
+            start_voxels=grid_data['start_voxels'],
+            node_ids=grid_data['analysis_nodeID'],
+            resistances=grid_data['analysis_combined_resistance'],
+            neighbors_flat=grid_data['neighbors_flat'],
+            neighbors_ptr=grid_data['neighbors_ptr'],
+            initial_energy=initial_energy,
+            resistance_factor=params_sim['resistance_factor'],
+            resistance_threshold=params_sim['resistance_threshold'],
+            high_resistance_cutoff=params_sim['high_resistance_cutoff'],
+            high_termination_chance=params_sim['high_termination_chance'],
+            fast_growth_split_chance=params_sim['fast_growth_split_chance'],
+            split_chance=params_sim['split_chance'],
+            termination_chance=params_sim['termination_chance'],
+            max_turns=5000
+        )
+        
+        # Assign results to xarray dataset
+        save_results_to_xarray(xarray_dataset, growth_origin, growth_turn, f'{input_folder}/{site}_{voxel_size}_envelopeResults.nc')
+        
+        # Convert to PolyData and save
+        polydata = a_helper_functions.convert_xarray_into_polydata(xarray_dataset)
+        polydata.save(f'{input_folder}/{site}_{voxel_size}_envelopeResults.vtk')
+        
+        xarrays[site] = xarray_dataset
+        polydatas[site] = polydata
+        
+        # Visualization with PyVista
+        plotter = pv.Plotter(shape=(1, 2))
+        
+        # Plot simResults_origin
+        plotter.subplot(0, 0)
+        max_turn = np.max(growth_turn)
+        plotter.add_mesh(polydata, scalars='simResults_origin', cmap='viridis', clim=[0, max_turn], 
+                        below_color='white', show_scalar_bar=True)
+        plotter.add_title('Simulation Results (Origin)')
+        
+        # Plot analysis_combined_resistance
+        plotter.subplot(0, 1)
+        plotter.add_mesh(polydata, scalars='analysis_combined_resistance', cmap='coolwarm', show_scalar_bar=True)
+        plotter.add_title('Combined Resistance')
+        
+        # Add EDL (Eye-Dome Lighting) to the plotter
+        plotter.enable_eye_dome_lighting()
+        
+        # Show the plot
+        plotter.show()
+        
+        # Plot growth turns using Matplotlib
+        plot_growth_turns(growth_turn, grid_data['voxel_coords'])

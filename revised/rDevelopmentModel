@@ -1,0 +1,566 @@
+import numpy as np
+import trimesh
+import os
+import re
+from pyproj import Transformer, CRS
+from xml.etree import ElementTree as ET
+import simplekml
+import zipfile
+import geopandas as gpd
+import matplotlib.pyplot as plt
+from shapely.geometry import Polygon
+import pyvista as pv
+import csv
+import pandas as pd
+from scipy.spatial import cKDTree
+
+# Define the projection for GDA94 / MGA zone 55 (EPSG:28355)
+gda94_mga55 = Transformer.from_crs("epsg:4326", "epsg:28355", always_xy=True)
+
+def check_kml_crs(kml_file_path):
+    tree = ET.parse(kml_file_path)
+    root = tree.getroot()
+    ns = {'kml': 'http://www.opengis.net/kml/2.2'}
+    
+    # Check for explicit CRS information
+    crs_info = root.find(".//kml:crs", ns)
+    if crs_info is not None:
+        print(f"KML file has explicit CRS information: {crs_info.text}")
+        return
+    
+    # If no explicit CRS, check a sample coordinate
+    coord_elem = root.find(".//kml:coordinates", ns)
+    if coord_elem is not None:
+        sample_coord = coord_elem.text.strip().split(',')[:2]
+        lon, lat = map(float, sample_coord)
+        if -180 <= lon <= 180 and -90 <= lat <= 90:
+            print("KML coordinates appear to be in WGS84 (EPSG:4326)")
+        else:
+            print("KML coordinates do not appear to be in WGS84. Further investigation needed.")
+    else:
+        print("Unable to determine CRS from KML file.")
+
+def parse_and_project_kml(kml_file_path, transformer):
+    print(f"Parsing and projecting KML file: {kml_file_path}")
+    tree = ET.parse(kml_file_path)
+    root = tree.getroot()
+    ns = {'kml': 'http://www.opengis.net/kml/2.2'}
+    placemarks = root.findall(".//kml:Placemark", ns)
+    
+    tiles = {}
+    for placemark in placemarks:
+        name = placemark.find("kml:name", ns).text
+        coordinates = placemark.find(".//kml:coordinates", ns).text.strip().split()
+        projected_coords = []
+        for coord in coordinates:
+            lon, lat, _ = map(float, coord.split(","))
+            easting, northing = transformer.transform(lon, lat)
+            projected_coords.append((easting, northing))
+        tiles[name] = projected_coords
+    
+    print(f"Extracted and projected {len(tiles)} tiles from the KML file.")
+    return tiles
+
+def get_grid_dimensions(tiles):
+    tile_indices = [re.match(r'Tile_\+(\d+)_\+(\d+)', name) for name in tiles.keys()]
+    tile_indices = [(int(m.group(1)), int(m.group(2))) for m in tile_indices if m]
+    
+    if not tile_indices:
+        print("No valid tile indices found. Using default values.")
+        return 0, 0, 0, 0
+    
+    min_x = min(x for x, _ in tile_indices)
+    max_x = max(x for x, _ in tile_indices)
+    min_y = min(y for _, y in tile_indices)
+    max_y = max(y for _, y in tile_indices)
+    
+    num_tiles_x = max_x - min_x + 1
+    num_tiles_y = max_y - min_y + 1
+    
+    print(f"Grid dimensions: {num_tiles_x}x{num_tiles_y}")
+    print(f"X range: {min_x} to {max_x}")
+    print(f"Y range: {min_y} to {max_y}")
+    
+    return num_tiles_x, num_tiles_y, min_x, min_y
+
+def load_and_analyze_glb(glb_file_path):
+    print(f"Loading and analyzing GLB model: {glb_file_path}")
+    scene = trimesh.load(glb_file_path)
+    
+    if isinstance(scene, trimesh.Scene):
+        print(f"The GLB file contains a scene with {len(scene.geometry)} geometries/groups:")
+        for name, geometry in scene.geometry.items():
+            if isinstance(geometry, trimesh.Trimesh):
+                bounding_box = geometry.bounds
+                dimensions = bounding_box[1] - bounding_box[0]
+                print(f"  {name}: Mesh with {len(geometry.vertices)} vertices and {len(geometry.faces)} faces")
+                print(f"    Bounding Box: {bounding_box}")
+                print(f"    Dimensions: {dimensions}")
+            elif isinstance(geometry, trimesh.path.Path3D):
+                print(f"  {name}: Path with {len(geometry.entities)} entities")
+            else:
+                print(f"  {name}: Other geometry type ({type(geometry)})")
+    else:
+        bounding_box = scene.bounds
+        dimensions = bounding_box[1] - bounding_box[0]
+        print("The GLB file contains a single mesh:")
+        print(f"  Vertices: {len(scene.vertices)}")
+        print(f"  Faces: {len(scene.faces)}")
+        print(f"  Bounding Box: {bounding_box}")
+        print(f"  Dimensions: {dimensions}")
+    
+    return scene
+
+def create_meshtile_geojson(glb_bbox, kmz_tiles, output_path):
+    print("Creating mesh tile GeoJSON file")
+    
+    # Calculate the size of each tile based on the GLB bounding box and the number of tiles
+    num_tiles_x, num_tiles_y, min_tile_x, min_tile_y = get_grid_dimensions(kmz_tiles)
+    tile_size_x = (glb_bbox[1][0] - glb_bbox[0][0]) / num_tiles_x
+    tile_size_z = (glb_bbox[1][2] - glb_bbox[0][2]) / num_tiles_y
+    
+    # Calculate the midpoint of the GLB bounding box (using X and Z)
+    glb_midpoint = np.array([(glb_bbox[0][0] + glb_bbox[1][0]) / 2, (glb_bbox[0][2] + glb_bbox[1][2]) / 2])
+
+    # Calculate the midpoint of the KMZ tiles (using X and Y)
+    kmz_coords = np.array([coord for tile_coords in kmz_tiles.values() for coord in tile_coords])
+    kmz_midpoint = np.mean(kmz_coords, axis=0)
+
+    # Calculate the translation to align midpoints (X and Z for GLB, X and Y for KMZ)
+    translation = np.array([kmz_midpoint[0] - glb_midpoint[0], kmz_midpoint[1] - glb_midpoint[1]])
+
+    raw_tile_bboxes = {}
+    mesh_tiles = []
+    
+    # Create a grid of tiles that covers the entire GLB bounding box
+    for i in range(num_tiles_x):
+        for j in range(num_tiles_y):
+            # Calculate the bounds for this tile in the raw mesh coordinate system
+            raw_tile_min_x = glb_bbox[0][0] + i * tile_size_x
+            raw_tile_max_x = raw_tile_min_x + tile_size_x
+            raw_tile_min_z = glb_bbox[0][2] + j * tile_size_z
+            raw_tile_max_z = raw_tile_min_z + tile_size_z
+            
+            tile_name = f"Tile_{i+min_tile_x:03d}_{j+min_tile_y:03d}"
+            
+            # Store raw bounding box coordinates (before translation)
+            raw_tile_bboxes[tile_name] = [raw_tile_min_x, raw_tile_min_z, raw_tile_max_x, raw_tile_max_z]
+            
+            # Apply translation for mesh tiles
+            mesh_tile_min_x = raw_tile_min_x + translation[0]
+            mesh_tile_max_x = raw_tile_max_x + translation[0]
+            mesh_tile_min_z = raw_tile_min_z + translation[1]
+            mesh_tile_max_z = raw_tile_max_z + translation[1]
+            
+            # Calculate tile dimensions
+            tile_width = mesh_tile_max_x - mesh_tile_min_x
+            tile_height = mesh_tile_max_z - mesh_tile_min_z
+            
+            # Create a polygon for the mesh tile
+            coords = [
+                (mesh_tile_min_x, mesh_tile_min_z),
+                (mesh_tile_max_x, mesh_tile_min_z),
+                (mesh_tile_max_x, mesh_tile_max_z),
+                (mesh_tile_min_x, mesh_tile_max_z)
+            ]
+            polygon = Polygon(coords)
+            
+            # Transform coordinates back to WGS84
+            polygon_wgs84 = Polygon([gda94_mga55.transform(x, z, direction='INVERSE') for x, z in coords])
+            
+            mesh_tiles.append({
+                'name': tile_name,
+                'width': tile_width,
+                'height': tile_height,
+                'geometry': polygon_wgs84
+            })
+    
+    # Create a GeoDataFrame
+    gdf = gpd.GeoDataFrame(mesh_tiles, crs="EPSG:4326")
+    
+    # Save as GeoJSON
+    gdf.to_file(output_path, driver='GeoJSON')
+    print(f"Mesh tile GeoJSON file saved to: {output_path}")
+
+    # Print some stats
+    print(f"Number of tiles: {len(mesh_tiles)}")
+    print(f"Translation applied: {translation}")
+    
+    print("\nRaw tile bounding boxes (before translation):")
+    for tile_name, bbox in list(raw_tile_bboxes.items())[:5]:  # Print first 5 for brevity
+        print(f"{tile_name}: {bbox}")
+    print("...")
+    
+    print("\nMesh tile bounding boxes (after translation):")
+    for tile in mesh_tiles[:5]:  # Print first 5 for brevity
+        bbox = tile['geometry'].bounds
+        print(f"{tile['name']}: {bbox}")
+    print("...")
+    
+    return gdf, num_tiles_x, num_tiles_y, translation
+
+def divide_scene_bounding_box(scene, num_tiles_x, num_tiles_y, mesh_kmz_file):
+    print("Dividing GLB scene bounding box into tiles and creating mesh KMZ")
+    
+    # Count total number of vertices and faces in the original scene
+    total_vertices = sum(len(geometry.vertices) for geometry in scene.geometry.values() if isinstance(geometry, trimesh.Trimesh))
+    total_faces = sum(len(geometry.faces) for geometry in scene.geometry.values() if isinstance(geometry, trimesh.Trimesh))
+    print(f"Original scene: {total_vertices} vertices, {total_faces} faces")
+
+    # Extract all vertices from all meshes
+    all_vertices = np.vstack([geometry.vertices for geometry in scene.geometry.values() if isinstance(geometry, trimesh.Trimesh)])
+
+    # Print vertex statistics
+    print(f"Vertex coordinate ranges:")
+    print(f"X: {all_vertices[:, 0].min()} to {all_vertices[:, 0].max()}")
+    print(f"Y: {all_vertices[:, 1].min()} to {all_vertices[:, 1].max()}")
+    print(f"Z: {all_vertices[:, 2].min()} to {all_vertices[:, 2].max()}")
+    
+    # Get the overall bounding box of tiles
+    min_x = all_vertices[:, 0].min()
+    min_z = all_vertices[:, 2].min()
+    max_x = all_vertices[:, 0].max()
+    max_z = all_vertices[:, 2].max()
+    
+    print(f"Tile bounding box:")
+    print(f"X: {min_x} to {max_x}")
+    print(f"Z: {min_z} to {max_z}")
+    
+    # Calculate tile sizes
+    tile_size_x = (max_x - min_x) / num_tiles_x
+    tile_size_z = (max_z - min_z) / num_tiles_y
+    print(f"Tile sizes: X: {tile_size_x}, Z: {tile_size_z}")
+    
+    # Calculate which tile each vertex belongs to
+    tile_x = np.floor((all_vertices[:, 0] - min_x) / tile_size_x).astype(int)
+    tile_z = np.floor((all_vertices[:, 2] - min_z) / tile_size_z).astype(int)
+    
+    print(f"Tile assignment ranges:")
+    print(f"X: {tile_x.min()} to {tile_x.max()}")
+    print(f"Z: {tile_z.min()} to {tile_z.max()}")
+    
+    submeshes = {f"Tile_{i:03d}_{j:03d}": trimesh.Scene() for i in range(num_tiles_x) for j in range(num_tiles_y)}
+    kml = simplekml.Kml()
+    
+    vertex_offset = 0
+    divided_vertices = 0
+    divided_faces = 0
+    for name, geometry in scene.geometry.items():
+        if isinstance(geometry, trimesh.Trimesh):
+            n_vertices = len(geometry.vertices)
+            
+            # Get tile indices for this geometry's vertices
+            geom_tile_x = tile_x[vertex_offset:vertex_offset + n_vertices]
+            geom_tile_z = tile_z[vertex_offset:vertex_offset + n_vertices]
+            
+            # For each tile, create a submesh
+            for i in range(num_tiles_x):
+                for j in range(num_tiles_y):
+                    tile_name = f"Tile_{i:03d}_{j:03d}"
+                    
+                    # Find vertices in this tile
+                    mask = (geom_tile_x == i) & (geom_tile_z == j)
+                    if np.any(mask):
+                        vertex_mask = np.zeros(n_vertices, dtype=bool)
+                        vertex_mask[mask] = True
+                        face_mask = np.any(vertex_mask[geometry.faces], axis=1)
+                        submesh = geometry.submesh([face_mask], append=True)
+                        
+                        if len(submesh.vertices) > 0:
+                            submeshes[tile_name].add_geometry(submesh, node_name=name)
+                            divided_vertices += len(submesh.vertices)
+                            divided_faces += len(submesh.faces)
+            
+            vertex_offset += n_vertices
+    
+    print(f"Divided scene: {divided_vertices} vertices, {divided_faces} faces")
+    print(f"Difference: {total_vertices - divided_vertices} vertices, {total_faces - divided_faces} faces")
+
+    # Create KML
+    for i in range(num_tiles_x):
+        for j in range(num_tiles_y):
+            tile_name = f"Tile_{i:03d}_{j:03d}"
+            tile_min_x = min_x + i * tile_size_x
+            tile_max_x = tile_min_x + tile_size_x
+            tile_min_z = min_z + j * tile_size_z
+            tile_max_z = tile_min_z + tile_size_z
+            
+            poly = kml.newpolygon(name=tile_name)
+            coords = [
+                (tile_min_x, tile_min_z),
+                (tile_max_x, tile_min_z),
+                (tile_max_x, tile_max_z),
+                (tile_min_x, tile_max_z),
+                (tile_min_x, tile_min_z)
+            ]
+            poly.outerboundaryis = [(gda94_mga55.transform(x, z, direction='INVERSE')[1], gda94_mga55.transform(x, z, direction='INVERSE')[0], 0) for x, z in coords]
+            
+            label = kml.newpoint(name=tile_name)
+            center_x, center_z = (tile_min_x + tile_max_x) / 2, (tile_min_z + tile_max_z) / 2
+            label.coords = [(gda94_mga55.transform(center_x, center_z, direction='INVERSE')[1], gda94_mga55.transform(center_x, center_z, direction='INVERSE')[0], 0)]
+    
+    kml.save(mesh_kmz_file)
+    print(f"Mesh KMZ file saved to: {mesh_kmz_file}")
+    
+    # Print statistics about submeshes
+    non_empty_submeshes = sum(1 for scene in submeshes.values() if len(scene.geometry) > 0)
+    print(f"Number of non-empty submeshes: {non_empty_submeshes} out of {len(submeshes)}")
+    
+    return submeshes
+
+def plot_geojson(geojson_file_path):
+    # Read the GeoJSON file
+    gdf = gpd.read_file(geojson_file_path)
+    
+    # Plot the GeoJSON
+    fig, ax = plt.subplots(figsize=(12, 8))
+    gdf.plot(ax=ax, edgecolor='black', facecolor='none')
+    
+    # Add labels for each tile
+    for idx, row in gdf.iterrows():
+        centroid = row.geometry.centroid
+        ax.annotate(row['name'], (centroid.x, centroid.y), ha='center', va='center', fontsize=8)
+    
+    # Set the title and display the plot
+    plt.title('Mesh Tile Plot')
+    plt.axis('off')
+    plt.tight_layout()
+    plt.show()
+
+def plot_adjacent_submeshes(submeshes, num_tiles_x, num_tiles_y):
+    print("Step 7: Plotting 4 adjacent submeshes using PyVista")
+    
+    # Choose a central tile
+    center_x = num_tiles_x // 2
+    center_y = num_tiles_y // 2
+    
+    # Define the 4 adjacent tiles
+    adjacent_tiles = [
+        f"Tile_{center_x:03d}_{center_y:03d}",
+        f"Tile_{center_x+1:03d}_{center_y:03d}",
+        f"Tile_{center_x:03d}_{center_y+1:03d}",
+        f"Tile_{center_x+1:03d}_{center_y+1:03d}"
+    ]
+    
+    # Create a PyVista plotter
+    plotter = pv.Plotter()
+    
+    # Add each adjacent submesh to the plot
+    for tile_name in adjacent_tiles:
+        if tile_name in submeshes and len(submeshes[tile_name].geometry) > 0:
+            # Convert trimesh to PyVista mesh
+            for geom_name, geom in submeshes[tile_name].geometry.items():
+                if isinstance(geom, trimesh.Trimesh):
+                    try:
+                        # Ensure faces are in the correct format for PyVista
+                        faces = np.column_stack((np.full(len(geom.faces), 3), geom.faces)).flatten()
+                        pv_mesh = pv.PolyData(geom.vertices, faces)
+                        plotter.add_mesh(pv_mesh, style='wireframe', line_width=1, color='white')
+                    except Exception as e:
+                        print(f"Error processing {tile_name}, geometry {geom_name}:")
+                        print(f"  Vertices: {len(geom.vertices)}, Faces: {len(geom.faces)}")
+                        print(f"  Error: {str(e)}")
+        else:
+            print(f"Skipping empty or non-existent tile: {tile_name}")
+    
+    # Set up the camera and display the plot
+    plotter.set_background('black')
+    plotter.show_axes()
+    plotter.show_grid()
+    plotter.show()
+
+def validate_submeshes(submeshes):
+    for tile_name, tile_scene in submeshes.items():
+        for geom_name, geom in tile_scene.geometry.items():
+            if isinstance(geom, trimesh.Trimesh):
+                if len(geom.vertices) == 0 or len(geom.faces) == 0:
+                    print(f"Warning: Empty geometry in {tile_name}, {geom_name}")
+                if not geom.is_watertight:
+                    print(f"Warning: Non-watertight mesh in {tile_name}, {geom_name}")
+                if not geom.is_winding_consistent:
+                    print(f"Warning: Inconsistent winding in {tile_name}, {geom_name}")
+
+def world_to_model_space(easting, northing, world_origin):
+    model_x = easting - world_origin[0]
+    model_z = northing - world_origin[1]
+    print(f"World coordinates (Easting, Northing): ({easting}, {northing})")
+    print(f"Model coordinates (X, Z): ({model_x}, {model_z})")
+    return model_x, model_z
+
+def build_mesh_kdtree(scene):
+    mesh_centers = []
+    mesh_data = []
+    for name, geometry in scene.geometry.items():
+        if isinstance(geometry, trimesh.Trimesh):
+            center = geometry.centroid
+            mesh_centers.append([center[0], center[2]])  # Use X and Z coordinates
+            mesh_data.append((name, geometry))
+    
+    kdtree = cKDTree(mesh_centers)
+    return kdtree, mesh_data
+
+def get_meshes_in_range_kdtree(kdtree, mesh_data, model_x, model_z, radius):
+    query_point = [model_x, model_z]
+    indices = kdtree.query_ball_point(query_point, radius)
+    
+    meshes_in_range = [mesh_data[i] for i in indices]
+    
+    print(f"Found {len(meshes_in_range)} meshes within {radius} meters of ({model_x:.2f}, {model_z:.2f})")
+    return meshes_in_range
+
+def plot_meshes_in_range(meshes_in_range, center_x, center_z, radius):
+    if not meshes_in_range:
+        print(f"No meshes found within {radius} meters of ({center_x}, {center_z})")
+        return
+
+    plotter = pv.Plotter()
+    for name, mesh in meshes_in_range:
+        pv_mesh = pv.PolyData(mesh.vertices, mesh.faces)
+        plotter.add_mesh(pv_mesh, style='wireframe', line_width=1, color='white')
+    
+    plotter.set_background('black')
+    plotter.show_axes()
+    plotter.show_grid()
+    plotter.show()
+
+    print(f"Displaying {len(meshes_in_range)} meshes within {radius} meters of ({center_x}, {center_z})")
+    for name, _ in meshes_in_range:
+        print(f"  - {name}")
+
+def main():
+    kml_file_path = 'data/revised/experimental/Tile_Index.KML'
+    glb_file_path = 'data/revised/experimental/DevelopmentActivityModel.glb'
+    glb_file_path = 'data/revised/experimental/DevelopmentActivityModel-trimmed.glb'
+    
+    mesh_geojson_file = 'data/revised/experimental/mesh_tiles.geojson'
+    output_folder = 'data/revised/experimental/tile_meshes'
+
+    # Step 1: Checking KML coordinate system
+    print("Step 1: Checking KML coordinate system")
+    check_kml_crs(kml_file_path)
+    print()
+
+    # Step 2: Parsing and projecting KML tiles
+    print("Step 2: Parsing and projecting KML tiles")
+    projected_tiles = parse_and_project_kml(kml_file_path, gda94_mga55)
+    print(f"Sample of projected tiles:")
+    for name, coords in list(projected_tiles.items())[:3]:
+        print(f"  {name}: {coords[0]}")
+    print()
+
+    # Step 3: Finding grid dimensions
+    print("Step 3: Finding grid dimensions")
+    num_tiles_x, num_tiles_y, min_tile_x, min_tile_y = get_grid_dimensions(projected_tiles)
+    print()
+
+    # Step 4: Loading GLB model, analyzing layers/groups, and getting bounding boxes
+    print("Step 4: Loading GLB model, analyzing layers/groups, and getting bounding boxes")
+    scene = load_and_analyze_glb(glb_file_path)
+    
+    mesh_bbox = scene.bounds
+    mesh_dimensions = np.array([mesh_bbox[1][0] - mesh_bbox[0][0], mesh_bbox[1][2] - mesh_bbox[0][2]])  # X and Z
+    mesh_midpoint = (mesh_bbox[0] + mesh_bbox[1]) / 2  # Correct midpoint calculation
+    print(f"Mesh bounding box: {mesh_bbox}")
+    print(f"Mesh dimensions (X, Z): {mesh_dimensions}")
+    print(f"Mesh midpoint (X, Y, Z): {mesh_midpoint}")
+    
+    kml_coords = np.array([coord for tile_coords in projected_tiles.values() for coord in tile_coords])
+    kml_bbox = np.array([
+        [kml_coords[:, 0].min(), kml_coords[:, 1].min()],
+        [kml_coords[:, 0].max(), kml_coords[:, 1].max()]
+    ])
+    kml_dimensions = kml_bbox[1] - kml_bbox[0]
+    kml_midpoint = (kml_bbox[0] + kml_bbox[1]) / 2  # Correct midpoint calculation
+    print(f"KML bounding box: {kml_bbox}")
+    print(f"KML dimensions: {kml_dimensions}")
+    print(f"KML midpoint (X, Y): {kml_midpoint}")
+    
+    print("\nComparison of dimensions:")
+    print(f"Mesh (X, Z): {mesh_dimensions}")
+    print(f"KML (X, Y):  {kml_dimensions}")
+    print("\nComparison of midpoints:")
+    print(f"Mesh (X, Y, Z): {mesh_midpoint}")
+    print(f"KML (X, Y):    {kml_midpoint}")
+    print()
+
+    # Step 5: Creating mesh tile GeoJSON and printing tile dimensions
+    print("Step 5: Creating mesh tile GeoJSON and printing tile dimensions")
+    mesh_tiles_gdf, num_tiles_x, num_tiles_y, world_origin = create_meshtile_geojson(mesh_bbox, projected_tiles, mesh_geojson_file)
+    print(f"World origin (translation): {world_origin}")
+    print()
+
+    """# Plot the created GeoJSON file
+    print("Plotting GeoJSON file")
+    plot_geojson(mesh_geojson_file)
+    print()"""
+
+    # Step 6: Dividing scene into tiles and creating mesh KMZ
+    """print("Step 6: Dividing scene into tiles and creating mesh KMZ")
+    submeshes = divide_scene_bounding_box(scene, num_tiles_x, num_tiles_y, mesh_geojson_file)
+    print(f"Created {len(submeshes)} submeshes")
+    print()
+
+    # Add this debugging information
+    total_submesh_vertices = sum(sum(len(geom.vertices) for geom in submesh.geometry.values() if isinstance(geom, trimesh.Trimesh)) for submesh in submeshes.values())
+    total_submesh_faces = sum(sum(len(geom.faces) for geom in submesh.geometry.values() if isinstance(geom, trimesh.Trimesh)) for submesh in submeshes.values())
+    print(f"Total vertices in submeshes: {total_submesh_vertices}")
+    print(f"Total faces in submeshes: {total_submesh_faces}")
+
+    original_vertices = sum(len(geom.vertices) for geom in scene.geometry.values() if isinstance(geom, trimesh.Trimesh))
+    original_faces = sum(len(geom.faces) for geom in scene.geometry.values() if isinstance(geom, trimesh.Trimesh))
+    print(f"Original vertices: {original_vertices}")
+    print(f"Original faces: {original_faces}")
+    print(f"Vertex difference: {original_vertices - total_submesh_vertices}")
+    print(f"Face difference: {original_faces - total_submesh_faces}")
+    """
+    # Step 7: Plotting 4 adjacent submeshes
+    #validate_submeshes(submeshes)
+    #plot_adjacent_submeshes(submeshes, num_tiles_x, num_tiles_y)
+
+    # New step: Process CSV data and convert coordinates
+    print(f"\nScene bounding box: {scene.bounds}")
+    print(f"Scene centroid: {scene.centroid}")
+    print(f"World origin (translation): {world_origin}")
+
+    # Load the CSV file
+    csv_file_path = 'data/revised/experimental/locations.csv'
+    site_coords = pd.read_csv(csv_file_path)
+
+    # Define the site to process
+    site = 'uni'  # You can change this to any site name in your CSV
+
+    # Look up the coordinates for the specified site
+    site_row = site_coords[site_coords['Name'] == site].iloc[0]
+    easting = site_row['Easting']
+    northing = site_row['Northing']
+
+    print(f"\nProcessing {site}:")
+    model_x, model_z = world_to_model_space(easting, northing, world_origin)
+
+    # Set the radius (e.g., 1000 meters)
+    radius = 1000
+
+    # Build KD-tree for efficient spatial queries
+    print("Building KD-tree for efficient spatial queries")
+    kdtree, mesh_data = build_mesh_kdtree(scene)
+
+    meshes_in_range = get_meshes_in_range_kdtree(kdtree, mesh_data, model_x, model_z, radius)
+
+    # Plot the meshes in range
+    plot_meshes_in_range(meshes_in_range, model_x, model_z, radius)
+
+    # Step 8: Saving individual tile meshes
+    """print("Step 8: Saving individual tile meshes")
+    os.makedirs(output_folder, exist_ok=True)
+    for tile_name, tile_scene in submeshes.items():
+        output_path = os.path.join(output_folder, f"{tile_name}.glb")
+        if len(tile_scene.geometry) > 0:
+            tile_scene.export(output_path)
+            print(f"Saved {tile_name} to {output_path}")
+        else:
+            print(f"Skipped empty tile: {tile_name}")
+    print()"""
+
+if __name__ == "__main__":
+    main()
+

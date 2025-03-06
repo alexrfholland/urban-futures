@@ -1,0 +1,37 @@
+DataName: tree.xyz
+Total order of branches: 10
+The 0 order branch:1	total length: 25.6219
+The 1 order branch:33	total length: 128.635
+The 2 order branch:493	total length: 484.75
+The 3 order branch:2858	total length: 1370.25
+The 4 order branch:8298	total length: 2656.77
+The 5 order branch:15347	total length: 3438.38
+The 6 order branch:17143	total length: 2938.66
+The 7 order branch:12007	total length: 1660.67
+The 8 order branch:5450	total length: 620.986
+The 9 order branch:1544	total length: 145.541
+The 10 order branch:252	total length: 19.9369
+DataName: tree-cropped.xyz
+Total order of branches: 9
+The 0 order branch:1	total length: 26.4717
+The 1 order branch:36	total length: 167.471
+The 2 order branch:494	total length: 632.305
+The 3 order branch:2200	total length: 1551.03
+The 4 order branch:5086	total length: 2374.22
+The 5 order branch:5965	total length: 2157.75
+The 6 order branch:4244	total length: 1309.89
+The 7 order branch:2092	total length: 563.761
+The 8 order branch:673	total length: 152.503
+The 9 order branch:99	total length: 26.7404
+DataName: tree-cropped.xyz
+Total order of branches: 9
+The 0 order branch:1	total length: 25.9424
+The 1 order branch:32	total length: 146.951
+The 2 order branch:420	total length: 521.934
+The 3 order branch:1776	total length: 1318.7
+The 4 order branch:4345	total length: 2227.01
+The 5 order branch:6079	total length: 2290.57
+The 6 order branch:4586	total length: 1405.62
+The 7 order branch:2219	total length: 602.322
+The 8 order branch:775	total length: 182.285
+The 9 order branch:150	total length: 32.737

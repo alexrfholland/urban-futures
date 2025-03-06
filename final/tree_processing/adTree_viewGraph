@@ -1,0 +1,636 @@
+import networkx as nx
+import numpy as np
+import plotly.graph_objs as go
+import plotly.io as pio
+import pyvista as pv
+import pandas as pd
+import igraph as ig
+import networkx as nx
+from cdlib import algorithms
+import networkx as nx
+import numpy as np
+import plotly.graph_objs as go
+import plotly.io as pio
+from plotly.subplots import make_subplots
+import leidenalg as la  # Import the leidenalg library
+
+
+import networkx as nx
+import igraph as ig
+import leidenalg as la
+import community as community_louvain
+from networkx.algorithms import community as nx_community
+from infomap import Infomap
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+
+# -------------------- Community Detection Functions --------------------
+def apply_leiden_algorithm(nx_graph, weight_attr='startRadius', prioritize_main_stem=True):
+    """
+    Applies the Leiden algorithm to a NetworkX graph, assigns each node a 'community-leiden' attribute,
+    and returns the original graph with the community labels and the number of communities detected.
+
+    Parameters:
+    nx_graph (nx.DiGraph): A directed NetworkX graph
+    weight_attr (str): Node attribute to influence edge weights (default is 'startRadius')
+    prioritize_main_stem (bool): Whether to prioritize the main stem (original_branch_id == 0)
+
+    Returns:
+    nx.DiGraph: The original NetworkX graph with 'community-leiden' labels for each node
+    int: Number of communities detected
+    """
+    # Convert NetworkX graph to igraph object
+    G_igraph = ig.Graph.TupleList(nx_graph.edges(), directed=True, edge_attrs=True)
+
+    # Prepare edge weights based on 'startRadius'
+    weights = []
+    for u, v, data in nx_graph.edges(data=True):
+        start_radius_u = nx_graph.nodes[u].get(weight_attr, 1.0)
+        start_radius_v = nx_graph.nodes[v].get(weight_attr, 1.0)
+        edge_weight = (start_radius_u + start_radius_v) / 2.0
+
+        # Prioritize edges connected to main stem
+        if prioritize_main_stem:
+            original_branch_id_u = nx_graph.nodes[u].get('original_branch_id', -1)
+            original_branch_id_v = nx_graph.nodes[v].get('original_branch_id', -1)
+            if original_branch_id_u == 0 or original_branch_id_v == 0:
+                edge_weight += 5.0  # Adjusted boost to prevent over-merging
+
+        weights.append(edge_weight)
+
+    G_igraph.es['weight'] = weights
+
+    # Apply Leiden algorithm with modularity optimization
+    partition = la.find_partition(
+        G_igraph,
+        la.ModularityVertexPartition,
+        weights='weight'
+    )
+
+    # Create a mapping from igraph vertex names to community IDs
+    node_to_community = {}
+    for community_id, community in enumerate(partition):
+        for node in community:
+            node_name = G_igraph.vs[node]['name']
+            node_to_community[node_name] = community_id
+
+    # Assign community as a node attribute in the original NetworkX graph
+    nx.set_node_attributes(nx_graph, node_to_community, 'community-leiden')
+
+    return nx_graph, len(partition)
+
+def apply_louvain_algorithm(nx_graph, weight_attr='startRadius', resolution=1.0, prioritize_main_stem=True):
+    """
+    Applies the Louvain method to a NetworkX graph, assigns each node a 'community-louvain' attribute,
+    and returns the original graph with the community labels and the number of communities detected.
+
+    Parameters:
+    nx_graph (nx.DiGraph): A directed NetworkX graph
+    weight_attr (str): Node attribute to influence edge weights (default is 'startRadius')
+    resolution (float): Resolution parameter for the Louvain method (default is 1.0)
+    prioritize_main_stem (bool): Whether to prioritize the main stem (original_branch_id == 0)
+
+    Returns:
+    nx.DiGraph: The original NetworkX graph with 'community-louvain' labels for each node
+    int: Number of communities detected
+    """
+    # Create an undirected copy for Louvain
+    graph_copy = nx_graph.to_undirected()
+
+    # Initialize edge weights based on node attributes
+    for u, v, data in graph_copy.edges(data=True):
+        start_radius_u = graph_copy.nodes[u].get(weight_attr, 1.0)
+        start_radius_v = graph_copy.nodes[v].get(weight_attr, 1.0)
+        edge_weight = (start_radius_u + start_radius_v) / 2.0
+
+        # Prioritize edges connected to main stem
+        if prioritize_main_stem:
+            original_branch_id_u = graph_copy.nodes[u].get('original_branch_id', -1)
+            original_branch_id_v = graph_copy.nodes[v].get('original_branch_id', -1)
+            if original_branch_id_u == 0 or original_branch_id_v == 0:
+                edge_weight += 5.0  # Adjusted boost
+
+        data['weight'] = edge_weight
+
+    # Apply Louvain method
+    partition = community_louvain.best_partition(graph_copy, weight='weight', resolution=resolution)
+
+    # Assign community as a node attribute in the original NetworkX graph
+    nx.set_node_attributes(nx_graph, partition, 'community-louvain')
+
+    num_communities = len(set(partition.values()))
+    return nx_graph, num_communities
+
+def apply_girvan_newman_algorithm(nx_graph, top_level_communities=4, prioritize_main_stem=True):
+    """
+    Applies the Girvan-Newman algorithm to a NetworkX graph, assigns each node a 'community-girvan_newman' attribute,
+    and returns the original graph with the community labels and the number of communities detected.
+
+    Parameters:
+    nx_graph (nx.DiGraph): A directed NetworkX graph
+    top_level_communities (int): The desired number of communities to detect (default is 4)
+    prioritize_main_stem (bool): Whether to prioritize the main stem (original_branch_id == 0)
+
+    Returns:
+    nx.DiGraph: The original NetworkX graph with 'community-girvan_newman' labels for each node
+    int: Number of communities detected
+    """
+    # Create an undirected copy for Girvan-Newman
+    graph_copy = nx_graph.to_undirected()
+
+    # If prioritizing main stem, adjust edge weights accordingly
+    if prioritize_main_stem:
+        for u, v, data in graph_copy.edges(data=True):
+            original_branch_id_u = graph_copy.nodes[u].get('original_branch_id', -1)
+            original_branch_id_v = graph_copy.nodes[v].get('original_branch_id', -1)
+            if original_branch_id_u == 0 or original_branch_id_v == 0:
+                data['weight'] = data.get('weight', 1.0) + 5.0  # Adjusted boost
+
+    # Generate communities using Girvan-Newman
+    comp = nx_community.girvan_newman(graph_copy)
+
+    # Iterate to get the desired number of communities
+    limited = ()
+    try:
+        for communities in comp:
+            limited = communities
+            if len(limited) >= top_level_communities:
+                break
+    except StopIteration:
+        pass
+
+    # Create a mapping from node to community
+    community_mapping = {}
+    for community_id, community in enumerate(limited):
+        for node in community:
+            community_mapping[node] = community_id
+
+    # Assign community as a node attribute in the original NetworkX graph
+    nx.set_node_attributes(nx_graph, community_mapping, 'community-girvan_newman')
+
+    num_communities = len(limited)
+    return nx_graph, num_communities
+
+def apply_infomap_algorithm(nx_graph, weight_attr='startRadius', prioritize_main_stem=True):
+    """
+    Applies the Infomap algorithm to a NetworkX graph, assigns each node a 'community-infomap' attribute,
+    and returns the original graph with the community labels and the number of communities detected.
+
+    Parameters:
+    nx_graph (nx.DiGraph): A directed NetworkX graph
+    weight_attr (str): Node attribute to influence edge weights (default is 'startRadius')
+    prioritize_main_stem (bool): Whether to prioritize the main stem (original_branch_id == 0)
+
+    Returns:
+    nx.DiGraph: The original NetworkX graph with 'community-infomap' labels for each node
+    int: Number of communities detected
+    """
+    # Initialize Infomap
+    im = Infomap()
+
+    # Create a mapping from original node IDs to unique integers
+    original_to_int = {node: idx for idx, node in enumerate(nx_graph.nodes())}
+    int_to_original = {idx: node for node, idx in original_to_int.items()}
+
+    # Add edges to Infomap with possible weights using integer node IDs
+    for u, v, data in nx_graph.edges(data=True):
+        # Map original node IDs to integers
+        u_int = original_to_int[u]
+        v_int = original_to_int[v]
+        
+        weight = data.get('weight', 1.0)
+        # Incorporate node weights into edge weights
+        if weight_attr in nx_graph.nodes[u] and weight_attr in nx_graph.nodes[v]:
+            start_radius_u = nx_graph.nodes[u].get(weight_attr, 1.0)
+            start_radius_v = nx_graph.nodes[v].get(weight_attr, 1.0)
+            weight *= (start_radius_u + start_radius_v) / 2.0
+
+        # Prioritize edges connected to main stem
+        original_branch_id_u = nx_graph.nodes[u].get('original_branch_id', -1)
+        original_branch_id_v = nx_graph.nodes[v].get('original_branch_id', -1)
+        if prioritize_main_stem:
+            if original_branch_id_u == 0 or original_branch_id_v == 0:
+                weight += 5.0  # Adjusted boost to prevent over-merging
+
+        # Infomap expects unsigned integers; ensure u_int and v_int are integers
+        im.add_link(u_int, v_int, weight)
+
+    # Run Infomap
+    im.run()
+
+    # Create a mapping from integer node IDs to community IDs
+    int_to_community = {}
+    for node in im.nodes:
+        int_to_community[node.node_id] = node.moduleId  # Use 'moduleId' instead of 'module'
+
+    # Map back community assignments to original node IDs
+    original_community_mapping = {}
+    for int_id, community_id in int_to_community.items():
+        original_node = int_to_original[int_id]
+        original_community_mapping[original_node] = community_id
+
+    # Assign community as a node attribute in the original NetworkX graph
+    nx.set_node_attributes(nx_graph, original_community_mapping, 'community-infomap')
+
+    num_communities = len(set(original_community_mapping.values()))
+    return nx_graph, num_communities
+
+# -------------------- Visualization Function --------------------
+
+def create_pyvista_polydata(G):
+    """
+    Converts a directed graph into a PyVista PolyData object, representing nodes as points and
+    edges as lines, with node attributes added as point_data. Also adds two columns: 'subgraph' 
+    and 'isRootNode'.
+    
+    Parameters:
+    - graph_path (str): Path to the GraphML file to be converted to PolyData.
+    
+    Returns:
+    - pv.PolyData: PolyData object with nodes as points, edges as lines, and attributes as point_data.
+    """
+    # Load the graph from the GraphML file
+  
+    
+    # Check if the graph is directed
+    if not G.is_directed():
+        raise ValueError("The graph must be directed to detect root nodes.")
+    
+    # Extract node attributes for spatial positions (startX, startY, startZ)
+    node_positions = {
+        node: (float(data['startX']), float(data['startY']), float(data['startZ'])) 
+        for node, data in G.nodes(data=True) 
+        if 'startX' in data and 'startY' in data and 'startZ' in data
+    }
+    
+    # Extract positions as a numpy array
+    nodes = list(node_positions.keys())
+    points = np.array([node_positions[node] for node in nodes])
+    
+    # Get weakly connected components and assign them as a 'subgraph' attribute
+    weakly_connected_components = list(nx.weakly_connected_components(G))
+    subgraph_data = np.full(len(nodes), -1, dtype=int)
+    for idx, component in enumerate(weakly_connected_components):
+        for node in component:
+            node_index = nodes.index(node)
+            subgraph_data[node_index] = idx
+
+    # Identify root nodes (nodes with in-degree 0) and mark them in 'isRootNode'
+    is_root_node_data = np.zeros(len(nodes), dtype=bool)  # Initialize with False
+    root_nodes = [node for node in G.nodes() if G.in_degree(node) == 0]
+    for root_node in root_nodes:
+        if root_node in nodes:
+            root_index = nodes.index(root_node)
+            is_root_node_data[root_index] = True
+
+    # Prepare the edges for the line cells in PyVista
+    lines = []
+    for u, v in G.edges():
+        if u in node_positions and v in node_positions:
+            u_index = nodes.index(u)
+            v_index = nodes.index(v)
+            lines.append([2, u_index, v_index])  # Each line connects 2 points: u and v
+
+    # Convert lines to a numpy array
+    lines = np.hstack(lines)
+
+    # Create the PyVista PolyData object
+    polydata = pv.PolyData(points)
+
+    # Add edges as lines to the PolyData object
+    polydata.lines = lines
+
+    # Add attributes (node data) to the PolyData point_data
+    for key in G.nodes[nodes[0]].keys():
+        print(f'adding attribute: {key}')
+        attribute_data = np.array([G.nodes[node].get(key, np.nan) for node in nodes])
+        polydata.point_data[key] = attribute_data
+    
+    # Add 'subgraph' and 'isRootNode' columns to point_data
+    polydata.point_data['subgraph'] = subgraph_data
+    polydata.point_data['isRootNode'] = is_root_node_data
+
+    return polydata
+
+def visualize_graph_3d(graph_path):
+    """
+    Visualizes a directed graph in 3D space, with a dropdown to select node coloring
+    based on attributes, highlighting weakly connected components, and labeling root nodes.
+    
+    Parameters:
+    - graph_path (str): Path to the GraphML file to be visualized.
+    """
+    # Load the graph from the GraphML file
+    G = nx.read_graphml(graph_path)
+    
+    # Check if the graph is directed
+    if not G.is_directed():
+        raise ValueError("The graph must be directed to identify origins based on topological information.")
+    
+    # Extract node attributes for spatial positions (startX, startY, startZ)
+    node_positions = {
+        node: (float(data['startX']), float(data['startY']), float(data['startZ'])) 
+        for node, data in G.nodes(data=True) 
+        if 'startX' in data and 'startY' in data and 'startZ' in data
+    }
+
+    # Extract all attributes for dynamic coloring
+    available_attributes = list(next(iter(G.nodes(data=True)))[1].keys())  # Attributes from the first node
+    default_attribute = "component"
+
+    # Get weakly connected components and assign them as a default attribute
+    weakly_connected_components = list(nx.weakly_connected_components(G))
+    for idx, component in enumerate(weakly_connected_components):
+        for node in component:
+            G.nodes[node]["component"] = idx
+
+    # Identify root nodes (nodes with in-degree 0)
+    root_nodes = [node for node in G.nodes() if G.in_degree(node) == 0]
+
+    # Prepare positions for nodes and root nodes
+    nodes = list(node_positions.keys())
+    positions = np.array([node_positions[node] for node in nodes])
+
+    # Function to create a color array based on an attribute
+    def get_color_by_attribute(attribute):
+        return np.array([G.nodes[node].get(attribute, 0) for node in nodes])
+
+    # Set the default colors
+    colors = get_color_by_attribute(default_attribute)
+
+    # Prepare the edges
+    valid_edges = []
+    for u, v in G.edges():
+        if u in node_positions and v in node_positions:
+            valid_edges.append([node_positions[u], node_positions[v]])
+
+    edges_start = np.array([edge[0] for edge in valid_edges])
+    edges_end = np.array([edge[1] for edge in valid_edges])
+
+    # Create hover text showing all attributes for each node, including root nodes
+    hover_texts = []
+    for node in nodes:
+        attrs = G.nodes[node]  # Get all attributes of the node
+        hover_text = f"Node: {node}<br>" + "<br>".join([f"{key}: {value}" for key, value in attrs.items()])
+        hover_texts.append(hover_text)
+
+    # Create scatter plot for the nodes
+    node_trace = go.Scatter3d(
+        x=positions[:, 0], 
+        y=positions[:, 1], 
+        z=positions[:, 2],
+        mode='markers',
+        marker=dict(
+            size=5,
+            color=colors,  # color by selected attribute (default: component)
+            colorscale='Viridis',
+            opacity=0.8,
+        ),
+        hoverinfo='text',
+        text=hover_texts  # Set hover text with full node attributes
+    )
+
+    # Create lines for the edges
+    edge_traces = []
+    for edge_start, edge_end in zip(edges_start, edges_end):
+        edge_trace = go.Scatter3d(
+            x=[edge_start[0], edge_end[0], None],
+            y=[edge_start[1], edge_end[1], None],
+            z=[edge_start[2], edge_end[2], None],
+            mode='lines',
+            line=dict(color='gray', width=2),
+            hoverinfo='none'
+        )
+        edge_traces.append(edge_trace)
+
+    # Add annotations for the root nodes (in-degree 0)
+    annotations = []
+    for root_node in root_nodes:
+        if root_node in node_positions:
+            root_pos = node_positions[root_node]
+            root_hover_text = f"Root Node: {root_node}<br>" + "<br>".join(
+                [f"{key}: {value}" for key, value in G.nodes[root_node].items()]
+            )
+            annotations.append(
+                go.Scatter3d(
+                    x=[root_pos[0]],
+                    y=[root_pos[1]],
+                    z=[root_pos[2]],
+                    mode='markers+text',
+                    marker=dict(size=10, color='red'),
+                    text=[root_hover_text],
+                    textposition="top center",
+                    hoverinfo='text'
+                )
+            )
+
+    # Combine the node and edge traces with root node annotations
+    data = [node_trace] + edge_traces + annotations
+
+    # Create dropdown to select the attribute for node coloring
+    buttons = []
+    for attribute in available_attributes:
+        buttons.append(dict(
+            args=[{'marker.color': [get_color_by_attribute(attribute)]}],
+            label=attribute,
+            method='restyle'
+        ))
+
+    # Layout settings with dropdown menu for node coloring
+    layout = go.Layout(
+        title="Graph colored by selected attribute, with root nodes labeled",
+        showlegend=False,
+        scene=dict(
+            xaxis=dict(title='X'),
+            yaxis=dict(title='Y'),
+            zaxis=dict(title='Z'),
+        ),
+        margin=dict(l=0, r=0, b=0, t=0),
+        updatemenus=[dict(
+            buttons=buttons,
+            direction="down",
+            showactive=True,
+            x=0.17,
+            xanchor="left",
+            y=1.1,
+            yanchor="top"
+        )]
+    )
+
+    # Create the figure
+    fig = go.Figure(data=data, layout=layout)
+
+    # Render the plot in a new window using the 'browser' renderer
+    pio.renderers.default = 'browser'
+    fig.show()
+
+# Example usage:
+# visualize_graph_3d('your_graph_file_path.graphml')
+
+# Example usage:
+# visualize_graph_3d('your_graph_file_path.graphml')
+
+
+def create_tree_id_filename_dict(point_cloud_files):
+    """
+    Creates a new dictionary with tree ID as key and processed filename as value.
+    
+    :param point_cloud_files: Dictionary with filename as key and tree ID as value
+    :return: New dictionary with tree ID as key and processed filename as value
+    """
+    tree_id_filename_dict = {}
+    for filename, tree_id in point_cloud_files.items():
+        processed_filename = filename.split('_')[0]
+        print(f"Tree ID: {tree_id}, Filename: {processed_filename}")
+        tree_id_filename_dict[tree_id] = processed_filename
+    return tree_id_filename_dict
+
+
+#if __name__ == "__main__":
+folderPath = 'data/revised/lidar scans/elm/adtree'
+point_cloud_files = {
+    "Small A_skeleton.ply": 4,
+    "Small B_skeleton.ply": 5,
+    "Small C_skeleton.ply": 6,
+    "Med A 1 mil_skeleton.ply": 1,
+    "Med B 1 mil_skeleton.ply": 2,
+    "Med C 1 mil_skeleton.ply": 3,
+    "ElmL1_skeleton.ply": 7,
+    "Elm L3_skeleton.ply": 9,
+    "Elm L4_skeleton.ply": 10,
+    "Elm L5_skeleton.ply": 11,
+    "Large Elm A 1 mil_skeleton.ply": 12,
+    "Large Elm B - 1 mil_skeleton.ply": 13,
+    "Large Elm C 1 mil_skeleton.ply": 14
+}
+
+fileNameDic = create_tree_id_filename_dict(point_cloud_files)
+selectedTreeIDs = [12]
+# Create a subset of fileNameDic that only includes the selected TreeIDs
+selected_fileNameDic = {tree_id: filename for tree_id, filename in fileNameDic.items() if tree_id in selectedTreeIDs}
+#fileNameDic = selected_fileNameDic
+
+for tree_id, filename in fileNameDic.items():
+    graphPath = f'{folderPath}/processedQSMs/{filename}_clusterGraph.graphml'
+    voxelDF = pd.read_csv(f'{folderPath}/elmVoxelDFs/{filename}_voxelDF.csv')
+
+    G = nx.read_graphml(graphPath)
+    #G = apply_leiden_algorithm(G)
+
+    #G = apply_infomap(G)
+        # Apply Leiden Algorithm
+
+    directed = True  # Set to False if your graph is undirected
+    
+        # Apply Community Detection Algorithms
+    print("Applying Leiden Algorithm...")
+    G, leiden_count = apply_leiden_algorithm(
+        G,
+        weight_attr='startRadius',
+        prioritize_main_stem=True
+    )
+    print(f"Leiden detected {leiden_count} communities.")
+
+    print("Applying Louvain Algorithm...")
+    G, louvain_count = apply_louvain_algorithm(
+        G,
+        weight_attr='startRadius',
+        resolution=1.0,
+        prioritize_main_stem=True
+    )
+    print(f"Louvain detected {louvain_count} communities.")
+
+    print("Applying Girvan-Newman Algorithm...")
+    desired_communities = 4  # Adjust based on your data
+    G, girvan_newman_count = apply_girvan_newman_algorithm(
+        G,
+        top_level_communities=desired_communities,
+        prioritize_main_stem=True
+    )
+    print(f"Girvan-Newman detected {girvan_newman_count} communities.")
+
+    print("Applying Infomap Algorithm...")
+    G, infomap_count = apply_infomap_algorithm(
+        G,
+        weight_attr='startRadius',
+        prioritize_main_stem=True
+    )
+    print(f"Infomap detected {infomap_count} communities.")
+  
+    #create a polydata object from voxelDF x y z columns
+    voxelPoly = pv.PolyData(voxelDF[['x', 'y', 'z']].values)
+    
+    poly = create_pyvista_polydata(G)
+
+      
+    #visualize_graph_3d(graphPath)
+    community_detection_method_names = [
+        'community-infomap',
+        'community-louvain',
+        'community-girvan_newman',
+        'community-leiden'
+    ]
+    
+
+    """plotter = pv.Plotter()
+    plotter.add_mesh(voxelPoly, color='grey', point_size=10, opacity=0.25, render_points_as_spheres=True)
+    plotter.add_mesh(poly, scalars='community', cmap='Set2', line_width=10)"""
+
+    # Initialize the plotter with multiple subplots
+    num_methods = len(community_detection_method_names)
+    plotter = pv.Plotter(shape=(1, num_methods))  # 1 row, num_methods columns
+
+    for i, method_name in enumerate(community_detection_method_names):
+        # Make a copy of the polydata
+        poly_copy = poly.copy()
+        
+        # Set the active scalar field to the current community detection method
+        if method_name in poly_copy.point_data:
+            poly_copy.set_active_scalars(method_name)
+        else:
+            print(f"Warning: Scalar '{method_name}' not found in PolyData")
+            continue
+
+        # Set the active subplot
+        plotter.subplot(0, i)
+
+        # Add the voxel mesh to the subplot
+        plotter.add_mesh(voxelPoly, color='grey', point_size=10, opacity=0.25, render_points_as_spheres=True)
+        
+        # Add the poly mesh to the subplot with the current scalar field
+        plotter.add_mesh(poly_copy, scalars=method_name, cmap='Set2', line_width=10)
+        
+        # Add title to each subplot
+        plotter.add_title(method_name, font_size=10)
+
+        # Show the plot with subplots
+        plotter.show()
+
+    """# Extract root nodes
+    root_nodes = poly.extract_points(poly.point_data['isRootNode'] == True)
+    
+    # Create labels for root nodes
+    root_labels = []
+    for i in range(root_nodes.n_points):
+        label = ""
+        for key in root_nodes.point_data.keys():
+            label += f"{key}: {root_nodes.point_data[key][i]}\n"
+        root_labels.append(label.strip())
+        print(label)"""
+    
+    # Add root nodes with labels
+    #plotter.add_point_labels(root_nodes.points, root_labels, point_size=15, font_size=30)
+    
+    # Extract nodes with original cluster id == 0
+    cluster_zero_nodes = poly.extract_points(poly.point_data['original_cluster_id'] == 0)
+    
+    # Add cluster zero nodes as red points
+    plotter.add_mesh(cluster_zero_nodes, color='red', point_size=50, render_points_as_spheres=True)
+
+    #add title to plotter
+    plotter.title = f'Tree ID: {tree_id}, Filename: {filename}'
+
+    #plotter.enable_eye_dome_lighting()
+    plotter.show()
+    plotter.close()
+      

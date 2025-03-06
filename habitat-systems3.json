@@ -1,0 +1,152 @@
+{
+    "buildings": 
+    {
+        "roof": 
+        {
+            "search": 
+            {
+                "buildings-dip": [[0.0, 0.1]]
+            },
+            "subtypes": 
+            {
+                "Load bearing": 
+                {
+                    "extensive_green_roof-RATING": ["Excellent", "Good", "Moderate"]
+                },
+                "Lightweight": 
+                {
+                    "intensive_green_roof-RATING": ["Excellent", "Good", "Moderate"]
+                }
+            }
+        },
+
+        "wall": {
+            "search": 
+            {
+                "buildings-dip": [[1, 2]]
+            },
+            "subtypes": 
+            {
+                "habitat ready": 
+                {
+                    "solar": [[0.2, 1.0]] 
+                }
+            }
+        }
+    },
+
+    "street features": 
+    {
+        "convertable space": 
+        {
+            "search": 
+            {
+                "elevation": [[-5,5]]
+            },
+            "subtypes": 
+            {
+                "main road": 
+                {
+                    "distance groups": [[-1,2]],
+                    "parkingmedian-isparkingmedian": [true]
+                },
+                "conversion-identified": 
+                {
+                    "disturbance-potential-proximity": [3]
+                },
+                "conversion-public": 
+                {
+                    "disturbance-potential-proximity": [2]
+                },
+                "conversion-private": 
+                {
+                    "disturbance-potential-proximity": [1]
+                }
+            }
+        },
+
+        "utility pole": 
+        {
+            "search": 
+            {
+                "ispylons": [true]
+            },
+            "subtypes": 
+            {
+                "utility pole": 
+                {
+                    "ispylons": [true]
+                }
+            }
+        },
+
+        "tree-ground": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [true],
+                "_Control": ["street-tree"]
+            },
+            
+            "subtypes": 
+            {
+                "existing": 
+                {
+                    "_Tree_size": ["large"]
+                },
+                "future": 
+                {
+                    "_Tree_size": ["medium"]
+                }            
+            }
+        },
+
+        "turf": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [true],
+                "_Control": ["park-tree"]
+            },
+            "subtypes": 
+            {
+                
+                "existing": 
+                {
+                    "_Tree_size": ["large"]
+                },
+                "future": 
+                {
+                    "_Tree_size": ["medium"]
+                }            
+            }
+        },
+
+        "vacant lot": 
+        {
+            "search": 
+            {
+                "isPrecolonial": [true],
+                "_Control": ["reserve-tree"]
+            },
+            "subtypes": 
+            {
+                
+                "existing": 
+                {
+                    "_Tree_size": ["large"]
+                },
+                "future": 
+                {
+                    "_Tree_size": ["medium"]
+                }            
+            }
+        }
+    },
+
+
+
+
+
+    }
+}

@@ -1,0 +1,434 @@
+import pandas as pd
+import xarray as xr
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+import ast
+import a_helper_functions
+import pyvista as pv
+
+# === CONFIGURATION VARIABLES ===
+
+SITE = 'city'
+VOXEL_SIZE_KEY = 'voxel_size'
+GREEN_ROOF_DEAD_LOAD = 300
+BROWN_ROOF_DEAD_LOAD = 150
+GREEN_ROOF_LOG_LOAD = 50
+BROWN_ROOF_LOG_LOAD = 100
+LOG_SIZE_PRIORITY = ['large', 'medium', 'small']
+
+# === HELPER FUNCTIONS ===
+def infer_dtype(series):
+    if pd.api.types.is_float_dtype(series):
+        return float
+    elif pd.api.types.is_integer_dtype(series):
+        return int
+    elif pd.api.types.is_bool_dtype(series):
+        return bool
+    else:
+        return str
+
+def initialize_xarray_variables_generic_auto(xarray_dataset, df, column_names, prefix):
+    for col in column_names:
+        variable_name = f"{prefix}{col}"
+        dtype = infer_dtype(df[col])
+        
+        if dtype == float:
+            xarray_dataset[variable_name] = (('voxel',), np.full(xarray_dataset.sizes['voxel'], np.nan))
+        elif dtype == int:
+            xarray_dataset[variable_name] = (('voxel',), np.full(xarray_dataset.sizes['voxel'], -1))
+        elif dtype == bool:
+            xarray_dataset[variable_name] = (('voxel',), np.full(xarray_dataset.sizes['voxel'], False))
+        elif dtype == str:
+            xarray_dataset[variable_name] = (('voxel',), np.full(xarray_dataset.sizes['voxel'], 'unassigned'))
+
+    return xarray_dataset
+
+# === MAIN PROCESS FUNCTIONS ===
+def calculate_roof_voxels(xarray_dataset):
+    roof_types = ['none', 'green roof', 'brown roof']
+    max_length = max(len(s) for s in roof_types)
+    xarray_dataset['envelope_roofType'] = xr.DataArray(
+        np.full(xarray_dataset.sizes['voxel'], 'none', dtype=f'U{max_length}'), dims='voxel'
+    )
+
+    green_roof_mask = xarray_dataset.site_greenRoof_ratingInt >= 4
+    brown_roof_mask = (xarray_dataset.site_brownRoof_ratingInt > 1) & (xarray_dataset.site_greenRoof_ratingInt < 4)
+    xarray_dataset['envelope_roofType'] = xr.where(green_roof_mask, 'green roof', xarray_dataset.envelope_roofType)
+    xarray_dataset['envelope_roofType'] = xr.where(brown_roof_mask, 'brown roof', xarray_dataset.envelope_roofType)
+
+    flattened_df = xarray_dataset.to_dataframe().reset_index()
+    roof_info_df = flattened_df[flattened_df['envelope_roofType'] != 'none'].copy()
+    roof_info_df['Voxel coordinate'] = roof_info_df['voxel']
+
+    roof_info_df['roofID'] = roof_info_df.groupby(['site_building_ID', 'envelope_roofType']).ngroup()
+    grouped_roof_info = roof_info_df.groupby('roofID').agg(
+        site_building_ID=('site_building_ID', 'first'),
+        envelope_roofType=('envelope_roofType', 'first'),
+        voxel_coordinates=('Voxel coordinate', list),
+        centroid_x=('centroid_x', list),
+        centroid_y=('centroid_y', list),
+        centroid_z=('centroid_z', list),
+        number_of_voxels=('site_building_ID', 'count')
+    ).reset_index()
+
+    # Calculate the voxel area (in square meters)
+    voxel_area = xarray_dataset.attrs[VOXEL_SIZE_KEY] ** 2
+
+    # Calculate roof loads using the corrected area-based formula
+    grouped_roof_info['Roof load'] = (
+        grouped_roof_info['number_of_voxels'] * voxel_area *
+        grouped_roof_info['envelope_roofType'].map({
+            'green roof': GREEN_ROOF_DEAD_LOAD,
+            'brown roof': BROWN_ROOF_DEAD_LOAD
+        })
+    )
+    grouped_roof_info['Log load'] = (
+        grouped_roof_info['number_of_voxels'] * voxel_area *
+        grouped_roof_info['envelope_roofType'].map({
+            'green roof': GREEN_ROOF_LOG_LOAD,
+            'brown roof': BROWN_ROOF_LOG_LOAD
+        })
+    )
+    
+    return xarray_dataset, grouped_roof_info, roof_info_df
+
+
+def assign_logs_calculations(grouped_roof_info, log_library_df):
+    """
+    Assign logs to roofs based on load requirements, prioritizing larger logs.
+    Ensures that a log is only assigned if the roof can support its mass.
+    """
+    log_assignments = []
+    logNo_counter = 0
+
+    grouped_roof_info['Log load assigned'] = 0
+
+    for idx, roof in grouped_roof_info.iterrows():
+        remaining_roof_load = roof['Log load']
+        voxel_indexes = roof['voxel_coordinates']
+        assigned_log_load = 0
+
+        for log_size in LOG_SIZE_PRIORITY:
+            available_logs = log_library_df[log_library_df['LogSize'] == log_size].copy()
+            while remaining_roof_load > 0 and not available_logs.empty:
+                selected_log = available_logs.sample(1).iloc[0]
+                log_no = logNo_counter
+                log_mass = selected_log['Biomass_kg']
+                log_size = selected_log['LogSize']
+
+                # Check if the log can be supported by the remaining load
+                if log_mass <= remaining_roof_load:
+                    remaining_roof_load -= log_mass
+                    assigned_log_load += log_mass
+                    voxel_index = np.random.choice(voxel_indexes)
+                    
+                    log_assignments.append({
+                        'logNo': log_no,
+                        'logMass': log_mass,
+                        'logSize': log_size,
+                        'roofID': roof['roofID'],
+                        'voxelID': voxel_index
+                    })
+                    
+                    logNo_counter += 1
+                    available_logs = available_logs[available_logs['LogNo'] != selected_log['LogNo']]
+                else:
+                    # Skip this log if it's too heavy for the remaining load
+                    available_logs = available_logs[available_logs['LogNo'] != selected_log['LogNo']]
+
+        grouped_roof_info.at[idx, 'Log load assigned'] = assigned_log_load
+
+    log_info_df = pd.DataFrame(log_assignments)
+    return log_info_df, grouped_roof_info
+
+def update_xarray_with_assignments(xarray_dataset, log_info_df, grouped_roof_info):
+    log_info_columns = ['logNo', 'logMass', 'logSize']
+    roof_info_columns = ['roofID', 'Roof load', 'Log load', 'Log load assigned']
+    
+    xarray_dataset = initialize_xarray_variables_generic_auto(
+        xarray_dataset, log_info_df, log_info_columns, 'envelope_'
+    )
+    xarray_dataset = initialize_xarray_variables_generic_auto(
+        xarray_dataset, grouped_roof_info, roof_info_columns, 'envelope_'
+    )
+
+    for _, log in log_info_df.iterrows():
+        voxel_id = log['voxelID']
+        for col in log_info_columns:
+            variable_name = f"envelope_{col}"
+            xarray_dataset[variable_name].loc[dict(voxel=voxel_id)] = log[col]
+
+    for _, roof in grouped_roof_info.iterrows():
+        voxel_ids = roof['voxel_coordinates']
+        for col in roof_info_columns:
+            variable_name = f"envelope_{col}"
+            value = roof[col]
+            for voxel_id in voxel_ids:
+                xarray_dataset[variable_name].loc[dict(voxel=voxel_id)] = value
+    
+    return xarray_dataset
+
+
+
+# === MAIN PROCESS FUNCTIONS ===
+def calculate_roof_voxels(xarray_dataset):
+    roof_types = ['none', 'green roof', 'brown roof']
+    max_length = max(len(s) for s in roof_types)
+    xarray_dataset['envelope_roofType'] = xr.DataArray(
+        np.full(xarray_dataset.sizes['voxel'], 'none', dtype=f'U{max_length}'), dims='voxel'
+    )
+
+    green_roof_mask = xarray_dataset.site_greenRoof_ratingInt >= 4
+    brown_roof_mask = (xarray_dataset.site_brownRoof_ratingInt > 1) & (xarray_dataset.site_greenRoof_ratingInt < 4)
+    xarray_dataset['envelope_roofType'] = xr.where(green_roof_mask, 'green roof', xarray_dataset.envelope_roofType)
+    xarray_dataset['envelope_roofType'] = xr.where(brown_roof_mask, 'brown roof', xarray_dataset.envelope_roofType)
+
+    flattened_df = xarray_dataset.to_dataframe().reset_index()
+    roof_info_df = flattened_df[flattened_df['envelope_roofType'] != 'none'].copy()
+    roof_info_df['Voxel coordinate'] = roof_info_df['voxel']
+
+    roof_info_df['roofID'] = roof_info_df.groupby(['site_building_ID', 'envelope_roofType']).ngroup()
+    grouped_roof_info = roof_info_df.groupby('roofID').agg(
+        site_building_ID=('site_building_ID', 'first'),
+        envelope_roofType=('envelope_roofType', 'first'),
+        voxel_coordinates=('Voxel coordinate', list),
+        centroid_x=('centroid_x', list),
+        centroid_y=('centroid_y', list),
+        centroid_z=('centroid_z', list),
+        number_of_voxels=('site_building_ID', 'count')
+    ).reset_index()
+
+    voxel_area = xarray_dataset.attrs[VOXEL_SIZE_KEY] ** 2
+    grouped_roof_info['Roof load'] = (
+        grouped_roof_info['number_of_voxels'] * voxel_area *
+        grouped_roof_info['envelope_roofType'].map({
+            'green roof': GREEN_ROOF_DEAD_LOAD,
+            'brown roof': BROWN_ROOF_DEAD_LOAD
+        })
+    )
+    grouped_roof_info['Log load'] = (
+        grouped_roof_info['number_of_voxels'] * voxel_area *
+        grouped_roof_info['envelope_roofType'].map({
+            'green roof': GREEN_ROOF_LOG_LOAD,
+            'brown roof': BROWN_ROOF_LOG_LOAD
+        })
+    )
+    
+    return xarray_dataset, grouped_roof_info, roof_info_df
+
+# Updated function to include checks for roof size and load validation.
+def assign_logs_calculations(grouped_roof_info, log_library_df):
+    """
+    Assign logs to roofs based on load requirements, prioritizing larger logs.
+    Ensures that a log is only assigned if the roof can support its mass.
+    Skips roofs with fewer than 10 tiles and ensures load constraints.
+    """
+    log_assignments = []
+    logNo_counter = 0
+
+    grouped_roof_info['Log load assigned'] = 0
+
+    for idx, roof in grouped_roof_info.iterrows():
+        # Skip roofs with fewer than 10 voxels
+        if roof['number_of_voxels'] < 10:
+            continue
+
+        remaining_roof_load = roof['Log load']
+        voxel_indexes = roof['voxel_coordinates']
+        assigned_log_load = 0
+
+        for log_size in LOG_SIZE_PRIORITY:
+            available_logs = log_library_df[log_library_df['LogSize'] == log_size].copy()
+            while remaining_roof_load > 0 and not available_logs.empty:
+                selected_log = available_logs.sample(1).iloc[0]
+                log_no = logNo_counter
+                log_mass = selected_log['Biomass_kg']
+                log_size = selected_log['LogSize']
+
+                # Check if the log can be supported by the remaining load
+                if log_mass <= remaining_roof_load:
+                    remaining_roof_load -= log_mass
+                    assigned_log_load += log_mass
+                    voxel_index = np.random.choice(voxel_indexes)
+                    
+                    log_assignments.append({
+                        'logNo': log_no,
+                        'logMass': log_mass,
+                        'logSize': log_size,
+                        'roofID': roof['roofID'],
+                        'voxelID': voxel_index
+                    })
+                    
+                    logNo_counter += 1
+                    available_logs = available_logs[available_logs['LogNo'] != selected_log['LogNo']]
+                else:
+                    # Skip this log if it's too heavy for the remaining load
+                    available_logs = available_logs[available_logs['LogNo'] != selected_log['LogNo']]
+
+                # Ensure that the remaining roof load is not negative
+                if remaining_roof_load < 0:
+                    remaining_roof_load = 0
+
+        # Ensure that the assigned log load does not exceed the initial log load for the roof
+        assigned_log_load = min(assigned_log_load, roof['Log load'])
+        grouped_roof_info.at[idx, 'Log load assigned'] = assigned_log_load
+
+    log_info_df = pd.DataFrame(log_assignments)
+    return log_info_df, grouped_roof_info
+
+
+
+
+def update_xarray_with_assignments(xarray_dataset, log_info_df, grouped_roof_info):
+    log_info_columns = ['logNo', 'logMass', 'logSize']
+    roof_info_columns = ['roofID', 'Roof load', 'Log load', 'Log load assigned']
+    
+    xarray_dataset = initialize_xarray_variables_generic_auto(
+        xarray_dataset, log_info_df, log_info_columns, 'envelope_'
+    )
+    xarray_dataset = initialize_xarray_variables_generic_auto(
+        xarray_dataset, grouped_roof_info, roof_info_columns, 'envelope_'
+    )
+
+    for _, log in log_info_df.iterrows():
+        voxel_id = log['voxelID']
+        for col in log_info_columns:
+            variable_name = f"envelope_{col}"
+            xarray_dataset[variable_name].loc[dict(voxel=voxel_id)] = log[col]
+
+    for _, roof in grouped_roof_info.iterrows():
+        voxel_ids = roof['voxel_coordinates']
+        for col in roof_info_columns:
+            variable_name = f"envelope_{col}"
+            value = roof[col]
+            for voxel_id in voxel_ids:
+                xarray_dataset[variable_name].loc[dict(voxel=voxel_id)] = value
+    
+    return xarray_dataset
+
+
+def print_stats_for_verification(subset_xarray):
+
+    # Define the columns of interest
+    log_info_columns = ['logNo', 'logMass', 'logSize']
+    roof_info_columns = ['roofID', 'Roof load', 'Log load', 'Log load assigned']
+
+    # Combine both sets of columns for iteration
+    all_columns = log_info_columns + roof_info_columns
+
+    # Initialize a dictionary to store the unique values and counts for each new variable in the xarray
+    unique_values_counts_all = {}
+
+    # Iterate over each variable and compute unique values and their counts (up to 10)
+    for col in all_columns:
+        var_name = f"envelope_{col}"
+        data = subset_xarray[var_name].values
+        unique, counts = np.unique(data, return_counts=True)
+        unique_values_counts_all[var_name] = list(zip(unique[:10], counts[:10]))
+
+    # Print the unique values and counts for each variable
+    for var_name, unique_values in unique_values_counts_all.items():
+        print(f"\nVariable: {var_name}")
+        for value, count in unique_values:
+            print(f"Value: {value}, Count: {count}")
+
+def plot_roofs(xarray_dataset, roof_info_df, log_info_df, log_library_df):
+    CIRCLE_SCALE_FACTOR = 0.01
+    CIRCLE_COLORS = {'large': 'red', 'medium': 'blue', 'small': 'green'}
+
+
+    bounds = xarray_dataset.attrs.get('bounds', None)
+    if bounds is None:
+        raise ValueError("Bounds attribute not found in xarray_dataset.")
+    x_min, x_max, y_min, y_max, z_min, z_max = bounds
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.scatter(roof_info_df['centroid_x'].values, roof_info_df['centroid_y'].values,
+               color='grey', label='All Voxel Centroids', s=10, alpha=0.3)
+
+    log_info_df = log_info_df.merge(log_library_df[['LogNo', 'LogSize', 'Biomass_kg']],
+                                    left_on='logNo', right_on='LogNo', how='left')
+
+    # Plot assigned logs as circles, with radius proportional to the log biomass
+    for _, log in log_info_df.iterrows():
+        voxel_id = log['voxelID']
+        biomass = log['Biomass_kg']
+        log_size = log['LogSize']
+        color = CIRCLE_COLORS.get(log_size, 'black')
+
+        centroid_x = xarray_dataset['centroid_x'].values[voxel_id]
+        centroid_y = xarray_dataset['centroid_y'].values[voxel_id]
+        circle_radius = np.sqrt(biomass) * CIRCLE_SCALE_FACTOR
+
+        circle = plt.Circle((centroid_x, centroid_y), circle_radius, color=color, alpha=0.6, edgecolor='black')
+        ax.add_patch(circle)
+
+    # Draw the site's boundary
+    site_boundary = Rectangle((x_min, y_min), x_max - x_min, y_max - y_min,
+                              edgecolor='black', facecolor='none', linewidth=2)
+    ax.add_patch(site_boundary)
+
+    # Set plot limits and labels
+    ax.set_xlim(x_min - 10, x_max + 10)
+    ax.set_ylim(y_min - 10, y_max + 10)
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    ax.set_title(f'Smaller Weighted Circles for Assigned Logs ({SITE})')
+
+    # Add legend
+    legend_labels = [plt.Line2D([0], [0], marker='o', color='w', label=f'{size.capitalize()} Log',
+                                markerfacecolor=color, markersize=10)
+                     for size, color in CIRCLE_COLORS.items()]
+    ax.legend(handles=legend_labels, loc='upper right')
+
+    # Show the plot
+    plt.show()
+
+
+# === MAIN PROCESS ===
+def process_roof_logs(xarray_dataset, log_library_df, downscale=True):
+    if downscale:
+        # Define required variables and attributes
+        required_variables = ['centroid_x', 'centroid_y', 'centroid_z', 'site_greenRoof_ratingInt', 'site_brownRoof_ratingInt', 'site_building_ID']
+        required_attributes = ['bounds', 'voxel_size']
+
+        old_xarray_dataset = xarray_dataset
+
+        xarray_dataset = a_helper_functions.create_subset_dataset(xarray_dataset, required_variables, required_attributes)
+
+    print("Processing roof logs...")
+    xarray_dataset, grouped_roof_info, roof_info_df = calculate_roof_voxels(xarray_dataset)
+    print("Assigning logs...")
+    log_info_df, grouped_roof_info = assign_logs_calculations(grouped_roof_info, log_library_df)
+    print("Updating xarray...")
+    xarray_dataset = update_xarray_with_assignments(xarray_dataset, log_info_df, grouped_roof_info)
+    
+    print_stats_for_verification(xarray_dataset)
+
+
+    if downscale:
+        xarray_dataset = a_helper_functions.update_xarray_with_subset(old_xarray_dataset, xarray_dataset)
+        
+    return xarray_dataset, grouped_roof_info, roof_info_df, log_info_df
+
+if __name__ == "__main__":
+    #xarray_path = "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/envelopes/city_subset_xarray.nc"
+    xarray_path = "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/city/city_3_voxelArray_withTreesAndPoleLocations.nc"
+    log_library_path = "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/trees/logLibraryStats.csv"
+    xarray_dataset = xr.open_dataset(xarray_path)
+    log_library_df = pd.read_csv(log_library_path)
+    subset_xarray, grouped_roof_info, roof_info_df, log_info_df = process_roof_logs(xarray_dataset, log_library_df)
+    vtk = a_helper_functions.convert_xarray_into_polydata(subset_xarray)
+
+    #plot_roofs(xarray_dataset, roof_info_df, log_info_df, log_library_df)
+
+
+    folder = '/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/city/test'
+
+    subset_xarray.to_netcdf(f'{folder}/city_voxelArray_withLogs.nc')
+    grouped_roof_info.to_csv(f'{folder}/city_grouped_roof_info.csv')
+    roof_info_df.to_csv(f'{folder}/city_roof_info.csv')
+    log_info_df.to_csv(f'{folder}/city_log_info.csv')
+    vtk.save(f'{folder}/city_polydata.vtk')
+    
