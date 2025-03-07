@@ -239,6 +239,13 @@ def preprocess_logLocationsDF(logLocationsDF, logLibraryDF, seed=42, voxel_size=
 def process_single_log(row, log_templates):
     """
     Processes a single log location using the template.
+    
+    Parameters:
+        row: DataFrame row containing log location and metadata
+        log_templates: Dictionary of log templates indexed by tree_id
+        
+    Returns:
+        DataFrame with translated log template and metadata
     """
     template = log_templates[row['tree_id']].copy()  # Changed from logModel to tree_id
     
@@ -254,18 +261,29 @@ def process_single_log(row, log_templates):
     # Translate coordinates
     template[['x', 'y', 'z']] += row_coords.values
     
-    # Add metadata columns from row
+    # Create a new DataFrame with only the necessary columns
+    result_df = pd.DataFrame()
+    
+    # 1. Add coordinates
+    result_df[['x', 'y', 'z']] = template[['x', 'y', 'z']]
+    
+    # 2. Add all resource columns from template
+    resource_cols = [col for col in template.columns if col.startswith('resource_')]
+    for col in resource_cols:
+        result_df[col] = template[col]
+    
+    # 3. Add metadata columns from row
     metadata_columns = [
         'tree_number', 'size', 'tree_id', 'precolonial', 'control',
         'diameter_breast_height', 'structureID', 'useful_life_expectancy',
-        'isNewTree'
+        'isNewTree', 'nodeType'
     ]
     
     for col in metadata_columns:
         if col in row:
-            template[col] = row[col]
+            result_df[col] = row[col]
     
-    return template
+    return result_df
 
 def create_log_resource_df(logLocationsDF, logLibraryDF, voxel_size=None):
     """
@@ -375,11 +393,6 @@ def voxelize_log_resource_df(df, voxel_size):
     
     return voxelized_df
 
-def initialise_and_translate_log(log_template, row):
-    """
-    Translates the log template by the given x, y, z offsets and initializes additional columns.
-    """
-    log_template_copy = log_template.copy()
 
 def initialise_and_translate_tree(tree_template, row):
     """
@@ -675,10 +688,12 @@ if __name__ == "__main__":
     logLocationsDF = preprocess_logLocationsDF(logLocationsDF, logLibrary)
     # Pass voxel size to create_log_resource_df for voxelization at the end
     logResourceDF = create_log_resource_df(logLocationsDF, logLibrary, voxel_size=outputVoxelSize)
-    
+        
     # Process trees
     locationDF, resourceDF = process_all_trees(treeDF, voxel_size=outputVoxelSize)
     resourceDF = rotate_resource_structures(locationDF, resourceDF)
+    
+    print(f'logDF is {logResourceDF.head()}')
     
     # Combine resources
     combined_resourceDF = pd.concat([resourceDF, logResourceDF], ignore_index=True)

@@ -198,6 +198,45 @@ def get_terrain_poly(terrain_df):
 
     return terrain_cloud
 
+def combine_polydata(resourcePoly, terrainPoly):
+    """Combine resource and terrain polydata with appropriate search variables"""
+    print("Combining resource and terrain polydata...")
+    
+    # Initialize search_bioavailable for resourcePoly as 'arboreal'
+    search_bioavailable_resource = np.full(resourcePoly.n_points, 'arboreal', dtype='<U20')
+    resourcePoly.point_data['search_bioavailable'] = search_bioavailable_resource
+    print(f"  Set {resourcePoly.n_points:,} resource points to 'arboreal'")
+    
+    # Initialize search_bioavailable for terrainPoly as 'low-vegetation'
+    search_bioavailable_terrain = np.full(terrainPoly.n_points, 'low-vegetation', dtype='<U20')
+    terrainPoly.point_data['search_bioavailable'] = search_bioavailable_terrain
+    print(f"  Set {terrainPoly.n_points:,} terrain points to 'low-vegetation'")
+
+    # Append 'forest_' to resourcePoly point_data attribute names
+    for attr in ['useful_life_expectancy', 'precolonial', 'size', 'control']:
+        if attr in resourcePoly.point_data:
+            # Create a new attribute with 'forest_' prefix and copy the data
+            resourcePoly.point_data[f'forest_{attr}'] = resourcePoly.point_data[attr].copy()
+            # Remove the original attribute
+            del resourcePoly.point_data[attr]
+            print(f"  Renamed '{attr}' to 'forest_{attr}'")
+
+    # Create a copy of resourcePoly
+    combinedPoly = resourcePoly.copy()
+    
+    # Initialize any missing variables in terrainPoly based on resourcePoly
+    terrainPoly = a_helper_functions.initialize_polydata_variables_generic_auto(terrainPoly, resourcePoly)
+    
+    # Initialize any missing variables in resourcePoly based on terrainPoly
+    resourcePoly = a_helper_functions.initialize_polydata_variables_generic_auto(resourcePoly, terrainPoly)
+    
+    # Append terrainPoly to combinedPoly
+    combinedPoly = combinedPoly.append_polydata(terrainPoly)
+    print(f"  Combined polydata has {combinedPoly.n_points:,} total points")
+    
+    combinedPoly.plot(scalars='resource_fallen log', render_points_as_spheres=True)
+    
+    return combinedPoly
 
 
 # Load and process baseline densities
@@ -343,23 +382,36 @@ voxel_size = 1
 baseline_tree_df, resourceDF = a_resource_distributor_dataframes.process_all_trees(baseline_tree_df, voxel_size=voxel_size)
 resourceDF = a_resource_distributor_dataframes.rotate_resource_structures(baseline_tree_df, resourceDF)
 
+
+print('\nCreating resource polydata...')
+resourcePoly = a_resource_distributor_dataframes.convertToPoly(resourceDF)
+
+print('\nCreating terrain polydata...')
+terrain_polydata = get_terrain_poly(terrain_df)
+
+
+
+
 output_folder = f'data/revised/final/baselines'
-
-poly = a_resource_distributor_dataframes.convertToPoly(resourceDF)
 polyfilePath = f'{output_folder}/{site}_baseline_resources_{voxel_size}.vtk'
-#poly.plot(scalars='useful_life_expectancy', render_points_as_spheres=True)
 
+
+#combine resourcePoly with terrainPoly
+print('creating combined polydata...')
+combinedPoly = combine_polydata(resourcePoly, terrain_polydata)
 
 print(f'saving polydata to {polyfilePath}')
-poly.save(polyfilePath)
+resourcePoly.save(polyfilePath)
 print(f'exported poly to {polyfilePath}')
 
 output_path = f'{output_folder}/{site}_baseline_trees.csv'
 baseline_tree_df.to_csv(output_path, index=False)
 print(f'\nSaved baseline trees to: {output_path}')
 
-print('\nCreating terrain polydata...')
-terrain_polydata = get_terrain_poly(terrain_df)
 output_path = f'{output_folder}/{site}_terrain_polydata.vtk'
 terrain_polydata.save(output_path)
 print(f'\nSaved terrain polydata to: {output_path}')
+
+output_path = f'{output_folder}/{site}_combined_polydata.vtk'
+combinedPoly.save(output_path)
+print(f'\nSaved combined polydata to: {output_path}')

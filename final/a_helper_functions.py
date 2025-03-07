@@ -149,6 +149,52 @@ def infer_dtype(series):
         return str
     
 
+def initialize_polydata_variables_generic_auto(target_poly, source_poly, column_names=None, prefix=''):
+    """
+    Automatically initializes variables in a target polydata using inferred data types
+    from a source polydata for specified columns.
+    
+    Parameters:
+        target_poly (pv.PolyData): The target polydata to update.
+        source_poly (pv.PolyData): The source polydata containing the data.
+        column_names (list, optional): List of column names to initialize. If None, all point_data keys from source are used.
+        prefix (str, optional): The prefix to add to the variable names.
+    
+    Returns:
+        pv.PolyData: Updated target polydata with initialized variables.
+    """
+    # If column_names is None, use all point_data keys from source
+    if column_names is None:
+        column_names = list(source_poly.point_data.keys())
+    
+    # Process each column
+    for col in column_names:
+        variable_name = f"{prefix}{col}"
+        
+        # Skip if the variable already exists in target
+        if variable_name in target_poly.point_data:
+            continue
+        
+        # Get the data from source
+        source_data = source_poly.point_data[col]
+        dtype = source_data.dtype
+        
+        # Initialize based on the inferred dtype
+        if np.issubdtype(dtype, np.floating):
+            target_poly.point_data[variable_name] = np.full(target_poly.n_points, np.nan, dtype=dtype)
+        elif np.issubdtype(dtype, np.integer):
+            target_poly.point_data[variable_name] = np.full(target_poly.n_points, -1, dtype=dtype)
+        elif np.issubdtype(dtype, np.bool_):
+            target_poly.point_data[variable_name] = np.full(target_poly.n_points, False, dtype=dtype)
+        elif dtype.kind in ('U', 'S'):  # String types
+            target_poly.point_data[variable_name] = np.full(target_poly.n_points, 'none', dtype=dtype)
+        else:
+            # For other types, use zeros
+            target_poly.point_data[variable_name] = np.zeros(target_poly.n_points, dtype=dtype)
+            
+        print(f"  Initialized {variable_name} in target polydata with default values")
+    
+    return target_poly
 
 if __name__ == "__main__":
     # Ask for voxel size and site

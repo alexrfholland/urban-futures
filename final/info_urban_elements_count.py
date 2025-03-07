@@ -243,9 +243,11 @@ def create_bioavailablity_layer(scenario_vtk):
     return scenario_vtk
 
 def create_design_action_layer(scenario_vtk):
-    """Create the search_design_action layer"""
+    """Create the search_design_action layer
+    design actions can be:
+    [list of design actions]
+    """
     print("Creating design action layer...")
-    
     search_design_action = np.full(scenario_vtk.n_points, 'none', dtype='<U20')
     
     # Set rewilded areas
