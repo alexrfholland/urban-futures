@@ -272,6 +272,11 @@ def process_single_log(row, log_templates):
     for col in resource_cols:
         result_df[col] = template[col]
     
+    # Add all stat columns from template (if they exist)
+    stat_cols = [col for col in template.columns if col.startswith('stat_')]
+    for col in stat_cols:
+        result_df[col] = template[col]
+    
     # 3. Add metadata columns from row
     metadata_columns = [
         'tree_number', 'size', 'tree_id', 'precolonial', 'control',
@@ -336,6 +341,13 @@ def create_log_resource_df(logLocationsDF, logLibraryDF, voxel_size=None):
     if voxel_size is not None:
         print(f"Voxelizing log resource DF with voxel size {voxel_size}")
         logResourceDF = voxelize_log_resource_df(logResourceDF, voxel_size)
+    else:
+        # If not voxelizing, still add stat_ columns based on resource_ columns
+        resource_cols = [col for col in logResourceDF.columns if col.startswith('resource_')]
+        for col in resource_cols:
+            stat_col = col.replace('resource_', 'stat_')
+            print(f"Creating stat column: {stat_col} from {col}")
+            logResourceDF[stat_col] = logResourceDF[col]
     
     return logResourceDF
 
@@ -388,6 +400,12 @@ def voxelize_log_resource_df(df, voxel_size):
         'voxel_y': 'y',
         'voxel_z': 'z'
     })
+    
+    # Add stat_ columns based on resource_ columns
+    for col in resource_cols:
+        stat_col = col.replace('resource_', 'stat_')
+        print(f"Creating stat column: {stat_col} from {col}")
+        voxelized_df[stat_col] = voxelized_df[col]
     
     print(f"Voxelized log resource DF size: {len(voxelized_df)}")
     
@@ -592,6 +610,9 @@ def convertToPoly(resourceDF):
     #define columns to use as point_data attributes
     #all columns starting with resource_
     resource_columns = [col for col in resourceDF.columns if col.startswith('resource_')]
+    
+    #all columns starting with stat_
+    stat_columns = [col for col in resourceDF.columns if col.startswith('stat_')]
 
     #extend with 'precolonial', 'size', 'control', 'tree_id', 'nodeID', 'structureID'
     attribute_columns = ['precolonial', 'size', 'control', 'tree_id', 'useful_life_expectancy']
@@ -615,13 +636,22 @@ def convertToPoly(resourceDF):
 
         poly.point_data[resource] = resourceDF[resource].values
         print(f"Added column '{resource}' as point data attribute to PolyData.")
+    
+    # Add stat columns
+    for stat in stat_columns:
+        print(f'adding stat column {stat}')
+        print(f'counts: {resourceDF[stat].value_counts()}')
+        print(f'types: {resourceDF[stat].dtype}')
+
+        poly.point_data[stat] = resourceDF[stat].values
+        print(f"Added column '{stat}' as point data attribute to PolyData.")
 
     # Add existing attribute columns only
     for col in existing_attribute_columns:
         poly.point_data[col] = resourceDF[col].values
         print(f"Added column '{col}' as point data attribute to PolyData.")
     
-    print(f'PolyData object created with {len(poly.points)} points and {len(existing_attribute_columns)} point data attributes')
+    print(f'PolyData object created with {len(poly.points)} points and {len(existing_attribute_columns) + len(resource_columns) + len(stat_columns)} point data attributes')
     return poly
     #poly.plot(scalars=treeResource_peeling bark', render_points_as_spheres=True)
 

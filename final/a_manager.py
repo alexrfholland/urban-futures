@@ -1,4 +1,5 @@
 import a_voxeliser, a_logDistributor, a_create_resistance_grid, a_rewilding, a_urban_forest_parser, a_helper_functions
+import a_scenario_urban_elements_count  # Import the new module
 import os
 import pandas as pd
 import xarray as xr
@@ -15,6 +16,9 @@ var_number = int(input("\nWhat processing stage? 0 or 1: "))
 stage = stages[var_number]
 
 #sites = ['city']
+
+# Add urban elements processing option
+process_urban_elements = input("\nProcess urban elements? (yes/no, default no): ").lower() in ['yes', 'y', 'true', '1']
 
 for site in sites: # Replace with actual site identifiers
     
@@ -101,5 +105,25 @@ for site in sites: # Replace with actual site identifiers
     """print(f'creating rewilding distributions for {site}')
     ds = a_rewilding.get_rewilding(ds, site)
     ds.to_netcdf(f'{filePATH}/{site}_{voxel_size}_voxelArray_withRewilding.nc')"""
+
+    # Add new step for urban elements processing if requested
+    if process_urban_elements:
+        print(f'\nSTEP 6: PROCESSING URBAN ELEMENTS')
+        process_baseline = input("Process baseline for urban elements? (yes/no, default yes): ").lower() not in ['no', 'n', 'false', '0']
+        
+        if process_baseline:
+            print(f'Processing baseline for {site}')
+            a_scenario_urban_elements_count.process_baseline(site, voxel_size)
+        
+        # Ask for scenarios
+        scenarios_input = input(f"Enter scenario(s) to process (comma-separated) or press Enter for default ['positive', 'trending']: ")
+        scenarios = scenarios_input.split(',') if scenarios_input else ['positive', 'trending']
+        scenarios = [scenario.strip() for scenario in scenarios]
+        
+        for scenario in scenarios:
+            print(f'Processing {scenario} scenario for {site}')
+            a_scenario_urban_elements_count.process_scenarios(site, scenario, voxel_size)
+        
+        print(f'Urban elements processing for {site} complete!')
 
         

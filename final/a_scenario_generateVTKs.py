@@ -425,7 +425,9 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     ]).T
 
     # Integrate resources into xarray
-    ds, combinedDF_scenario = a_voxeliser.integrate_resources_into_xarray(ds, treeDF, logDF, poleDF, valid_points)
+    
+    templateResolution = 0.5
+    ds, combinedDF_scenario = a_voxeliser.integrate_resources_into_xarray(ds, treeDF, templateResolution, logDF, poleDF, valid_points)
     
     # Final processing
     ds = finalDSprocessing(ds)

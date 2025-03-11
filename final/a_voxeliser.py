@@ -507,43 +507,46 @@ def assign_voxel_indices(points, bounds, voxel_size=1.0):
 def aggregate_resource_counts(resource_df_within):
     """
     Aggregates resource counts per voxel.
-
-    Parameters:
-        resource_df_within (pd.DataFrame): DataFrame containing resources within voxel grid bounds.
-
-    Returns:
-        pd.DataFrame: Aggregated resource DataFrame per voxel.
     """
     resource_prefix = 'resource_'
+    stat_prefix = 'stat_'
+    
     resource_cols = [col for col in resource_df_within.columns if col.startswith(resource_prefix)]
-
-    # Specify which columns to keep with 'first' aggregation
+    stat_cols = [col for col in resource_df_within.columns if col.startswith(stat_prefix)]
+    
+    # Specify which columns to keep with 'first' aggregation (excluding stat_cols now)
     columns_to_keep = ['nodeType'] + [col for col in resource_df_within.columns 
-                                    if col not in ['x', 'y', 'z'] + resource_cols]
-
+                                    if col not in ['x', 'y', 'z'] + resource_cols + stat_cols]
+    
     voxelised_resource_df = resource_df_within.groupby(['voxel_I', 'voxel_J', 'voxel_K'], as_index=False).agg(
         {**{col: 'sum' for col in resource_cols},
+         **{col: 'sum' for col in stat_cols}, 
          **{col: 'first' for col in columns_to_keep}}
     )
     logger.info("Aggregated resource counts per voxel.")
+
+    #print all columns starting with stat_ and print no stat columns else
+    #DEBUG
+    if any(col.startswith(stat_prefix) for col in voxelised_resource_df.columns):
+        logger.info(f"Columns starting with {stat_prefix}: {voxelised_resource_df.columns[voxelised_resource_df.columns.str.startswith(stat_prefix)]}")
+    else:
+        logger.info("No columns starting with stat_")
     return voxelised_resource_df
+
 
 def rename_non_resource_columns(voxelised_resource_df):
     """
     Renames non-resource columns with 'forest_' prefix, except for columns in exception list.
-
-    Parameters:
-        voxelised_resource_df (pd.DataFrame): Aggregated resource DataFrame per voxel.
-
-    Returns:
-        pd.DataFrame: Renamed resource DataFrame.
     """
     resource_prefix = 'resource_'
+    stat_prefix = 'stat_'
     exception_list = ['nodeType', 'nodeTypeInt']
+    
     non_resource_cols = [col for col in voxelised_resource_df.columns 
-                        if col not in [col for col in voxelised_resource_df.columns if col.startswith(resource_prefix)] + 
-                        ['voxel_I', 'voxel_J', 'voxel_K'] + 
-                        exception_list]
+                        if not col.startswith(resource_prefix) and 
+                           not col.startswith(stat_prefix) and
+                           col not in ['voxel_I', 'voxel_J', 'voxel_K'] + exception_list]
+                        
     voxelised_resource_df.rename(columns={col: f'forest_{col}' for col in non_resource_cols}, inplace=True)
     logger.info(f"Renamed {len(non_resource_cols)} non-resource columns with 'forest_' prefix.")
     return voxelised_resource_df
@@ -932,7 +935,7 @@ def visualize_voxel_dataset(ds, site, voxel_size):
 # Process logs
     
 
-def integrate_resources_into_xarray(ds, treeLocationsDF, logLocationsDF=None, poleLocationsDF=None, valid_points=None):
+def integrate_resources_into_xarray(ds, treeLocationsDF, templateResolution = 0.5, logLocationsDF=None, poleLocationsDF=None, valid_points=None):
     # Save original attributes
         voxel_size = ds.attrs['voxel_size']
         original_attrs = ds.attrs.copy()
@@ -940,7 +943,16 @@ def integrate_resources_into_xarray(ds, treeLocationsDF, logLocationsDF=None, po
         
         #process trees
         treeLocationsDF['nodeType'] = 'tree'
-        treeLocationsDF, treeResource_df = a_resource_distributor_dataframes.process_all_trees(treeLocationsDF)
+        treeLocationsDF, treeResource_df = a_resource_distributor_dataframes.process_all_trees(treeLocationsDF, voxel_size=templateResolution)
+
+        #check if any columns starting with stat_
+        if any(col.startswith('stat_') for col in treeResource_df.columns):
+            logger.info(f"Columns starting with stat_: {treeResource_df.columns[treeResource_df.columns.str.startswith('stat_')]}")
+        else:
+            logger.info("No columns starting with stat_")
+
+
+
         print('rotating resource structures...')
         treeLocationsDF, treeResource_df = a_rotate_resource_structures.process_rotations(treeLocationsDF, treeResource_df, valid_points)
         print(f'resource_df columns are {treeResource_df.columns}')
@@ -956,7 +968,7 @@ def integrate_resources_into_xarray(ds, treeLocationsDF, logLocationsDF=None, po
         if poleLocationsDF is not None and len(poleLocationsDF) > 0:
             print('processing poles')
             poleLocationsDF['nodeType'] = 'pole'
-            poleLocationsDF, poleResourceDF = a_resource_distributor_dataframes.process_all_trees(poleLocationsDF)
+            poleLocationsDF, poleResourceDF = a_resource_distributor_dataframes.process_all_trees(poleLocationsDF, templateResolution)
             poleLocationsDF, poleResourceDF = a_rotate_resource_structures.process_rotations(poleLocationsDF, poleResourceDF, valid_points)
 
             poleLocationsDF['nodeTypeInt'] = 2

@@ -508,7 +508,7 @@ def main():
         
         #4. VOXELISE TEMPLATES
         print('\nVoxelizing templates...')
-        voxelised_templates = combined_voxelise_dfs.process_trees(combined_templates, voxel_size, resetCount=True)
+        voxelised_templates, adjustment_summary = combined_voxelise_dfs.process_trees(combined_templates, voxel_size, resetCount=True)
 
         #5. SAVE OUTPUTS
         print(f'saving')
@@ -533,6 +533,10 @@ def main():
         output_path = output_dir / voxelisedName
         voxelised_templates.to_pickle(output_path)
         print(f'Voxelized templates dataframe saved at {output_path}')
+
+        summary_name = f'{voxel_size}_combined_voxel_adjustment_summary.csv'
+        adjustment_summary.to_csv(output_dir / summary_name, index=False)
+        print(f"\nAdjustment summary saved to {output_dir / summary_name}")
         
     else:
         # Load existing voxelised templates

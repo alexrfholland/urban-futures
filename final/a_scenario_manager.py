@@ -5,6 +5,7 @@ import importlib
 import a_scenario_initialiseDS
 import a_scenario_runscenario
 import a_scenario_generateVTKs
+import a_scenario_urban_elements_count  # Import the new module
 
 def check_data_files_exist(site, scenario, year, voxel_size):
     """
@@ -57,7 +58,7 @@ def check_data_files_exist(site, scenario, year, voxel_size):
     
     return True
 
-def process_site(site, scenario, years, voxel_size, skip_scenario=False, enable_visualization=False):
+def process_site(site, scenario, years, voxel_size, skip_scenario=False, enable_visualization=False, process_urban_elements=True):
     """
     Process a single site with the given parameters.
     
@@ -68,6 +69,7 @@ def process_site(site, scenario, years, voxel_size, skip_scenario=False, enable_
     voxel_size (int): Voxel size
     skip_scenario (bool): Whether to skip the scenario simulation step
     enable_visualization (bool): Whether to enable visualization in VTK generation
+    process_urban_elements (bool): Whether to process urban elements after VTK generation
     """
     print(f"\n===== Processing {site} with {scenario} scenario =====\n")
     
@@ -124,8 +126,6 @@ def process_site(site, scenario, years, voxel_size, skip_scenario=False, enable_
             site, scenario, year, voxel_size, subsetDS, 
             treeDF_scenario, logDF_scenario, poleDF_scenario, enable_visualization
         )
-    
-    print(f"\nProcessing complete for {site} with {scenario} scenario")
 
 def main():
     """Main function to gather user input and process sites."""
@@ -169,6 +169,10 @@ def main():
     vis_input = input("Enable visualization during VTK generation? (yes/no, default no): ")
     enable_visualization = vis_input.lower() in ['yes', 'y', 'true', '1']
     
+    # Ask whether to process urban elements
+    urban_elements_input = input("Process urban elements after VTK generation? (yes/no, default yes): ")
+    process_urban_elements = urban_elements_input.lower() not in ['no', 'n', 'false', '0']
+    
     # Print summary of selected options
     print("\n===== Processing with the following parameters =====")
     print(f"Sites: {sites}")
@@ -177,6 +181,7 @@ def main():
     print(f"Voxel Size: {voxel_size}")
     print(f"Skip Scenario Simulation: {skip_scenario}")
     print(f"Enable Visualization: {enable_visualization}")
+    print(f"Process Urban Elements: {process_urban_elements}")
     
     # Confirm proceeding
     confirm = input("\nProceed with these settings? (yes/no, default yes): ")
@@ -189,8 +194,19 @@ def main():
         for scenario in scenarios:
             process_site(
                 site, scenario, years, voxel_size,
-                skip_scenario, enable_visualization
+                skip_scenario, enable_visualization, 
+                process_urban_elements
             )
+    
+    # Process baseline for urban elements if requested
+    if process_urban_elements:
+        baseline_input = input("Process baseline for urban elements? (yes/no, default yes): ")
+        process_baseline = baseline_input.lower() not in ['no', 'n', 'false', '0']
+        
+        if process_baseline:
+            print("\n===== Processing baseline for urban elements =====")
+            for site in sites:
+                a_scenario_urban_elements_count.process_baseline(site, voxel_size)
     
     print("\n===== All processing completed =====")
 
