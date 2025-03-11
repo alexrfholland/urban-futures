@@ -1,5 +1,6 @@
 import a_voxeliser, a_logDistributor, a_create_resistance_grid, a_rewilding, a_urban_forest_parser, a_helper_functions
-import a_scenario_urban_elements_count  # Import the new module
+import a_scenario_urban_elements_count  # Import the urban elements module
+import a_scenario_get_baselines  # Import the baseline generation module
 import os
 import pandas as pd
 import xarray as xr
@@ -19,6 +20,9 @@ stage = stages[var_number]
 
 # Add urban elements processing option
 process_urban_elements = input("\nProcess urban elements? (yes/no, default no): ").lower() in ['yes', 'y', 'true', '1']
+
+# Define scenarios for urban elements processing
+scenarios = ['positive', 'trending']
 
 for site in sites: # Replace with actual site identifiers
     
@@ -106,24 +110,66 @@ for site in sites: # Replace with actual site identifiers
     ds = a_rewilding.get_rewilding(ds, site)
     ds.to_netcdf(f'{filePATH}/{site}_{voxel_size}_voxelArray_withRewilding.nc')"""
 
-    # Add new step for urban elements processing if requested
-    if process_urban_elements:
-        print(f'\nSTEP 6: PROCESSING URBAN ELEMENTS')
-        process_baseline = input("Process baseline for urban elements? (yes/no, default yes): ").lower() not in ['no', 'n', 'false', '0']
-        
-        if process_baseline:
-            print(f'Processing baseline for {site}')
-            a_scenario_urban_elements_count.process_baseline(site, voxel_size)
-        
-        # Ask for scenarios
-        scenarios_input = input(f"Enter scenario(s) to process (comma-separated) or press Enter for default ['positive', 'trending']: ")
-        scenarios = scenarios_input.split(',') if scenarios_input else ['positive', 'trending']
-        scenarios = [scenario.strip() for scenario in scenarios]
-        
-        for scenario in scenarios:
-            print(f'Processing {scenario} scenario for {site}')
-            a_scenario_urban_elements_count.process_scenarios(site, scenario, voxel_size)
-        
-        print(f'Urban elements processing for {site} complete!')
+    # STEP 6: PROCESS BASELINE
+    print(f'\nSTEP 6: PROCESSING BASELINE')
+    # Define paths for baseline files
+    baseline_folder = 'data/revised/final/baselines'
+    baseline_resource_path = f'{baseline_folder}/{site}_baseline_resources_{voxel_size}.vtk'
+    
+    # Check if baseline files already exist
+    if os.path.exists(baseline_resource_path):
+        print(f'Baseline resource file already exists at: {baseline_resource_path}')
+        print(f'Skipping baseline generation')
+    else:
+        # Check alternative location
+        alt_baseline_path = f'{filePATH}/{site}_baseline_resources_{voxel_size}.vtk'
+        if os.path.exists(alt_baseline_path):
+            print(f'Baseline resource file found at alternative location: {alt_baseline_path}')
+            print(f'Using existing baseline file')
+            baseline_resource_path = alt_baseline_path
+        else:
+            print(f'Generating new baseline for {site}')
+            # Generate baseline using the encapsulated function
+            _, baseline_resource_path, _, _ = a_scenario_get_baselines.generate_baseline(
+                site, voxel_size, baseline_folder
+            )
+    
+    # STEP 7: PROCESS URBAN ELEMENTS
+    print(f'\nSTEP 7: PROCESSING URBAN ELEMENTS')
+    
+    # Process urban elements for scenarios
+    scenario_vtk_files = []
+    for scenario in scenarios:
+        # Look for scenario VTK files
+        for year in [0, 10, 30, 60, 180]:  # Common years to check
+            scenario_vtk_path = f'{filePATH}/{site}_{scenario}_{voxel_size}_resources_{year}.vtk'
+            if os.path.exists(scenario_vtk_path):
+                scenario_vtk_files.append(scenario_vtk_path)
+                print(f'Found scenario VTK: {scenario_vtk_path}')
+    
+    if scenario_vtk_files:
+        print(f'Processing urban elements for {len(scenario_vtk_files)} scenario VTK files')
+        a_scenario_urban_elements_count.run_from_manager(
+            site=site,
+            voxel_size=voxel_size,
+            specific_files=scenario_vtk_files,
+            process_baseline=False
+        )
+    else:
+        print(f'No scenario VTK files found for {site}')
+    
+    # Process urban elements for baseline
+    if os.path.exists(baseline_resource_path):
+        print(f'Processing urban elements for baseline: {baseline_resource_path}')
+        a_scenario_urban_elements_count.run_from_manager(
+            site=site,
+            voxel_size=voxel_size,
+            specific_files=[baseline_resource_path],
+            process_baseline=True
+        )
+    else:
+        print(f'No baseline file found for urban elements processing')
+
+print("\n===== All processing completed =====")
 
         

@@ -3,6 +3,7 @@ import xarray as xr
 import numpy as np
 import pyvista as pv
 import a_helper_functions, a_resource_distributor_dataframes
+import os
 
 
 #f"data/revised/final/{site}-roadVoxels-coloured.vtk"
@@ -238,180 +239,207 @@ def combine_polydata(resourcePoly, terrainPoly):
     
     return combinedPoly
 
-
-# Load and process baseline densities
-baselineDensities = pd.read_csv('data/csvs/tree-baseline-density.csv')
-baselineDensities = baselineDensities.rename(columns={'Size': 'diameter_breast_height'})
-print('\nBaseline Densities:')
-print(baselineDensities.to_string(index=False))
-
-# Load site data
-site = 'trimmed-parade'
-voxel_size = 1
-print(f'\nProcessing site: {site} with voxel size: {voxel_size}m')
-
-input_folder = f'data/revised/final/{site}'
-filepath = f'{input_folder}/{site}_{voxel_size}_subsetForScenarios.nc'
-xarray_dataset = xr.open_dataset(filepath)
-
-terrain_polydata_path= f"data/revised/final/{site}-roadVoxels-coloured.vtk"
-terrain_polydata = pv.read(terrain_polydata_path)
-
-print(f'Loaded xarray dataset from: {filepath}')
-
-# Calculate area
-bounds = xarray_dataset.attrs['bounds']
-Xmin, Xmax, Ymin, Ymax = bounds[:4]
-area = ((Xmax - Xmin) * (Ymax - Ymin)) / 10000
-print(f'\nSite bounds: Xmin={Xmin:.1f}, Xmax={Xmax:.1f}, Ymin={Ymin:.1f}, Ymax={Ymax:.1f}')
-print(f'Site area: {area:.2f} hectares')
-
-# Generate baseline trees
-print('\nGenerating baseline trees...')
-baseline_tree_df = pd.DataFrame()
-
-total_trees = 0
-for index, row in baselineDensities.iterrows():
-    diameter_breast_height = row['diameter_breast_height']
-    flat_density = row['Flat']
-    num_points = int((area * flat_density) / 0.1)
-    total_trees += num_points
-    print(f'DBH {diameter_breast_height}cm: {num_points} trees ({flat_density:.1f} trees/ha)')
+def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/baselines'):
+    """
+    Generate baseline trees and resources for a site.
     
-    # Create new rows for this DBH class
-    new_rows = pd.DataFrame({
-        'x': [-1] * num_points,
-        'y': [-1] * num_points,
-        'z': [-1] * num_points,
-        'voxelID': [-1] * num_points,
-        'voxel_I': [-1] * num_points,
-        'voxel_J': [-1] * num_points,
-        'voxel_K': [-1] * num_points,
-        'precolonial': True,
-        'control': 'reserve-tree',
-        'diameter_breast_height': diameter_breast_height,
-        'tree_id': [-1] * num_points,
-        'useful_life_expectancy': -1
-    })
+    Parameters:
+    site (str): Site name (e.g., 'trimmed-parade', 'city', 'uni')
+    voxel_size (int): Voxel size for the simulation
+    output_folder (str): Folder to save output files
     
-    baseline_tree_df = pd.concat([baseline_tree_df, new_rows], ignore_index=True)
+    Returns:
+    tuple: Paths to the generated files (trees_csv, resource_vtk, terrain_vtk, combined_vtk)
+    """
+    # Load and process baseline densities
+    baselineDensities = pd.read_csv('data/csvs/tree-baseline-density.csv')
+    baselineDensities = baselineDensities.rename(columns={'Size': 'diameter_breast_height'})
+    print('\nBaseline Densities:')
+    print(baselineDensities.to_string(index=False))
 
-print(f'\nTotal baseline trees generated: {len(baseline_tree_df)}')
+    # Load site data
+    print(f'\nProcessing site: {site} with voxel size: {voxel_size}m')
 
-# Size categorization
-print('\nCategorizing trees by size...')
-baseline_tree_df['size'] = 'small'  # default value
-baseline_tree_df.loc[baseline_tree_df['diameter_breast_height'] >= 50, 'size'] = 'medium'
-baseline_tree_df.loc[baseline_tree_df['diameter_breast_height'] >= 80, 'size'] = 'large'
+    input_folder = f'data/revised/final/{site}'
+    filepath = f'{input_folder}/{site}_{voxel_size}_subsetForScenarios.nc'
+    xarray_dataset = xr.open_dataset(filepath)
 
-print('\nInitial size distribution:')
-size_counts = baseline_tree_df['size'].value_counts()
-for size, count in size_counts.items():
-    print(f'{size}: {count} trees ({count/len(baseline_tree_df)*100:.1f}%)')
+    terrain_polydata_path= f"data/revised/final/{site}-roadVoxels-coloured.vtk"
+    terrain_polydata = pv.read(terrain_polydata_path)
 
-# Handle senescing trees and their states
-print('\nProcessing senescing trees...')
-# First mark half of large trees as senescings
-large_trees = baseline_tree_df['size'] == 'large'
-num_large = large_trees.sum()
-print(f'Found {num_large} large trees, converting half to senescing')
+    print(f'Loaded xarray dataset from: {filepath}')
 
-# Create array of indices for large trees
-large_tree_indices = baseline_tree_df[large_trees].index.values
-# Randomly select half of these indices
-np.random.seed(42)  # for reproducibility
-senescing_indices = np.random.choice(large_tree_indices, size=num_large//2, replace=False)
+    # Calculate area
+    bounds = xarray_dataset.attrs['bounds']
+    Xmin, Xmax, Ymin, Ymax = bounds[:4]
+    area = ((Xmax - Xmin) * (Ymax - Ymin)) / 10000
+    print(f'\nSite bounds: Xmin={Xmin:.1f}, Xmax={Xmax:.1f}, Ymin={Ymin:.1f}, Ymax={Ymax:.1f}')
+    print(f'Site area: {area:.2f} hectares')
 
-# Mark selected trees as senescing
-baseline_tree_df.loc[senescing_indices, 'size'] = 'senescing'
+    # Generate baseline trees
+    print('\nGenerating baseline trees...')
+    baseline_tree_df = pd.DataFrame()
 
-# Get all senescing trees to create variants
-senescing_trees = baseline_tree_df[baseline_tree_df['size'] == 'senescing'].copy()
-num_senescing = len(senescing_trees)
-print(f'Creating {num_senescing} snags and {num_senescing} fallen trees')
+    total_trees = 0
+    for index, row in baselineDensities.iterrows():
+        diameter_breast_height = row['diameter_breast_height']
+        flat_density = row['Flat']
+        num_points = int((area * flat_density) / 0.1)
+        total_trees += num_points
+        print(f'DBH {diameter_breast_height}cm: {num_points} trees ({flat_density:.1f} trees/ha)')
+        
+        # Create new rows for this DBH class
+        new_rows = pd.DataFrame({
+            'x': [-1] * num_points,
+            'y': [-1] * num_points,
+            'z': [-1] * num_points,
+            'voxelID': [-1] * num_points,
+            'voxel_I': [-1] * num_points,
+            'voxel_J': [-1] * num_points,
+            'voxel_K': [-1] * num_points,
+            'precolonial': True,
+            'control': 'reserve-tree',
+            'diameter_breast_height': diameter_breast_height,
+            'tree_id': [-1] * num_points,
+            'useful_life_expectancy': -1
+        })
+        
+        baseline_tree_df = pd.concat([baseline_tree_df, new_rows], ignore_index=True)
 
-# Create snags (standing dead trees)
-snags = senescing_trees.copy()
-snags['size'] = 'snag'
+    print(f'\nTotal baseline trees generated: {len(baseline_tree_df)}')
 
-# Create fallen trees
-fallen = senescing_trees.copy()
-fallen['size'] = 'fallen'
+    # Size categorization
+    print('\nCategorizing trees by size...')
+    baseline_tree_df['size'] = 'small'  # default value
+    baseline_tree_df.loc[baseline_tree_df['diameter_breast_height'] >= 50, 'size'] = 'medium'
+    baseline_tree_df.loc[baseline_tree_df['diameter_breast_height'] >= 80, 'size'] = 'large'
 
-# Add snags and fallen trees to original dataframe
-baseline_tree_df = pd.concat([
-    baseline_tree_df,  # Keep all original trees including senescing
-    snags,            # Add snag variants
-    fallen            # Add fallen variants
-], ignore_index=True)
+    print('\nInitial size distribution:')
+    size_counts = baseline_tree_df['size'].value_counts()
+    for size, count in size_counts.items():
+        print(f'{size}: {count} trees ({count/len(baseline_tree_df)*100:.1f}%)')
 
-#add 'tree_number', 'Node_ID', 'structure_id', which are all just the index
-baseline_tree_df['tree_number'] = baseline_tree_df.index
-baseline_tree_df['NodeID'] = baseline_tree_df.index
-baseline_tree_df['structureID'] = baseline_tree_df.index
+    # Handle senescing trees and their states
+    print('\nProcessing senescing trees...')
+    # First mark half of large trees as senescings
+    large_trees = baseline_tree_df['size'] == 'large'
+    num_large = large_trees.sum()
+    print(f'Found {num_large} large trees, converting half to senescing')
 
-#initialsie ['rotateZ'] as a random rotation between 0 and 360 use a seed
-np.random.seed(42)
-baseline_tree_df['rotateZ'] = np.random.uniform(0, 360, len(baseline_tree_df))
+    # Create array of indices for large trees
+    large_tree_indices = baseline_tree_df[large_trees].index.values
+    # Randomly select half of these indices
+    np.random.seed(42)  # for reproducibility
+    senescing_indices = np.random.choice(large_tree_indices, size=num_large//2, replace=False)
 
-# Print final distribution
-print('\nFinal size distribution:')
-size_counts = baseline_tree_df['size'].value_counts()
-for size, count in size_counts.items():
-    print(f'{size}: {count} trees ({count/len(baseline_tree_df)*100:.1f}%)')
+    # Mark selected trees as senescing
+    baseline_tree_df.loc[senescing_indices, 'size'] = 'senescing'
 
-print('\nControl type distribution:')
-control_counts = baseline_tree_df['control'].value_counts()
-for control, count in control_counts.items():
-    print(f'{control}: {count} trees ({count/len(baseline_tree_df)*100:.1f}%)')
+    # Get all senescing trees to create variants
+    senescing_trees = baseline_tree_df[baseline_tree_df['size'] == 'senescing'].copy()
+    num_senescing = len(senescing_trees)
+    print(f'Creating {num_senescing} snags and {num_senescing} fallen trees')
 
-# Ground detection and position assignment
-print('\nDetecting ground voxels...')
-terrain_df = getGround(xarray_dataset, terrain_polydata)
+    # Create snags (standing dead trees)
+    snags = senescing_trees.copy()
+    snags['size'] = 'snag'
 
-print('\nAssigning tree positions...')
-baseline_tree_df = getPositions(baseline_tree_df, terrain_df)
+    # Create fallen trees
+    fallen = senescing_trees.copy()
+    fallen['size'] = 'fallen'
 
-print('\nCalculating useful life expectancy...')
-baseline_tree_df = calculate_useful_life_expectancy(baseline_tree_df)
+    # Add snags and fallen trees to original dataframe
+    baseline_tree_df = pd.concat([
+        baseline_tree_df,  # Keep all original trees including senescing
+        snags,            # Add snag variants
+        fallen            # Add fallen variants
+    ], ignore_index=True)
 
+    #add 'tree_number', 'Node_ID', 'structure_id', which are all just the index
+    baseline_tree_df['tree_number'] = baseline_tree_df.index
+    baseline_tree_df['NodeID'] = baseline_tree_df.index
+    baseline_tree_df['structureID'] = baseline_tree_df.index
 
-#resource assignments
-#voxel_size = 0.25
-voxel_size = 1
-baseline_tree_df, resourceDF = a_resource_distributor_dataframes.process_all_trees(baseline_tree_df, voxel_size=voxel_size)
-resourceDF = a_resource_distributor_dataframes.rotate_resource_structures(baseline_tree_df, resourceDF)
+    #initialsie ['rotateZ'] as a random rotation between 0 and 360 use a seed
+    np.random.seed(42)
+    baseline_tree_df['rotateZ'] = np.random.uniform(0, 360, len(baseline_tree_df))
 
+    # Print final distribution
+    print('\nFinal size distribution:')
+    size_counts = baseline_tree_df['size'].value_counts()
+    for size, count in size_counts.items():
+        print(f'{size}: {count} trees ({count/len(baseline_tree_df)*100:.1f}%)')
 
-print('\nCreating resource polydata...')
-resourcePoly = a_resource_distributor_dataframes.convertToPoly(resourceDF)
+    print('\nControl type distribution:')
+    control_counts = baseline_tree_df['control'].value_counts()
+    for control, count in control_counts.items():
+        print(f'{control}: {count} trees ({count/len(baseline_tree_df)*100:.1f}%)')
 
-print('\nCreating terrain polydata...')
-terrain_polydata = get_terrain_poly(terrain_df)
+    # Ground detection and position assignment
+    print('\nDetecting ground voxels...')
+    terrain_df = getGround(xarray_dataset, terrain_polydata)
 
+    print('\nAssigning tree positions...')
+    baseline_tree_df = getPositions(baseline_tree_df, terrain_df)
 
+    print('\nCalculating useful life expectancy...')
+    baseline_tree_df = calculate_useful_life_expectancy(baseline_tree_df)
 
+    #resource assignments
+    print('\nAssigning resources...')
+    baseline_tree_df, resourceDF = a_resource_distributor_dataframes.process_all_trees(baseline_tree_df, voxel_size=voxel_size)
+    resourceDF = a_resource_distributor_dataframes.rotate_resource_structures(baseline_tree_df, resourceDF)
 
-output_folder = f'data/revised/final/baselines'
-polyfilePath = f'{output_folder}/{site}_baseline_resources_{voxel_size}.vtk'
+    print('\nCreating resource polydata...')
+    resourcePoly = a_resource_distributor_dataframes.convertToPoly(resourceDF)
 
+    print('\nCreating terrain polydata...')
+    terrain_polydata = get_terrain_poly(terrain_df)
 
-#combine resourcePoly with terrainPoly
-print('creating combined polydata...')
-combinedPoly = combine_polydata(resourcePoly, terrain_polydata)
+    # Ensure output directory exists
+    os.makedirs(output_folder, exist_ok=True)
 
-print(f'saving polydata to {polyfilePath}')
-resourcePoly.save(polyfilePath)
-print(f'exported poly to {polyfilePath}')
+    # Define output paths
+    resource_vtk_path = f'{output_folder}/{site}_baseline_resources_{voxel_size}.vtk'
+    trees_csv_path = f'{output_folder}/{site}_baseline_trees.csv'
+    terrain_vtk_path = f'{output_folder}/{site}_terrain_polydata.vtk'
+    combined_vtk_path = f'{output_folder}/{site}_combined_polydata.vtk'
 
-output_path = f'{output_folder}/{site}_baseline_trees.csv'
-baseline_tree_df.to_csv(output_path, index=False)
-print(f'\nSaved baseline trees to: {output_path}')
+    # Create combined polydata
+    print('Creating combined polydata...')
+    combinedPoly = combine_polydata(resourcePoly, terrain_polydata)
 
-output_path = f'{output_folder}/{site}_terrain_polydata.vtk'
-terrain_polydata.save(output_path)
-print(f'\nSaved terrain polydata to: {output_path}')
+    # Save outputs
+    print(f'Saving resource polydata to {resource_vtk_path}')
+    resourcePoly.save(resource_vtk_path)
+    
+    print(f'Saving baseline trees to {trees_csv_path}')
+    baseline_tree_df.to_csv(trees_csv_path, index=False)
+    
+    print(f'Saving terrain polydata to {terrain_vtk_path}')
+    terrain_polydata.save(terrain_vtk_path)
+    
+    print(f'Saving combined polydata to {combined_vtk_path}')
+    combinedPoly.save(combined_vtk_path)
+    
+    return trees_csv_path, resource_vtk_path, terrain_vtk_path, combined_vtk_path
 
-output_path = f'{output_folder}/{site}_combined_polydata.vtk'
-combinedPoly.save(output_path)
-print(f'\nSaved combined polydata to: {output_path}')
+def main():
+    """
+    Main function to run the baseline generation from command line.
+    """
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Generate baseline trees and resources for a site.')
+    parser.add_argument('site', type=str, help='Site name (e.g., trimmed-parade, city, uni)')
+    parser.add_argument('--voxel-size', type=int, default=1, help='Voxel size for the simulation (default: 1)')
+    parser.add_argument('--output-folder', type=str, default='data/revised/final/baselines', 
+                        help='Folder to save output files (default: data/revised/final/baselines)')
+    
+    args = parser.parse_args()
+    
+    # Generate baseline
+    generate_baseline(args.site, args.voxel_size, args.output_folder)
+
+if __name__ == "__main__":
+    main()

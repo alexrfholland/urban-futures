@@ -7,16 +7,13 @@ import matplotlib.pyplot as plt
 import a_helper_functions
 from scipy.spatial import cKDTree
 
-# Configuration variables
+# Configuration variables that will be overridden by the manager
 SITES = ['trimmed-parade']
 SCENARIOS = ['positive', 'trending']
 VOXEL_SIZE = 1
-PROCESS_BASELINE = True  # Set to True to process baseline file
-
-#also do baseline: polyfilePath = f'{output_folder}/{site}_baseline_resources_{voxel_size}.vtk'
-#search_bioavailable: 'traversable'
-#search_design_action: 'rewilded'
-#search_urban_elements: 'none'
+PROCESS_BASELINE = True
+YEARS = [0, 10, 30, 60, 180]
+SPECIFIC_FILES = []  # Will be populated by the manager
 
 def load_xarray(site, voxel_size):
     """Load xarray dataset for the site"""
@@ -166,8 +163,6 @@ def transfer_site_features_to_scenario(site_vtk, scenario_vtk):
             print(f"  Transferred {var} to {feature_name}")
         else:
             print(f"  Variable {var} not found in site VTK")
-
-    #scenario_vtk.plot(scalars='FEATURES-road_roadInfo_type', cmap='tab10')
     
     return scenario_vtk
 
@@ -243,10 +238,7 @@ def create_bioavailablity_layer(scenario_vtk):
     return scenario_vtk
 
 def create_design_action_layer(scenario_vtk):
-    """Create the search_design_action layer
-    design actions can be:
-    [list of design actions]
-    """
+    """Create the search_design_action layer"""
     print("Creating design action layer...")
     search_design_action = np.full(scenario_vtk.n_points, 'none', dtype='<U20')
     
@@ -287,9 +279,6 @@ def create_design_action_layer(scenario_vtk):
 def create_urban_elements_layer(scenario_vtk):
     """Create the search_urban_elements layer"""
     print("Creating urban elements layer...")
-
-    #print all point data variables in scenario_vtk
-    print(scenario_vtk.point_data.keys())
     
     search_urban_elements = np.full(scenario_vtk.n_points, 'none', dtype='<U20')
     
@@ -390,9 +379,6 @@ def create_urban_elements_layer(scenario_vtk):
         print(f"  Parking points: {np.sum(mask):,}")
     else:
         print("  'FEATURES-road_terrainInfo_isParking' not found in point data")
-
-    
-
     
     scenario_vtk.point_data['search_urban_elements'] = search_urban_elements
     
@@ -440,118 +426,6 @@ def summarize_search_variables(scenario_vtk):
     
     return scenario_vtk
 
-def plot_search_variables(scenario_vtk):
-    """Plot search variables in a 3-up layout"""
-    print("Plotting search variables in a 3-up layout...")
-    
-    # Create a plotter with 3 subplots
-    plotter = pv.Plotter(shape=(1, 3))
-    
-    # Plot 1: Bioavailable points
-    plotter.subplot(0, 0)
-    plotter.add_text("Bioavailable", position="upper_edge", font_size=10, color='black')
-    
-    if 'search_bioavailable' in scenario_vtk.point_data:
-        # Create a copy of the scenario_vtk
-        bioavailable_vtk = scenario_vtk.copy()
-        
-        # Get bioavailable data
-        bioavailable = scenario_vtk.point_data['search_bioavailable']
-        
-        # Create a string array for display
-        bioavailable_str = np.full(scenario_vtk.n_points, 'No', dtype='<U20')
-        
-        # Use boolean indexing to set values
-        bioavailable_mask = (bioavailable != 'none')
-        bioavailable_str[bioavailable_mask] = 'Yes'
-        
-        # Add the string array to the vtk data
-        bioavailable_vtk.point_data['bioavailable_str'] = bioavailable_str
-        
-        # Add the mesh with direct string scalar coloring
-        plotter.add_mesh(bioavailable_vtk, scalars='bioavailable_str', cmap='viridis',
-                        scalar_bar_args={'title': 'Bioavailable'})
-    else:
-        plotter.add_text("No bioavailable data", position="center", font_size=10, color='red')
-    
-    # Plot 2: Design action
-    plotter.subplot(0, 1)
-    plotter.add_text("Design Action", position="upper_edge", font_size=10, color='black')
-    
-    if 'search_design_action' in scenario_vtk.point_data:
-        # Create a copy of the scenario_vtk
-        design_action_vtk = scenario_vtk.copy()
-        
-        # Add the mesh with direct string scalar coloring
-        plotter.add_mesh(design_action_vtk, scalars='search_design_action', cmap='tab10',
-                        scalar_bar_args={'title': 'Design Action'})
-    else:
-        plotter.add_text("No design action data", position="center", font_size=10, color='red')
-    
-    # Plot 3: Urban elements
-    plotter.subplot(0, 2)
-    plotter.add_text("Urban Elements", position="upper_edge", font_size=10, color='black')
-    
-    if 'search_urban_elements' in scenario_vtk.point_data:
-        # Create a copy of the scenario_vtk
-        urban_elements_vtk = scenario_vtk.copy()
-        
-        # Add the mesh with direct string scalar coloring
-        plotter.add_mesh(urban_elements_vtk, scalars='search_urban_elements', cmap='tab20',
-                        scalar_bar_args={'title': 'Urban Element'})
-    else:
-        plotter.add_text("No urban elements data", position="center", font_size=10, color='red')
-    
-    # Link all views so camera movements affect all subplots
-    plotter.link_views()
-    
-    # Show the plot
-    #plotter.show(screenshot='search_variables.png')
-    plotter.close()
-    
-    print("Plotting complete. Image saved as search_variables.png")
-
-def plot_urban_elements(scenario_vtk):
-    """Plot only the urban elements with eye dome lighting"""
-    print("Plotting urban elements with eye dome lighting...")
-    
-    if 'search_urban_elements' not in scenario_vtk.point_data:
-        print("  No urban elements data found in the scenario")
-        return
-    
-    # Create a plotter
-    plotter = pv.Plotter()
-    
-    # Add title
-    plotter.add_text("Urban Elements", position="upper_edge", font_size=16, color='black')
-    
-    # Get urban elements data
-    urban_elements = scenario_vtk.point_data['search_urban_elements']
-    
-    # Create a copy of the scenario_vtk
-    urban_elements_vtk = scenario_vtk.copy()
-    
-    # Add the mesh with direct string scalar coloring
-    plotter.add_mesh(urban_elements_vtk, scalars='search_urban_elements', cmap='tab20',
-                    scalar_bar_args={'title': 'Urban Element'})
-    
-    # Enable eye dome lighting for better depth perception
-    plotter.enable_eye_dome_lighting()
-    
-    # Add a text with statistics
-    elements, element_counts = np.unique(urban_elements[urban_elements != 'none'], return_counts=True)
-    if len(elements) > 0:
-        stats_text = "Urban Elements:\n"
-        for element, count in zip(elements, element_counts):
-            stats_text += f"{element}: {count:,}\n"
-        plotter.add_text(stats_text, position=(0.02, 0.02), font_size=10, viewport=True, color='black')
-    
-    # Show the plot
-    #plotter.show(screenshot='urban_elements_detailed.png')
-    plotter.close()
-    
-    print("Urban elements plot complete. Image saved as urban_elements_detailed.png")
-
 def add_search_variables_to_scenario(scenario_vtk):
     """Add search variables to scenario VTK and plot the results"""
     print("Adding search variables to scenario VTK...")
@@ -570,70 +444,23 @@ def add_search_variables_to_scenario(scenario_vtk):
     
     return scenario_vtk
 
-def process_scenarios(site, scenario, voxel_size):
-    """Process all scenario VTK files"""
-    # Load xarray
-    ds = load_xarray(site, voxel_size)
-    if ds is None:
-        return
-    
-    # Convert to polydata
-    print("\nConverting xarray to polydata...")
-    site_vtk = a_helper_functions.convert_xarray_into_polydata(ds)
-    
-    # Preprocess site VTK to create analysis variables
-    site_vtk = preprocess_site_vtk(site_vtk)
-    
-    # Create temp directory for non-VTK outputs
-    temp_dir = f'data/revised/final/{site}/temp'
-    os.makedirs(temp_dir, exist_ok=True)
-    
-    years = [0, 10, 30, 60, 180]
-    
-    for year in years:
-        print(f"\nProcessing scenario for year {year}...")
-        
-        # Load scenario VTK - using the same path as in a_scenario_generatorB.py
-        scenario_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk'
-        try:
-            scenario_vtk = pv.read(scenario_path)
-            print(f"Loaded scenario VTK for year {year}")
-        except Exception as e:
-            print(f"Could not load scenario for year {year}: {e}")
-            continue
-        
-        # Transfer site features to scenario
-        updated_scenario = transfer_site_features_to_scenario(site_vtk, scenario_vtk)
-        
-        # Add search variables
-        updated_scenario = add_search_variables_to_scenario(updated_scenario)
-        
-        # Save updated scenario
-        output_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_urban_features.vtk'
-        updated_scenario.save(output_path)
-        print(f"Saved updated scenario to {output_path}")
-        
-        # Save visualization outputs to temp directory
-        # Plot search variables and save to temp directory
-        plot_search_variables(updated_scenario)
-        if os.path.exists('search_variables.png'):
-            os.rename('search_variables.png', f'{temp_dir}/{site}_{scenario}_yr{year}_search_variables.png')
-            print(f"Saved search variables plot to {temp_dir}/{site}_{scenario}_yr{year}_search_variables.png")
-        
-        # Plot urban elements and save to temp directory
-        plot_urban_elements(updated_scenario)
-        if os.path.exists('urban_elements_detailed.png'):
-            os.rename('urban_elements_detailed.png', f'{temp_dir}/{site}_{scenario}_yr{year}_urban_elements_detailed.png')
-            print(f"Saved urban elements plot to {temp_dir}/{site}_{scenario}_yr{year}_urban_elements_detailed.png")
-
 def process_baseline(site, voxel_size):
     """Process baseline VTK file to add search variables"""
     print(f"\nProcessing baseline for site {site}...")
     
-    # Load baseline VTK file
-    baseline_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}.vtk'
+    # First check in the standardized baselines folder
+    baseline_path = f'data/revised/final/baselines/{site}_baseline_resources_{voxel_size}.vtk'
+    
+    # If not found, try the site-specific folder
+    if not os.path.exists(baseline_path):
+        baseline_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}.vtk'
+        
+    if not os.path.exists(baseline_path):
+        print(f"Error: Baseline file not found for {site} in either location")
+        return None
+    
+    print(f"Loading baseline file from: {baseline_path}")
     baseline_vtk = pv.read(baseline_path)
-
     
     # Initialize search variables
     print("Adding search variables to baseline...")
@@ -677,29 +504,122 @@ def process_baseline(site, voxel_size):
     baseline_vtk.point_data['forest_control'] = forest_control
     print(f"  Added forest_control with all points set to 'reserve-tree'")
     
-    # Save updated baseline
-    updated_baseline_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}_urban_features.vtk'
+    # Save updated baseline - save to the same folder as the input file
+    output_folder = os.path.dirname(baseline_path)
+    filename = os.path.basename(baseline_path)
+    updated_baseline_path = os.path.join(output_folder, filename.replace('.vtk', '_urban_features.vtk'))
     baseline_vtk.save(updated_baseline_path)
     print(f"Saved updated baseline to {updated_baseline_path}")
     
     return baseline_vtk
 
-def main():
-    """Main function to process sites and scenarios"""
+def process_single_file(vtk_file_path, site=None, voxel_size=None):
+    """Process a single VTK file specified by path"""
+    print(f"\nProcessing VTK file: {vtk_file_path}")
+    
+    try:
+        # Load the VTK file
+        scenario_vtk = pv.read(vtk_file_path)
+        print(f"Loaded VTK file with {scenario_vtk.n_points:,} points")
+        
+        # Extract site, scenario, and year from filename if not provided
+        if site is None:
+            filename = os.path.basename(vtk_file_path)
+            parts = filename.split('_')
+            if len(parts) >= 1:
+                site = parts[0]
+        
+        # Load xarray if needed for site context
+        ds = None
+        if site is not None and voxel_size is not None:
+            ds = load_xarray(site, voxel_size)
+        
+        # If this is a site VTK, preprocess it directly
+        if 'site' in vtk_file_path.lower() or 'baseline' in vtk_file_path.lower():
+            # For site or baseline VTK, process directly
+            if 'baseline' in vtk_file_path.lower():
+                # Process as baseline
+                updated_vtk = process_baseline(site, voxel_size)
+                print(f"Processed as baseline VTK")
+            else:
+                # Process as site VTK
+                updated_vtk = preprocess_site_vtk(scenario_vtk)
+                print(f"Processed as site VTK")
+        else:
+            # For scenario VTKs, we need site context
+            if ds is not None:
+                # Convert xarray to polydata for site
+                site_vtk = a_helper_functions.convert_xarray_into_polydata(ds)
+                site_vtk = preprocess_site_vtk(site_vtk)
+                
+                # Transfer site features to scenario
+                scenario_vtk = transfer_site_features_to_scenario(site_vtk, scenario_vtk)
+                
+                # Add search variables
+                updated_vtk = add_search_variables_to_scenario(scenario_vtk)
+                print(f"Processed as scenario VTK with site context")
+            else:
+                # No site context available, process directly
+                updated_vtk = add_search_variables_to_scenario(scenario_vtk)
+                print(f"Processed as scenario VTK without site context")
+        
+        # Save updated VTK with "_urban_features" suffix
+        output_path = vtk_file_path.replace('.vtk', '_urban_features.vtk')
+        updated_vtk.save(output_path)
+        print(f"Saved updated VTK to {output_path}")
+        
+        return updated_vtk
+    
+    except Exception as e:
+        print(f"Error processing VTK file {vtk_file_path}: {e}")
+        return None
+
+def run_from_manager(site=None, scenario=None, years=None, voxel_size=None, specific_files=None, process_baseline=False):
+    """Run the urban elements processing from a manager script"""
+    global SITES, SCENARIOS, YEARS, VOXEL_SIZE, PROCESS_BASELINE, SPECIFIC_FILES
+    
+    # Override global variables with manager-provided values
+    if site:
+        SITES = [site] if isinstance(site, str) else site
+    if scenario:
+        SCENARIOS = [scenario] if isinstance(scenario, str) else scenario
+    if years:
+        YEARS = years if isinstance(years, list) else [years]
+    if voxel_size:
+        VOXEL_SIZE = voxel_size
+    if specific_files is not None:
+        SPECIFIC_FILES = specific_files if isinstance(specific_files, list) else [specific_files]
+    if process_baseline is not None:
+        PROCESS_BASELINE = process_baseline
+    
+    print(f"\n===== Urban Elements Processing =====")
+    print(f"Sites: {SITES}")
+    print(f"Scenarios: {SCENARIOS}")
+    print(f"Years: {YEARS}")
+    print(f"Voxel Size: {VOXEL_SIZE}")
+    print(f"Process Baseline: {PROCESS_BASELINE}")
+    print(f"Specific Files: {SPECIFIC_FILES if SPECIFIC_FILES else 'None'}")
+    
+    # If specific files are provided, process only those
+    if SPECIFIC_FILES:
+        print("\nProcessing specific files...")
+        for file_path in SPECIFIC_FILES:
+            process_single_file(file_path, site=SITES[0] if len(SITES) == 1 else None, voxel_size=VOXEL_SIZE)
+        return
+    
     # Process baseline if requested
     if PROCESS_BASELINE:
         for site in SITES:
             process_baseline(site, VOXEL_SIZE)
     
-    # Process all sites and scenarios
-    """for site in SITES:
-        print(f"\n=== Processing site: {site} ===")
-        
+    # Process scenario files based on site/scenario/year
+    for site in SITES:
         for scenario in SCENARIOS:
-            print(f"\n--- Processing scenario: {scenario} ---")
-            
-            # Process scenarios
-            process_scenarios(site, scenario, VOXEL_SIZE)
-    """
-if __name__ == "__main__":
-    main()
+            for year in YEARS:
+                print(f"\nProcessing {site} - {scenario} - Year {year}")
+                scenario_path = f'data/revised/final/{site}/{site}_{scenario}_{VOXEL_SIZE}_scenarioYR{year}.vtk'
+                
+                if os.path.exists(scenario_path):
+                    process_scenarios_file(site, scenario, year, VOXEL_SIZE)
+                else:
+                    print(f"Scenario file not found: {scenario_path}")

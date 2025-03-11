@@ -5,7 +5,12 @@ import importlib
 import a_scenario_initialiseDS
 import a_scenario_runscenario
 import a_scenario_generateVTKs
-import a_scenario_urban_elements_count  # Import the new module
+import a_scenario_urban_elements_count
+import a_scenario_get_baselines
+
+#==============================================================================
+# UTILITY FUNCTIONS
+#==============================================================================
 
 def check_data_files_exist(site, scenario, year, voxel_size):
     """
@@ -58,7 +63,11 @@ def check_data_files_exist(site, scenario, year, voxel_size):
     
     return True
 
-def process_site(site, scenario, years, voxel_size, skip_scenario=False, enable_visualization=False, process_urban_elements=True):
+#==============================================================================
+# CORE PROCESSING FUNCTIONS
+#==============================================================================
+
+def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, enable_visualization=False):
     """
     Process a single site with the given parameters.
     
@@ -69,12 +78,17 @@ def process_site(site, scenario, years, voxel_size, skip_scenario=False, enable_
     voxel_size (int): Voxel size
     skip_scenario (bool): Whether to skip the scenario simulation step
     enable_visualization (bool): Whether to enable visualization in VTK generation
-    process_urban_elements (bool): Whether to process urban elements after VTK generation
+    
+    Returns:
+    list: List of generated VTK file paths
     """
     print(f"\n===== Processing {site} with {scenario} scenario =====\n")
     
-    # Step 1: Initialize site xarray
+    #--------------------------------------------------------------------------
+    # STEP 1: PREPROCESS SITE DATA
+    #--------------------------------------------------------------------------
     print("Step 1: Initializing site xarray dataset")
+    # Initialize site xarray
     subsetDS = a_scenario_initialiseDS.initialize_dataset(site, voxel_size)
     
     # Load initial tree, log, and pole dataframes
@@ -95,20 +109,29 @@ def process_site(site, scenario, years, voxel_size, skip_scenario=False, enable_
         print("Processing pole dataframe...")
         poleDF = a_scenario_initialiseDS.pole_processing(poleDF, None, subsetDS)
     
+    # Collect the VTK files that are generated for later urban elements processing
+    generated_vtk_files = []
+    
+    #--------------------------------------------------------------------------
+    # STEP 2: PROCESS EACH YEAR
+    #--------------------------------------------------------------------------
     # Process each year
     for year in years:
         print(f"\n----- Processing year {year} -----\n")
         
-        # Step 2: Run scenario simulation (if not skipped)
+        #----------------------------------------------------------------------
+        # STEP 2.1: RUN SCENARIO SIMULATION
+        #----------------------------------------------------------------------
+        # Run scenario simulation (if not skipped)
         if not skip_scenario:
-            print(f"Step 2: Running scenario simulation for year {year}")
+            print(f"Step 2.1: Running scenario simulation for year {year}")
             treeDF_scenario, logDF_scenario, poleDF_scenario = a_scenario_runscenario.run_scenario(
                 site, scenario, year, voxel_size, treeDF, subsetDS, logDF, poleDF
             )
         else:
             # Check if scenario data files exist
             if check_data_files_exist(site, scenario, year, voxel_size):
-                print(f"Step 2: Skipping scenario simulation, loading existing data for year {year}")
+                print(f"Step 2.1: Skipping scenario simulation, loading existing data for year {year}")
                 # Load the scenario dataframes
                 treeDF_scenario, logDF_scenario, poleDF_scenario = a_scenario_generateVTKs.load_scenario_dataframes(
                     site, scenario, year, voxel_size
@@ -120,15 +143,80 @@ def process_site(site, scenario, years, voxel_size, skip_scenario=False, enable_
                     site, scenario, year, voxel_size, treeDF, subsetDS, logDF, poleDF
                 )
         
-        # Step 3: Generate VTKs
-        print(f"Step 3: Generating VTKs for year {year}")
-        a_scenario_generateVTKs.generate_vtk(
+        #----------------------------------------------------------------------
+        # STEP 2.2: GENERATE VTKs
+        #----------------------------------------------------------------------
+        print(f"Step 2.2: Generating VTKs for year {year}")
+        vtk_file = a_scenario_generateVTKs.generate_vtk(
             site, scenario, year, voxel_size, subsetDS, 
             treeDF_scenario, logDF_scenario, poleDF_scenario, enable_visualization
         )
+        
+        # Track the VTK file path
+        if vtk_file:
+            generated_vtk_files.append(vtk_file)
+    
+    return generated_vtk_files
+
+def process_baseline(site, voxel_size=1):
+    """
+    Process baseline for a site. Checks if baseline files exist first.
+    
+    Parameters:
+    site (str): Site name ('trimmed-parade', 'city', 'uni')
+    voxel_size (int): Voxel size
+    
+    Returns:
+    str: Path to the baseline resource VTK file
+    """
+    # Define output paths
+    output_folder = 'data/revised/final/baselines'
+    resource_vtk_path = f'{output_folder}/{site}_baseline_resources_{voxel_size}.vtk'
+    
+    # Check if baseline file already exists in baselines folder
+    if os.path.exists(resource_vtk_path):
+        print(f"\n===== Using existing baseline for {site} =====")
+        print(f"Found existing baseline file: {resource_vtk_path}")
+        return resource_vtk_path
+    
+    # Alternative path to check in site-specific folder
+    alt_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}.vtk'
+    if os.path.exists(alt_path):
+        print(f"\n===== Using existing baseline for {site} (alternative location) =====")
+        print(f"Found existing baseline file: {alt_path}")
+        
+        # Copy to standardized location in baselines folder
+        import shutil
+        os.makedirs(output_folder, exist_ok=True)
+        print(f"Copying baseline file to standardized location...")
+        shutil.copy2(alt_path, resource_vtk_path)
+        print(f"Copied {alt_path} to {resource_vtk_path}")
+        
+        return resource_vtk_path
+    
+    # If no existing baseline found, generate a new one
+    print(f"\n===== Generating new baseline for {site} =====\n")
+    
+    # Generate baseline using the encapsulated function
+    trees_csv, resource_vtk, terrain_vtk, combined_vtk = a_scenario_get_baselines.generate_baseline(
+        site, voxel_size, output_folder
+    )
+    
+    print(f"Baseline generation completed for {site}")
+    print(f"Resource VTK: {resource_vtk}")
+    
+    return resource_vtk
+
+#==============================================================================
+# MAIN FUNCTION
+#==============================================================================
 
 def main():
     """Main function to gather user input and process sites."""
+    
+    #--------------------------------------------------------------------------
+    # STEP 1: GATHER USER INPUTS
+    #--------------------------------------------------------------------------
     # Default values
     default_sites = ['trimmed-parade', 'city', 'uni']
     default_scenarios = ['positive', 'trending']
@@ -146,7 +234,7 @@ def main():
     scenarios = [scenario.strip() for scenario in scenarios]
     
     # Ask for years/trimesters
-    years_input = input(f"Enter years/trimesters to process (comma-separated) or press Enter for default {default_years}: ")
+    years_input = input(f"Enter years to process (comma-separated) or press Enter for default {default_years}: ")
     try:
         years = [int(year.strip()) for year in years_input.split(',')] if years_input else default_years
     except ValueError:
@@ -169,10 +257,6 @@ def main():
     vis_input = input("Enable visualization during VTK generation? (yes/no, default no): ")
     enable_visualization = vis_input.lower() in ['yes', 'y', 'true', '1']
     
-    # Ask whether to process urban elements
-    urban_elements_input = input("Process urban elements after VTK generation? (yes/no, default yes): ")
-    process_urban_elements = urban_elements_input.lower() not in ['no', 'n', 'false', '0']
-    
     # Print summary of selected options
     print("\n===== Processing with the following parameters =====")
     print(f"Sites: {sites}")
@@ -181,7 +265,6 @@ def main():
     print(f"Voxel Size: {voxel_size}")
     print(f"Skip Scenario Simulation: {skip_scenario}")
     print(f"Enable Visualization: {enable_visualization}")
-    print(f"Process Urban Elements: {process_urban_elements}")
     
     # Confirm proceeding
     confirm = input("\nProceed with these settings? (yes/no, default yes): ")
@@ -189,52 +272,77 @@ def main():
         print("Operation cancelled.")
         return
     
+    #--------------------------------------------------------------------------
+    # STEP 2: PROCESS SCENARIOS
+    #--------------------------------------------------------------------------
+    print("\n===== STEP 2: PROCESSING SCENARIOS =====")
+    # Dictionary to store all generated VTK files by site
+    all_vtk_files = {site: [] for site in sites}
+    
     # Process each site and scenario
     for site in sites:
         for scenario in scenarios:
-            process_site(
+            # Process site and get generated VTK files
+            scenario_vtk_files = process_scenario(
                 site, scenario, years, voxel_size,
-                skip_scenario, enable_visualization, 
-                process_urban_elements
+                skip_scenario, enable_visualization
             )
+            
+            # Store the generated VTK files
+            all_vtk_files[site].extend(scenario_vtk_files)
     
-    # Process baseline for urban elements if requested
-    if process_urban_elements:
-        baseline_input = input("Process baseline for urban elements? (yes/no, default yes): ")
-        process_baseline = baseline_input.lower() not in ['no', 'n', 'false', '0']
+    #--------------------------------------------------------------------------
+    # STEP 3: PROCESS BASELINES
+    #--------------------------------------------------------------------------
+    print("\n===== STEP 3: PROCESSING BASELINES =====")
+    # Process baselines after scenario VTKs
+    baseline_vtk_files = {}
+    for site in sites:
+        baseline_vtk = process_baseline(site, voxel_size)
+        if baseline_vtk:
+            baseline_vtk_files[site] = baseline_vtk
+    
+    #--------------------------------------------------------------------------
+    # STEP 4: PROCESS URBAN ELEMENTS
+    #--------------------------------------------------------------------------
+    print("\n===== STEP 4: PROCESSING URBAN ELEMENTS =====")
+    # Process urban elements for all sites
+    for site in sites:
+        # Process scenario VTKs
+        if all_vtk_files[site]:
+            print(f"\nProcessing urban elements for {site} scenario VTKs")
+            for scenario in scenarios:
+                # Filter VTK files for this scenario
+                scenario_files = [f for f in all_vtk_files[site] if f'{scenario}' in f]
+                if scenario_files:
+                    a_scenario_urban_elements_count.run_from_manager(
+                        site=site,
+                        scenario=scenario,
+                        years=years,
+                        voxel_size=voxel_size,
+                        specific_files=scenario_files,
+                        process_baseline=False
+                    )
         
-        if process_baseline:
-            print("\n===== Processing baseline for urban elements =====")
-            for site in sites:
-                a_scenario_urban_elements_count.process_baseline(site, voxel_size)
+        # Process baseline VTK
+        if site in baseline_vtk_files and os.path.exists(baseline_vtk_files[site]):
+            print(f"\nProcessing urban elements for {site} baseline")
+            
+            # Process the urban elements directly from the baselines folder
+            a_scenario_urban_elements_count.run_from_manager(
+                site=site,
+                voxel_size=voxel_size,
+                specific_files=[baseline_vtk_files[site]],
+                process_baseline=True
+            )
     
     print("\n===== All processing completed =====")
 
+#==============================================================================
+# SCRIPT ENTRY POINT
+#==============================================================================
+
 if __name__ == "__main__":
-    # Display welcome message
-    print("\n===== Scenario Manager =====")
-    print("This tool manages the workflow for scenario simulation and VTK generation.")
-    print("You will be prompted for various options to configure the process.\n")
-    
-    # Check if required modules are available
-    required_modules = [
-        'a_scenario_initialiseDS', 
-        'a_scenario_runscenario', 
-        'a_scenario_generateVTKs'
-    ]
-    
-    missing_modules = []
-    for module in required_modules:
-        try:
-            importlib.import_module(module)
-        except ImportError:
-            missing_modules.append(module)
-    
-    if missing_modules:
-        print(f"Error: The following required modules are missing: {', '.join(missing_modules)}")
-        print("Please make sure all required scripts are in the same directory.")
-        exit(1)
-    
     # Run the main function
     try:
         main()
