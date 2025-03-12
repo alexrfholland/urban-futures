@@ -174,28 +174,14 @@ def process_baseline(site, voxel_size=1):
     """
     # Define output paths
     output_folder = 'data/revised/final/baselines'
-    resource_vtk_path = f'{output_folder}/{site}_baseline_resources_{voxel_size}.vtk'
+    baseline_vtk_path = f'{output_folder}/{site}_baseline_combined_{voxel_size}.vtk'
     
     # Check if baseline file already exists in baselines folder
-    if os.path.exists(resource_vtk_path):
+    if os.path.exists(baseline_vtk_path):
         print(f"\n===== Using existing baseline for {site} =====")
-        print(f"Found existing baseline file: {resource_vtk_path}")
-        return resource_vtk_path
-    
-    # Alternative path to check in site-specific folder
-    alt_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}.vtk'
-    if os.path.exists(alt_path):
-        print(f"\n===== Using existing baseline for {site} (alternative location) =====")
-        print(f"Found existing baseline file: {alt_path}")
-        
-        # Copy to standardized location in baselines folder
-        import shutil
-        os.makedirs(output_folder, exist_ok=True)
-        print(f"Copying baseline file to standardized location...")
-        shutil.copy2(alt_path, resource_vtk_path)
-        print(f"Copied {alt_path} to {resource_vtk_path}")
-        
-        return resource_vtk_path
+        print(f"Found existing baseline file: {baseline_vtk_path}")
+        return baseline_vtk_path
+
     
     # If no existing baseline found, generate a new one
     print(f"\n===== Generating new baseline for {site} =====\n")
@@ -206,9 +192,9 @@ def process_baseline(site, voxel_size=1):
     )
     
     print(f"Baseline generation completed for {site}")
-    print(f"Resource VTK: {resource_vtk}")
+    print(f"Resource VTK: {combined_vtk}")
     
-    return resource_vtk
+    return combined_vtk
 
 #==============================================================================
 # MAIN FUNCTION
@@ -332,7 +318,7 @@ def main():
                 years=years,
                 voxel_size=voxel_size,
                 specific_files=scenario_files,
-                process_baseline=False
+                should_process_baseline=False
             )
             
             if processed_files:
@@ -351,7 +337,7 @@ def main():
                 site=site,
                 voxel_size=voxel_size,
                 specific_files=[baseline_file],
-                process_baseline=True
+                should_process_baseline=True
             )
             
             if processed_baseline:
@@ -367,11 +353,5 @@ def main():
 
 if __name__ == "__main__":
     # Run the main function
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\nOperation cancelled by user.")
-    except Exception as e:
-        print(f"\nAn error occurred: {e}")
-    finally:
-        print("\nThank you for using Scenario Manager.")
+    main()
+    print("Done")

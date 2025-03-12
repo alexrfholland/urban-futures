@@ -448,11 +448,7 @@ def process_baseline(site, voxel_size):
     print(f"\nProcessing baseline for site {site}...")
     
     # First check in the standardized baselines folder
-    baseline_path = f'data/revised/final/baselines/{site}_baseline_resources_{voxel_size}.vtk'
-    
-    # If not found, try the site-specific folder
-    if not os.path.exists(baseline_path):
-        baseline_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}.vtk'
+    baseline_path = f'data/revised/final/baselines/{site}_baseline_combined_{voxel_size}.vtk'
         
     if not os.path.exists(baseline_path):
         print(f"Error: Baseline file not found for {site} in either location")
@@ -654,7 +650,7 @@ def process_scenario_vtks(site, scenario, years, voxel_size):
     print(f"\nProcessed {len(processed_files)} of {len(years)} VTK files for {site} - {scenario}")
     return processed_files
 
-def run_from_manager(site=None, scenario=None, years=None, voxel_size=None, specific_files=None, process_baseline=False):
+def run_from_manager(site=None, scenario=None, years=None, voxel_size=None, specific_files=None, should_process_baseline=False):
     """
     Run the urban elements processing from the manager script.
     
@@ -672,7 +668,7 @@ def run_from_manager(site=None, scenario=None, years=None, voxel_size=None, spec
     processed_files = []
     
     # 1. Process baseline if requested
-    if process_baseline:
+    if should_process_baseline:
         print(f"\nProcessing baseline for site: {site}")
         baseline_result = process_baseline(site, voxel_size)
         if baseline_result:
