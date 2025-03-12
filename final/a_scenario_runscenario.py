@@ -5,6 +5,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 import a_helper_functions
 import a_scenario_initialiseDS  # Import for preprocessing functions
+import a_scenario_params  # Import the centralized parameters module
 
 def remap_values_xarray(values, old_min, old_max, new_min, new_max):
     return (values - old_min) / (old_max - old_min) * (new_max - new_min) + new_min
@@ -564,140 +565,6 @@ def run_simulation(df, ds, params, logDF=None, poleDF=None):
     
     return df, logDF, poleDF
 
-def get_scenario_parameters():
-    paramsPARADE_positive = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 70,
-    'plantThreshold' : 50,
-    'rewildThreshold' : 10,
-    'senescingThreshold' : -25,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 0,
-                            30: 3000,
-                            60: 4000,
-                            180: 4500},
-    }
-
-    paramsPARADE_trending = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 2, # Highest threshold
-    'plantThreshold' : 1, # Middle threshold
-    'rewildThreshold' : 0, # Lowest threshold
-    'senescingThreshold' : -5, 
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 0,
-                            30: 0,
-                            60: 0,
-                            180: 0},
-    }
-
-    paramsCITY_positive = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 70,
-    'plantThreshold' : 50,
-    'rewildThreshold' : 10,
-    'senescingThreshold' : -25,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 300,
-                            30: 1249.75,
-                            60: 4999,
-                            180: 5000},
-    'sim_averageResistance' : {0: 0,
-                            10: 50,
-                            30: 50,
-                            60: 67.90487670898438,
-                            180: 96},
-    }
-
-    paramsCITY_trending = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 15,
-    'plantThreshold' : 10,
-    'rewildThreshold' : 5,
-    'senescingThreshold' : -5,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 20,
-                            30: 50,
-                            60: 100,
-                            180: 200},
-    'sim_averageResistance' : {0: 0,
-                            10: 10,
-                            30: 20,
-                            60: 30,
-                            180: 50},
-    }
-
-    paramsUNI_positive = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 70,
-    'plantThreshold' : 50,
-    'rewildThreshold' : 10,
-    'senescingThreshold' : -25,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 300,
-                            30: 1249.75,
-                            60: 4999,
-                            180: 5000},
-    'sim_averageResistance' : {0: 0,
-                            10: 50,
-                            30: 50,
-                            60: 67.90487670898438,
-                            180: 0},
-    }
-
-    paramsUNI_trending = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 15,
-    'plantThreshold' : 10,
-    'rewildThreshold' : 5,
-    'senescingThreshold' : -5,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 20,
-                            30: 50,
-                            60: 100,
-                            180: 200},
-    'sim_averageResistance' : {0: 0,
-                            10: 0,
-                            30: 0,
-                            60: 0,
-                            180: 0},
-    }
-
-    paramsDic = {
-        ('trimmed-parade', 'positive'): paramsPARADE_positive,
-        ('trimmed-parade', 'trending'): paramsPARADE_trending,
-        ('city', 'positive'): paramsCITY_positive,
-        ('city', 'trending'): paramsCITY_trending,
-        ('uni', 'positive'): paramsUNI_positive,
-        ('uni', 'trending'): paramsUNI_trending,
-    }
-    
-    return paramsDic
-
 def run_scenario(site, scenario, year, voxel_size, treeDF, subsetDS, logDF=None, poleDF=None):
     """
     Runs a scenario simulation for a given site, scenario, and year.
@@ -715,8 +582,8 @@ def run_scenario(site, scenario, year, voxel_size, treeDF, subsetDS, logDF=None,
     Returns:
     tuple: (treeDF_scenario, logDF_scenario, poleDF_scenario) - Simulated dataframes
     """
-    # Get scenario parameters
-    paramsDic = get_scenario_parameters()
+    # Get scenario parameters from the centralized module
+    paramsDic = a_scenario_params.get_scenario_parameters()
     params = paramsDic[(site, scenario)]
     params['years_passed'] = year
     

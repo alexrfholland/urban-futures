@@ -1,3 +1,6 @@
+#==============================================================================
+# IMPORTS
+#==============================================================================
 import os
 import pandas as pd
 import xarray as xr
@@ -5,7 +8,12 @@ import numpy as np
 import pyvista as pv
 import a_helper_functions
 import a_voxeliser
+import a_scenario_params  # Import the centralized parameters module
 
+
+#==============================================================================
+# XARRAY PROCESSING FUNCTIONS
+#==============================================================================
 def update_rewilded_voxel_catagories(ds, df):
     """
     Updates the 'scenario_rewilded' variable in the xarray dataset based on the dataframe values.
@@ -17,20 +25,36 @@ def update_rewilded_voxel_catagories(ds, df):
     
     Returns:
     xarray.Dataset: The updated dataset with the 'scenario_rewilded' variable modified.
+    
+    Variables created/modified:
+    - ds['scenario_rewilded']: Categorical variable indicating rewilding status for each voxel
     """
+    #--------------------------------------------------------------------------
+    # STEP 1: PREPARE INPUT DATA
+    # Standardize 'None' values to lowercase 'none' for consistency
+    #--------------------------------------------------------------------------
     # Replace 'None' with 'none' in the DataFrame
     df['rewilded'] = df['rewilded'].replace('None', 'none')
     
-    # Step 1: Initialize 'scenario_rewilded' if it doesn't exist
+    #--------------------------------------------------------------------------
+    # STEP 2: INITIALIZE SCENARIO_REWILDED VARIABLE
+    # Create the variable if it doesn't exist with default 'none' values
+    #--------------------------------------------------------------------------
     if 'scenario_rewilded' not in ds.variables:
         # Use object dtype for variable-length strings
         ds = ds.assign(scenario_rewilded=('voxel', np.array(['none'] * ds.dims['voxel'], dtype='O')))
     
-    # Step 2: Extract relevant arrays from xarray
+    #--------------------------------------------------------------------------
+    # STEP 3: EXTRACT REFERENCE ARRAYS
+    # Get the arrays needed for node matching
+    #--------------------------------------------------------------------------
     canopy_id = ds['node_CanopyID'].values
     sim_nodes = ds['sim_Nodes'].values
     
-    # Step 3: Iterate over dataframe rows and update scenario_rewilded based on NodeID
+    #--------------------------------------------------------------------------
+    # STEP 4: UPDATE SCENARIO_REWILDED BASED ON NODE MATCHING
+    # Match voxels to nodes and update their rewilding status
+    #--------------------------------------------------------------------------
     for idx, row in df.iterrows():
         if row['rewilded'] in ['exoskeleton', 'footprint-depaved']:
             # Match using 'node_CanopyID'
@@ -44,6 +68,10 @@ def update_rewilded_voxel_catagories(ds, df):
         # Update 'scenario_rewilded' for matching voxels
         ds['scenario_rewilded'].values[mask] = row['rewilded']
 
+    #--------------------------------------------------------------------------
+    # STEP 5: PRINT STATISTICS
+    # Output counts of rewilding categories for verification
+    #--------------------------------------------------------------------------
     # Print all unique values and counts for df['rewilded'] using pandas
     print('Column rewilded values and counts in dataframe:')
     print(df['rewilded'].value_counts())
@@ -54,24 +82,48 @@ def update_rewilded_voxel_catagories(ds, df):
     for value, count in zip(unique_values, counts):
         print(f'scenario_rewilded value: {value}, count: {count}')
     
-    # Step 4: Return the updated dataset
     return ds
 
 def update_bioEnvelope_voxel_catagories(ds, params):
-    # Create another version of the depaved column that also considers the green envelopes
+    """
+    Updates the xarray dataset with bio-envelope categories based on simulation parameters.
+    
+    Parameters:
+    ds (xarray.Dataset): The xarray dataset containing voxel information.
+    params (dict): Dictionary of scenario parameters including thresholds.
+    
+    Returns:
+    xarray.Dataset: The updated dataset with bio-envelope variables.
+    
+    Variables created/modified:
+    - ds['bioMask']: Boolean mask indicating voxels eligible for bio-envelope
+    - ds['scenario_bioEnvelope']: Categorical variable indicating bio-envelope type for each voxel
+    """
+    #--------------------------------------------------------------------------
+    # STEP 1: CREATE BIO-ENVELOPE ELIGIBILITY MASK
+    # Determine which voxels are eligible for bio-envelope based on simulation parameters
+    #--------------------------------------------------------------------------
     year = params['years_passed']
     turnThreshold = params['sim_TurnsThreshold'][year]
-    resistanceThreshold = params['sim_averageResistance'][year] if 'sim_averageResistance' in params else 0
+    resistanceThreshold = params['sim_averageResistance'][year]
 
     bioMask = (ds['sim_Turns'] <= turnThreshold) & (ds['sim_averageResistance'] <= resistanceThreshold) & (ds['sim_Turns'] >= 0)
     ds['bioMask'] = bioMask
 
+    #--------------------------------------------------------------------------
+    # STEP 2: INITIALIZE SCENARIO_BIOENVELOPE VARIABLE
+    # Start with rewilded status and then modify based on bio-envelope criteria
+    #--------------------------------------------------------------------------
     # Initialize scenario_bioEnvelope as a copy of ds['scenario_rewilded']
     ds['scenario_bioEnvelope'] = xr.DataArray(
         data=np.array(ds['scenario_rewilded'].values, dtype='O'),
         dims='voxel'
     )
 
+    #--------------------------------------------------------------------------
+    # STEP 3: ASSIGN BIO-ENVELOPE CATEGORIES
+    # Update bio-envelope categories based on building elements and bioMask
+    #--------------------------------------------------------------------------
     # Assign 'otherGround' to scenario_bioEnvelope where bioMask is true and scenario_bioEnvelope is 'none'
     ds['scenario_bioEnvelope'].loc[bioMask & (ds['scenario_bioEnvelope'] == 'none')] = 'otherGround'
 
@@ -87,6 +139,10 @@ def update_bioEnvelope_voxel_catagories(ds, params):
     """poly = a_helper_functions.convert_xarray_into_polydata(ds)
     poly.plot(scalars='scenario_bioEnvelope', cmap='Set1')"""
 
+    #--------------------------------------------------------------------------
+    # STEP 4: PRINT STATISTICS
+    # Output counts of bio-envelope categories for verification
+    #--------------------------------------------------------------------------
     unique_values, counts = np.unique(ds['scenario_bioEnvelope'], return_counts=True)
     print('column scenario_bioEnvelope values and counts in xarray dataset:')
     for value, count in zip(unique_values, counts):
@@ -95,9 +151,27 @@ def update_bioEnvelope_voxel_catagories(ds, params):
     return ds
 
 def finalDSprocessing(ds):
-    # Create updated resource variables in xarray
-
-    # Elevated dead branches
+    """
+    Creates updated resource variables in the xarray dataset for final analysis.
+    
+    Parameters:
+    ds (xarray.Dataset): The xarray dataset containing voxel and resource information.
+    
+    Returns:
+    xarray.Dataset: The updated dataset with additional resource variables.
+    
+    Variables created/modified:
+    - ds['updatedResource_elevatedDeadBranches']: Combined dead branches for senescing trees
+    - ds['updatedResource_groundDeadBranches']: Combined resources for fallen trees
+    - ds['maskforTrees']: Boolean mask identifying voxels with tree resources
+    - ds['maskForRewilding']: Boolean mask identifying voxels with rewilding status
+    - ds['scenario_outputs']: Combined categorical variable for visualization
+    """
+    #--------------------------------------------------------------------------
+    # STEP 1: CREATE ELEVATED DEAD BRANCHES RESOURCE
+    # Combines dead branch and other resources for senescing trees
+    #--------------------------------------------------------------------------
+    # Initialize with a copy of the dead branch resource
     ds['updatedResource_elevatedDeadBranches'] = ds['resource_dead branch'].copy()
     
     # Get mask for 'forest_size' == 'senescing'
@@ -106,7 +180,11 @@ def finalDSprocessing(ds):
     # Update 'updatedResource_elevatedDeadBranches' for senescing trees
     ds['updatedResource_elevatedDeadBranches'].loc[mask_senescing] = ds['resource_dead branch'].loc[mask_senescing] + ds['resource_other'].loc[mask_senescing]
 
-    # Ground dead branches
+    #--------------------------------------------------------------------------
+    # STEP 2: CREATE GROUND DEAD BRANCHES RESOURCE
+    # Combines multiple resources for fallen trees
+    #--------------------------------------------------------------------------
+    # Initialize with a copy of the fallen log resource
     ds['updatedResource_groundDeadBranches'] = ds['resource_fallen log'].copy()
     
     # Get mask for 'forest_size' == 'fallen'
@@ -121,34 +199,92 @@ def finalDSprocessing(ds):
         ds['resource_perch branch'].loc[mask_fallen]
     )
 
+    #--------------------------------------------------------------------------
+    # STEP 3: CREATE TREE RESOURCE MASK
+    # Identifies voxels that contain any tree resources (except leaf litter)
+    #--------------------------------------------------------------------------
+    # Initialize mask as all False
+    maskforTrees = np.zeros(ds.dims['voxel'], dtype=bool)
+    
+    # Loop through resource variables and update the mask
+    for var_name in ds.variables:
+        if var_name.startswith('resource_') and var_name != 'resource_leaf litter':
+            # Create a boolean mask where the values are greater than 0
+            resource_mask = ds[var_name].values > 0
+            
+            # Combine the mask with the current mask using logical OR
+            maskforTrees = np.logical_or(maskforTrees, resource_mask)
+    
+    # Add the mask to the dataset
+    ds['maskforTrees'] = xr.DataArray(maskforTrees, dims='voxel')
+    
+    #--------------------------------------------------------------------------
+    # STEP 4: CREATE REWILDING MASK
+    # Identifies voxels that have been rewilded (not 'none')
+    #--------------------------------------------------------------------------
+    maskForRewilding = ds['scenario_rewilded'].values != 'none'
+    ds['maskForRewilding'] = xr.DataArray(maskForRewilding, dims='voxel')
+    
+    #--------------------------------------------------------------------------
+    # STEP 5: CREATE COMBINED SCENARIO OUTPUT VARIABLE
+    # Combines tree size and rewilding status into a single categorical variable
+    #--------------------------------------------------------------------------
+    # Initialize with object dtype
+    scenario_outputs = np.full(ds.dims['voxel'], 'none', dtype='O')
+    
+    # For rewilded voxels, use the rewilding status
+    scenario_outputs[maskForRewilding] = ds['scenario_rewilded'].values[maskForRewilding]
+    
+    # For tree voxels, use the forest size
+    scenario_outputs[maskforTrees] = ds['forest_size'].values[maskforTrees]
+    
+    # Add the combined variable to the dataset
+    ds['scenario_outputs'] = xr.DataArray(scenario_outputs, dims='voxel')
+    
+    # Print unique values and counts for scenario_outputs
+    unique_values, counts = np.unique(ds['scenario_outputs'], return_counts=True)
+    print('Column scenario_outputs values and counts in xarray dataset:')
+    for value, count in zip(unique_values, counts):
+        print(f'scenario_outputs value: {value}, count: {count}')
+
     return ds
 
-def print_simulation_statistics(df, year, site):
-    print(f"Simulation Summary for Year: {year}, Site: {site}")
-    
-    # Print total number of trees
-    total_trees = len(df)
-    print(f"Total number of trees: {total_trees}")
-    
-    # Print unique values and their counts for the 'size' column
-    print("\nUnique values and their counts for 'size':")
-    print(df['size'].value_counts())
-
-    # Print unique values and their counts for the 'action' column
-    print("\nUnique values and their counts for 'action':")
-    print(df['action'].value_counts())
-
-    # Print unique values and their counts for the 'rewilded' column
-    print("\nUnique values and their counts for 'rewilded':")
-    print(df['rewilded'].value_counts())
-
-    print(f"Trees planted: {df[df['isNewTree'] == True].shape[0]}")
-    
-    print("\nEnd of simulation statistics.\n")
-
+#==============================================================================
+# POLYDATA PROCESSING FUNCTIONS
+#==============================================================================
 def process_polydata(polydata):
-    # Create a mask that checks all polydata.point_data variables starting with resource,
-    # except for resource_leaf_litter. If any of the resource variables are >0, mask is True, else False
+    """
+    Process the polydata to verify and print statistics about the variables.
+    The main variables are now created in the xarray dataset before conversion.
+    
+    Parameters:
+    polydata (pyvista.PolyData): The polydata object converted from xarray
+    
+    Returns:
+    pyvista.PolyData: The processed polydata
+    
+    Variables used (already created in xarray):
+    - maskforTrees: Boolean mask identifying voxels with tree resources
+    - maskForRewilding: Boolean mask identifying voxels with rewilding status
+    - scenario_outputs: Combined categorical variable for visualization
+    """
+    #--------------------------------------------------------------------------
+    # STEP 1: VERIFY VARIABLES EXIST
+    # Check that all required variables were transferred from xarray
+    #--------------------------------------------------------------------------
+    required_vars = ['maskforTrees', 'maskForRewilding', 'scenario_outputs']
+    for var in required_vars:
+        if var not in polydata.point_data:
+            print(f"Warning: Variable '{var}' not found in polydata. This may cause visualization issues.")
+    
+    #--------------------------------------------------------------------------
+    # STEP 2: PRINT STATISTICS
+    # Output counts of scenario output categories for verification
+    #--------------------------------------------------------------------------
+    # Print unique values and counts for scenario_outputs
+    if 'scenario_outputs' in polydata.point_data:
+        print(f'unique values and counts for scenario_outputs in polydata: {pd.Series(polydata.point_data["scenario_outputs"]).value_counts()}')
+    
     maskforTrees = np.zeros(polydata.n_points, dtype=bool)
 
     # Loop through point_data keys and update the mask
@@ -165,12 +301,25 @@ def process_polydata(polydata):
 
     # Add the mask to point data
     polydata.point_data['maskforTrees'] = maskforTrees
+    
+    #--------------------------------------------------------------------------
+    # STEP 2: CREATE REWILDING MASK
+    # Identifies voxels that have been rewilded (not 'none')
+    #--------------------------------------------------------------------------
     maskForRewilding = polydata['scenario_rewilded'] != 'none'
     polydata.point_data['maskForRewilding'] = maskForRewilding
 
+    #--------------------------------------------------------------------------
+    # STEP 3: CREATE COMBINED SCENARIO OUTPUT VARIABLE
+    # Combines tree size and rewilding status into a single categorical variable
+    #--------------------------------------------------------------------------
     # Initialize with object dtype
     scenario_outputs = np.full(polydata.n_points, 'none', dtype='O')
+    
+    # For rewilded voxels, use the rewilding status
     scenario_outputs[maskForRewilding] = polydata.point_data['scenario_rewilded'][maskForRewilding]
+    
+    # For tree voxels, use the forest size
     scenario_outputs[maskforTrees] = polydata.point_data['forest_size'][maskforTrees]
     
     # Print unique values and counts for scenario_outputs
@@ -178,16 +327,33 @@ def process_polydata(polydata):
     polydata.point_data['scenario_outputs'] = scenario_outputs
     
     print(f'unique values and counts for scenario_outputs in polydata: {pd.Series(polydata.point_data["scenario_outputs"]).value_counts()}')
+    
     return polydata
 
+#==============================================================================
+# VISUALIZATION FUNCTIONS
+#==============================================================================
 def plot_scenario_rewilded(polydata, treeDF, years_passed, site):
+    """
+    Creates a visualization of the scenario with trees, rewilding, and site voxels.
+    
+    Parameters:
+    polydata (pyvista.PolyData): The polydata object with all variables
+    treeDF (pd.DataFrame): Tree dataframe for labeling
+    years_passed (int): Years passed for title
+    site (str): Site name for title
+    
+    Uses variables:
+    - maskforTrees: Boolean mask identifying voxels with tree resources
+    - maskForRewilding: Boolean mask identifying voxels with rewilding status
+    """
+    # Get masks from polydata (created in xarray)
     maskforTrees = polydata.point_data['maskforTrees']
     maskForRewilding = polydata.point_data['maskForRewilding']
 
+    # Extract different polydata subsets based on the masks
     sitePoly = polydata.extract_points(~maskforTrees)  # Points where forest_tree_id is NaN
     treePoly = polydata.extract_points(maskforTrees)  # Points where forest_tree_id is not NaN
-
-    # Extract two different polydata based on the masks
     rewildingVoxels = sitePoly.extract_points(maskForRewilding)
     siteVoxels = sitePoly.extract_points(~maskForRewilding)
 
@@ -234,141 +400,35 @@ def label_trees(df, plotter):
         point_size=10          # Size of the points associated with labels if rendered
     )
 
-def get_scenario_parameters():
-    """Returns a dictionary of parameters for each site and scenario."""
-    paramsPARADE_positive = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 70,
-    'plantThreshold' : 50,
-    'rewildThreshold' : 10,
-    'senescingThreshold' : -25,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 0,
-                            30: 3000,
-                            60: 4000,
-                            180: 4500},
-    }
-
-    paramsPARADE_trending = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 2, # Highest threshold
-    'plantThreshold' : 1, # Middle threshold
-    'rewildThreshold' : 0, # Lowest threshold
-    'senescingThreshold' : -5, 
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 0,
-                            30: 0,
-                            60: 0,
-                            180: 0},
-    }
-
-    paramsCITY_positive = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 70,
-    'plantThreshold' : 50,
-    'rewildThreshold' : 10,
-    'senescingThreshold' : -25,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 300,
-                            30: 1249.75,
-                            60: 4999,
-                            180: 5000},
-    'sim_averageResistance' : {0: 0,
-                            10: 50,
-                            30: 50,
-                            60: 67.90487670898438,
-                            180: 96},
-    }
-
-    paramsCITY_trending = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 15,
-    'plantThreshold' : 10,
-    'rewildThreshold' : 5,
-    'senescingThreshold' : -5,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 20,
-                            30: 50,
-                            60: 100,
-                            180: 200},
-    'sim_averageResistance' : {0: 0,
-                            10: 10,
-                            30: 20,
-                            60: 30,
-                            180: 50},
-    }
-
-    paramsUNI_positive = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 70,
-    'plantThreshold' : 50,
-    'rewildThreshold' : 10,
-    'senescingThreshold' : -25,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 300,
-                            30: 1249.75,
-                            60: 4999,
-                            180: 5000},
-    'sim_averageResistance' : {0: 0,
-                            10: 50,
-                            30: 50,
-                            60: 67.90487670898438,
-                            180: 0},
-    }
-
-    paramsUNI_trending = {
-    'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
-    'ageInPlaceThreshold' : 15,
-    'plantThreshold' : 10,
-    'rewildThreshold' : 5,
-    'senescingThreshold' : -5,
-    'snagThreshold' : -200,
-    'collapsedThreshold' : -250,
-    'controlSteps' : 20,
-    'sim_TurnsThreshold' : {0: 0,
-                            10: 20,
-                            30: 50,
-                            60: 100,
-                            180: 200},
-    'sim_averageResistance' : {0: 0,
-                            10: 0,
-                            30: 0,
-                            60: 0,
-                            180: 0},
-    }
-
-    paramsDic = {
-        ('trimmed-parade', 'positive'): paramsPARADE_positive,
-        ('trimmed-parade', 'trending'): paramsPARADE_trending,
-        ('city', 'positive'): paramsCITY_positive,
-        ('city', 'trending'): paramsCITY_trending,
-        ('uni', 'positive'): paramsUNI_positive,
-        ('uni', 'trending'): paramsUNI_trending,
-    }
+#==============================================================================
+# UTILITY FUNCTIONS
+#==============================================================================
+def print_simulation_statistics(df, year, site):
+    print(f"Simulation Summary for Year: {year}, Site: {site}")
     
-    return paramsDic
+    # Print total number of trees
+    total_trees = len(df)
+    print(f"Total number of trees: {total_trees}")
+    
+    # Print unique values and their counts for the 'size' column
+    print("\nUnique values and their counts for 'size':")
+    print(df['size'].value_counts())
 
+    # Print unique values and their counts for the 'action' column
+    print("\nUnique values and their counts for 'action':")
+    print(df['action'].value_counts())
+
+    # Print unique values and their counts for the 'rewilded' column
+    print("\nUnique values and their counts for 'rewilded':")
+    print(df['rewilded'].value_counts())
+
+    print(f"Trees planted: {df[df['isNewTree'] == True].shape[0]}")
+    
+    print("\nEnd of simulation statistics.\n")
+
+#==============================================================================
+# MAIN PROCESSING FUNCTIONS
+#==============================================================================
 def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleDF=None, enable_visualization=False):
     """
     Generates a VTK file for a given site, scenario, and year.
@@ -387,8 +447,8 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     Returns:
     xarray.Dataset: Updated dataset
     """
-    # Get scenario parameters
-    paramsDic = get_scenario_parameters()
+    # Get scenario parameters from the centralized module
+    paramsDic = a_scenario_params.get_scenario_parameters()
     params = paramsDic[(site, scenario)]
     params['years_passed'] = year
     
@@ -398,7 +458,13 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     
     print(f'Generating VTK for {site}, {scenario}, year {year}')
     
-    # Update the xarray dataset
+    #--------------------------------------------------------------------------
+    # STEP 1: UPDATE XARRAY WITH SCENARIO DATA
+    # Variables created/modified:
+    # - ds['scenario_rewilded']: Rewilded status for each voxel
+    # - ds['scenario_bioEnvelope']: Bio-envelope status for each voxel (if logs/poles exist)
+    # - ds['bioMask']: Boolean mask for bio-envelope eligibility
+    #--------------------------------------------------------------------------
     print('Integrating results into xarray')
     ds = update_rewilded_voxel_catagories(ds, treeDF)
     
@@ -409,6 +475,12 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     unique_values, counts = np.unique(ds['scenario_rewilded'], return_counts=True)
     print(f'Unique values and counts for scenario_rewilded: {unique_values}, {counts}')
 
+    #--------------------------------------------------------------------------
+    # STEP 2: PREPARE VALID POINTS FOR RESOURCE VOXELIZATION
+    # Variables created:
+    # - validpointsMask: Boolean mask for voxels to include in resource calculation
+    # - valid_points: Array of 3D coordinates for valid voxels
+    #--------------------------------------------------------------------------
     # Prepare valid points for resource voxelization
     validpointsMask = ds['scenario_rewilded'].values != 'none'
     if logDF is not None:
@@ -424,12 +496,25 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
         ds['centroid_z'].values[validpointsMask]
     ]).T
 
-    # Integrate resources into xarray
-    
+    #--------------------------------------------------------------------------
+    # STEP 3: INTEGRATE RESOURCES INTO XARRAY
+    # Variables created/modified:
+    # - Multiple resource variables in ds (resource_*)
+    # - forest_* variables in ds
+    # - combinedDF_scenario: Combined dataframe of all nodes with resources
+    #--------------------------------------------------------------------------
     templateResolution = 0.5
     ds, combinedDF_scenario = a_voxeliser.integrate_resources_into_xarray(ds, treeDF, templateResolution, logDF, poleDF, valid_points)
     
-    # Final processing
+    #--------------------------------------------------------------------------
+    # STEP 4: FINAL XARRAY PROCESSING
+    # Variables created:
+    # - ds['updatedResource_elevatedDeadBranches']: Combined dead branches for senescing trees
+    # - ds['updatedResource_groundDeadBranches']: Combined resources for fallen trees
+    # - ds['maskforTrees']: Boolean mask identifying voxels with tree resources
+    # - ds['maskForRewilding']: Boolean mask identifying voxels with rewilding status
+    # - ds['scenario_outputs']: Combined categorical variable for visualization
+    #--------------------------------------------------------------------------
     ds = finalDSprocessing(ds)
 
     # Save combinedDF_scenario to csv
@@ -439,6 +524,10 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     # Print statistics
     print_simulation_statistics(combinedDF_scenario, year, site)
 
+    #--------------------------------------------------------------------------
+    # STEP 5: CONVERT XARRAY TO POLYDATA AND SAVE VTK
+    # All variables are now created in the xarray dataset and transferred to polydata
+    #--------------------------------------------------------------------------
     # Convert to polydata and process
     polydata = a_helper_functions.convert_xarray_into_polydata(ds)
     polydata = process_polydata(polydata)
@@ -448,7 +537,14 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     polydata.save(vtk_file)
     print(f'Saved VTK file to {vtk_file}')
 
-    # Optional visualization
+    #--------------------------------------------------------------------------
+    # STEP 6: OPTIONAL VISUALIZATION
+    # Creates visualization with:
+    # - Tree voxels colored by forest_size
+    # - Rewilding voxels colored by scenario_rewilded
+    # - Site voxels in white
+    # - Tree labels for large, senescing, snag, and fallen trees
+    #--------------------------------------------------------------------------
     if enable_visualization:
         plot_scenario_rewilded(polydata, treeDF, year, site)
     
@@ -498,6 +594,9 @@ def load_scenario_dataframes(site, scenario, year, voxel_size):
     
     return treeDF, logDF, poleDF
 
+#==============================================================================
+# MAIN EXECUTION
+#==============================================================================
 if __name__ == "__main__":
     import a_scenario_initialiseDS
     
