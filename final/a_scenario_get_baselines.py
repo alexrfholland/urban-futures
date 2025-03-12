@@ -402,8 +402,8 @@ def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/base
     # Define output paths
     resource_vtk_path = f'{output_folder}/{site}_baseline_resources_{voxel_size}.vtk'
     trees_csv_path = f'{output_folder}/{site}_baseline_trees.csv'
-    terrain_vtk_path = f'{output_folder}/{site}_terrain_polydata.vtk'
-    combined_vtk_path = f'{output_folder}/{site}_combined_polydata.vtk'
+    terrain_vtk_path = f'{output_folder}/{site}_baseline_terrain_{voxel_size}.vtk'
+    combined_vtk_path = f'{output_folder}/{site}_baseline_combined_{voxel_size}.vtk'
 
     # Create combined polydata
     print('Creating combined polydata...')
