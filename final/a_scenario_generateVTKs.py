@@ -1,3 +1,6 @@
+
+
+
 #==============================================================================
 # IMPORTS
 #==============================================================================
@@ -9,12 +12,14 @@ import pyvista as pv
 import a_helper_functions
 import a_voxeliser
 import a_scenario_params  # Import the centralized parameters module
+# Import the assign_rewilded_status function directly
+from a_scenario_runscenario import calculate_rewilded_status
 
 
 #==============================================================================
 # XARRAY PROCESSING FUNCTIONS
 #==============================================================================
-def update_rewilded_voxel_catagories(ds, df):
+def create_rewilded_variable(ds, df):
     """
     Updates the 'scenario_rewilded' variable in the xarray dataset based on the dataframe values.
     Matches are made based on NodeID. Non-matching NodeIDs are ignored.
@@ -69,7 +74,34 @@ def update_rewilded_voxel_catagories(ds, df):
         ds['scenario_rewilded'].values[mask] = row['rewilded']
 
     #--------------------------------------------------------------------------
-    # STEP 5: PRINT STATISTICS
+    # STEP 5: ASSIGN NON-NODE BASED REWILDING STATUS
+    # For points that are scenario_rewildingEnabled but have scenario_rewilded = 'none'
+    #--------------------------------------------------------------------------
+    # Check if scenario_rewildingEnabled exists
+    if 'scenario_rewildingEnabled' in ds.variables:
+        print("scenario_rewildingEnabled exists in the dataset")
+        
+        # Print some statistics about scenario_rewildingEnabled
+        enabled_count = (ds['scenario_rewildingEnabled'] >= 0).sum().item()
+        print(f"Number of voxels with scenario_rewildingEnabled >= 0: {enabled_count}")
+        
+        # Create mask for points that are enabled for rewilding but don't have a specific type
+        generic_rewilding_mask = (ds['scenario_rewildingEnabled'] >= 0) & (ds['scenario_rewilded'] == 'none')
+        
+        # Print count of voxels that match the mask
+        mask_count = generic_rewilding_mask.sum().item()
+        print(f"Number of voxels that match the generic rewilding mask: {mask_count}")
+        
+        # Assign 'rewilded' category to these points
+        ds['scenario_rewilded'].values[generic_rewilding_mask] = 'rewilded'
+        
+        # Print count of generic rewilded points
+        print(f'Number of rewilded points: {generic_rewilding_mask.sum().item()}')
+    else:
+        print("WARNING: scenario_rewildingEnabled does not exist in the dataset")
+
+    #--------------------------------------------------------------------------
+    # STEP 6: PRINT STATISTICS
     # Output counts of rewilding categories for verification
     #--------------------------------------------------------------------------
     # Print all unique values and counts for df['rewilded'] using pandas
@@ -84,7 +116,7 @@ def update_rewilded_voxel_catagories(ds, df):
     
     return ds
 
-def update_bioEnvelope_voxel_catagories(ds, params):
+def create_bioEnvelope_catagories(ds, params):
     """
     Updates the xarray dataset with bio-envelope categories based on simulation parameters.
     
@@ -111,21 +143,14 @@ def update_bioEnvelope_voxel_catagories(ds, params):
     ds['bioMask'] = bioMask
 
     #--------------------------------------------------------------------------
-    # STEP 2: INITIALIZE SCENARIO_BIOENVELOPE VARIABLE
-    # Start with rewilded status and then modify based on bio-envelope criteria
-    #--------------------------------------------------------------------------
-    # Initialize scenario_bioEnvelope as a copy of ds['scenario_rewilded']
-    ds['scenario_bioEnvelope'] = xr.DataArray(
-        data=np.array(ds['scenario_rewilded'].values, dtype='O'),
-        dims='voxel'
-    )
-
-    #--------------------------------------------------------------------------
-    # STEP 3: ASSIGN BIO-ENVELOPE CATEGORIES
+    # STEP 2: ASSIGN BIO-ENVELOPE CATEGORIES
     # Update bio-envelope categories based on building elements and bioMask
     #--------------------------------------------------------------------------
+    # Note: scenario_bioEnvelope is already initialized as a copy of scenario_rewilded in generate_vtk
+    
     # Assign 'otherGround' to scenario_bioEnvelope where bioMask is true and scenario_bioEnvelope is 'none'
-    ds['scenario_bioEnvelope'].loc[bioMask & (ds['scenario_bioEnvelope'] == 'none')] = 'otherGround'
+    otherground_mask = bioMask & (ds['scenario_bioEnvelope'] == 'none')
+    ds['scenario_bioEnvelope'].loc[otherground_mask] = 'otherGround'
 
     # Assign 'livingFacade' to scenario_bioEnvelope where site_building_element == 'facade' and bioMask is True
     ds['scenario_bioEnvelope'].loc[(ds['site_building_element'] == 'facade') & bioMask] = 'livingFacade'
@@ -140,7 +165,7 @@ def update_bioEnvelope_voxel_catagories(ds, params):
     poly.plot(scalars='scenario_bioEnvelope', cmap='Set1')"""
 
     #--------------------------------------------------------------------------
-    # STEP 4: PRINT STATISTICS
+    # STEP 3: PRINT STATISTICS
     # Output counts of bio-envelope categories for verification
     #--------------------------------------------------------------------------
     unique_values, counts = np.unique(ds['scenario_bioEnvelope'], return_counts=True)
@@ -220,10 +245,16 @@ def finalDSprocessing(ds):
     
     #--------------------------------------------------------------------------
     # STEP 4: CREATE REWILDING MASK
-    # Identifies voxels that have been rewilded (not 'none')
+    # Identifies voxels that have been rewilded (not 'none') and don't have tree resources
     #--------------------------------------------------------------------------
-    maskForRewilding = ds['scenario_rewilded'].values != 'none'
+    # Create a mask for rewilded voxels that don't overlap with tree resources
+    maskForRewilding = (ds['scenario_bioEnvelope'].values != 'none') & (~maskforTrees)
     ds['maskForRewilding'] = xr.DataArray(maskForRewilding, dims='voxel')
+    
+    # Print statistics about the masks
+    print(f"Total voxels: {ds.dims['voxel']}")
+    print(f"Tree voxels: {maskforTrees.sum()}")
+    print(f"Rewilded voxels (non-overlapping): {maskForRewilding.sum()}")
     
     #--------------------------------------------------------------------------
     # STEP 5: CREATE COMBINED SCENARIO OUTPUT VARIABLE
@@ -232,8 +263,14 @@ def finalDSprocessing(ds):
     # Initialize with object dtype
     scenario_outputs = np.full(ds.dims['voxel'], 'none', dtype='O')
     
-    # For rewilded voxels, use the rewilding status
-    scenario_outputs[maskForRewilding] = ds['scenario_rewilded'].values[maskForRewilding]
+    # For rewilded voxels, use the appropriate rewilding status
+    # Check if scenario_bioEnvelope exists and use it instead of scenario_rewilded
+    if 'scenario_bioEnvelope' in ds.variables:
+        print("Using scenario_bioEnvelope for rewilded voxels in scenario_outputs")
+        scenario_outputs[maskForRewilding] = ds['scenario_bioEnvelope'].values[maskForRewilding]
+    else:
+        print("Using scenario_rewilded for rewilded voxels in scenario_outputs")
+        scenario_outputs[maskForRewilding] = ds['scenario_rewilded'].values[maskForRewilding]
     
     # For tree voxels, use the forest size
     scenario_outputs[maskforTrees] = ds['forest_size'].values[maskforTrees]
@@ -268,56 +305,34 @@ def process_polydata(polydata):
     - maskForRewilding: Boolean mask identifying voxels with rewilding status
     - scenario_outputs: Combined categorical variable for visualization
     """
-    #--------------------------------------------------------------------------
-    # STEP 1: VERIFY VARIABLES EXIST
-    # Check that all required variables were transferred from xarray
-    #--------------------------------------------------------------------------
-    required_vars = ['maskforTrees', 'maskForRewilding', 'scenario_outputs']
-    for var in required_vars:
-        if var not in polydata.point_data:
-            print(f"Warning: Variable '{var}' not found in polydata. This may cause visualization issues.")
-    
-    #--------------------------------------------------------------------------
-    # STEP 2: PRINT STATISTICS
-    # Output counts of scenario output categories for verification
-    #--------------------------------------------------------------------------
     # Print unique values and counts for scenario_outputs
     if 'scenario_outputs' in polydata.point_data:
         print(f'unique values and counts for scenario_outputs in polydata: {pd.Series(polydata.point_data["scenario_outputs"]).value_counts()}')
     
-    maskforTrees = np.zeros(polydata.n_points, dtype=bool)
 
-    # Loop through point_data keys and update the mask
-    for key in polydata.point_data.keys():
-        if key.startswith('resource_') and key != 'resource_leaf litter':
-            # Get the data as a NumPy array
-            resource_data = polydata.point_data[key]
-            
-            # Create a boolean mask where the values are greater than 0
-            resource_mask = resource_data > 0
-            
-            # Combine the mask with the current mask using logical OR
-            maskforTrees = np.logical_or(maskforTrees, resource_mask)
-
-    # Add the mask to point data
-    polydata.point_data['maskforTrees'] = maskforTrees
+    maskforTrees = polydata.point_data['maskforTrees']
+    maskForRewilding = polydata.point_data['maskForRewilding']
+    
+    # Print statistics about the masks
+    print(f"Total points in polydata: {polydata.n_points}")
+    print(f"Tree points: {maskforTrees.sum()}")
+    print(f"Rewilded points (non-overlapping): {maskForRewilding.sum()}")
     
     #--------------------------------------------------------------------------
-    # STEP 2: CREATE REWILDING MASK
-    # Identifies voxels that have been rewilded (not 'none')
-    #--------------------------------------------------------------------------
-    maskForRewilding = polydata['scenario_rewilded'] != 'none'
-    polydata.point_data['maskForRewilding'] = maskForRewilding
-
-    #--------------------------------------------------------------------------
-    # STEP 3: CREATE COMBINED SCENARIO OUTPUT VARIABLE
+    # STEP 4: CREATE COMBINED SCENARIO OUTPUT VARIABLE
     # Combines tree size and rewilding status into a single categorical variable
     #--------------------------------------------------------------------------
     # Initialize with object dtype
     scenario_outputs = np.full(polydata.n_points, 'none', dtype='O')
     
-    # For rewilded voxels, use the rewilding status
-    scenario_outputs[maskForRewilding] = polydata.point_data['scenario_rewilded'][maskForRewilding]
+    # For rewilded voxels, use the appropriate rewilding status
+    # Check if scenario_bioEnvelope exists and use it instead of scenario_rewilded
+    if 'scenario_bioEnvelope' in polydata.point_data:
+        print("Using scenario_bioEnvelope for rewilded voxels in scenario_outputs")
+        scenario_outputs[maskForRewilding] = polydata.point_data['scenario_bioEnvelope'][maskForRewilding]
+    else:
+        print("Using scenario_rewilded for rewilded voxels in scenario_outputs")
+        scenario_outputs[maskForRewilding] = polydata.point_data['scenario_rewilded'][maskForRewilding]
     
     # For tree voxels, use the forest size
     scenario_outputs[maskforTrees] = polydata.point_data['forest_size'][maskforTrees]
@@ -352,10 +367,16 @@ def plot_scenario_rewilded(polydata, treeDF, years_passed, site):
     maskForRewilding = polydata.point_data['maskForRewilding']
 
     # Extract different polydata subsets based on the masks
-    sitePoly = polydata.extract_points(~maskforTrees)  # Points where forest_tree_id is NaN
+    
     treePoly = polydata.extract_points(maskforTrees)  # Points where forest_tree_id is not NaN
-    rewildingVoxels = sitePoly.extract_points(maskForRewilding)
-    siteVoxels = sitePoly.extract_points(~maskForRewilding)
+    designActionPoly = polydata.extract_points(maskForRewilding)
+
+    # Extract site voxels (neither trees nor rewilding)
+    siteMask = ~(maskforTrees | maskForRewilding)
+    sitePoly = polydata.extract_points(siteMask)
+
+
+
 
     # Print all point_data variables in polydata
     print(f'point_data variables in polydata: {sitePoly.point_data.keys()}')
@@ -369,11 +390,23 @@ def plot_scenario_rewilded(polydata, treeDF, years_passed, site):
     label_trees(treeDF, plotter)
 
     # Add 'none' points as white
-    plotter.add_mesh(siteVoxels, color='white')
-    plotter.add_mesh(treePoly, scalars='forest_size', cmap='Set1')
-
-    # Add other points with scalar-based coloring
-    plotter.add_mesh(rewildingVoxels, scalars='scenario_rewilded', cmap='Set2', show_scalar_bar=True)
+    # Add site points if they exist
+    if sitePoly.n_points > 0:
+        plotter.add_mesh(sitePoly, color='white')
+    else:
+        print("No site points to visualize")
+    
+    # Add tree points if they exist
+    if treePoly.n_points > 0:
+        plotter.add_mesh(treePoly, scalars='forest_size', cmap='Set1')
+    else:
+        print("No tree points to visualize")
+    
+    # Add rewilding/design action points if they exist
+    if designActionPoly.n_points > 0:
+        plotter.add_mesh(designActionPoly, scalars='scenario_bioEnvelope', cmap='Set2', show_scalar_bar=True)
+    else:
+        print("No rewilding/design action points to visualize")
     plotter.enable_eye_dome_lighting()
 
     plotter.show()
@@ -465,15 +498,33 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     # - ds['scenario_bioEnvelope']: Bio-envelope status for each voxel (if logs/poles exist)
     # - ds['bioMask']: Boolean mask for bio-envelope eligibility
     #--------------------------------------------------------------------------
-    print('Integrating results into xarray')
-    ds = update_rewilded_voxel_catagories(ds, treeDF)
+    # First, call assign_rewilded_status to ensure the rewilding variables are created
+    print('Ensuring rewilding variables are created in xarray')
+    _, ds = calculate_rewilded_status(treeDF, ds, params)
     
+    # Now integrate node-based rewilding results into xarray
+    print('Integrating node-based rewilding results into xarray')
+    ds = create_rewilded_variable(ds, treeDF)
+    
+    # Always initialize scenario_bioEnvelope as a copy of scenario_rewilded
+    print('Initializing scenario_bioEnvelope as a copy of scenario_rewilded')
+    ds['scenario_bioEnvelope'] = xr.DataArray(
+        data=np.array(ds['scenario_rewilded'].values, dtype='O'),
+        dims='voxel'
+    )
+    
+    # Update bioEnvelope categories if logs or poles exist
     print('Updating bioEnvelope voxel categories')
     if logDF is not None or poleDF is not None:
-        ds = update_bioEnvelope_voxel_catagories(ds, params)
+        ds = create_bioEnvelope_catagories(ds, params)
+    else:
+        print('No logs or poles found, using scenario_rewilded values for scenario_bioEnvelope')
 
     unique_values, counts = np.unique(ds['scenario_rewilded'], return_counts=True)
     print(f'Unique values and counts for scenario_rewilded: {unique_values}, {counts}')
+    
+    unique_values, counts = np.unique(ds['scenario_bioEnvelope'], return_counts=True)
+    print(f'Unique values and counts for scenario_bioEnvelope: {unique_values}, {counts}')
 
     #--------------------------------------------------------------------------
     # STEP 2: PREPARE VALID POINTS FOR RESOURCE VOXELIZATION
@@ -482,12 +533,7 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     # - valid_points: Array of 3D coordinates for valid voxels
     #--------------------------------------------------------------------------
     # Prepare valid points for resource voxelization
-    validpointsMask = ds['scenario_rewilded'].values != 'none'
-    if logDF is not None:
-        validpointsMask = ds['scenario_bioEnvelope'].values != 'none'
-
-    if poleDF is not None:
-        validpointsMask = ds['scenario_bioEnvelope'].values != 'none'
+    validpointsMask = ds['scenario_bioEnvelope'].values != 'none'
 
     # Extract valid points as a numpy array
     valid_points = np.array([

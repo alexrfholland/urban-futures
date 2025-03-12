@@ -138,7 +138,7 @@ def assign_depaved_status(df, params):
     
     return df
 
-def assign_rewilded_status(df, ds, params):
+def calculate_rewilded_status(df, ds, params):
     # Mask for sim_Nodes exceeding rewilding threshold (now called depavedMask)
     depaved_threshold = params['sim_TurnsThreshold'][params['years_passed']]
     depaved_mask = (ds['sim_Turns'] <= depaved_threshold) & (ds['sim_Turns'] >= 0)
@@ -536,7 +536,7 @@ def run_simulation(df, ds, params, logDF=None, poleDF=None):
     df = assign_depaved_status(df.copy(), params)  # Assign the correct rewilding status
 
     print(f'Handle node-based rewilding')
-    df, ds = assign_rewilded_status(df.copy(), ds, params)
+    df, ds = calculate_rewilded_status(df.copy(), ds, params)
 
     print(f'reduce control of non senescent trees')
     df = reduce_control_of_trees(df.copy(), params)

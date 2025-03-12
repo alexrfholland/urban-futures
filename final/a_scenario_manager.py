@@ -3,10 +3,13 @@ import importlib
 
 # Import required modules
 import a_scenario_initialiseDS
+# Import a_scenario_runscenario but don't use it directly in imports to avoid potential circular dependencies
 import a_scenario_runscenario
 import a_scenario_generateVTKs
 import a_scenario_urban_elements_count
 import a_scenario_get_baselines
+
+# Note: a_scenario_generateVTKs now imports assign_rewilded_status directly from a_scenario_runscenario
 
 #==============================================================================
 # UTILITY FUNCTIONS
