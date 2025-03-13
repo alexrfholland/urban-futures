@@ -153,7 +153,8 @@ def calculate_rewilded_status(df, ds, params):
     combined_mask = depaved_mask & terrain_mask
 
     # Save combined mask to ds
-    ds['scenario_rewildingEnabled'] = params['years_passed'] * xr.where(combined_mask, 1, -1)
+    ds['scenario_rewildingEnabled'] = max(1, params['years_passed']) * xr.where(combined_mask, 1, -1)
+
 
     print(f'Number of voxels where rewilding is enabled: {(ds["scenario_rewildingEnabled"] >= 0).sum().item()}')
     
@@ -190,7 +191,8 @@ def calculate_rewilded_status(df, ds, params):
     final_mask = depaved_mask & terrain_mask & proximity_mask
     
     # Assign the rewilding plantings status where the final mask is satisfied
-    ds['scenario_rewildingPlantings'] = xr.where(final_mask, params['years_passed'], -1)
+    # Also modified to use max(1, years_passed)
+    ds['scenario_rewildingPlantings'] = xr.where(final_mask, max(1, params['years_passed']), -1)
 
     print(f'Number of voxels where rewilding plantings are enabled: {(ds["scenario_rewildingPlantings"] >= 0).sum().item()}')
     
