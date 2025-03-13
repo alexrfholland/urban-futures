@@ -145,3 +145,4 @@ def get_scenario_parameters():
     }
     
     return paramsDic 
+
