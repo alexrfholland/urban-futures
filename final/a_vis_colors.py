@@ -23,7 +23,8 @@ def get_lifecycle_colors():
         "large": (249, 159, 118),       # Salmon/orange
         "senescing": (235, 155, 197),   # Pink
         "snag": (252, 227, 88),         # Yellow
-        "fallen": (130, 203, 185)       # Teal/mint
+        "fallen": (130, 203, 185),       # Teal/mint
+        "artificial": (255, 0, 0)        # Red
     }
 
 def get_bioenvelope_colors():

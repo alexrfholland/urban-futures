@@ -272,15 +272,18 @@ def create_tree_capabilities(vtk_data):
        Numeric indicators:
        - tree_grow: Total voxels where resource_other > 0 : 'volume'
     
-    2. Age: Points where 'search_design_action' == 'improved-tree' OR 'forset_control' == 'reserve-tree'
-       - Areas where trees are protected and can mature
+    2. Age: Points where 'search_design_action' == 'improved-tree' OR 'forest_control' == 'reserve-tree'
+       - Points where trees are protected and can mature
        
        Numeric indicators:
        - tree_age: Total voxels where search_design_action == 'improved-tree' : 'improved tree'
        - tree_age: Total voxels where forest_control == 'reserve-tree' : 'reserve tree'
     
+    3. TODO: consider changing 'Persist' to points that are unmanaged land that have room for trees to grow
+        -
+    
     3. Persist: Points where both conditions are met:
-       - 'search_bioavailable' == 'traversable' (suitable growing conditions)
+       - 'search_bioavailable' == 'traversable' (suitable growing conditions,ie. low maintence)
        - Within 1m of points where 'forest_size' == 'medium' OR 'forest_size' == 'large'
          (proximity to mature trees that can reproduce)
        

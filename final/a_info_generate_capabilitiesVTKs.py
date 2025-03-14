@@ -198,8 +198,8 @@ def create_bird_capabilities(vtk_data):
         print("    'resource_perch branch' not found in point data")
     
     # Bird Feed: points in resource_leaf_litter > 0
-    if 'resource_leaf litter' in vtk_data.point_data:
-        leaf_data = vtk_data.point_data['resource_leaf litter']
+    if 'resource_peeling bark' in vtk_data.point_data:
+        leaf_data = vtk_data.point_data['resource_peeling bark']
         if np.issubdtype(leaf_data.dtype, np.number):
             bird_feed_mask = leaf_data > 0
         else:
@@ -210,7 +210,7 @@ def create_bird_capabilities(vtk_data):
         capabilities_bird[bird_feed_mask] = 'feed'
         print(f"    Bird feed points: {np.sum(bird_feed_mask):,}")
     else:
-        print("    'resource_leaf litter' not found in point data")
+        print("    'resource_peeling bark' not found in point data")
     
     # Bird Raise Young: points in resource_hollow > 0
     if 'resource_hollow' in vtk_data.point_data:
@@ -602,7 +602,10 @@ def collect_capability_stats(vtk_data):
 
 def load_vtk_file(site, scenario, voxel_size, year):
     """Load VTK file for a specific year"""
-    vtk_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk'
+    output_path = f'data/revised/final/{site}'
+    vtk_path = f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_urban_features.vtk'
+    
+
     try:
         vtk_data = pv.read(vtk_path)
         print(f"Loaded VTK file from {vtk_path}")
