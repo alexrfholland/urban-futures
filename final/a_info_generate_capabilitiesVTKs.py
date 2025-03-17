@@ -64,7 +64,7 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
             print(f"Saved baseline with capabilities to {baseline_output_path}")
         else:
             print(f"Error: Could not find baseline VTK file for {site}")
-            # List all VTK files in the baselines directory
+            # List all VTK fiales in the baselines directory
             baseline_dir = Path('data/revised/final/baselines')
             if baseline_dir.exists():
                 baseline_files = list(baseline_dir.glob(f"{site}*.vtk"))

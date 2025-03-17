@@ -298,36 +298,7 @@ def main():
     print("\n===== STEP 4: PROCESSING URBAN ELEMENTS =====")
     # Process urban elements for all sites
     for site in sites:
-        # Process each scenario
-        for scenario in scenarios:
-            print(f"\nProcessing urban elements for {site} - {scenario}")
-            
-            # Construct the list of VTK files for this site and scenario
-            scenario_files = []
-            for year in years:
-                vtk_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk'
-                if os.path.exists(vtk_path):
-                    scenario_files.append(vtk_path)
-                    print(f"Found VTK file: {os.path.basename(vtk_path)}")
-                else:
-                    print(f"Warning: VTK file not found: {os.path.basename(vtk_path)}")
-            
-            # Process the urban elements
-            processed_files = a_scenario_urban_elements_count.run_from_manager(
-                site=site,
-                scenario=scenario,
-                years=years,
-                voxel_size=voxel_size,
-                specific_files=scenario_files,
-                should_process_baseline=False
-            )
-            
-            if processed_files:
-                print(f"Successfully processed {len(processed_files)} urban element files for {site} - {scenario}")
-            else:
-                print(f"No urban element files were processed for {site} - {scenario}")
-        
-        # Process baseline VTK
+        # Process baseline VTK first to ensure it's done before scenarios
         if site in baseline_vtk_files and os.path.exists(baseline_vtk_files[site]):
             print(f"\nProcessing urban elements for {site} baseline")
             baseline_file = baseline_vtk_files[site]
@@ -338,14 +309,53 @@ def main():
                 site=site,
                 voxel_size=voxel_size,
                 specific_files=[baseline_file],
-                should_process_baseline=True
+                should_process_baseline=True,
+                enable_visualization=enable_visualization
             )
             
             if processed_baseline:
                 print(f"Successfully processed baseline urban elements for {site}")
             else:
                 print(f"Failed to process baseline urban elements for {site}")
-    
+        
+        # Now process all scenarios together for this site to take advantage of caching
+        all_scenario_files = []
+        scenario_info = {}
+        
+        # First collect all VTK files for all scenarios
+        for scenario in scenarios:
+            print(f"\nCollecting files for {site} - {scenario}")
+            scenario_files = []
+            for year in years:
+                vtk_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk'
+                if os.path.exists(vtk_path):
+                    scenario_files.append(vtk_path)
+                    # Store scenario and year info for each file
+                    scenario_info[vtk_path] = {'scenario': scenario, 'year': year}
+                    print(f"Found VTK file: {os.path.basename(vtk_path)}")
+                else:
+                    print(f"Warning: VTK file not found: {os.path.basename(vtk_path)}")
+            
+            all_scenario_files.extend(scenario_files)
+        
+        # Process all scenarios for this site in one batch to use cached site data
+        if all_scenario_files:
+            print(f"\nProcessing all {len(all_scenario_files)} urban element files for {site}")
+            processed_files = a_scenario_urban_elements_count.run_from_manager(
+                site=site,
+                voxel_size=voxel_size,
+                specific_files=all_scenario_files,
+                should_process_baseline=False,
+                enable_visualization=enable_visualization
+            )
+            
+            if processed_files:
+                print(f"Successfully processed {len(processed_files)} urban element files for {site}")
+            else:
+                print(f"No urban element files were processed for {site}")
+        else:
+            print(f"No VTK files found for site {site}")
+
     print("\n===== All processing completed =====")
 
 #==============================================================================

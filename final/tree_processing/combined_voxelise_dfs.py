@@ -527,6 +527,7 @@ if __name__ == "__main__":
 
     # Check that output directory exists, create if not
     output_dir = Path('data/revised/trees') 
+    
     output_dir.mkdir(parents=True, exist_ok=True)
 
     #elm_output_name = f'{voxel_size}_elm_voxel_templateDF.pkl'

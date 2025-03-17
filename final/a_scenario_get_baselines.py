@@ -213,6 +213,11 @@ def combine_polydata(resourcePoly, terrainPoly):
     terrainPoly.point_data['search_bioavailable'] = search_bioavailable_terrain
     print(f"  Set {terrainPoly.n_points:,} terrain points to 'low-vegetation'")
 
+    # Print original resourcePoly point_data variables
+    print("\nOriginal resourcePoly point_data variables:")
+    for key in resourcePoly.point_data.keys():
+        print(f"  - {key}")
+
     # Append 'forest_' to resourcePoly point_data attribute names
     for attr in ['useful_life_expectancy', 'precolonial', 'size', 'control']:
         if attr in resourcePoly.point_data:
@@ -231,9 +236,19 @@ def combine_polydata(resourcePoly, terrainPoly):
     # Initialize any missing variables in resourcePoly based on terrainPoly
     resourcePoly = a_helper_functions.initialize_polydata_variables_generic_auto(resourcePoly, terrainPoly)
     
+    # Print resourcePoly point_data variables after initialization
+    print("\nresourcePoly point_data variables after initialization:")
+    for key in resourcePoly.point_data.keys():
+        print(f"  - {key}")
+    
     # Append terrainPoly to combinedPoly
     combinedPoly = combinedPoly.append_polydata(terrainPoly)
     print(f"  Combined polydata has {combinedPoly.n_points:,} total points")
+    
+    # Print combinedPoly point_data variables
+    print("\ncombinedPoly point_data variables:")
+    for key in combinedPoly.point_data.keys():
+        print(f"  - {key}")
     
     combinedPoly.plot(scalars='resource_fallen log', render_points_as_spheres=True)
     
@@ -388,10 +403,23 @@ def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/base
     #resource assignments
     print('\nAssigning resources...')
     baseline_tree_df, resourceDF = a_resource_distributor_dataframes.process_all_trees(baseline_tree_df, voxel_size=voxel_size)
+    print(f'resourceDF: {resourceDF}')
+
+
     resourceDF = a_resource_distributor_dataframes.rotate_resource_structures(baseline_tree_df, resourceDF)
 
     print('\nCreating resource polydata...')
     resourcePoly = a_resource_distributor_dataframes.convertToPoly(resourceDF)
+
+    print('\nCreating resource polydata...')
+    resourcePoly = a_resource_distributor_dataframes.convertToPoly(resourceDF)
+
+    # Add the missing attributes to resourcePoly with 'forest_' prefix
+    for column in ['tree_number', 'NodeID', 'structureID','diameter_breast_height']:
+        if column in resourceDF.columns:
+            forest_column = f'forest_{column}'
+            resourcePoly.point_data[forest_column] = resourceDF[column].values
+            print(f"Added missing column '{column}' as '{forest_column}' to resourcePoly point_data")
 
     print('\nCreating terrain polydata...')
     terrain_polydata = get_terrain_poly(terrain_df)

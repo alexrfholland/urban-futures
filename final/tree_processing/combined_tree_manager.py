@@ -502,7 +502,7 @@ def main():
         
         #3. COMBINE TEMPLATES
         print('combining into single template file...')
-        combined_templates = update_template_files(euc_templates, elm_templates, updated_snags, regenerated_snags, use_original=True)
+        combined_templates = update_template_files(euc_templates, elm_templates, updated_snags, regenerated_snags, use_original=False)
         #remove propped size
         combined_templates = combined_templates[combined_templates['size'] != 'propped']
         
@@ -529,6 +529,7 @@ def main():
             pickle.dump(regenerated_snags, f)
         print(f'Regenerated snags saved at {output_path}')
 
+        #voxelisedName = f'combined_voxelSize_{voxel_size}_templateDF.pkl'
         voxelisedName = f'combined_voxelSize_{voxel_size}_templateDF.pkl'
         output_path = output_dir / voxelisedName
         voxelised_templates.to_pickle(output_path)
