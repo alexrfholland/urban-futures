@@ -16,14 +16,32 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
     # Dictionary to track zero counts
     zero_counts = {}
     
+    # Flag to track if any data was processed
+    data_processed = False
+    
     # Process baseline if requested
     if include_baseline:
         print(f"\n=== Processing baseline for site: {site} ===")
-        baseline_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}.vtk'
-        try:
-            baseline_vtk = pv.read(baseline_path)
-            print(f"Loaded baseline VTK from {baseline_path}")
-            
+        # Try both possible baseline paths
+        baseline_paths = [
+            f'data/revised/final/baselines/{site}_baseline_combined_{voxel_size}.vtk',
+            f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}.vtk',
+            f'data/revised/final/{site}/{site}_baseline_{voxel_size}.vtk',
+            f'data/revised/final/baselines/{site}_baseline_{voxel_size}.vtk'
+        ]
+        
+        baseline_vtk = None
+        for baseline_path in baseline_paths:
+            try:
+                if Path(baseline_path).exists():
+                    print(f"Found baseline file: {baseline_path}")
+                    baseline_vtk = pv.read(baseline_path)
+                    print(f"Loaded baseline VTK from {baseline_path}")
+                    break
+            except Exception as e:
+                print(f"Could not load baseline from {baseline_path}: {e}")
+        
+        if baseline_vtk is not None:
             # Create capabilities for baseline
             baseline_vtk = create_bird_capabilities(baseline_vtk)
             baseline_vtk = create_reptile_capabilities(baseline_vtk)
@@ -32,6 +50,7 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
             # Collect statistics
             baseline_stats = collect_capability_stats(baseline_vtk)
             all_stats['baseline'] = baseline_stats
+            data_processed = True
             
             # Check for zero counts
             for key, count in baseline_stats.items():
@@ -43,8 +62,18 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
             baseline_output_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}_with_capabilities.vtk'
             baseline_vtk.save(baseline_output_path)
             print(f"Saved baseline with capabilities to {baseline_output_path}")
-        except Exception as e:
-            print(f"Error processing baseline: {e}")
+        else:
+            print(f"Error: Could not find baseline VTK file for {site}")
+            # List all VTK files in the baselines directory
+            baseline_dir = Path('data/revised/final/baselines')
+            if baseline_dir.exists():
+                baseline_files = list(baseline_dir.glob(f"{site}*.vtk"))
+                if baseline_files:
+                    print(f"Available baseline files in {baseline_dir}:")
+                    for file_path in baseline_files:
+                        print(f"  - {file_path}")
+                else:
+                    print(f"No baseline files found for {site} in {baseline_dir}")
     
     # Process each year
     for year in years:
@@ -62,18 +91,26 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
         
         # Collect statistics
         year_stats = collect_capability_stats(vtk_data)
-        all_stats[year] = year_stats
+        # Store year as string to ensure consistent key types
+        all_stats[str(year)] = year_stats
+        data_processed = True
         
         # Check for zero counts
         for key, count in year_stats.items():
             if count == 0:
                 print(f"  ##WARNING## Zero count for {key} in year {year}")
-                zero_counts.setdefault(year, []).append(key)
+                zero_counts.setdefault(str(year), []).append(key)
         
         # Save updated VTK file
         output_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_capabilities.vtk'
         vtk_data.save(output_path)
         print(f"Saved updated VTK file to {output_path}")
+    
+    # Check if any data was processed
+    if not data_processed:
+        print(f"\n### ERROR: No capability statistics were processed for site {site}, scenario {scenario} ###")
+        print("Please check that the VTK files exist and are in the expected locations.")
+        return None
     
     # Print summary of all statistics
     print("\n=== Capability Statistics Summary ===")
@@ -84,15 +121,22 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
         print(f"\n{persona.upper()} CAPABILITIES:")
         
         # Get all keys for this persona
-        persona_keys = [key for key in all_stats[list(all_stats.keys())[0]].keys() 
+        first_time_point = list(all_stats.keys())[0]
+        persona_keys = [key for key in all_stats[first_time_point].keys() 
                        if key.startswith(f'capabilities-{persona}-') and key.count('-') == 2]
         
         for capability_key in sorted(persona_keys):
             capability = capability_key.split('-')[2]
             print(f"  {capability.upper()}:")
             
-            # Print counts for each year
-            for time_point in sorted(all_stats.keys()):
+            # Define a custom sort order for time points
+            def sort_key(time_point):
+                if time_point == 'baseline':
+                    return -1  # Baseline comes first
+                return int(time_point)  # Convert other time points to integers for sorting
+            
+            # Print counts for each year, with baseline first, then years in numerical order
+            for time_point in sorted(all_stats.keys(), key=sort_key):
                 count = all_stats[time_point].get(capability_key, 0)
                 print(f"    {time_point}: {count:,}")
                 
@@ -109,7 +153,13 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
     # Print summary of zero counts
     if zero_counts:
         print("\n=== Zero Count Summary ===")
-        for time_point, keys in sorted(zero_counts.items()):
+        # Define the same custom sort order for time points
+        def sort_key(time_point):
+            if time_point == 'baseline':
+                return -1  # Baseline comes first
+            return int(time_point)  # Convert other time points to integers for sorting
+        
+        for time_point, keys in sorted(zero_counts.items(), key=lambda x: sort_key(x[0])):
             print(f"\n{time_point}:")
             for key in sorted(keys):
                 print(f"  {key}")
@@ -126,32 +176,93 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
 
 def main():
     """Main function to process capabilities for sites and scenarios"""
-    # Set up argument parser
-    parser = argparse.ArgumentParser(description='Generate capability layers for VTK files')
-    parser.add_argument('--sites', nargs='+', default=['trimmed-parade'], 
-                        help='Sites to process (default: [trimmed-parade])')
-    parser.add_argument('--scenarios', nargs='+', default=['positive', 'trending'], 
-                        help='Scenarios to process (default: [positive, trending])')
-    parser.add_argument('--years', nargs='+', type=int, default=[0, 10, 30, 60, 180],
-                        help='Years to process (default: [0, 10, 30, 60, 180])')
-    parser.add_argument('--voxel-size', type=int, default=1, help='Voxel size (default: 1)')
-    parser.add_argument('--skip-baseline', action='store_true', help='Skip processing baseline')
+    #--------------------------------------------------------------------------
+    # STEP 1: GATHER USER INPUTS
+    #--------------------------------------------------------------------------
+    # Default values
+    default_sites = ['trimmed-parade']
+    default_scenarios = ['baseline', 'positive', 'trending']
+    default_years = [0, 10, 30, 60, 180]
+    default_voxel_size = 1
     
-    args = parser.parse_args()
+    # Ask for sites
+    sites_input = input(f"Enter site(s) to process (comma-separated) or press Enter for default {default_sites}: ")
+    sites = sites_input.split(',') if sites_input else default_sites
+    sites = [site.strip() for site in sites]
     
-    # Process all sites and scenarios
-    for site in args.sites:
-        for scenario in args.scenarios:
+    # Ask for scenarios
+    print("\nAvailable scenarios: baseline, positive, trending")
+    scenarios_input = input(f"Enter scenario(s) to process (comma-separated) or press Enter for default {default_scenarios}: ")
+    scenarios = scenarios_input.split(',') if scenarios_input else default_scenarios
+    scenarios = [scenario.strip() for scenario in scenarios]
+    
+    # Check if baseline is included
+    include_baseline = 'baseline' in scenarios
+    if include_baseline:
+        scenarios.remove('baseline')
+    
+    # Ask for years/trimesters
+    years_input = input(f"Enter years to process (comma-separated) or press Enter for default {default_years}: ")
+    try:
+        years = [int(year.strip()) for year in years_input.split(',')] if years_input else default_years
+    except ValueError:
+        print("Invalid input for years. Using default values.")
+        years = default_years
+    
+    # Ask for voxel size
+    voxel_size_input = input(f"Enter voxel size (default {default_voxel_size}): ")
+    try:
+        voxel_size = int(voxel_size_input) if voxel_size_input else default_voxel_size
+    except ValueError:
+        print("Invalid input for voxel size. Using default value.")
+        voxel_size = default_voxel_size
+    
+    # Print summary of selected options
+    print("\n===== Processing with the following parameters =====")
+    print(f"Sites: {sites}")
+    print(f"Scenarios: {scenarios}")
+    print(f"Process baseline: {include_baseline}")
+    print(f"Years/Trimesters: {years}")
+    print(f"Voxel Size: {voxel_size}")
+    
+    # Confirm proceeding
+    confirm = input("\nProceed with these settings? (yes/no, default yes): ")
+    if confirm.lower() in ['no', 'n']:
+        print("Operation cancelled.")
+        return
+    
+    #--------------------------------------------------------------------------
+    # STEP 2: PROCESS CAPABILITIES
+    #--------------------------------------------------------------------------
+    print("\n===== PROCESSING CAPABILITIES =====")
+    
+    # Process each site
+    for site in sites:
+        # Process each scenario
+        for scenario in scenarios:
             print(f"\n=== Processing site: {site}, scenario: {scenario} ===")
             
             # Process capabilities
             process_capabilities(
                 site=site,
                 scenario=scenario,
-                voxel_size=args.voxel_size,
-                years=args.years,
-                include_baseline=not args.skip_baseline
+                voxel_size=voxel_size,
+                years=years,
+                include_baseline=include_baseline
             )
+        
+        # If baseline was requested but no scenarios, process it separately
+        if include_baseline and not scenarios:
+            print(f"\n=== Processing baseline only for site: {site} ===")
+            process_capabilities(
+                site=site,
+                scenario="baseline",  # Dummy value, not used for baseline
+                voxel_size=voxel_size,
+                years=years,
+                include_baseline=True
+            )
+    
+    print("\n===== All processing completed =====")
 
 def create_bird_capabilities(vtk_data):
     """    Bird capabilities:
@@ -418,7 +529,13 @@ def create_tree_capabilities(vtk_data):
        - tree_age: Total voxels where search_design_action == 'improved-tree' : 'improved tree'
        - tree_age: Total voxels where forest_control == 'reserve-tree' : 'reserve tree'
     
-    3. Persist: Points where both conditions are met:
+    #change persist to: 
+    3. Persist: Terrain points eligle for new tree plantings (ie. depaved and unmanaged land away from trees)
+    
+    Numeric indicator:
+    -scenario_rewildingPlantings >= 1 : 'eligble soil'
+
+    ARCHIVE: 3. Persist: Points where both conditions are met:
        - 'search_bioavailable' == 'traversable' (suitable growing conditions)
        - Within 1m of points where 'forest_size' == 'medium' OR 'forest_size' == 'large'
          (proximity to mature trees that can reproduce)
@@ -603,16 +720,75 @@ def collect_capability_stats(vtk_data):
 def load_vtk_file(site, scenario, voxel_size, year):
     """Load VTK file for a specific year"""
     output_path = f'data/revised/final/{site}'
-    vtk_path = f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_urban_features.vtk'
     
-
-    try:
-        vtk_data = pv.read(vtk_path)
-        print(f"Loaded VTK file from {vtk_path}")
-        return vtk_data
-    except Exception as e:
-        print(f"Error loading VTK file: {e}")
-        return None
+    # Try different file patterns
+    file_patterns = [
+        # Standard patterns
+        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_urban_features.vtk',
+        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk',
+        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_features.vtk',
+        
+        # Additional patterns
+        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_urban_features.vtk',
+        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_features.vtk',
+        
+        # Patterns from a_scenario_urban_elements_count.py
+        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_capabilities.vtk',
+        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_search.vtk',
+        
+        # Try without voxel size in filename
+        f'{output_path}/{site}_{scenario}_scenarioYR{year}.vtk',
+        f'{output_path}/{site}_{scenario}_scenarioYR{year}_urban_features.vtk'
+    ]
+    
+    print(f"Searching for VTK files for site: {site}, scenario: {scenario}, year: {year}")
+    
+    # Check if files exist before trying to load them
+    existing_files = []
+    for vtk_path in file_patterns:
+        if Path(vtk_path).exists():
+            existing_files.append(vtk_path)
+    
+    if existing_files:
+        print(f"Found {len(existing_files)} matching VTK files:")
+        for file_path in existing_files:
+            print(f"  - {file_path}")
+    else:
+        print(f"No matching VTK files found in {output_path}")
+        # List all VTK files in the directory
+        all_vtk_files = list(Path(output_path).glob(f"{site}_{scenario}*{year}*.vtk"))
+        if all_vtk_files:
+            print(f"Available VTK files for {site}_{scenario} year {year}:")
+            for file_path in all_vtk_files:
+                print(f"  - {file_path}")
+        else:
+            # List all VTK files for this scenario
+            all_scenario_files = list(Path(output_path).glob(f"{site}_{scenario}*.vtk"))
+            if all_scenario_files:
+                print(f"Available VTK files for {site}_{scenario}:")
+                for file_path in all_scenario_files:
+                    print(f"  - {file_path}")
+            else:
+                print(f"No VTK files found for {site}_{scenario} in {output_path}")
+    
+    # Try to load each file
+    for vtk_path in file_patterns:
+        try:
+            if Path(vtk_path).exists():
+                vtk_data = pv.read(vtk_path)
+                print(f"Successfully loaded VTK file from {vtk_path}")
+                
+                # Print available point data keys
+                print(f"Available point data keys in {Path(vtk_path).name}:")
+                for key in sorted(vtk_data.point_data.keys()):
+                    print(f"  - {key}")
+                
+                return vtk_data
+        except Exception as e:
+            print(f"Error loading {vtk_path}: {e}")
+    
+    print(f"ERROR: Could not find or load any VTK file for site {site}, scenario {scenario}, year {year}")
+    return None
 
 if __name__ == "__main__":
     main() 
