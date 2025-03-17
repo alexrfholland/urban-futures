@@ -59,11 +59,11 @@ def add_improvement_rows(df):
         elif size == 'medium':
             # Resources are the larger number between:
             #   - Same values as returned by changing 'control' to 'reserve-tree'
-            #   - Same values as returned by changing 'control' to 'reserve-tree' and 'size' to 'large', multiplied by 0.5
+            #   - Same values as returned by changing 'control' to 'reserve-tree' and 'size' to 'large', multiplied by 0.25
     
     For non-precolonial trees with improvements:
         # Resources are the same values as returned by changing 'control' to 'reserve-tree' 
-        # and 'size' to 'large' (from precolonial trees), multiplied by 0.5
+        # and 'size' to 'large' (from precolonial trees), multiplied by 0.25
     """
     # Get resource columns
     resource_cols = [col for col in df.columns 
@@ -93,7 +93,7 @@ def add_improvement_rows(df):
         (reserve_trees['size'] == 'medium')
     ][resource_cols].iloc[0]
     
-    large_reserve_half = large_reserve * 0.5
+    large_reserve_half = large_reserve * 0.25
     medium_improved = pd.Series({
         col: max(medium_reserve[col], large_reserve_half[col])
         for col in resource_cols
@@ -107,7 +107,7 @@ def add_improvement_rows(df):
     })
     
     # Non-precolonial trees (medium and large only)
-    precolonial_large_half = large_reserve * 0.5
+    precolonial_large_half = large_reserve * 0.25
     for size in ['medium', 'large']:  # removed 'small'
         improved_rows.append({
             'precolonial': False,

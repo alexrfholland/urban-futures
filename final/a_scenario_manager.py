@@ -161,7 +161,7 @@ def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, ena
     
     return generated_vtk_files
 
-def process_baseline(site, voxel_size=1):
+def process_baseline(site, voxel_size=1,check=False):
     """
     Process baseline for a site. Checks if baseline files exist first.
     
@@ -177,10 +177,11 @@ def process_baseline(site, voxel_size=1):
     baseline_vtk_path = f'{output_folder}/{site}_baseline_combined_{voxel_size}.vtk'
     
     # Check if baseline file already exists in baselines folder
-    if os.path.exists(baseline_vtk_path):
-        print(f"\n===== Using existing baseline for {site} =====")
-        print(f"Found existing baseline file: {baseline_vtk_path}")
-        return baseline_vtk_path
+    if check:
+        if os.path.exists(baseline_vtk_path):
+            print(f"\n===== Using existing baseline for {site} =====")
+            print(f"Found existing baseline file: {baseline_vtk_path}")
+            return baseline_vtk_path
 
     
     # If no existing baseline found, generate a new one

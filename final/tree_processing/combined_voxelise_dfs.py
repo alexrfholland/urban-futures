@@ -168,10 +168,10 @@ def adjust_resource_quantities(voxelised_templates, resource_dic_path='data/revi
             stat_col = resource_col.replace('resource_', 'stat_')
             
             # Skip certain resources or configurations based on validation logic
-            if resource_name in ['other', 'peeling bark', 'perch branch', 'hollow', 'epiphyte', 'fallen log'] or \
+            """if resource_name in ['other', 'peeling bark', 'perch branch', 'hollow', 'epiphyte', 'fallen log'] or \
                row['size'] in ['senescing'] or \
                row['control'] in ['improved-tree']:
-                continue
+                continue"""
             
             # Check if resource exists in target dictionary
             if resource_name not in target_resources.columns:
@@ -324,10 +324,10 @@ def generate_resource_stats(voxelised_templates, resource_dic_path='data/revised
             resource_name = resource_col.replace('resource_', '')
             
             # Skip certain resources or configurations based on validation logic
-            if (resource_name in ['other', 'peeling bark', 'perch branch', 'hollow', 'epiphyte', 'fallen log'] or
+            """if (resource_name in ['other', 'peeling bark', 'perch branch', 'hollow', 'epiphyte', 'fallen log'] or
                 row['size'] in ['senescing'] or 
                 row['control'] in ['improved-tree']):
-                continue
+                continue"""
             
             # Check if resource exists in target dictionary and stat columns
             if resource_name not in target_resources.columns:
@@ -516,7 +516,7 @@ def process_trees(tree_templates_DF, voxel_size = 0.25, resetCount = False):
 ###
 
 if __name__ == "__main__":
-    voxel_size = .5
+    voxel_size = 1
 
     # Load existing voxelised templates
     #combined_templates = pd.read_pickle('data/revised/trees/combined_templateDF.pkl')
