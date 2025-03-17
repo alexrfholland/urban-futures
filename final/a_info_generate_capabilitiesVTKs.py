@@ -266,23 +266,23 @@ def main():
 
 def create_bird_capabilities(vtk_data):
     """    Bird capabilities:
-    1. Socialise: Points where 'resource_perch branch' > 0
+    1. Socialise: Points where 'stat_perch branch' > 0
        - Birds need branches to perch on for social activities
        
        Numeric indicators:
-       - bird_socialise: Total voxels where resource_perch branch > 0 : 'perch branch'
+       - bird_socialise: Total voxels where stat_perch branch > 0 : 'perch branch'
     
-    2. Feed: Points where 'resource_peeling bark' > 0
+    2. Feed: Points where 'stat_peeling bark' > 0
        - Birds feed on insects found under peeling bark
        
        Numeric indicators:
-       - bird_feed: Total voxels where resource_peeling bark > 0 : 'peeling bark'
+       - bird_feed: Total voxels where stat_peeling bark > 0 : 'peeling bark'
     
-    3. Raise Young: Points where 'resource_hollow' > 0
+    3. Raise Young: Points where 'stat_hollow' > 0
        - Birds need hollows in trees to nest and raise their young
        
        Numeric indicators:
-       - bird_raise_young: Total voxels where resource_hollow > 0 : 'hollow'
+       - bird_raise_young: Total voxels where stat_hollow > 0 : 'hollow'
     """
     print("  Creating bird capability layers...")
     
@@ -294,9 +294,9 @@ def create_bird_capabilities(vtk_data):
     # Initialize aggregate capability array with 'none'
     capabilities_bird = np.full(vtk_data.n_points, 'none', dtype='<U20')
     
-    # Bird Socialise: points in resource_perch_branch > 0
-    if 'resource_perch branch' in vtk_data.point_data:
-        perch_data = vtk_data.point_data['resource_perch branch']
+    # Bird Socialise: points in stat_perch_branch > 0
+    if 'stat_perch branch' in vtk_data.point_data:
+        perch_data = vtk_data.point_data['stat_perch branch']
         if np.issubdtype(perch_data.dtype, np.number):
             bird_socialise_mask = perch_data > 0
         else:
@@ -306,26 +306,26 @@ def create_bird_capabilities(vtk_data):
         capabilities_bird[bird_socialise_mask] = 'socialise'
         print(f"    Bird socialise points: {np.sum(bird_socialise_mask):,}")
     else:
-        print("    'resource_perch branch' not found in point data")
+        print("    'stat_perch branch' not found in point data")
     
-    # Bird Feed: points in resource_leaf_litter > 0
-    if 'resource_peeling bark' in vtk_data.point_data:
-        leaf_data = vtk_data.point_data['resource_peeling bark']
-        if np.issubdtype(leaf_data.dtype, np.number):
-            bird_feed_mask = leaf_data > 0
+    # Bird Feed: points in stat_peeling bark > 0
+    if 'stat_peeling bark' in vtk_data.point_data:
+        bark_data = vtk_data.point_data['stat_peeling bark']
+        if np.issubdtype(bark_data.dtype, np.number):
+            bird_feed_mask = bark_data > 0
         else:
-            bird_feed_mask = (leaf_data != 'none') & (leaf_data != '') & (leaf_data != 'nan')
+            bird_feed_mask = (bark_data != 'none') & (bark_data != '') & (bark_data != 'nan')
         
         bird_feed |= bird_feed_mask
         # Override any existing values (later capabilities take precedence)
         capabilities_bird[bird_feed_mask] = 'feed'
         print(f"    Bird feed points: {np.sum(bird_feed_mask):,}")
     else:
-        print("    'resource_peeling bark' not found in point data")
+        print("    'stat_peeling bark' not found in point data")
     
-    # Bird Raise Young: points in resource_hollow > 0
-    if 'resource_hollow' in vtk_data.point_data:
-        hollow_data = vtk_data.point_data['resource_hollow']
+    # Bird Raise Young: points in stat_hollow > 0
+    if 'stat_hollow' in vtk_data.point_data:
+        hollow_data = vtk_data.point_data['stat_hollow']
         if np.issubdtype(hollow_data.dtype, np.number):
             bird_raise_young_mask = hollow_data > 0
         else:
@@ -336,7 +336,7 @@ def create_bird_capabilities(vtk_data):
         capabilities_bird[bird_raise_young_mask] = 'raise-young'
         print(f"    Bird raise-young points: {np.sum(bird_raise_young_mask):,}")
     else:
-        print("    'resource_hollow' not found in point data")
+        print("    'stat_hollow' not found in point data")
     
     # Add bird capability layers to vtk_data
     vtk_data.point_data['capabilities-bird-socialise'] = bird_socialise
@@ -358,20 +358,20 @@ def create_reptile_capabilities(vtk_data):
     
     2. Foraige: Points where any of the following conditions are met:
        - 'search_bioavailable' == 'low-vegetation' (areas reptiles can move through)
-       - 'resource_dead branch' > 0 (dead branches provide foraging opportunities)
-       - 'resource_epiphyte' > 0 (epiphytes provide habitat for prey)
+       - 'stat_dead branch' > 0 (dead branches provide foraging opportunities)
+       - 'stat_epiphyte' > 0 (epiphytes provide habitat for prey)
        
        Numeric indicators:
        - reptile_forage_low_veg: Voxels where search_bioavailable == 'low-vegetation' : 'ground cover'
-       - reptile_forage_dead_branch: Voxels where resource_dead branch > 0 : 'dead branch'
-       - reptile_forage_epiphyte: Voxels where resource_epiphyte > 0 : 'epiphyte'
+       - reptile_forage_dead_branch: Voxels where stat_dead branch > 0 : 'dead branch'
+       - reptile_forage_epiphyte: Voxels where stat_epiphyte > 0 : 'epiphyte'
     
     3. Shelter: Points where any of the following conditions are met:
-       - 'resource_fallen log' > 0 (fallen logs provide shelter)
+       - 'stat_fallen log' > 0 (fallen logs provide shelter)
        - 'forest_size' == 'fallen' (fallen trees provide shelter)
        
        Numeric indicators:
-       - reptile_shelter_fallen_log: Voxels where resource_fallen log > 0 : 'fallen log'
+       - reptile_shelter_fallen_log: Voxels where stat_fallen log > 0 : 'fallen log'
        - reptile_shelter_fallen_tree: Voxels where forest_size == 'fallen' : 'fallen tree'
     """
     print("  Creating reptile capability layers...")
@@ -406,7 +406,7 @@ def create_reptile_capabilities(vtk_data):
     else:
         print("    'search_bioavailable' not found in point data")
     
-    # Reptile Forage: points in 'search_bioavailable' == 'low-vegetation' OR points in 'resource_dead branch' > 0 OR resource_epiphyte > 0
+    # Reptile Forage: points in 'search_bioavailable' == 'low-vegetation' OR points in 'stat_dead branch' > 0 OR stat_epiphyte > 0
     reptile_forage_mask = np.zeros(vtk_data.n_points, dtype=bool)
     
     # Check low-vegetation points
@@ -418,8 +418,8 @@ def create_reptile_capabilities(vtk_data):
         print(f"    Reptile forage low-vegetation points: {np.sum(low_veg_mask):,}")
     
     # Check dead branch points
-    if 'resource_dead branch' in vtk_data.point_data:
-        dead_branch_data = vtk_data.point_data['resource_dead branch']
+    if 'stat_dead branch' in vtk_data.point_data:
+        dead_branch_data = vtk_data.point_data['stat_dead branch']
         if np.issubdtype(dead_branch_data.dtype, np.number):
             dead_branch_mask = dead_branch_data > 0
         else:
@@ -430,11 +430,11 @@ def create_reptile_capabilities(vtk_data):
         capabilities_reptile_forage[dead_branch_mask] = 'dead branch'
         print(f"    Reptile forage dead branch points: {np.sum(dead_branch_mask):,}")
     else:
-        print("    'resource_dead branch' not found in point data")
+        print("    'stat_dead branch' not found in point data")
     
     # Check epiphyte points
-    if 'resource_epiphyte' in vtk_data.point_data:
-        epiphyte_data = vtk_data.point_data['resource_epiphyte']
+    if 'stat_epiphyte' in vtk_data.point_data:
+        epiphyte_data = vtk_data.point_data['stat_epiphyte']
         if np.issubdtype(epiphyte_data.dtype, np.number):
             epiphyte_mask = epiphyte_data > 0
         else:
@@ -445,7 +445,7 @@ def create_reptile_capabilities(vtk_data):
         capabilities_reptile_forage[epiphyte_mask] = 'epiphyte'
         print(f"    Reptile forage epiphyte points: {np.sum(epiphyte_mask):,}")
     else:
-        print("    'resource_epiphyte' not found in point data")
+        print("    'stat_epiphyte' not found in point data")
     
     # Update aggregate forage mask
     reptile_forage |= reptile_forage_mask
@@ -454,12 +454,12 @@ def create_reptile_capabilities(vtk_data):
     capabilities_reptile[reptile_forage_mask] = 'forage'
     print(f"    Reptile forage total points: {np.sum(reptile_forage_mask):,}")
     
-    # Reptile Shelter: points in 'resource_fallen log' > 0 OR forest_size == 'fallen'
+    # Reptile Shelter: points in 'stat_fallen log' > 0 OR forest_size == 'fallen'
     reptile_shelter_mask = np.zeros(vtk_data.n_points, dtype=bool)
     
     # Check fallen log points
-    if 'resource_fallen log' in vtk_data.point_data:
-        fallen_log_data = vtk_data.point_data['resource_fallen log']
+    if 'stat_fallen log' in vtk_data.point_data:
+        fallen_log_data = vtk_data.point_data['stat_fallen log']
         if np.issubdtype(fallen_log_data.dtype, np.number):
             fallen_log_mask = fallen_log_data > 0
         else:
@@ -470,7 +470,7 @@ def create_reptile_capabilities(vtk_data):
         capabilities_reptile_shelter[fallen_log_mask] = 'fallen log'
         print(f"    Reptile shelter fallen log points: {np.sum(fallen_log_mask):,}")
     else:
-        print("    'resource_fallen log' not found in point data")
+        print("    'stat_fallen log' not found in point data")
     
     # Check fallen tree points
     if 'forest_size' in vtk_data.point_data:
@@ -516,11 +516,11 @@ def create_tree_capabilities(vtk_data):
     """Create capability layers for trees
     
     Tree capabilities:
-    1. Grow: Points where 'resource_other' > 0
+    1. Grow: Points where 'stat_other' > 0
        - Areas where trees can grow and establish
        
        Numeric indicators:
-       - tree_grow: Total voxels where resource_other > 0 : 'volume'
+       - tree_grow: Total voxels where stat_other > 0 : 'volume'
     
     2. Age: Points where 'search_design_action' == 'improved-tree' OR 'forset_control' == 'reserve-tree'
        - Areas where trees are protected and can mature
@@ -561,9 +561,9 @@ def create_tree_capabilities(vtk_data):
     tree_age_attr = np.full(vtk_data.n_points, 'none', dtype='<U20')
     tree_persist_attr = np.full(vtk_data.n_points, 'none', dtype='<U20')
     
-    # Tree Grow: points in 'resource_other' > 0
-    if 'resource_other' in vtk_data.point_data:
-        other_data = vtk_data.point_data['resource_other']
+    # Tree Grow: points in 'stat_other' > 0
+    if 'stat_other' in vtk_data.point_data:
+        other_data = vtk_data.point_data['stat_other']
         if np.issubdtype(other_data.dtype, np.number):
             tree_grow_mask = other_data > 0
         else:
@@ -574,7 +574,7 @@ def create_tree_capabilities(vtk_data):
         capabilities_tree[tree_grow_mask] = 'grow'
         print(f"    Tree grow points: {np.sum(tree_grow_mask):,}")
     else:
-        print("    'resource_other' not found in point data")
+        print("    'stat_other' not found in point data")
     
     # Tree Age: points in 'improved-tree' OR 'reserve-tree'
     if 'search_design_action' in vtk_data.point_data:
@@ -602,76 +602,103 @@ def create_tree_capabilities(vtk_data):
     else:
         print("    'forest_control' not found in point data")
     
-    # Tree Persist: points in 'search_bioavailable' == 'traversable' WITHIN 1m of points where forest_size == 'medium' OR forest_size == 'large'
-    # Use KDTree for spatial search
-    tree_persist_mask = np.zeros(vtk_data.n_points, dtype=bool)
-    
-    if 'search_bioavailable' in vtk_data.point_data and 'forest_size' in vtk_data.point_data:
-        bioavailable = vtk_data.point_data['search_bioavailable']
-        forest_size = vtk_data.point_data['forest_size']
-        
-        # Find traversable points
-        traversable_mask = bioavailable == 'traversable'
-        traversable_points = np.where(traversable_mask)[0]
-        
-        if len(traversable_points) > 0:
-            # Find medium and large tree points
-            if forest_size.dtype.kind == 'U' or forest_size.dtype.kind == 'S':  # String types
-                medium_tree_mask = (forest_size == 'medium')
-                large_tree_mask = (forest_size == 'large')
-            else:  # Numeric types
-                medium_tree_mask = np.zeros(vtk_data.n_points, dtype=bool)
-                large_tree_mask = np.zeros(vtk_data.n_points, dtype=bool)
-            
-            medium_tree_points = np.where(medium_tree_mask)[0]
-            large_tree_points = np.where(large_tree_mask)[0]
-            
-            # Get coordinates of all points
-            points = vtk_data.points
-            
-            # Process medium trees if any exist
-            if len(medium_tree_points) > 0:
-                # Build KDTree for medium tree points
-                medium_tree_coords = points[medium_tree_points]
-                medium_tree = cKDTree(medium_tree_coords)
-                
-                # Query traversable points against medium tree points
-                traversable_coords = points[traversable_points]
-                distances, _ = medium_tree.query(traversable_coords, k=1, distance_upper_bound=1.0)
-                
-                # Find traversable points within 1m of medium trees
-                near_medium_indices = traversable_points[distances < 1.0]
-                tree_persist_near_medium[near_medium_indices] = True
-                tree_persist_mask[near_medium_indices] = True
-                tree_persist_attr[near_medium_indices] = 'near medium tree'
-                print(f"    Tree persist points near medium trees: {len(near_medium_indices):,}")
-            
-            # Process large trees if any exist
-            if len(large_tree_points) > 0:
-                # Build KDTree for large tree points
-                large_tree_coords = points[large_tree_points]
-                large_tree = cKDTree(large_tree_coords)
-                
-                # Query traversable points against large tree points
-                traversable_coords = points[traversable_points]
-                distances, _ = large_tree.query(traversable_coords, k=1, distance_upper_bound=1.0)
-                
-                # Find traversable points within 1m of large trees
-                near_large_indices = traversable_points[distances < 1.0]
-                tree_persist_near_large[near_large_indices] = True
-                tree_persist_mask[near_large_indices] = True
-                tree_persist_attr[near_large_indices] = 'near large tree'
-                print(f"    Tree persist points near large trees: {len(near_large_indices):,}")
+    # Changed approach for tree persist - now using scenario_rewildingPlantings
+    if 'scenario_rewildingPlantings' in vtk_data.point_data:
+        rewilding_data = vtk_data.point_data['scenario_rewildingPlantings']
+        if np.issubdtype(rewilding_data.dtype, np.number):
+            tree_persist_mask = rewilding_data >= 1
         else:
-            print("    No traversable points found for tree persist capability")
+            # If not numeric, try to handle string representation
+            try:
+                # Convert string representation to numbers if possible
+                numeric_values = np.zeros_like(rewilding_data, dtype=float)
+                for i, val in enumerate(rewilding_data):
+                    try:
+                        if val not in ['none', '', 'nan']:
+                            numeric_values[i] = float(val)
+                    except ValueError:
+                        pass
+                tree_persist_mask = numeric_values >= 1
+            except:
+                # Fallback if conversion fails
+                tree_persist_mask = np.zeros(vtk_data.n_points, dtype=bool)
+                print("    Unable to convert scenario_rewildingPlantings to numeric values")
+        
+        tree_persist |= tree_persist_mask
+        tree_persist_attr[tree_persist_mask] = 'eligible soil'
+        # Override any existing values (later capabilities take precedence)
+        capabilities_tree[tree_persist_mask] = 'persist'
+        print(f"    Tree persist points from eligible soil: {np.sum(tree_persist_mask):,}")
     else:
-        print("    'search_bioavailable' or 'forest_size' not found in point data")
-    
-    # Update aggregate persist mask
-    tree_persist |= tree_persist_mask
-    
-    # Override any existing values (later capabilities take precedence)
-    capabilities_tree[tree_persist_mask] = 'persist'
+        print("    'scenario_rewildingPlantings' not found in point data")
+        
+        # Fallback to old method if scenario_rewildingPlantings is not available
+        print("    Falling back to proximity-based persist calculation")
+        
+        if 'search_bioavailable' in vtk_data.point_data and 'forest_size' in vtk_data.point_data:
+            bioavailable = vtk_data.point_data['search_bioavailable']
+            forest_size = vtk_data.point_data['forest_size']
+            
+            # Find traversable points
+            traversable_mask = bioavailable == 'traversable'
+            traversable_points = np.where(traversable_mask)[0]
+            
+            if len(traversable_points) > 0:
+                # Find medium and large tree points
+                if forest_size.dtype.kind == 'U' or forest_size.dtype.kind == 'S':  # String types
+                    medium_tree_mask = (forest_size == 'medium')
+                    large_tree_mask = (forest_size == 'large')
+                else:  # Numeric types
+                    medium_tree_mask = np.zeros(vtk_data.n_points, dtype=bool)
+                    large_tree_mask = np.zeros(vtk_data.n_points, dtype=bool)
+                
+                medium_tree_points = np.where(medium_tree_mask)[0]
+                large_tree_points = np.where(large_tree_mask)[0]
+                
+                # Get coordinates of all points
+                points = vtk_data.points
+                
+                # Process medium trees if any exist
+                if len(medium_tree_points) > 0:
+                    # Build KDTree for medium tree points
+                    medium_tree_coords = points[medium_tree_points]
+                    medium_tree = cKDTree(medium_tree_coords)
+                    
+                    # Query traversable points against medium tree points
+                    traversable_coords = points[traversable_points]
+                    distances, _ = medium_tree.query(traversable_coords, k=1, distance_upper_bound=1.0)
+                    
+                    # Find traversable points within 1m of medium trees
+                    near_medium_indices = traversable_points[distances < 1.0]
+                    tree_persist_near_medium[near_medium_indices] = True
+                    tree_persist_mask = np.zeros(vtk_data.n_points, dtype=bool)
+                    tree_persist_mask[near_medium_indices] = True
+                    tree_persist |= tree_persist_mask
+                    tree_persist_attr[near_medium_indices] = 'near medium tree'
+                    print(f"    Tree persist points near medium trees: {len(near_medium_indices):,}")
+                
+                # Process large trees if any exist
+                if len(large_tree_points) > 0:
+                    # Build KDTree for large tree points
+                    large_tree_coords = points[large_tree_points]
+                    large_tree = cKDTree(large_tree_coords)
+                    
+                    # Query traversable points against large tree points
+                    traversable_coords = points[traversable_points]
+                    distances, _ = large_tree.query(traversable_coords, k=1, distance_upper_bound=1.0)
+                    
+                    # Find traversable points within 1m of large trees
+                    near_large_indices = traversable_points[distances < 1.0]
+                    tree_persist_near_large[near_large_indices] = True
+                    tree_persist_mask = np.zeros(vtk_data.n_points, dtype=bool)
+                    tree_persist_mask[near_large_indices] = True
+                    tree_persist |= tree_persist_mask
+                    tree_persist_attr[near_large_indices] = 'near large tree'
+                    print(f"    Tree persist points near large trees: {len(near_large_indices):,}")
+            else:
+                print("    No traversable points found for tree persist capability")
+        else:
+            print("    'search_bioavailable' or 'forest_size' not found in point data")
     
     # Add tree capability layers to vtk_data
     vtk_data.point_data['capabilities-tree-grow'] = tree_grow
@@ -791,4 +818,4 @@ def load_vtk_file(site, scenario, voxel_size, year):
     return None
 
 if __name__ == "__main__":
-    main() 
+    main()
