@@ -92,6 +92,148 @@ def count_resources_by_voxel(df, resetCount=False):
     
     return voxelised_df
 
+
+########################################################
+#PRECOLONIAL TEMPLATE REPLACEMENT
+########################################################
+
+def create_treeid_mapping(tree_templates_DF, target_sizes=None):
+    """
+    Creates a mapping from precolonial tree_ids to non-precolonial tree_ids
+    based on the size of their template dataframes.
+    
+    Parameters:
+        tree_templates_DF (pd.DataFrame): DataFrame containing tree templates
+        target_sizes (list): List of sizes to filter by (e.g., ['snag', 'senescing'])
+                           If None, all sizes are considered
+        
+    Returns:
+        dict: Mapping from precolonial tree_ids to non-precolonial tree_ids
+    """
+    print(f"\n=== Creating Tree ID Mapping ===")
+    
+    # Filter by target sizes if specified
+    if target_sizes:
+        filtered_df = tree_templates_DF[tree_templates_DF['size'].isin(target_sizes)].copy()
+        print(f"Filtered to {len(filtered_df)} rows with sizes {target_sizes}")
+    else:
+        filtered_df = tree_templates_DF.copy()
+    
+    # Split into precolonial and non-precolonial dataframes
+    precolonial_df = filtered_df[filtered_df['precolonial'] == True]
+    non_precolonial_df = filtered_df[filtered_df['precolonial'] == False]
+    
+    print(f"Found {len(precolonial_df)} precolonial and {len(non_precolonial_df)} non-precolonial templates")
+    
+    # Create a function to process each dataframe
+    def process_df(df):
+        # Add template size column
+        df = df.copy()
+        df['template_size'] = df['template'].apply(len)
+        
+        # Group by tree_id and take the first entry for each group
+        grouped = df.groupby('tree_id').first().reset_index()
+        
+        # Sort by template size in descending order
+        return grouped.sort_values('template_size', ascending=False)
+    
+    # Process both dataframes
+    precolonial_processed = process_df(precolonial_df)
+    non_precolonial_processed = process_df(non_precolonial_df)
+    
+    print(f"After grouping: {len(precolonial_processed)} unique precolonial tree_ids and "
+          f"{len(non_precolonial_processed)} unique non-precolonial tree_ids")
+    
+    # Create mapping based on sorted index
+    mapping = {}
+    min_length = min(len(precolonial_processed), len(non_precolonial_processed))
+    
+    for i in range(min_length):
+        pre_id = precolonial_processed.iloc[i]['tree_id']
+        non_pre_id = non_precolonial_processed.iloc[i]['tree_id']
+        mapping[pre_id] = non_pre_id
+    
+    print(f"Created mapping for {len(mapping)} tree_ids")
+    
+    # Print mapping for debugging
+    print("\nTree ID mapping (precolonial -> non-precolonial):")
+    for pre_id, non_pre_id in mapping.items():
+        pre_size = precolonial_processed[precolonial_processed['tree_id'] == pre_id]['template_size'].iloc[0]
+        non_pre_size = non_precolonial_processed[non_precolonial_processed['tree_id'] == non_pre_id]['template_size'].iloc[0]
+        print(f"  {pre_id} (size: {pre_size}) -> {non_pre_id} (size: {non_pre_size})")
+    
+    return mapping
+
+def replace_precolonial_templates(tree_templates_DF, target_sizes=None):
+    """
+    Replaces templates in precolonial trees with corresponding templates from 
+    non-precolonial trees based on a mapping of tree_ids.
+    
+    Parameters:
+        tree_templates_DF (pd.DataFrame): DataFrame containing tree templates
+        target_sizes (list): List of sizes to consider for replacement (e.g., ['snag', 'senescing'])
+                           If None, all sizes are considered
+        
+    Returns:
+        pd.DataFrame: Updated DataFrame with replaced templates
+    """
+    print("\n=== Starting Precolonial Template Replacement ===")
+    print(f"Input DataFrame contains {len(tree_templates_DF)} templates")
+    
+    # Create a copy to avoid modifying the original DataFrame
+    df = tree_templates_DF.copy()
+    
+    # Create tree_id mapping
+    tree_id_mapping = create_treeid_mapping(df, target_sizes)
+    
+    if not tree_id_mapping:
+        print("No mappings created. No replacements will be performed.")
+        return df
+    
+    # Filter to target sizes if specified
+    if target_sizes:
+        size_mask = df['size'].isin(target_sizes)
+        replace_mask = df['precolonial'] == True
+        full_mask = size_mask & replace_mask
+        filtered_df = df[full_mask]
+        print(f"Found {len(filtered_df)} precolonial templates to potentially replace")
+    else:
+        replace_mask = df['precolonial'] == True
+        filtered_df = df[replace_mask]
+        print(f"Found {len(filtered_df)} precolonial templates to potentially replace")
+    
+    # Count replacements
+    replacement_count = 0
+    
+    # For each precolonial template that matches our criteria
+    for idx, row in filtered_df.iterrows():
+        pre_tree_id = row['tree_id']
+        
+        # Check if we have a mapping for this tree_id
+        if pre_tree_id in tree_id_mapping:
+            non_pre_tree_id = tree_id_mapping[pre_tree_id]
+            
+            # Find matching non-precolonial templates
+            matching_templates = df[(df['precolonial'] == False) & 
+                                    (df['tree_id'] == non_pre_tree_id) &
+                                    (df['size'] == row['size'])]
+            
+            if not matching_templates.empty:
+                # Get the first matching template
+                template_to_use = matching_templates.iloc[0]['template']
+                
+                # Replace the template
+                df.at[idx, 'template'] = template_to_use
+                replacement_count += 1
+                
+                print(f"Replaced template at index {idx}: tree_id {pre_tree_id} -> {non_pre_tree_id}, "
+                      f"size: {row['size']}, control: {row['control']}")
+    
+    print(f"\n=== Precolonial Template Replacement Complete ===")
+    print(f"Replaced {replacement_count} templates")
+    
+    return df
+
 ########################################################
 #RESOURCE STATS ADJUSTMENT
 ########################################################
@@ -613,6 +755,11 @@ def generate_all_resource_stats(voxelised_templates, output_dir='data/revised/tr
 # Main Function
 # ================================
 
+
+
+
+
+
 def process_trees(tree_templates_DF, voxel_size = 0.25, resetCount = False):
 
     # Create new DataFrame instead of modifying in place
@@ -643,6 +790,10 @@ def process_trees(tree_templates_DF, voxel_size = 0.25, resetCount = False):
 
     
     voxelised_templates_DF = pd.DataFrame(processed_templates)
+
+    # PRECOLONIAL TEMPLATE REPLACEMENT
+    print("\nReplacing precolonial snag and senescing templates with non-precolonial versions...")
+    voxelised_templates_DF = replace_precolonial_templates(voxelised_templates_DF, target_sizes=['snag', 'senescing'])
 
     voxelised_templates_DF = adjust_resource_quantities(voxelised_templates_DF)
 
@@ -686,3 +837,4 @@ if __name__ == "__main__":
     print(f"\nComplete resource statistics saved to {output_dir / all_stats_name}")
 
     print(f'done')
+

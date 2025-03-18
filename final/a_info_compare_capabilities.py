@@ -6,40 +6,12 @@ from pathlib import Path
 def load_vtk_file(site, voxel_size, file_type, timestep=None, scenario=None):
     """Load VTK file for a specific timestep or baseline"""
     if file_type == 'baseline':
-        # Try different possible baseline paths
-        baseline_paths = [
-            f'data/revised/final/baselines/{site}_baseline_combined_{voxel_size}.vtk',
-            f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}.vtk',
-            f'data/revised/final/{site}/{site}_baseline_{voxel_size}.vtk',
-            f'data/revised/final/baselines/{site}_baseline_{voxel_size}.vtk'
-        ]
-        
-        for baseline_path in baseline_paths:
-            if Path(baseline_path).exists():
-                return pv.read(baseline_path)
-        return None
-    
+        baseline_path = f'data/revised/final/baselines/{site}_baseline_combined_{voxel_size}_urban_features.vtk'
+        return pv.read(baseline_path)    
     elif file_type == 'timestep':
-        output_path = f'data/revised/final/{site}'
-        
-        # Try different file patterns for the timestep
-        file_patterns = [
-            f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{timestep}_urban_features.vtk',
-            f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{timestep}.vtk',
-            f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{timestep}_with_features.vtk',
-            f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{timestep}_with_urban_features.vtk',
-            f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{timestep}_features.vtk',
-            f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{timestep}_with_capabilities.vtk',
-            f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{timestep}_with_search.vtk',
-            f'{output_path}/{site}_{scenario}_scenarioYR{timestep}.vtk',
-            f'{output_path}/{site}_{scenario}_scenarioYR{timestep}_urban_features.vtk'
-        ]
-        
-        for vtk_path in file_patterns:
-            if Path(vtk_path).exists():
-                return pv.read(vtk_path)
-        return None
-
+        path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{timestep}_urban_features.vtk'
+        return pv.read(path)
+    
 def vtk_to_dataframe(vtk_data, file_type, scenario=None, timestep=None):
     """Convert VTK point data to a pandas DataFrame"""
     # Create a label for the file type

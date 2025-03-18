@@ -5,6 +5,7 @@ import argparse
 from pathlib import Path
 from scipy.spatial import cKDTree
 
+    
 def process_capabilities(site, scenario, voxel_size, years=None, include_baseline=True):
     """Process capabilities for all years and baseline"""
     if years is None:
@@ -22,24 +23,17 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
     # Process baseline if requested
     if include_baseline:
         print(f"\n=== Processing baseline for site: {site} ===")
-        # Try both possible baseline paths
-        baseline_paths = [
-            f'data/revised/final/baselines/{site}_baseline_combined_{voxel_size}.vtk',
-            f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}.vtk',
-            f'data/revised/final/{site}/{site}_baseline_{voxel_size}.vtk',
-            f'data/revised/final/baselines/{site}_baseline_{voxel_size}.vtk'
-        ]
-        
+
+        baseline_path = f'data/revised/final/baselines/{site}_baseline_combined_{voxel_size}_urban_features.vtk'
         baseline_vtk = None
-        for baseline_path in baseline_paths:
-            try:
-                if Path(baseline_path).exists():
-                    print(f"Found baseline file: {baseline_path}")
-                    baseline_vtk = pv.read(baseline_path)
-                    print(f"Loaded baseline VTK from {baseline_path}")
-                    break
-            except Exception as e:
-                print(f"Could not load baseline from {baseline_path}: {e}")
+
+        try:
+            if Path(baseline_path).exists():
+                print(f"Found baseline file: {baseline_path}")
+                baseline_vtk = pv.read(baseline_path)
+                print(f"Loaded baseline VTK from {baseline_path}")
+        except Exception as e:
+            print(f"Could not load baseline from {baseline_path}: {e}")
         
         if baseline_vtk is not None:
             # Create capabilities for baseline
@@ -745,77 +739,9 @@ def collect_capability_stats(vtk_data):
     return stats
 
 def load_vtk_file(site, scenario, voxel_size, year):
-    """Load VTK file for a specific year"""
-    output_path = f'data/revised/final/{site}'
-    
-    # Try different file patterns
-    file_patterns = [
-        # Standard patterns
-        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_urban_features.vtk',
-        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk',
-        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_features.vtk',
-        
-        # Additional patterns
-        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_urban_features.vtk',
-        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_features.vtk',
-        
-        # Patterns from a_scenario_urban_elements_count.py
-        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_capabilities.vtk',
-        f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_search.vtk',
-        
-        # Try without voxel size in filename
-        f'{output_path}/{site}_{scenario}_scenarioYR{year}.vtk',
-        f'{output_path}/{site}_{scenario}_scenarioYR{year}_urban_features.vtk'
-    ]
-    
-    print(f"Searching for VTK files for site: {site}, scenario: {scenario}, year: {year}")
-    
-    # Check if files exist before trying to load them
-    existing_files = []
-    for vtk_path in file_patterns:
-        if Path(vtk_path).exists():
-            existing_files.append(vtk_path)
-    
-    if existing_files:
-        print(f"Found {len(existing_files)} matching VTK files:")
-        for file_path in existing_files:
-            print(f"  - {file_path}")
-    else:
-        print(f"No matching VTK files found in {output_path}")
-        # List all VTK files in the directory
-        all_vtk_files = list(Path(output_path).glob(f"{site}_{scenario}*{year}*.vtk"))
-        if all_vtk_files:
-            print(f"Available VTK files for {site}_{scenario} year {year}:")
-            for file_path in all_vtk_files:
-                print(f"  - {file_path}")
-        else:
-            # List all VTK files for this scenario
-            all_scenario_files = list(Path(output_path).glob(f"{site}_{scenario}*.vtk"))
-            if all_scenario_files:
-                print(f"Available VTK files for {site}_{scenario}:")
-                for file_path in all_scenario_files:
-                    print(f"  - {file_path}")
-            else:
-                print(f"No VTK files found for {site}_{scenario} in {output_path}")
-    
-    # Try to load each file
-    for vtk_path in file_patterns:
-        try:
-            if Path(vtk_path).exists():
-                vtk_data = pv.read(vtk_path)
-                print(f"Successfully loaded VTK file from {vtk_path}")
-                
-                # Print available point data keys
-                print(f"Available point data keys in {Path(vtk_path).name}:")
-                for key in sorted(vtk_data.point_data.keys()):
-                    print(f"  - {key}")
-                
-                return vtk_data
-        except Exception as e:
-            print(f"Error loading {vtk_path}: {e}")
-    
-    print(f"ERROR: Could not find or load any VTK file for site {site}, scenario {scenario}, year {year}")
-    return None
+    path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_urban_features.vtk'
+    return pv.read(path)
+  
 
 if __name__ == "__main__":
     main()
