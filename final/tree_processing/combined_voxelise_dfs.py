@@ -5,10 +5,17 @@ import pickle
 import pyvista as pv
 import aa_tree_helper_functions
 
-# ================================
-# Step 1: Assign Voxel Coordinates
-# ================================
 
+RESOURCE_TYPES = {
+        'other': 'object',
+        'dead branch': 'percent', 
+        'peeling bark': 'percent',
+        'perch branch': 'object',
+        'epiphyte': 'count',
+        'fallen log': 'object',
+        'hollow': 'count'
+    }
+    
 
 # ================================
 # Step 1: Assign Voxel Coordinates
@@ -85,20 +92,80 @@ def count_resources_by_voxel(df, resetCount=False):
     
     return voxelised_df
 
-##stats adjustment
+########################################################
+#RESOURCE STATS ADJUSTMENT
+########################################################
+
+def adjust_count_resource(template, resource_name, stat_col, canopy_indices, target_resources):
+    """Handle resources that are pure counts"""
+    current_count = template.loc[canopy_indices, stat_col].sum()
+    # Round the target count to the nearest integer
+    target_count = round(target_resources[resource_name].iloc[0])
+    delta = target_count - current_count
+    
+    print(f"\nResource: {resource_name} (count)")
+    print(f"Current count: {current_count}")
+    print(f"Target count: {target_count}")
+    print(f"Need to {'add' if delta > 0 else 'remove'} {abs(delta)} voxels")
+    
+    return delta
+
+def adjust_percent_resource(template, resource_name, stat_col, canopy_indices, target_resources, total_canopy_voxels):
+    """Handle resources that are percentages"""
+    current_count = template.loc[canopy_indices, stat_col].sum()
+    current_percentage = (current_count / total_canopy_voxels) * 100
+    target_percentage = target_resources[resource_name].iloc[0]
+    percentage_difference = current_percentage - target_percentage
+    
+    print(f"\nResource: {resource_name} (percent)")
+    print(f"Current count: {current_count}, Current percentage: {current_percentage:.2f}%")
+    print(f"Target percentage: {target_percentage:.2f}%")
+    print(f"Difference: {percentage_difference:.2f}%")
+    
+    # Skip if close enough (within 1%)
+    if abs(percentage_difference) <= 1.0:
+        print(f"Current percentage is within 1% of target, no adjustment needed")
+        return 0
+    
+    target_count = int(round((target_percentage / 100) * total_canopy_voxels))
+    delta = target_count - current_count
+    print(f"Need to {'add' if delta > 0 else 'remove'} {abs(delta)} voxels to reach target")
+    
+    return delta
+
+def make_adjustment(template, delta, stat_col, canopy_indices):
+    """Make the actual adjustment to the template"""
+    if delta == 0:
+        return
+        
+    if delta > 0:
+        # Need to add more of this resource
+        candidates_mask = (template.loc[canopy_indices, stat_col] == 0)
+        candidates = canopy_indices[candidates_mask]
+        
+        if len(candidates) >= delta:
+            voxels_to_convert = np.random.choice(candidates, delta, replace=False)
+            template.loc[voxels_to_convert, stat_col] = 1
+            print(f"Added {delta} voxels")
+        else:
+            template.loc[candidates, stat_col] = 1
+            print(f"WARNING: Could only add {len(candidates)} voxels, needed {delta}")
+    else:
+        # Need to remove some of this resource
+        candidates_mask = (template.loc[canopy_indices, stat_col] == 1)
+        candidates = canopy_indices[candidates_mask]
+        
+        delta_abs = abs(delta)
+        if len(candidates) >= delta_abs:
+            voxels_to_convert = np.random.choice(candidates, delta_abs, replace=False)
+            template.loc[voxels_to_convert, stat_col] = 0
+            print(f"Removed {delta_abs} voxels")
+        else:
+            template.loc[candidates, stat_col] = 0
+            print(f"WARNING: Could only remove {len(candidates)} voxels, needed {delta_abs}")
 
 def adjust_resource_quantities(voxelised_templates, resource_dic_path='data/revised/trees/resource_dicDF.csv'):
-    """
-    Adjust resource quantities in voxelized templates to match target percentages.
-    
-    Args:
-        voxelised_templates (pd.DataFrame or str): Either a DataFrame of voxelized templates 
-                                                 or a path to the pickle file
-        resource_dic_path (str): Path to the resource dictionary CSV file
-    
-    Returns:
-        pd.DataFrame: Updated voxelized templates DataFrame with adjusted resource quantities
-    """
+    """Adjust resource quantities in voxelized templates to match target percentages."""
     # Handle input which could be either a DataFrame or a file path
     if isinstance(voxelised_templates, str):
         print(f"Loading voxelized templates from {voxelised_templates}")
@@ -108,175 +175,6 @@ def adjust_resource_quantities(voxelised_templates, resource_dic_path='data/revi
     
     print(f"Loading resource dictionary from {resource_dic_path}")
     resource_df = pd.read_csv(resource_dic_path)
-    
-    # Process each template
-    for idx, row in voxelised_templates.iterrows():
-        print(f"\nProcessing template {idx+1}/{len(voxelised_templates)}: precolonial={row['precolonial']}, "
-              f"size={row['size']}, control={row['control']}, tree_id={row['tree_id']}")
-        
-        template = row['template']
-        
-        # Skip if template is empty
-        if template.empty:
-            print(f"Skipping empty template")
-            continue
-        
-        # Get resource target percentages for this template configuration using efficient filtering
-        mask = ((resource_df['precolonial'] == row['precolonial']) & 
-                (resource_df['size'] == row['size']) & 
-                (resource_df['control'] == row['control']))
-        
-        target_resources = resource_df[mask]
-        
-        # Skip if no matching resource targets found
-        if target_resources.empty:
-            print(f"No matching resource targets found for this configuration, skipping")
-            continue
-        
-        # Identify resource columns in template - do this once
-        resource_columns = [col for col in template.columns if col.startswith('resource_')]
-        
-        # Create stat columns vectorized if they don't exist
-        stat_columns = [col.replace('resource_', 'stat_') for col in resource_columns]
-        for resource_col, stat_col in zip(resource_columns, stat_columns):
-            if stat_col not in template.columns:
-                template[stat_col] = template[resource_col].copy()
-        
-        # Get canopy voxels (excluding fallen logs) - do this once
-        fallen_log_col = 'resource_fallen log'
-        if fallen_log_col in template.columns:
-            canopy_mask = template[fallen_log_col] == 0
-            canopy_indices = template.index[canopy_mask]
-            total_canopy_voxels = len(canopy_indices)
-        else:
-            canopy_mask = pd.Series(True, index=template.index)
-            canopy_indices = template.index
-            total_canopy_voxels = len(template)
-        
-        if total_canopy_voxels == 0:
-            print(f"No canopy voxels in template, skipping")
-            continue
-        
-        # Process each resource type
-        for resource_col in resource_columns:
-            # Skip fallen log for canopy calculations
-            if resource_col == 'resource_fallen log':
-                continue
-            
-            # Extract resource name without prefix
-            resource_name = resource_col.replace('resource_', '')
-            stat_col = resource_col.replace('resource_', 'stat_')
-            
-            # Skip certain resources or configurations based on validation logic
-            """if resource_name in ['other', 'peeling bark', 'perch branch', 'hollow', 'epiphyte', 'fallen log'] or \
-               row['size'] in ['senescing'] or \
-               row['control'] in ['improved-tree']:
-                continue"""
-            
-            # Check if resource exists in target dictionary
-            if resource_name not in target_resources.columns:
-                continue
-            
-            # Get current stats - use boolean indexing more efficiently
-            current_count = template.loc[canopy_indices, stat_col].sum()
-            current_percentage = (current_count / total_canopy_voxels) * 100
-            target_percentage = target_resources[resource_name].iloc[0]
-            percentage_difference = current_percentage - target_percentage
-            
-            print(f"\nResource: {resource_name}")
-            print(f"Current count: {current_count}, Current percentage: {current_percentage:.2f}%")
-            print(f"Target percentage: {target_percentage:.2f}%")
-            print(f"Difference: {percentage_difference:.2f}%")
-            
-            # Skip if close enough (within 1%)
-            if abs(percentage_difference) <= 1.0:
-                print(f"Current percentage is within 1% of target, no adjustment needed")
-                continue
-            
-            # Calculate target count
-            target_count = int(round((target_percentage / 100) * total_canopy_voxels))
-            delta = target_count - current_count
-            
-            print(f"Need to {'add' if delta > 0 else 'remove'} {abs(delta)} voxels to reach target")
-            
-            # Create a mask for candidates
-            if delta > 0:
-                # Need to add more of this resource
-                # Select candidates: voxels that don't already have this resource
-                candidates_mask = (template.loc[canopy_indices, stat_col] == 0)
-                candidates = canopy_indices[candidates_mask]
-                
-                if len(candidates) >= delta:
-                    # Randomly select voxels to convert (more efficient method)
-                    voxels_to_convert = np.random.choice(candidates, delta, replace=False)
-                    template.loc[voxels_to_convert, stat_col] = 1
-                    print(f"Added {delta} voxels with {resource_name}")
-                else:
-                    # Not enough candidates
-                    template.loc[candidates, stat_col] = 1
-                    print(f"WARNING: Could only add {len(candidates)} voxels, needed {delta}")
-            else:
-                # Need to remove some of this resource
-                # Select candidates: voxels that currently have this resource
-                candidates_mask = (template.loc[canopy_indices, stat_col] == 1)
-                candidates = canopy_indices[candidates_mask]
-                
-                delta_abs = abs(delta)
-                if len(candidates) >= delta_abs:
-                    # Randomly select voxels to convert (more efficient method)
-                    voxels_to_convert = np.random.choice(candidates, delta_abs, replace=False)
-                    template.loc[voxels_to_convert, stat_col] = 0
-                    print(f"Removed {delta_abs} voxels with {resource_name}")
-                else:
-                    # Not enough candidates
-                    template.loc[candidates, stat_col] = 0
-                    print(f"WARNING: Could only remove {len(candidates)} voxels, needed {delta_abs}")
-            
-            # Verify adjustment
-            new_count = template.loc[canopy_indices, stat_col].sum()
-            new_percentage = (new_count / total_canopy_voxels) * 100
-            
-            print(f"After adjustment: count = {new_count}, percentage = {new_percentage:.2f}%")
-        
-        # Update the template in the DataFrame
-        voxelised_templates.at[idx, 'template'] = template
-    
-    return voxelised_templates
-
-
-def generate_resource_stats(voxelised_templates, resource_dic_path='data/revised/trees/resource_dicDF.csv', 
-                            output_dir='data/revised/trees'):
-    """
-    Generate statistics directly from the voxelized templates by comparing with target resources.
-    
-    Args:
-        voxelised_templates (pd.DataFrame or str): Either a DataFrame of voxelized templates 
-                                                 or a path to the pickle file
-        resource_dic_path (str): Path to the resource dictionary CSV file
-        output_dir (str): Directory to save summary files
-    
-    Returns:
-        pd.DataFrame: Formatted statistics summary DataFrame
-    """
-    print("\nGenerating resource statistics...")
-    
-    # Handle input which could be either a DataFrame or a file path
-    if isinstance(voxelised_templates, str):
-        print(f"Loading voxelized templates from {voxelised_templates}")
-        voxelised_templates = pd.read_pickle(voxelised_templates)
-    else:
-        print("Using provided voxelized templates DataFrame")
-    
-    # Load resource dictionary
-    print(f"Loading resource dictionary from {resource_dic_path}")
-    resource_df = pd.read_csv(resource_dic_path)
-    
-    # Ensure output directory exists
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Prepare data structure for statistics
-    stats_data = []
     
     # Process each template
     for idx, row in voxelised_templates.iterrows():
@@ -299,6 +197,14 @@ def generate_resource_stats(voxelised_templates, resource_dic_path='data/revised
         
         # Get resource columns
         resource_columns = [col for col in template.columns if col.startswith('resource_')]
+        
+        # Ensure all stat columns exist by creating them from resource columns
+        for resource_col in resource_columns:
+            stat_col = resource_col.replace('resource_', 'stat_')
+            if stat_col not in template.columns:
+                print(f"Creating missing column: {stat_col}")
+                template[stat_col] = template[resource_col].copy()
+        
         stat_columns = [col for col in template.columns if col.startswith('stat_')]
         
         # Get canopy voxels (excluding fallen logs)
@@ -322,20 +228,171 @@ def generate_resource_stats(voxelised_templates, resource_dic_path='data/revised
             
             # Extract resource name without prefix
             resource_name = resource_col.replace('resource_', '')
+            stat_col = resource_col.replace('resource_', 'stat_')
             
-            # Skip certain resources or configurations based on validation logic
-            """if (resource_name in ['other', 'peeling bark', 'perch branch', 'hollow', 'epiphyte', 'fallen log'] or
-                row['size'] in ['senescing'] or 
-                row['control'] in ['improved-tree']):
-                continue"""
+            # Skip if resource doesn't exist in target dictionary
+            if resource_name not in target_resources.columns:
+                continue
             
-            # Check if resource exists in target dictionary and stat columns
+            # Get resource type
+            resource_type = RESOURCE_TYPES.get(resource_name, 'unknown')
+            
+            # Calculate delta based on resource type
+            delta = 0
+            if resource_type == 'count':
+                delta = adjust_count_resource(template, resource_name, stat_col, canopy_indices, target_resources)
+            elif resource_type == 'percent':
+                delta = adjust_percent_resource(template, resource_name, stat_col, canopy_indices, target_resources, total_canopy_voxels)
+            elif resource_type == 'object':
+                print(f"\nSkipping {resource_name} (object type)")
+                continue
+            else:
+                print(f"\nWarning: Unknown resource type for {resource_name}")
+                continue
+            
+            # Make the adjustment
+            make_adjustment(template, delta, stat_col, canopy_indices)
+            
+            # Verify adjustment
+            new_count = template.loc[canopy_indices, stat_col].sum()
+            if resource_type == 'percent':
+                new_percentage = (new_count / total_canopy_voxels) * 100
+                print(f"After adjustment: count = {new_count}, percentage = {new_percentage:.2f}%")
+            else:
+                print(f"After adjustment: count = {new_count}")
+        
+        # Update the template in the DataFrame
+        voxelised_templates.at[idx, 'template'] = template
+    
+    return voxelised_templates
+
+
+def generate_resource_stats(voxelised_templates, resource_dic_path='data/revised/trees/resource_dicDF.csv', 
+                            output_dir='data/revised/trees'):
+    """
+    Generate statistics from the voxelized templates:
+    1. Compares with target resources to evaluate adjustments
+    2. Collects statistics for all 'stat_' resources regardless of targets
+    
+    Returns two DataFrames: adjustment summary and complete resource statistics
+    """
+    print("\nGenerating resource statistics...")
+    
+    # Handle input which could be either a DataFrame or a file path
+    if isinstance(voxelised_templates, str):
+        print(f"Loading voxelized templates from {voxelised_templates}")
+        voxelised_templates = pd.read_pickle(voxelised_templates)
+    else:
+        print("Using provided voxelized templates DataFrame")
+    
+    # Load resource dictionary
+    print(f"Loading resource dictionary from {resource_dic_path}")
+    resource_df = pd.read_csv(resource_dic_path)
+    
+    # Ensure output directory exists
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    ###########################################################
+    ### PREPARE DATA STRUCTURES FOR BOTH SETS OF STATISTICS ###
+    ###########################################################
+    
+    # Prepare data structures for statistics
+    adjustment_stats_data = []
+    all_resource_stats_data = []
+    
+    ###########################################################
+    ### PROCESS EACH TEMPLATE TO COLLECT STATISTICS         ###
+    ###########################################################
+    
+    # Process each template
+    for idx, row in voxelised_templates.iterrows():
+        template = row['template']
+        
+        # Skip if template is empty
+        if template.empty:
+            continue
+        
+        # Get resource target percentages for this template
+        mask = ((resource_df['precolonial'] == row['precolonial']) & 
+                (resource_df['size'] == row['size']) & 
+                (resource_df['control'] == row['control']))
+        
+        target_resources = resource_df[mask]
+        
+        # Get resource and stat columns
+        resource_columns = [col for col in template.columns if col.startswith('resource_')]
+        stat_columns = [col for col in template.columns if col.startswith('stat_')]
+        
+        # Get canopy voxels (excluding fallen logs)
+        fallen_log_col = 'resource_fallen log'
+        if fallen_log_col in template.columns:
+            canopy_mask = template[fallen_log_col] == 0
+            canopy_indices = template.index[canopy_mask]
+            total_canopy_voxels = len(canopy_indices)
+        else:
+            canopy_indices = template.index
+            total_canopy_voxels = len(template)
+        
+        if total_canopy_voxels == 0:
+            continue
+            
+        ###########################################################
+        ### COLLECT STATISTICS FOR ALL STAT RESOURCES          ###
+        ###########################################################
+        
+        # Process each stat resource to collect complete statistics
+        for stat_col in stat_columns:
+            # Extract resource name without prefix
+            resource_name = stat_col.replace('stat_', '')
+            
+            # Get resource type from RESOURCE_TYPES dictionary
+            count_type = RESOURCE_TYPES.get(resource_name, 'unknown')
+            
+            # Calculate resource counts and percentages
+            stat_count = template.loc[canopy_indices, stat_col].sum()
+            stat_pct = (stat_count / total_canopy_voxels) * 100
+            
+            # Add to all resources statistics data
+            all_resource_stats_data.append({
+                'precolonial': row['precolonial'],
+                'size': row['size'],
+                'control': row['control'],
+                'tree_id': row['tree_id'],
+                'resource': resource_name,
+                'countType': count_type,
+                'count': int(stat_count),
+                'percentage': stat_pct,
+                'total_canopy_voxels': total_canopy_voxels
+            })
+        
+        ###########################################################
+        ### COLLECT ADJUSTMENT STATISTICS FOR TARGET RESOURCES  ###
+        ###########################################################
+        
+        # Skip if no matching resource targets found
+        if target_resources.empty:
+            continue
+        
+        # Process each resource type for adjustment statistics
+        for resource_col in resource_columns:
+            # Skip fallen log for canopy calculations
+            if resource_col == 'resource_fallen log':
+                continue
+            
+            # Extract resource name without prefix
+            resource_name = resource_col.replace('resource_', '')
+            
+            # Skip if resource doesn't exist in target dictionary
             if resource_name not in target_resources.columns:
                 continue
             
             stat_col = f"stat_{resource_name}"
             if stat_col not in template.columns:
                 continue
+            
+            # Get resource type
+            resource_type = RESOURCE_TYPES.get(resource_name, 'unknown')
             
             # Calculate resource counts and percentages
             resource_count = template.loc[canopy_indices, resource_col].sum()
@@ -354,13 +411,14 @@ def generate_resource_stats(voxelised_templates, resource_dic_path='data/revised
             needed_adjustment = resource_diff > 1.0
             is_adjusted = abs(resource_count - stat_count) > 0
             
-            # Add to statistics data
-            stats_data.append({
+            # Add to adjustment statistics data
+            adjustment_stats_data.append({
                 'precolonial': row['precolonial'],
                 'size': row['size'],
                 'control': row['control'],
                 'tree_id': row['tree_id'],
                 'resource': resource_name,
+                'countType': resource_type,
                 'total_canopy_voxels': total_canopy_voxels,
                 'original_count': int(resource_count),
                 'original_percentage': resource_pct,
@@ -371,6 +429,170 @@ def generate_resource_stats(voxelised_templates, resource_dic_path='data/revised
                 'was_adjusted': is_adjusted,
                 'improvement': stat_diff < resource_diff,
                 'final_difference': stat_diff
+            })
+    
+    ###########################################################
+    ### CREATE AND FORMAT THE ADJUSTMENT STATISTICS         ###
+    ###########################################################
+    
+    # Create DataFrame from collected adjustment data
+    adjustment_stats_df = pd.DataFrame(adjustment_stats_data)
+    
+    # Skip further processing if DataFrame is empty
+    if adjustment_stats_df.empty:
+        print("No adjustment statistics data to summarize")
+        adjustment_display_df = pd.DataFrame()
+    else:
+        # Sort the DataFrame
+        sort_columns = ['precolonial', 'size', 'control', 'tree_id', 'resource']
+        adjustment_stats_df = adjustment_stats_df.sort_values(by=sort_columns)
+        
+        # Create formatted columns for display
+        adjustment_stats_df['original_count_fmt'] = adjustment_stats_df['original_count'].apply(lambda x: f"{x:,}")
+        adjustment_stats_df['final_count_fmt'] = adjustment_stats_df['final_count'].apply(lambda x: f"{x:,}")
+        adjustment_stats_df['original_percentage_fmt'] = adjustment_stats_df['original_percentage'].apply(lambda x: f"{x:.2f}%")
+        adjustment_stats_df['target_percentage_fmt'] = adjustment_stats_df['target_percentage'].apply(lambda x: f"{x:.2f}%")
+        adjustment_stats_df['final_percentage_fmt'] = adjustment_stats_df['final_percentage'].apply(lambda x: f"{x:.2f}%")
+        adjustment_stats_df['final_difference_fmt'] = adjustment_stats_df['final_difference'].apply(lambda x: f"{x:.2f}%")
+        
+        # Add status column
+        def get_status(row):
+            if not row['needed_adjustment']:
+                return "No Adjustment Needed"
+            elif row['was_adjusted'] and row['improvement']:
+                return "Successfully Adjusted"
+            elif row['was_adjusted'] and not row['improvement']:
+                return "Adjusted (Partial)"
+            else:
+                return "Adjustment Failed"
+        
+        adjustment_stats_df['status'] = adjustment_stats_df.apply(get_status, axis=1)
+        
+        # Create display version with renamed columns
+        display_columns = {
+            'precolonial': 'Precolonial',
+            'size': 'Size',
+            'control': 'Control',
+            'tree_id': 'Tree ID',
+            'resource': 'Resource',
+            'countType': 'Count Type',
+            'original_count_fmt': 'Original Count',
+            'original_percentage_fmt': 'Original %',
+            'target_percentage_fmt': 'Target %',
+            'final_count_fmt': 'Final Count', 
+            'final_percentage_fmt': 'Final %',
+            'final_difference_fmt': 'Difference',
+            'status': 'Status'
+        }
+        
+        adjustment_display_df = adjustment_stats_df.rename(columns=display_columns)[list(display_columns.values())]
+        
+        # Explicitly list all columns to ensure proper ordering and inclusion
+        column_order = [
+            'Precolonial', 'Size', 'Control', 'Tree ID', 'Resource', 'Count Type',
+            'Original Count', 'Original %', 'Target %', 'Final Count', 'Final %', 
+            'Difference', 'Status'
+        ]
+        # Ensure all columns are included in the correct order
+        adjustment_display_df = adjustment_display_df[column_order]
+        
+        print("Adjustment statistics sample:")
+        print(adjustment_display_df.head())
+    
+    ###########################################################
+    ### CREATE AND FORMAT THE COMPLETE RESOURCE STATISTICS  ###
+    ###########################################################
+    
+    # Create DataFrame from all resource stats data
+    all_stats_df = pd.DataFrame(all_resource_stats_data)
+    
+    # Skip further processing if DataFrame is empty
+    if all_stats_df.empty:
+        print("No resource statistics data to summarize")
+    else:
+        # Sort the DataFrame
+        sort_columns = ['precolonial', 'size', 'control', 'tree_id', 'resource']
+        all_stats_df = all_stats_df.sort_values(by=sort_columns)
+        
+        print("Complete resource statistics sample:")
+        print(all_stats_df.head())
+    
+    return adjustment_display_df, all_stats_df
+
+def generate_all_resource_stats(voxelised_templates, output_dir='data/revised/trees'):
+    """
+    Generate statistics for all 'stat_' resources in the voxelized templates.
+    
+    Parameters:
+        voxelised_templates: DataFrame or path to pickle file with voxelized templates
+        output_dir: Directory to save output statistics
+        
+    Returns:
+        DataFrame with resource statistics for all stat resources
+    """
+    print("\nGenerating complete resource statistics...")
+    
+    # Handle input which could be either a DataFrame or a file path
+    if isinstance(voxelised_templates, str):
+        print(f"Loading voxelized templates from {voxelised_templates}")
+        voxelised_templates = pd.read_pickle(voxelised_templates)
+    else:
+        print("Using provided voxelized templates DataFrame")
+    
+    # Ensure output directory exists
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Prepare data structure for statistics
+    stats_data = []
+    
+    # Process each template
+    for idx, row in voxelised_templates.iterrows():
+        template = row['template']
+        
+        # Skip if template is empty
+        if template.empty:
+            continue
+        
+        # Get stat columns
+        stat_columns = [col for col in template.columns if col.startswith('stat_')]
+        
+        # Get canopy voxels (excluding fallen logs)
+        fallen_log_col = 'resource_fallen log'
+        if fallen_log_col in template.columns:
+            canopy_mask = template[fallen_log_col] == 0
+            canopy_indices = template.index[canopy_mask]
+            total_canopy_voxels = len(canopy_indices)
+        else:
+            canopy_indices = template.index
+            total_canopy_voxels = len(template)
+        
+        if total_canopy_voxels == 0:
+            continue
+        
+        # Process each stat resource
+        for stat_col in stat_columns:
+            # Extract resource name without prefix
+            resource_name = stat_col.replace('stat_', '')
+            
+            # Get resource type from RESOURCE_TYPES dictionary
+            count_type = RESOURCE_TYPES.get(resource_name, 'unknown')
+            
+            # Calculate resource counts and percentages
+            stat_count = template.loc[canopy_indices, stat_col].sum()
+            stat_pct = (stat_count / total_canopy_voxels) * 100
+            
+            # Add to statistics data
+            stats_data.append({
+                'precolonial': row['precolonial'],
+                'size': row['size'],
+                'control': row['control'],
+                'tree_id': row['tree_id'],
+                'resource': resource_name,
+                'countType': count_type,
+                'count': int(stat_count),
+                'percentage': stat_pct,
+                'total_canopy_voxels': total_canopy_voxels
             })
     
     # Create DataFrame from collected data
@@ -385,89 +607,7 @@ def generate_resource_stats(voxelised_templates, resource_dic_path='data/revised
     sort_columns = ['precolonial', 'size', 'control', 'tree_id', 'resource']
     stats_df = stats_df.sort_values(by=sort_columns)
     
-    # Create formatted columns for display
-    stats_df['original_count_fmt'] = stats_df['original_count'].apply(lambda x: f"{x:,}")
-    stats_df['final_count_fmt'] = stats_df['final_count'].apply(lambda x: f"{x:,}")
-    stats_df['original_percentage_fmt'] = stats_df['original_percentage'].apply(lambda x: f"{x:.2f}%")
-    stats_df['target_percentage_fmt'] = stats_df['target_percentage'].apply(lambda x: f"{x:.2f}%")
-    stats_df['final_percentage_fmt'] = stats_df['final_percentage'].apply(lambda x: f"{x:.2f}%")
-    stats_df['final_difference_fmt'] = stats_df['final_difference'].apply(lambda x: f"{x:.2f}%")
-    
-    # Add status column
-    def get_status(row):
-        if not row['needed_adjustment']:
-            return "No Adjustment Needed"
-        elif row['was_adjusted'] and row['improvement']:
-            return "Successfully Adjusted"
-        elif row['was_adjusted'] and not row['improvement']:
-            return "Adjusted (Partial)"
-        else:
-            return "Adjustment Failed"
-    
-    stats_df['status'] = stats_df.apply(get_status, axis=1)
-    
-    # Create display version with renamed columns
-    display_columns = {
-        'precolonial': 'Precolonial',
-        'size': 'Size',
-        'control': 'Control',
-        'tree_id': 'Tree ID',
-        'resource': 'Resource',
-        'original_count_fmt': 'Original Count',
-        'original_percentage_fmt': 'Original %',
-        'target_percentage_fmt': 'Target %',
-        'final_count_fmt': 'Final Count', 
-        'final_percentage_fmt': 'Final %',
-        'final_difference_fmt': 'Difference',
-        'status': 'Status'
-    }
-    
-    display_df = stats_df.rename(columns=display_columns)[list(display_columns.values())]
-
-    
-    # Print summary statistics
-    print("\n=== RESOURCE STATISTICS SUMMARY ===")
-    
-    total_resources = len(stats_df)
-    needed_adjustment = stats_df['needed_adjustment'].sum()
-    actually_adjusted = stats_df['was_adjusted'].sum()
-    improved = stats_df[stats_df['was_adjusted'] & stats_df['improvement']].shape[0]
-    
-    print(f"Total resources analyzed: {total_resources}")
-    print(f"Resources needing adjustment: {needed_adjustment} ({needed_adjustment/total_resources*100:.1f}%)")
-    print(f"Resources actually adjusted: {actually_adjusted} ({actually_adjusted/needed_adjustment*100:.1f}% of needed)")
-    print(f"Successfully improved: {improved} ({improved/actually_adjusted*100:.1f}% of adjusted)")
-    
-    # Resource-specific statistics
-    print("\nStatistics by resource type:")
-    resource_stats = stats_df.groupby('resource').agg({
-        'needed_adjustment': 'sum',
-        'was_adjusted': 'sum',
-        'improvement': lambda x: (x & stats_df.loc[x.index, 'was_adjusted']).sum(),
-        'final_difference': 'mean',
-        'resource': 'count'
-    })
-    
-    resource_stats.columns = ['needed_adjustment', 'actually_adjusted', 'improved', 'avg_difference', 'total']
-    
-    for resource, row in resource_stats.iterrows():
-        print(f"  {resource}:")
-        print(f"    Total: {int(row['total'])}, Needed Adjustment: {int(row['needed_adjustment'])}")
-        print(f"    Adjusted: {int(row['actually_adjusted'])}, Improved: {int(row['improved'])}")
-        print(f"    Average difference from target: {row['avg_difference']:.2f}%")
-    
-    # Create a pivot table for resource percentages by tree type
-    pivot_table = stats_df.pivot_table(
-        index=['precolonial', 'size', 'control'],
-        columns='resource',
-        values=['original_percentage', 'target_percentage', 'final_percentage'],
-        aggfunc='mean'
-    ).round(2)
-    
-    
-    return display_df
-
-
+    return stats_df
 
 # ================================
 # Main Function
@@ -506,10 +646,9 @@ def process_trees(tree_templates_DF, voxel_size = 0.25, resetCount = False):
 
     voxelised_templates_DF = adjust_resource_quantities(voxelised_templates_DF)
 
-    adjustment_summary = generate_resource_stats(voxelised_templates_DF)
+    adjustment_summary, all_resource_stats = generate_resource_stats(voxelised_templates_DF)
 
-
-    return voxelised_templates_DF, adjustment_summary
+    return voxelised_templates_DF, adjustment_summary, all_resource_stats
     
 ###
 #MAIN
@@ -522,7 +661,7 @@ if __name__ == "__main__":
     #combined_templates = pd.read_pickle('data/revised/trees/combined_templateDF.pkl')
     combined_templates = pd.read_pickle('data/revised/trees/edited_combined_templateDF.pkl')
 
-    voxelised_templates_DF, adjustment_summary = process_trees(combined_templates, voxel_size=voxel_size, resetCount=True)
+    voxelised_templates_DF, adjustment_summary, all_resource_stats = process_trees(combined_templates, voxel_size=voxel_size, resetCount=True)
 
 
     # Check that output directory exists, create if not
@@ -540,5 +679,10 @@ if __name__ == "__main__":
     summary_name = f'{voxel_size}_combined_voxel_adjustment_summary.csv'
     adjustment_summary.to_csv(output_dir / summary_name, index=False)
     print(f"\nAdjustment summary saved to {output_dir / summary_name}")
+
+    # Save the complete resource statistics
+    all_stats_name = f'{voxel_size}_combined_voxel_all_resource_stats.csv'
+    all_resource_stats.to_csv(output_dir / all_stats_name, index=False)
+    print(f"\nComplete resource statistics saved to {output_dir / all_stats_name}")
 
     print(f'done')

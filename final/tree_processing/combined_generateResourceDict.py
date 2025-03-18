@@ -16,7 +16,7 @@ def generate_resources_dict(leroux_df, tree_conditions):
     # Iterate over all conditions
     for (is_precolonial, size, control) in tree_conditions:
         # Apply the resource factor based on precolonial status
-        resource_factor = 1 if is_precolonial else 0.05
+        base_resource_factor = 1 if is_precolonial else 0.05
 
         # Filter the data for the specific size
         mask = (leroux_df['Tree Size'] == size)
@@ -32,10 +32,15 @@ def generate_resources_dict(leroux_df, tree_conditions):
                 min_val = subset[control].min()
                 max_val = subset[control].max()
 
-                if name in ['dead branch', 'fallen log'] or control == 'reserve-tree':
-                    resource_factor = 1  # have full values even for elms
+                # Reset resource factor for each resource
+                current_resource_factor = base_resource_factor
+                
+                # Override for specific cases
+                if name in ['dead branch', 'fallen log'] and is_precolonial == False:
+                    current_resource_factor = 0.5  # have increased values for these resources even for elms
+                    
                 # Calculate the resource value
-                resources[name] = ((min_val + max_val) / 2) * resource_factor
+                resources[name] = ((min_val + max_val) / 2) * current_resource_factor
 
         # Add row to our data
         row = {
@@ -52,18 +57,24 @@ def generate_resources_dict(leroux_df, tree_conditions):
 
 def add_improvement_rows(df):
     """
-    For precolonial trees with improvements:
-        if size == 'large':
-            # Resources are the same values as returned by changing 'control' to 'reserve-tree'
-        
-        elif size == 'medium':
-            # Resources are the larger number between:
-            #   - Same values as returned by changing 'control' to 'reserve-tree'
-            #   - Same values as returned by changing 'control' to 'reserve-tree' and 'size' to 'large', multiplied by 0.25
-    
-    For non-precolonial trees with improvements:
-        # Resources are the same values as returned by changing 'control' to 'reserve-tree' 
-        # and 'size' to 'large' (from precolonial trees), multiplied by 0.25
+    For size == 'large' and precolonial == True:
+        # Resources are the same values as returned by changing 'control' to 'reserve-tree'
+
+    For (size == 'large' and precolonial == False) OR (size == 'medium' and precolonial == True):
+            # - Dead branch: 20%
+            # - Peeling bark: 5%
+            # - Fallen log: 2
+            # - Hollow: 2
+            # - Epiphyte: 2 
+            # - Leaf litter: copied from base tree
+
+    For size == 'medium' and precolonial == False:
+            # - Dead branch: 20%
+            # - Peeling bark: 5%
+            # - Fallen log: 1
+            # - Hollow: 1
+            # - Epiphyte: 1
+            # - Leaf litter: copied from base tree
     """
     # Get resource columns
     resource_cols = [col for col in df.columns 
@@ -74,12 +85,13 @@ def add_improvement_rows(df):
     
     improved_rows = []
     
-    # Precolonial large trees
+    # Get large precolonial reserve tree values (used as reference)
     large_reserve = reserve_trees[
         (reserve_trees['precolonial'] == True) & 
         (reserve_trees['size'] == 'large')
     ][resource_cols].iloc[0]
     
+    # Case 1: Precolonial large trees - same as reserve tree
     improved_rows.append({
         'precolonial': True,
         'size': 'large',
@@ -87,34 +99,56 @@ def add_improvement_rows(df):
         **large_reserve
     })
     
-    # Precolonial medium trees
-    medium_reserve = reserve_trees[
-        (reserve_trees['precolonial'] == True) & 
-        (reserve_trees['size'] == 'medium')
-    ][resource_cols].iloc[0]
-    
-    large_reserve_half = large_reserve * 0.25
-    medium_improved = pd.Series({
-        col: max(medium_reserve[col], large_reserve_half[col])
-        for col in resource_cols
-    })
+    # Case 2: Precolonial medium trees - special modifications
+    precolonial_medium_values = large_reserve.copy()
+    # Set absolute values as per docstring
+    precolonial_medium_values['dead branch'] = 20
+    precolonial_medium_values['peeling bark'] = 5
+    precolonial_medium_values['fallen log'] = 2
+    precolonial_medium_values['hollow'] = 2
+    precolonial_medium_values['epiphyte'] = 2
+    # Keep leaf litter the same
     
     improved_rows.append({
         'precolonial': True,
         'size': 'medium',
         'control': 'improved-tree',
-        **medium_improved
+        **precolonial_medium_values
     })
     
-    # Non-precolonial trees (medium and large only)
-    precolonial_large_half = large_reserve * 0.25
-    for size in ['medium', 'large']:  # removed 'small'
-        improved_rows.append({
-            'precolonial': False,
-            'size': size,
-            'control': 'improved-tree',
-            **precolonial_large_half
-        })
+    # Case 3: Non-precolonial large trees - special modifications
+    nonprecolonial_large_values = large_reserve.copy()
+    # Set absolute values as per docstring
+    nonprecolonial_large_values['dead branch'] = 20
+    nonprecolonial_large_values['peeling bark'] = 5
+    nonprecolonial_large_values['fallen log'] = 2
+    nonprecolonial_large_values['hollow'] = 2
+    nonprecolonial_large_values['epiphyte'] = 2
+    # Keep leaf litter the same
+    
+    improved_rows.append({
+        'precolonial': False,
+        'size': 'large',
+        'control': 'improved-tree',
+        **nonprecolonial_large_values
+    })
+    
+    # Case 4: Non-precolonial medium trees - different values
+    nonprecolonial_medium_values = pd.Series({col: 0 for col in resource_cols})
+    # Set absolute values as per docstring
+    nonprecolonial_medium_values['dead branch'] = 20
+    nonprecolonial_medium_values['peeling bark'] = 5
+    nonprecolonial_medium_values['fallen log'] = 1
+    nonprecolonial_medium_values['hollow'] = 1
+    nonprecolonial_medium_values['epiphyte'] = 1
+    # Leaf litter remains 0
+    
+    improved_rows.append({
+        'precolonial': False,
+        'size': 'medium',
+        'control': 'improved-tree',
+        **nonprecolonial_medium_values
+    })
     
     # Add the new rows to the original DataFrame
     return pd.concat([
@@ -131,8 +165,8 @@ def add_senescing_rows(df):
         3. Precolonial senescing reserve-tree (based on precolonial large reserve-tree)
         
         Modifications for all versions:
-        # - Dead branch: +30% (max 100%)
-        # - Peeling bark: +20% (max 100%)
+        # - Dead branch: +15% (max 100%)
+        # - Peeling bark: +10% (max 100%)
         # - Fallen log: +2
         # - Hollow: +1
         # - Epiphyte: +1
@@ -157,8 +191,8 @@ def add_senescing_rows(df):
             'precolonial': is_precolonial,
             'size': 'senescing',
             'control': 'improved-tree',
-            'dead branch': min(100, base_values['dead branch'] + 30),
-            'peeling bark': min(100, base_values['peeling bark'] + 20),
+            'dead branch': min(100, base_values['dead branch'] + 15),
+            'peeling bark': min(100, base_values['peeling bark'] + 10),
             'fallen log': base_values['fallen log'] + 2,
             'hollow': base_values['hollow'] + 1,
             'epiphyte': base_values['epiphyte'] + 1,
@@ -178,8 +212,8 @@ def add_senescing_rows(df):
         'precolonial': True,
         'size': 'senescing',
         'control': 'reserve-tree',
-        'dead branch': min(100, reserve_large['dead branch'] + 30),
-        'peeling bark': min(100, reserve_large['peeling bark'] + 20),
+        'dead branch': min(100, reserve_large['dead branch'] + 15),
+        'peeling bark': min(100, reserve_large['peeling bark'] + 10),
         'fallen log': reserve_large['fallen log'] + 2,
         'hollow': reserve_large['hollow'] + 1,
         'epiphyte': reserve_large['epiphyte'] + 1,
