@@ -262,3 +262,100 @@ The primary variables used for quantitative analysis are:
 - `maskforTrees` and `maskForRewilding`: For area calculations
 - `scenario_rewildingPlantings`: For tree planting potential assessment
 - `scenario_bioEnvelope`: For bio-envelope coverage assessment 
+
+## Variables from a_scenario_urban_elements_count.py
+
+### 17. search_bioavailable
+
+**Purpose**: Categorizes voxels by habitat type for biodiversity analysis  
+**Values**: String categories
+- `'none'`: Not bioavailable
+- `'open space'`: Open areas available for biodiversity
+- `'low-vegetation'`: Areas with ground-level vegetation
+- `'arboreal'`: Tree canopy and elevated vegetation areas
+
+**Creation Criteria**:
+- `'open space'`: Voxels where `FEATURES-road_terrainInfo_isOpenSpace == 1`
+- `'low-vegetation'`: Voxels with:
+  - `scenario_rewildingPlantings > 0` or
+  - `scenario_rewilded != 'none'` or
+  - `scenario_bioEnvelope != 'none'` or
+  - `forest_size == 'fallen'` or
+  - `resource_fallen log > 0`
+- `'arboreal'`: Bioavailable voxels not categorized as open space or low-vegetation, including:
+  - Voxels where `forest_size` is not 'nan' or 'none'
+  - Voxels with tree resources
+
+**Created in**: `create_bioavailablity_layer()`  
+**Usage**: Primary variable for habitat analysis and biodiversity assessment
+
+### 18. search_design_action
+
+**Purpose**: Categorizes voxels by design intervention types  
+**Values**: String categories
+- `'none'`: No design action
+- `'rewilded'`: Generic rewilding (from `scenario_rewildingPlantings`)
+- `'exoskeleton'`: Exoskeleton support structure
+- `'footprint-depaved'`: Depaved areas
+- `'node-rewilded'`: Node-based rewilding
+- `'otherGround'`: Ground-based bio-envelope
+- `'livingFacade'`: Building facade bio-envelope
+- `'greenRoof'`: Green roof bio-envelope
+- `'brownRoof'`: Brown roof bio-envelope
+- `'improved-tree'`: Tree with improved habitat features
+
+**Creation Criteria**:
+- `'rewilded'`: Where `scenario_rewildingPlantings > 0`
+- Values from `scenario_rewilded`: Where `scenario_rewilded != 'none'`
+- Values from `scenario_bioEnvelope`: Where `scenario_bioEnvelope != 'none'`
+- `'improved-tree'`: Where `forest_control == 'improved-tree'`
+
+**Created in**: `create_design_action_layer()`  
+**Usage**: Used for quantifying and visualizing design interventions
+
+### 19. search_urban_elements
+
+**Purpose**: Categorizes voxels by urban feature type  
+**Values**: String categories
+- `'none'`: No classified urban element
+- `'arboreal'`: Areas with tree resources
+- Tree types: `'tree_small'`, `'tree_medium'`, `'tree_large'`, `'tree_senescing'`, `'tree_snag'`, `'tree_fallen'`
+- `'open space'`: Open areas
+- `'green roof'`: Green roof surfaces
+- `'brown roof'`: Brown roof surfaces 
+- `'facade'`: Building facades
+- `'roadway'`: Standard road surfaces
+- `'busy roadway'`: Major traffic corridors
+- `'existing conversion'`: Areas already converted to forest lanes
+- `'other street potential'`: Potential areas for street conversion
+- `'parking'`: Parking areas
+
+**Creation Criteria**:
+- `'arboreal'`: Where `resource_other` is not NaN
+- Tree types: Based on unique values in `forest_size`
+- `'open space'`: Where `FEATURES-road_terrainInfo_isOpenSpace == 1`
+- `'green roof'`: Where `FEATURES-envelope_roofType == 'green roof'`
+- `'brown roof'`: Where `FEATURES-envelope_roofType == 'brown roof'`
+- `'facade'`: Where `FEATURES-site_building_element == 'facade'`
+- `'roadway'`: Where `FEATURES-analysis_Roadway` is True
+- `'busy roadway'`: Where `FEATURES-analysis_busyRoadway` is True
+- `'existing conversion'`: Where `FEATURES-analysis_forestLane > 0`
+- `'other street potential'`: Where `FEATURES-road_terrainInfo_isParkingMedian3mBuffer == 1`
+- `'parking'`: Where `FEATURES-road_terrainInfo_isParking == 1`
+
+**Created in**: `create_urban_elements_layer()`  
+**Usage**: Used for urban typology analysis and quantifying available urban features
+
+## Extended Usage in Analysis
+
+The search variables created in `a_scenario_urban_elements_count.py` provide additional dimensions for analysis:
+- `search_bioavailable`: For categorizing and quantifying habitat types
+- `search_design_action`: For tracking and comparing design interventions across scenarios
+- `search_urban_elements`: For detailed inventory of urban features available for biodiversity
+
+These variables enable finer-grained analysis of:
+- Total area of each habitat type
+- Coverage of different design interventions
+- Distribution of urban features that support biodiversity
+- Changes in habitat composition across different scenario years
+- Spatial relationships between urban elements and habitat types 
