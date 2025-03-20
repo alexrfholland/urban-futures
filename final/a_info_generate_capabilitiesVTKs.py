@@ -5,7 +5,142 @@ import argparse
 from pathlib import Path
 from scipy.spatial import cKDTree
 
-    
+"""
+CAPABILITIES INFO    
+1.  Bird capabilities:
+
+1.1. Socialise: Points where 'stat_perch branch' > 0
+   - Birds need branches to perch on for social activities
+   
+   Numeric indicators:
+   - 1.1.1 bird_socialise: Total voxels where stat_perch branch > 0 : 'perch branch'
+        -label for graph: 'Perchable canopy volume'
+   
+   Urban element / design action: 
+   - 1.1.2 Canopy volume across control levels: high, medium, low
+        # search criteria: Total voxels in polydata['maskForTrees'] == 1, broken down by their ['forest_control'], where high == 'street-tree', medium == 'park-tree', low == 'reserve-tree' OR 'improved-tree'
+
+1.2 Feed: Points where 'stat_peeling bark' > 0
+   - Birds feed on insects found under peeling bark
+   
+   Numeric indicators:
+   - 1.2.1 bird_feed: Total voxels where stat_peeling bark > 0 : 'peeling bark'
+        - label for graph: 'Peeling bark volume'
+   
+   Urban element / design action:
+   - 1.2.1 Artificial bark installed on branches, utility poles
+        #search criteria: Total voxels where polydata['stat_epiphyte'] > 0 & polydata['precolonial'] == False
+        TO DO: could include eucs
+
+1.3. Raise Young: Points where 'stat_hollow' > 0
+   - Birds need hollows in trees to nest and raise their young
+   
+   Numeric indicators:
+   - 1.3.1 bird_raise_young: Total voxels where stat_hollow > 0 : 'hollow'
+        - label for graph: 'Hollow count'
+
+   Urban element / design action:
+   - 1.3.1 Artificial hollows installed on branches, utility poles
+        #search criteria: Total voxels where polydata['stat_hollow'] > 0 & polydata['precolonial'] == False
+        TO DO: could include eucs
+
+
+2. Reptile capabilities:
+
+2.1. Traverse: Points where 'search_bioavailable' != 'none'
+   - Reptiles can move through any bioavailable space
+   
+   Numeric indicators:
+   - 2.1.1 reptile_traverse: Total voxels where search_bioavailable != 'none' : traversable
+        - label for graph: 'Non-paved surface area'
+
+   Urban element / design action: 
+   - 2.1.1 Count of site voxels converted from: car parks, roads, green roofs, brown roofs, facades
+        # search criteria: Total voxels where polydata['capabilities-reptile-traverse'] == 'traversable', 
+        # broken down by the defined urban element catagories in polydata['search_urban_elements']
+
+
+2.2 Foraige: Points where any of the following conditions are met:
+   - 'search_bioavailable' == 'low-vegetation' (areas reptiles can move through)
+   - 'stat_dead branch' > 0 (dead branches in canopy generate coarse woody debris)
+   - 'stat_epiphyte' > 0 (epiphytes in canopy generate fallen leaves)
+   
+   Numeric indicators:
+   - 2.2.1 reptile_forage_low_veg: Voxels where search_bioavailable == 'low-vegetation' : 'ground cover'
+         - label for graph: 'Low vegetation surface area'
+   - 2.2.2 reptile_forage_dead_branch: Voxels where stat_dead branch > 0 : 'dead branch'
+         - label for graph: 'Canopy dead branch volume'
+   - 2.2.3 reptile_forage_epiphyte: Voxels where stat_epiphyte > 0 : 'epiphyte'
+        - label for graph: 'Epiphyte count'
+
+   Urban element / design action:
+   - 2.2.1 Count of voxels converted from  : car parks, roads, green roofs, brown roofs, facades
+        # search criteria: Count of 'reptile_forage_low_veg', broken down by the defined urban element catagories in polydata['search_urban_elements']
+   - 2.2.2 Dead branch volume across control levels: high, medium, low
+        # search criteria: Count of 'reptile_forage_dead_branch', broken down by their ['forest_control'], where high == 'street-tree', medium == 'park-tree', low == 'reserve-tree' OR 'improved-tree'
+   - 2.2.3 Number of epiphytes installed in elms
+        # search criteria: Count of 'reptile_forage_epiphyte' where 'forest_precolonial' == False
+
+2.3. Shelter: Points where any of the following conditions are met:
+   - 'stat_fallen log' > 0 (fallen logs provide shelter)
+   - 'forest_size' == 'fallen' (fallen trees provide shelter)
+   
+   Numeric indicators:
+   - 2.3.1 reptile_shelter_fallen_log: Voxels where stat_fallen log > 0 : 'fallen log'
+        - label for graph: 'Nurse log volume'
+   - 2.3.2 reptile_shelter_fallen_tree: Voxels where forest_size == 'fallen' : 'fallen tree'
+        - label for graph: 'Fallen tree volume'
+
+   Urban element / design action:
+   - 2.3.1 Count of ground elements supporting fallen logs  : car parks, roads, green roofs, brown roofs, facades within 5m of fallen trees and logs
+        #search criteria. Use a ckdTree to find points within 5m where 'reptile_shelter_fallen_log' == True 
+        #break these down by the defined urban element catagories in polydata['search_urban_elements']
+   - 2.3.2 Count of ground elements supporting fallen trees  : car parks, roads, green roofs, brown roofs, facades within 5m of fallen trees and logs
+        #search criteria. Use a ckdTree to find points within 5m where 'reptile_shelter_fallen_tree' == True 
+        #break these down by the defined urban element catagories in polydata['search_urban_elements']
+
+3. Tree capabilities:
+
+3.1. Grow: Points where 'stat_other' > 0
+   - Areas where trees can grow and establish
+   
+   Numeric indicators:
+   - 3.1.1 tree_grow: Total voxels where stat_other > 0 : 'volume'
+        - label for graph: 'Forest biovolume'
+
+   #Urban element / design action: 
+   - 3.1.1 count of number of trees planted this timestep
+        # search criteria: sum of df['number_of_trees_to_plant']      
+
+3.2. Age: Points where 'search_design_action' == 'improved-tree' OR 'forest_control' == 'reserve-tree'
+   - Areas where trees are protected and can mature
+   
+   Numeric indicators:
+   - 3.2.1 tree_age: Total voxels where search_design_action == 'improved-tree' : 'improved tree'
+        - label for graph: 'Canopy volume supported by humans'
+   - 3.2.2 tree_age: Total voxels where forest_control == 'reserve-tree' : 'reserve tree'
+        - label for graph: 'Canopy volume autonomous'
+
+   #Urban element / design action: 
+   -3.2.1 count of AGE-IN-PLACE actions: exoskeletons, habitat islands, depaved areas
+        # search criteria:  counts of df['rewilded'] == 'footprint-depaved','exoskeleton','node-rewilded'
+     -3.2.1 count of AGE-IN-PLACE actions: exoskeletons, habitat islands, depaved areas
+        # search criteria:  counts of df['rewilded'] == 'footprint-depaved','exoskeleton','node-rewilded'
+
+3.3. Persist: Terrain points eligible for new tree plantings (ie. depaved and unmanaged land away from trees)
+
+    Numeric indicator:
+    - 3.3.3 scenario_rewildingPlantings >= 1 : 'eligble soil'
+        - label for graph: 'Ground area for tree recruitment'
+
+    #Urban element / design action:
+    -3.3.3/ Count of site voxels converted from: car parks, roads, etc
+        #count of subset of polydata['scenario_rewildingPlantings'] >= 1, broken down by the defined urban element catagories in polydata['search_urban_elements']
+
+"""
+
+
+
 def process_capabilities(site, scenario, voxel_size, years=None, include_baseline=True):
     """Process capabilities for all years and baseline"""
     if years is None:
@@ -324,42 +459,6 @@ def main():
 'parking'
 
 def create_bird_capabilities(vtk_data):
-    """    Bird capabilities:
-    1. Socialise: Points where 'stat_perch branch' > 0
-       - Birds need branches to perch on for social activities
-       
-       Numeric indicators:
-       - bird_socialise: Total voxels where stat_perch branch > 0 : 'perch branch'
-
-       #Urban element / design action: 
-       # canopy volume across control levels: high, medium, low
-       # search criteria: Total voxels in polydata['maskForTrees'] == 1, broken down by their ['forest_control'], where high == 'street-tree', medium == 'park-tree', low == 'reserve-tree' OR 'improved-tree'
-
-       
-    
-    2. Feed: Points where 'stat_peeling bark' > 0
-       - Birds feed on insects found under peeling bark
-       
-       Numeric indicators:
-       - bird_feed: Total voxels where stat_peeling bark > 0 : 'peeling bark'
-       
-       #Urban element / design action:
-       #Artificial bark installed on branches, utility poles
-       #search criteria: Total voxels where polydata['stat_epiphyte'] > 0 & polydata['precolonial'] == False
-       TO DO: could include eucs
-    
-    3. Raise Young: Points where 'stat_hollow' > 0
-       - Birds need hollows in trees to nest and raise their young
-       
-       Numeric indicators:
-       - bird_raise_young: Total voxels where stat_hollow > 0 : 'hollow'
-       
-       #Urban element / design action:
-       #Artificial hollows installed on branches, utility poles
-       #search criteria: Total voxels where polydata['stat_hollow'] > 0 & polydata['precolonial'] == False
-       TO DO: could include eucs
-
-    """
     print("  Creating bird capability layers...")
     
     # Initialize capability arrays
@@ -423,49 +522,6 @@ def create_bird_capabilities(vtk_data):
     return vtk_data
 
 def create_reptile_capabilities(vtk_data):
-    """Create capability layers for reptiles
-    
-    Reptile capabilities:
-    1. Traverse: Points where 'search_bioavailable' != 'none'
-       - Reptiles can move through any bioavailable space
-       
-       Numeric indicators:
-       - reptile_traverse: Total voxels where search_bioavailable != 'none' : traversable
-
-       #Urban element / design action: 
-       # Count of site voxels converted from: car parks, roads, green roofs, brown roofs, facades
-       # search criteria: Total voxels where polydata['capabilities-reptile-traverse'] == 'traversable', 
-       # broken down by the defined urban element catagories in polydata['search_urban_elements']
-
-
-    2. Foraige: Points where any of the following conditions are met:
-       - 'search_bioavailable' == 'low-vegetation' (areas reptiles can move through)
-       - 'stat_dead branch' > 0 (dead branches provide foraging opportunities)
-       - 'stat_epiphyte' > 0 (epiphytes provide habitat for prey)
-       
-       Numeric indicators:
-       - reptile_forage_low_veg: Voxels where search_bioavailable == 'low-vegetation' : 'ground cover'
-       - reptile_forage_dead_branch: Voxels where stat_dead branch > 0 : 'dead branch'
-       - reptile_forage_epiphyte: Voxels where stat_epiphyte > 0 : 'epiphyte'
-
-       #Urban element / design action:
-       # Count of total number of mistletoe installed on elms
-       # search criteria: Voxels where polydata['stat_epiphyte] > 0 & polydata['precolonial'] == False
-    
-    3. Shelter: Points where any of the following conditions are met:
-       - 'stat_fallen log' > 0 (fallen logs provide shelter)
-       - 'forest_size' == 'fallen' (fallen trees provide shelter)
-       
-       Numeric indicators:
-       - reptile_shelter_fallen_log: Voxels where stat_fallen log > 0 : 'fallen log'
-       - reptile_shelter_fallen_tree: Voxels where forest_size == 'fallen' : 'fallen tree'
-
-       #Urban element / design action:
-       #Count of voxels converted from  : car parks, roads, green roofs, brown roofs, facades within 5m of fallen trees and logs
-       #search criteria. Use a ckdTree to find points within 5m of polydata['stat_fallen log'] OR polydata['forest_size'] == 'fallen'. 
-        #break these down by the defined urban element catagories in polydata['search_urban_elements']
-
-    """
     print("  Creating reptile capability layers...")
     
     # Initialize capability arrays
@@ -605,39 +661,6 @@ def create_reptile_capabilities(vtk_data):
     return vtk_data
 
 def create_tree_capabilities(vtk_data):
-    """Create capability layers for trees
-    
-    Tree capabilities:
-    1. Grow: Points where 'stat_other' > 0
-       - Areas where trees can grow and establish
-       
-       Numeric indicators:
-       - tree_grow: Total voxels where stat_other > 0 : 'volume'
-
-       #Urban element / design action: 
-       - count of number of trees planted this timestep
-       - sum of df['number_of_trees_to_plant']      
-    
-    2. Age: Points where 'search_design_action' == 'improved-tree' OR 'forest_control' == 'reserve-tree'
-       - Areas where trees are protected and can mature
-       
-       Numeric indicators:
-       - tree_age: Total voxels where search_design_action == 'improved-tree' : 'improved tree'
-       - tree_age: Total voxels where forest_control == 'reserve-tree' : 'reserve tree'
-
-       #Urban element / design action: 
-       # - count of AGE-IN-PLACE actions: exoskeletons, habitat islands, depaved areas
-       # search criteria:  counts of df['rewilded'] == 'footprint-depaved','exoskeleton','node-rewilded'
-
-    3. Persist: Terrain points eligible for new tree plantings (ie. depaved and unmanaged land away from trees)
-    
-    Numeric indicator:
-    -scenario_rewildingPlantings >= 1 : 'eligble soil'
-
-    #Urban element / design action:
-    #Count of site voxels converted from: car parks, roads, etc
-    #count of subset of polydata['scenario_rewildingPlantings'] >= 1, broken down by the defined urban element catagories in polydata['search_urban_elements']
-    """
     print("  Creating tree capability layers...")
     
     # Initialize capability arrays
