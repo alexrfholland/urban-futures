@@ -230,7 +230,19 @@ CAPABILITIES INFO
 
 """
 
-
+"""
+#search criteria for many of the Urban element / design action count 'urban elements'. Use these:
+##polydata['search_urban_elements'] catagories:
+'open space'
+'green roof'
+'brown roof'
+'facade'
+'roadway'
+'busy roadway'
+'existing conversion'
+'other street potential'
+'parking'
+"""
 
 def process_capabilities(site, scenario, voxel_size, years=None, include_baseline=True):
     """Process capabilities for all years and baseline"""
@@ -240,82 +252,41 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
     # Dictionary to store all statistics
     all_stats = {}
     
-    # Dictionary to track zero counts
-    zero_counts = {}
+    # DataFrame to collect converted urban element counts
+    all_converted_urban_element_counts = []
     
     # Flag to track if any data was processed
     data_processed = False
     
-    # DataFrame to collect converted urban element counts
-    all_converted_urban_element_counts = []
-    
     # Process baseline if requested
     if include_baseline:
-        print(f"\n=== Processing baseline for site: {site} ===")
-
+        print(f"Processing baseline for site: {site}")
         baseline_path = f'data/revised/final/baselines/{site}_baseline_combined_{voxel_size}_urban_features.vtk'
-        baseline_vtk = None
-
+        
         try:
             if Path(baseline_path).exists():
-                print(f"Found baseline file: {baseline_path}")
                 baseline_vtk = pv.read(baseline_path)
-                print(f"Loaded baseline VTK from {baseline_path}")
+                print(f"  Creating capability layers for baseline...")
+                # Create capabilities for baseline
+                baseline_vtk = create_bird_capabilities(baseline_vtk)
+                baseline_vtk = create_reptile_capabilities(baseline_vtk)
+                baseline_vtk = create_tree_capabilities(baseline_vtk)
+                
+                # Collect statistics
+                baseline_stats = collect_capability_stats(baseline_vtk)
+                all_stats['baseline'] = baseline_stats
+                data_processed = True
+                
+                # Save updated baseline with capabilities
+                baseline_output_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}_with_capabilities.vtk'
+                baseline_vtk.save(baseline_output_path)
+                print(f"  Saved baseline with capabilities to {baseline_output_path}")
         except Exception as e:
-            print(f"Could not load baseline from {baseline_path}: {e}")
-        
-        if baseline_vtk is not None:
-            # Create capabilities for baseline
-            baseline_vtk = create_bird_capabilities(baseline_vtk)
-            baseline_vtk = create_reptile_capabilities(baseline_vtk)
-            baseline_vtk = create_tree_capabilities(baseline_vtk)
-            
-            # Collect statistics
-            baseline_stats = collect_capability_stats(baseline_vtk)
-            all_stats['baseline'] = baseline_stats
-            data_processed = True
-            
-            # Try to load baseline tree dataframe
-            tree_df_path = f'data/revised/final/{site}/{site}_baseline_{voxel_size}_treeDF_0.csv'
-            try:
-                if Path(tree_df_path).exists():
-                    baseline_tree_df = pd.read_csv(tree_df_path)
-                    print(f"Loaded baseline tree dataframe from {tree_df_path}")
-                else:
-                    baseline_tree_df = None
-                    print(f"Baseline tree dataframe not found at {tree_df_path}")
-            except Exception as e:
-                baseline_tree_df = None
-                print(f"Could not load baseline tree dataframe: {e}")
-            
-            # Note: We don't collect urban elements counts for baseline
-            
-            # Check for zero counts
-            for key, count in baseline_stats.items():
-                if count == 0:
-                    print(f"  ##WARNING## Zero count for {key} in baseline")
-                    zero_counts.setdefault('baseline', []).append(key)
-            
-            # Save updated baseline with capabilities
-            baseline_output_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}_with_capabilities.vtk'
-            baseline_vtk.save(baseline_output_path)
-            print(f"Saved baseline with capabilities to {baseline_output_path}")
-        else:
-            print(f"Error: Could not find baseline VTK file for {site}")
-            # List all VTK files in the baselines directory
-            baseline_dir = Path('data/revised/final/baselines')
-            if baseline_dir.exists():
-                baseline_files = list(baseline_dir.glob(f"{site}*.vtk"))
-                if baseline_files:
-                    print(f"Available baseline files in {baseline_dir}:")
-                    for file_path in baseline_files:
-                        print(f"  - {file_path}")
-                else:
-                    print(f"No baseline files found for {site} in {baseline_dir}")
+            print(f"Could not process baseline for {site}: {e}")
     
     # Process each year
     for year in years:
-        print(f"\n=== Processing year {year} for site: {site}, scenario: {scenario} ===")
+        print(f"Processing year {year} for site: {site}, scenario: {scenario}")
         
         # Load VTK file
         vtk_data = load_vtk_file(site, scenario, voxel_size, year)
@@ -324,29 +295,19 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
         
         # Load tree dataframe
         tree_df_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_treeDF_{year}.csv'
-        try:
-            if Path(tree_df_path).exists():
-                tree_df = pd.read_csv(tree_df_path)
-                print(f"Loaded tree dataframe from {tree_df_path}")
-            else:
-                tree_df = None
-                print(f"Tree dataframe not found at {tree_df_path}")
-        except Exception as e:
-            tree_df = None
-            print(f"Could not load tree dataframe: {e}")
-        
-        # Note: Log and pole DFs are commented out as per instructions
-        # log_df = None
-        # pole_df = None
+        tree_df = None
+        if Path(tree_df_path).exists():
+            tree_df = pd.read_csv(tree_df_path)
+            print(f"  Loaded tree dataframe from {tree_df_path}")
         
         # Create capabilities
+        print(f"  Creating capability layers...")
         vtk_data = create_bird_capabilities(vtk_data)
         vtk_data = create_reptile_capabilities(vtk_data)
         vtk_data = create_tree_capabilities(vtk_data)
         
         # Collect statistics
         year_stats = collect_capability_stats(vtk_data)
-        # Store year as string to ensure consistent key types
         all_stats[str(year)] = year_stats
         data_processed = True
         
@@ -361,137 +322,40 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
         
         all_converted_urban_element_counts.append(year_counts)
         
-        # Check for zero counts
-        for key, count in year_stats.items():
-            if count == 0:
-                print(f"  ##WARNING## Zero count for {key} in year {year}")
-                zero_counts.setdefault(str(year), []).append(key)
-        
         # Save updated VTK file
         output_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_capabilities.vtk'
         vtk_data.save(output_path)
-        print(f"Saved updated VTK file to {output_path}")
+        print(f"  Saved VTK with capabilities to {output_path}")
     
     # Check if any data was processed
     if not data_processed:
-        print(f"\n### ERROR: No capability statistics were processed for site {site}, scenario {scenario} ###")
-        print("Please check that the VTK files exist and are in the expected locations.")
-        return None
+        print(f"No capability statistics were processed for site {site}, scenario {scenario}")
+        return None, None, False
     
-    # Print summary of all statistics
-    print("\n=== Capability Statistics Summary ===")
-    
-    # Group by persona and capability
-    personas = ['bird', 'reptile', 'tree']
-    for persona in personas:
-        print(f"\n{persona.upper()} CAPABILITIES:")
-        
-        # Get all keys for this persona
-        first_time_point = list(all_stats.keys())[0]
-        persona_keys = [key for key in all_stats[first_time_point].keys() 
-                       if key.startswith(f'capabilities-{persona}-') and key.count('-') == 2]
-        
-        for capability_key in sorted(persona_keys):
-            capability = capability_key.split('-')[2]
-            print(f"  {capability.upper()}:")
+    # Create long-format DataFrame for capability statistics
+    rows = []
+    for timestep, stats in all_stats.items():
+        for capability, count in stats.items():
+            # Get capability ID from map
+            capability_id = CAPABILITY_ID_MAP.get(capability, 'NA')
             
-            # Define a custom sort order for time points
-            def sort_key(time_point):
-                if time_point == 'baseline':
-                    return -1  # Baseline comes first
-                return int(time_point)  # Convert other time points to integers for sorting
-            
-            # Print counts for each year, with baseline first, then years in numerical order
-            for time_point in sorted(all_stats.keys(), key=sort_key):
-                count = all_stats[time_point].get(capability_key, 0)
-                print(f"    {time_point}: {count:,}")
-                
-                # Print component counts if available
-                component_keys = [k for k in all_stats[time_point].keys() 
-                                if k.startswith(f'{capability_key}-') or 
-                                (k.startswith(capability_key) and '_' in k)]
-                
-                for comp_key in sorted(component_keys):
-                    comp_count = all_stats[time_point].get(comp_key, 0)
-                    comp_name = comp_key.split('-')[-1] if '-' in comp_key else comp_key.split('_')[-1]
-                    print(f"      {comp_name}: {comp_count:,}")
+            rows.append({
+                'site': site,
+                'scenario': scenario,
+                'voxel_size': voxel_size,
+                'capability': capability,
+                'timestep': timestep,
+                'count': count,
+                'capabilityID': capability_id
+            })
     
-    # Print summary of zero counts
-    if zero_counts:
-        print("\n=== Zero Count Summary ===")
-        # Define the same custom sort order for time points
-        def sort_key(time_point):
-            if time_point == 'baseline':
-                return -1  # Baseline comes first
-            return int(time_point)  # Convert other time points to integers for sorting
-        
-        for time_point, keys in sorted(zero_counts.items(), key=lambda x: sort_key(x[0])):
-            print(f"\n{time_point}:")
-            for key in sorted(keys):
-                print(f"  {key}")
-    
-    # Save statistics to CSV
-    stats_df = pd.DataFrame(all_stats)
-    
-    # Debug: print keys to see what we need to map
-    print("\nRaw DataFrame indices before adding capability IDs:")
-    for idx in stats_df.index[:10]:  # Print first 10 for debugging
-        print(f"  {idx}")
-    
-    # Create a new column for capability IDs with a more direct approach
-    capability_ids = []
-    for idx in stats_df.index:
-        # Try direct lookup first
-        capability_id = CAPABILITY_ID_MAP.get(idx)
-        
-        # If not found, try normalizing the key
-        if capability_id is None:
-            # For boolean capability layers (e.g., capabilities-reptile-forage-low-veg)
-            if idx in vtk_data.point_data and np.issubdtype(vtk_data.point_data[idx].dtype, np.bool_):
-                capability_parts = idx.split('-')
-                if len(capability_parts) >= 3:
-                    persona = capability_parts[1]
-                    capability = capability_parts[2]
-                    
-                    # Try to get the ID for the capability level
-                    base_key = f"capabilities-{persona}-{capability}"
-                    sub_id = CAPABILITY_ID_MAP.get(base_key)
-                    
-                    if sub_id:
-                        # Append ".1" to the capability level ID
-                        capability_id = f"{sub_id}.1"
-            
-            # If still not found, use a default
-            if capability_id is None:
-                capability_id = 'NA'
-        
-        capability_ids.append(capability_id)
-    
-    # Add the capability IDs to the DataFrame
-    stats_df['capabilityID'] = capability_ids
-    
-    # Debug: Print mapping results
-    print("\nCapability ID mapping sample (fixed):")
-    for idx, cap_id in zip(stats_df.index[:10], stats_df['capabilityID'][:10]):
-        print(f"  {idx} -> {cap_id}")
-    
-    # Make sure capabilityID is treated as a string to prevent float conversion in CSV
+    stats_df = pd.DataFrame(rows)
     stats_df['capabilityID'] = stats_df['capabilityID'].astype(str)
     
-    stats_dir = Path('data/revised/final/stats')
-    stats_dir.mkdir(parents=True, exist_ok=True)
-    stats_path = stats_dir / f'{site}_{scenario}_capabilities_raw.csv'
-    stats_df.to_csv(stats_path)
-    print(f"\nSaved raw capability statistics to {stats_path}")
+    # Combine urban element counts
+    combined_counts = pd.concat(all_converted_urban_element_counts, ignore_index=True) if all_converted_urban_element_counts else pd.DataFrame()
     
-    # Combine all converted urban element counts and save to CSV
-    if all_converted_urban_element_counts:
-        combined_counts = pd.concat(all_converted_urban_element_counts, ignore_index=True)
-        counts_path = stats_dir / f'{site}_{scenario}_converted_urban_element_counts.csv'
-        combined_counts.to_csv(counts_path, index=False)
-        print(f"Saved converted urban element counts to {counts_path}")
-    
-    return all_stats
+    return stats_df, combined_counts, data_processed
 
 def main():
     """Main function to process capabilities for sites and scenarios"""
@@ -551,9 +415,15 @@ def main():
         return
     
     #--------------------------------------------------------------------------
-    # STEP 2: PROCESS CAPABILITIES
+    # STEP 2: PROCESS CAPABILITIES AND SAVE RESULTS
     #--------------------------------------------------------------------------
     print("\n===== PROCESSING CAPABILITIES =====")
+    
+    # Create directory structure if it doesn't exist
+    stats_dir = Path('data/revised/final/stats/arboreal-future-stats/data')
+    raw_dir = stats_dir / 'raw'
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Results will be saved to {raw_dir}")
     
     # Process each site
     for site in sites:
@@ -562,38 +432,52 @@ def main():
             print(f"\n=== Processing site: {site}, scenario: {scenario} ===")
             
             # Process capabilities
-            process_capabilities(
+            stats_df, counts_df, success = process_capabilities(
                 site=site,
                 scenario=scenario,
                 voxel_size=voxel_size,
                 years=years,
                 include_baseline=include_baseline
             )
+            
+            if success:
+                # Save capability statistics for this site-scenario
+                capabilities_path = raw_dir / f'{site}_{scenario}_{voxel_size}_capabilities_raw.csv'
+                stats_df.to_csv(capabilities_path, index=False)
+                print(f"Saved capability statistics to {capabilities_path}")
+                
+                # Save urban element counts for this site-scenario
+                if counts_df is not None and not counts_df.empty:
+                    counts_path = raw_dir / f'{site}_{scenario}_{voxel_size}_converted_urban_element_counts.csv'
+                    counts_df.to_csv(counts_path, index=False)
+                    print(f"Saved urban element counts to {counts_path}")
         
         # If baseline was requested but no scenarios, process it separately
         if include_baseline and not scenarios:
             print(f"\n=== Processing baseline only for site: {site} ===")
-            process_capabilities(
+            
+            stats_df, counts_df, success = process_capabilities(
                 site=site,
-                scenario="baseline",  # Dummy value, not used for baseline
+                scenario="baseline",  # Just using baseline as the scenario name for file naming
                 voxel_size=voxel_size,
                 years=years,
                 include_baseline=True
             )
+            
+            if success:
+                # Save capability statistics for the baseline
+                capabilities_path = raw_dir / f'{site}_baseline_{voxel_size}_capabilities_raw.csv'
+                stats_df.to_csv(capabilities_path, index=False)
+                print(f"Saved baseline capability statistics to {capabilities_path}")
+                
+                # Save urban element counts for the baseline
+                if counts_df is not None and not counts_df.empty:
+                    counts_path = raw_dir / f'{site}_baseline_{voxel_size}_converted_urban_element_counts.csv'
+                    counts_df.to_csv(counts_path, index=False)
+                    print(f"Saved baseline urban element counts to {counts_path}")
     
     print("\n===== All processing completed =====")
 
-#search criteria for many of the Urban element / design action count 'urban elements'. Use these:
-##polydata['search_urban_elements'] catagories:
-'open space'
-'green roof'
-'brown roof'
-'facade'
-'roadway'
-'busy roadway'
-'existing conversion'
-'other street potential'
-'parking'
 
 def create_bird_capabilities(vtk_data):
     print("  Creating bird capability layers...")
@@ -1067,21 +951,15 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
             else:
                 return ((data_field != 'none') & (data_field != '')) & condition
     
-    # Helper function to get precolonial mask
-    def get_precolonial_mask(precolonial_data):
-        if precolonial_data.dtype.kind in ['b', 'B']:
-            return precolonial_data
-        else:
-            return np.array([str(x).lower() == 'true' for x in precolonial_data])
-    
     # Helper function to process counts by urban element types
-    def count_by_urban_elements(mask_data, urban_data, count_name, persona, capability, capability_id, prefix=""):
+    def count_by_urban_elements(mask_data, urban_data, count_name, persona, capability, capability_id):
         for element_type in URBAN_ELEMENT_TYPES:
             element_mask = urban_data == element_type
             combined_mask = get_boolean_mask(mask_data, element_mask)
             count = np.sum(combined_mask)
             
-            element_name = f"{prefix}{element_type}" if prefix else element_type
+            # Use the element_type directly
+            element_name = element_type  # Will be converted to underscore format in add_count_record
             add_count_record(persona, capability, count_name, element_name, count, capability_id)
     
     # Helper function to process counts by control levels
@@ -1111,7 +989,8 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
             for element_type in URBAN_ELEMENT_TYPES:
                 element_mask = urban_data == element_type
                 count = np.sum(near_feature_mask & element_mask)
-                element_name = f"{prefix}_{element_type}"
+                # Use the element_type directly without prefix
+                element_name = element_type  # Will be converted to underscore format in add_count_record
                 add_count_record(persona, capability, count_name, element_name, count, capability_id)
     
     #---------------------------------------------------------------------------
@@ -1130,10 +1009,8 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
     
     # 1.2 Bird feed - Artificial bark installed
     if 'capabilities-bird-feed-peeling bark' in vtk_data.point_data and 'precolonial' in vtk_data.point_data:
-        peeling_bark = vtk_data.point_data['capabilities-bird-feed-peeling bark']
-        precolonial = vtk_data.point_data['precolonial']
-        
-        precolonial_mask = get_precolonial_mask(precolonial)
+        peeling_bark = vtk_data.point_data['capabilities-bird-feed-peeling bark']        
+        precolonial_mask = vtk_data.point_data['precolonial']
         artificial_bark_mask = get_boolean_mask(peeling_bark) & (~precolonial_mask)
         
         count = np.sum(artificial_bark_mask)
@@ -1142,9 +1019,7 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
     # 1.3 Bird raise young - Artificial hollows installed
     if 'capabilities-bird-raise-young-hollow' in vtk_data.point_data and 'precolonial' in vtk_data.point_data:
         hollow = vtk_data.point_data['capabilities-bird-raise-young-hollow']
-        precolonial = vtk_data.point_data['precolonial']
-        
-        precolonial_mask = get_precolonial_mask(precolonial)
+        precolonial_mask = vtk_data.point_data['precolonial']
         artificial_hollow_mask = get_boolean_mask(hollow) & (~precolonial_mask)
         
         count = np.sum(artificial_hollow_mask)
@@ -1183,9 +1058,7 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
     # 2.2.3 Number of epiphytes installed (mistletoe)
     if 'capabilities-reptile-forage-epiphyte' in vtk_data.point_data and 'precolonial' in vtk_data.point_data:
         epiphyte = vtk_data.point_data['capabilities-reptile-forage-epiphyte']
-        precolonial = vtk_data.point_data['precolonial']
-        
-        precolonial_mask = get_precolonial_mask(precolonial)
+        precolonial_mask = vtk_data.point_data['precolonial']
         epiphyte_mask = get_boolean_mask(epiphyte) & (~precolonial_mask)
         
         count = np.sum(epiphyte_mask)
@@ -1202,7 +1075,7 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
             fallen_log_mask = get_boolean_mask(fallen_log)
             
             count_near_features(fallen_log_mask, urban_elements, 'near_fallen_5m', 
-                               'log', 'reptile', 'shelter', '2.3.1')
+                               '', 'reptile', 'shelter', '2.3.1')
         
         # 2.3.2 Count of ground elements supporting fallen trees
         if 'capabilities-reptile-shelter-fallen-tree' in vtk_data.point_data:
@@ -1210,7 +1083,7 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
             fallen_tree_mask = get_boolean_mask(fallen_tree)
             
             count_near_features(fallen_tree_mask, urban_elements, 'near_fallen_5m', 
-                               'tree', 'reptile', 'shelter', '2.3.2')
+                               '', 'reptile', 'shelter', '2.3.2')
     
     #---------------------------------------------------------------------------
     # 3. TREE CAPABILITY COUNTS
