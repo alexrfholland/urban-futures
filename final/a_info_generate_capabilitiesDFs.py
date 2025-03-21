@@ -1,45 +1,9 @@
 import pandas as pd
 import numpy as np
-import argparse
 from pathlib import Path
-import os
-
-def load_capability_stats(site, scenario):
-    """Load capability statistics from CSV file"""
-    # Use the same naming convention as in a_info_generate_capabilitiesVTKs.py
-    stats_path = Path(f'data/revised/final/stats/{site}_{scenario}_capabilities_raw.csv')
-    
-    if not stats_path.exists():
-        print(f"Error: Statistics file not found at {stats_path}")
-        return None
-    
-    # Load statistics
-    stats_df = pd.read_csv(stats_path, index_col=0)
-    print(f"Loaded capability statistics from {stats_path}")
-    print(f"  Shape: {stats_df.shape}")
-    
-    return stats_df
-
-def load_urban_elements_counts(site, scenario):
-    """Load urban elements count data from CSV file"""
-    # Use the same naming convention as in a_info_generate_capabilitiesVTKs.py
-    counts_path = Path(f'data/revised/final/stats/{site}_{scenario}_converted_urban_element_counts.csv')
-    
-    if not counts_path.exists():
-        print(f"Error: Urban elements counts file not found at {counts_path}")
-        return None
-    
-    # Load the counts data
-    counts_df = pd.read_csv(counts_path)
-    print(f"Loaded urban elements counts from {counts_path}")
-    print(f"  Shape: {counts_df.shape}")
-    
-    return counts_df
 
 def generate_capability_dataframe(stats_df, site, scenario):
     """Generate a dataframe tracking capabilities across timesteps"""
-    print("\nGenerating capability dataframe...")
-    
     # Define the expected capabilities and their column names in the stats dataframe
     expected_indicators = {
         'Bird': {
@@ -77,7 +41,6 @@ def generate_capability_dataframe(stats_df, site, scenario):
     
     # Get all years (timesteps) from the stats dataframe
     years = [col for col in stats_df.columns if col != 'Unnamed: 0' and col != 'capabilityID']
-    print(f"  Processing years/timesteps: {years}")
     
     # For each persona, capability, and numeric indicator, extract counts for all years
     for persona, capabilities in expected_indicators.items():
@@ -102,7 +65,6 @@ def generate_capability_dataframe(stats_df, site, scenario):
                     if column_name in stats_df.index:
                         row[str(year)] = stats_df.at[column_name, year]
                     else:
-                        print(f"  Warning: {column_name} not found in stats dataframe")
                         row[str(year)] = 0
                 
                 # Add capabilityID if available
@@ -141,25 +103,11 @@ def generate_capability_dataframe(stats_df, site, scenario):
     # Apply the mapping
     capability_df['hpos'] = capability_df['Persona'].map(persona_map)
     
-    # Print the dataframe
-    print("\nCapability dataframe:")
-    print(capability_df.head())
-    print(f"Total rows: {len(capability_df)}")
-    
     return capability_df
+
 def generate_urban_elements_dataframe(counts_df, stats_df, site, scenario):
     """Generate a dataframe tracking urban elements counts across timesteps"""
-    print("\nGenerating urban elements count dataframe...")
-    
     if counts_df is None or counts_df.empty:
-        print("  No urban elements count data available")
-        return None
-    
-    # Ensure column names are consistent
-    required_columns = ['site', 'scenario', 'timestep', 'persona', 'capability', 'countname', 'countelement', 'count', 'capabilityID']
-    missing_columns = [col for col in required_columns if col not in counts_df.columns]
-    if missing_columns:
-        print(f"  Error: Missing required columns in urban elements counts: {missing_columns}")
         return None
     
     # Generate the capability dataframe first to map capabilityIDs
@@ -222,7 +170,6 @@ def generate_urban_elements_dataframe(counts_df, stats_df, site, scenario):
     
     # Create dataframe
     if not all_rows:
-        print("  No data to process for urban elements")
         return None
     
     urban_df = pd.DataFrame(all_rows)
@@ -268,11 +215,6 @@ def generate_urban_elements_dataframe(counts_df, stats_df, site, scenario):
     urban_df['IndicatorNo'] = urban_df['IndicatorNo'].astype(int)
     urban_df['hpos'] = urban_df['hpos'].astype(int)
     
-    # Print the dataframe
-    print("\nUrban elements count dataframe:")
-    print(urban_df.head())
-    print(f"Total rows: {len(urban_df)}")
-    
     return urban_df
 
 def process_all_sites_scenarios(sites, scenarios, voxel_size=1):
@@ -281,31 +223,32 @@ def process_all_sites_scenarios(sites, scenarios, voxel_size=1):
     all_capability_dfs = []
     all_urban_dfs = []
     
-    for site in sites:
-        for scenario in scenarios:
-            print(f"\n=== Processing site: {site}, scenario: {scenario} ===")
-            
-            # Load capability statistics
-            stats_df = load_capability_stats(site, scenario)
-            
-            # Generate capability dataframe
-            if stats_df is not None:
-                capability_df = generate_capability_dataframe(stats_df, site, scenario)
-                # Add to list
-                all_capability_dfs.append(capability_df)
-            
-            # Load urban elements counts
-            counts_df = load_urban_elements_counts(site, scenario)
-            if counts_df is not None:
-                # Generate urban elements dataframe - pass stats_df to use for mapping
-                urban_df = generate_urban_elements_dataframe(counts_df, stats_df, site, scenario)
-                if urban_df is not None:
-                    # Add to list
-                    all_urban_dfs.append(urban_df)
-    
     # Create the output directory structure
     output_dir = Path('data/revised/final/stats/arboreal-future-stats/data')
     output_dir.mkdir(parents=True, exist_ok=True)
+    
+    for site in sites:
+        for scenario in scenarios:
+            print(f"Processing {site}, scenario {scenario}")
+            
+            # Load capability statistics directly
+            stats_path = Path(f'data/revised/final/stats/arboreal-future-stats/data/raw/{site}_{scenario}_{voxel_size}_capabilities_raw.csv')
+            if stats_path.exists():
+                stats_df = pd.read_csv(stats_path, index_col=0)
+                
+                # Generate capability dataframe
+                capability_df = generate_capability_dataframe(stats_df, site, scenario)
+                all_capability_dfs.append(capability_df)
+                
+                # Load urban elements counts directly
+                counts_path = Path(f'data/revised/final/stats/arboreal-future-stats/data/raw/{site}_{scenario}_{voxel_size}_converted_urban_element_counts.csv')
+                if counts_path.exists():
+                    counts_df = pd.read_csv(counts_path)
+                    
+                    # Generate urban elements dataframe
+                    urban_df = generate_urban_elements_dataframe(counts_df, stats_df, site, scenario)
+                    if urban_df is not None:
+                        all_urban_dfs.append(urban_df)
     
     # Process capability dataframes
     combined_capability_df = None
@@ -315,8 +258,7 @@ def process_all_sites_scenarios(sites, scenarios, voxel_size=1):
         # Convert year columns to integers in capability dataframe
         year_columns = [col for col in combined_capability_df.columns if col.isdigit()]
         for col in year_columns:
-            if col in combined_capability_df.columns:
-                combined_capability_df[col] = combined_capability_df[col].astype(int)
+            combined_capability_df[col] = combined_capability_df[col].astype(int)
         
         # Save combined capability dataframe with the requested naming convention
         for site in sites:
@@ -324,33 +266,21 @@ def process_all_sites_scenarios(sites, scenarios, voxel_size=1):
             if not site_df.empty:
                 output_path = output_dir / f'{site}_{voxel_size}.csv'
                 site_df.to_csv(output_path, index=False)
-                print(f"\nSaved capability dataframe for site {site} to {output_path}")
+                print(f"Saved capability data for site {site} to {output_path}")
         
         # Save the complete combined capability dataframe
         capability_output_path = output_dir / 'all_capabilities.csv'
         combined_capability_df.to_csv(capability_output_path, index=False)
-        print(f"\nSaved combined capability dataframe to {capability_output_path}")
-        print(f"Columns in capability dataframe: {combined_capability_df.columns.tolist()}")
-    else:
-        print("\nNo capability dataframes were generated.")
+        print(f"Saved combined capability data to {capability_output_path}")
     
     # Process urban elements dataframes
     combined_urban_df = None
     if all_urban_dfs:
         combined_urban_df = pd.concat(all_urban_dfs, ignore_index=True)
         
-        # Restructure the combined urban elements dataframe to match the requested format
-        # Make sure it has columns: site, scenario, timestep, persona, capability, NumericIndicator, 
-        # countname, countelement, count, capabilityID, hpos, IndicatorNo
-        
-        # Select and reorder columns to match the requested format
+        # Select and reorder columns
         columns_order = ['site', 'scenario', 'timestep', 'persona', 'capability', 'NumericIndicator',
                           'countname', 'countelement', 'count', 'capabilityID', 'hpos', 'IndicatorNo']
-        
-        # Ensure all required columns exist
-        for col in columns_order:
-            if col not in combined_urban_df.columns:
-                print(f"Warning: Column '{col}' not found in urban elements dataframe")
         
         # Filter to only include the requested columns that are present
         existing_columns = [col for col in columns_order if col in combined_urban_df.columns]
@@ -359,18 +289,12 @@ def process_all_sites_scenarios(sites, scenarios, voxel_size=1):
         # Save the complete combined urban elements dataframe
         urban_output_path = output_dir / 'all_urban_elements.csv'
         combined_urban_df.to_csv(urban_output_path, index=False)
-        print(f"\nSaved combined urban elements dataframe to {urban_output_path}")
-        print(f"Columns in urban elements dataframe: {combined_urban_df.columns.tolist()}")
-    else:
-        print("\nNo urban elements dataframes were generated.")
+        print(f"Saved urban elements data to {urban_output_path}")
     
     return combined_capability_df, combined_urban_df
 
 def main():
     """Main function to generate capability dataframes"""
-    #--------------------------------------------------------------------------
-    # STEP 1: GATHER USER INPUTS
-    #--------------------------------------------------------------------------
     # Default values
     default_sites = ['trimmed-parade']
     default_scenarios = ['baseline', 'positive', 'trending']
@@ -392,38 +316,23 @@ def main():
     try:
         voxel_size = int(voxel_size_input) if voxel_size_input else default_voxel_size
     except ValueError:
-        print("Invalid input for voxel size. Using default value.")
         voxel_size = default_voxel_size
     
-    # Print summary of selected options
-    print("\n===== Processing with the following parameters =====")
-    print(f"Sites: {sites}")
+    # Print summary and confirm
+    print(f"\nProcessing sites: {sites}")
     print(f"Scenarios: {scenarios}")
     print(f"Voxel Size: {voxel_size}")
     
-    # Confirm proceeding
-    confirm = input("\nProceed with these settings? (yes/no, default yes): ")
+    confirm = input("\nProceed? (yes/no, default yes): ")
     if confirm.lower() in ['no', 'n']:
         print("Operation cancelled.")
         return
     
-    #--------------------------------------------------------------------------
-    # STEP 2: PROCESS CAPABILITIES
-    #--------------------------------------------------------------------------
-    print("\n===== PROCESSING CAPABILITIES AND URBAN ELEMENTS =====")
-    
     # Process all sites and scenarios
     capability_df, urban_df = process_all_sites_scenarios(sites, scenarios, voxel_size)
     
-    if capability_df is not None:
-        print("\nSuccessfully generated capability dataframes.")
-    else:
-        print("\nFailed to generate capability dataframes.")
-    
-    if urban_df is not None:
-        print("\nSuccessfully generated urban elements dataframes.")
-    else:
-        print("\nFailed to generate urban elements dataframes.")
+    if capability_df is not None and urban_df is not None:
+        print("\nProcessing completed successfully.")
 
 if __name__ == "__main__":
     main()
