@@ -58,7 +58,7 @@ CAPABILITIES INFO
         -label for graph: 'Perchable canopy volume'
    
    Urban element / design action: 
-   - 1.1.2 Canopy volume across control levels: high, medium, low
+   - 1.1.1 Canopy volume across control levels: high, medium, low
         # search criteria: Count of 'capabilities_bird_socialise_perch-branch', broken down by ['forest_control'], where high == 'street-tree', medium == 'park-tree', low == 'reserve-tree' OR 'improved-tree'
 
 1.2 Feed: Points where 'stat_peeling bark' > 0
