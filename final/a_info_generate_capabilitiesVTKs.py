@@ -6,6 +6,97 @@ from pathlib import Path
 from scipy.spatial import cKDTree
 
 """
+STRUCTURE OF CAPABILITIES:
+    # Numeric indicator layers
+    # name in polydata is f'capabilities-{persona}-{capability}-{numeric indicator}'
+    # possible values are 0 and 1
+    # example:
+        polydata.point_data['capabilities-reptile-shelter-fallen-log'] can be 0 or 1
+
+    # Capability layers
+    # name in polydata is f'capabilities-{persona}-{capability}'
+    # possible values are all the nummeric indicators for that capability
+    # example:
+        polydata.point_data['capabilities-reptile-shelter'] can be 'none', 'fallen log', 'fallen tree'
+    
+    # Persona aggregate capabilities layer
+    # name in polydata is f'capabilities-{persona}'
+    # possible values are all the capability layers for that persona
+    # example:
+        polydata.point_data['capabilities-reptile'] can be 'none', 'traverse', 'forage', 'shelter'
+
+"""
+
+# Add capability ID mapping dictionaries
+CAPABILITY_ID_MAP = {
+    # Persona level
+    'capabilities-bird': '1',
+    'capabilities-reptile': '2',
+    'capabilities-tree': '3',
+    
+    # Capability level
+    'capabilities-bird-socialise': '1.1',
+    'capabilities-bird-feed': '1.2',
+    'capabilities-bird-raise-young': '1.3',
+    'capabilities-reptile-traverse': '2.1',
+    'capabilities-reptile-forage': '2.2',
+    'capabilities-reptile-shelter': '2.3',
+    'capabilities-tree-grow': '3.1',
+    'capabilities-tree-age': '3.2',
+    'capabilities-tree-persist': '3.3',
+    
+    # Numeric indicator level - normalized key formats
+    'capabilities-bird-socialise-perch branch': '1.1.1',
+    'capabilities-bird-feed-peeling bark': '1.2.1',
+    'capabilities-bird-raise-young-hollow': '1.3.1',
+    'capabilities-reptile-traverse-traversable': '2.1.1',
+    'capabilities-reptile-forage-ground cover': '2.2.1',
+    'capabilities-reptile-forage-low-veg': '2.2.1',
+    'capabilities-reptile-forage-dead branch': '2.2.2',
+    'capabilities-reptile-forage-dead-branch': '2.2.2',
+    'capabilities-reptile-forage-epiphyte': '2.2.3',
+    'capabilities-reptile-shelter-fallen log': '2.3.1',
+    'capabilities-reptile-shelter-fallen-log': '2.3.1',
+    'capabilities-reptile-shelter-fallen tree': '2.3.2',
+    'capabilities-reptile-shelter-fallen-tree': '2.3.2',
+    'capabilities-tree-grow-volume': '3.1.1',
+    'capabilities-tree-age-improved tree': '3.2.1',
+    'capabilities-tree-age-reserve tree': '3.2.2',
+    'capabilities-tree-persist-eligible soil': '3.3.3',
+    'capabilities-tree-persist-eligble soil': '3.3.3',
+    
+    # Include boolean capability mappings
+    'capabilities-bird-socialise-perch branch': '1.1.1',
+    'capabilities-bird-feed-peeling bark': '1.2.1', 
+    'capabilities-bird-raise-young-hollow': '1.3.1',
+    'capabilities-reptile-forage-low-veg': '2.2.1',
+    'capabilities-reptile-forage-dead-branch': '2.2.2',
+    'capabilities-reptile-forage-epiphyte': '2.2.3',
+    'capabilities-reptile-shelter-fallen-log': '2.3.1',
+    'capabilities-reptile-shelter-fallen-tree': '2.3.2',
+}
+
+# Mapping for urban elements counts to capabilityID
+URBAN_ELEMENT_ID_MAP = {
+    # Bird
+    ('bird', 'socialise', 'canopy_volume'): '1.1.2',  # Canopy volume across control levels
+    ('bird', 'feed', 'artificial_bark'): '1.2.1',     # Artificial bark installed
+    ('bird', 'raise-young', 'artificial_hollows'): '1.3.1',  # Artificial hollows
+    
+    # Reptile
+    ('reptile', 'traverse', 'urban_conversion'): '2.1.1',  # Urban element conversion
+    ('reptile', 'forage', 'mistletoe'): '2.2.3',      # Number of epiphytes installed
+    ('reptile', 'forage', 'low_veg'): '2.2.1',        # Count of voxels converted
+    ('reptile', 'forage', 'dead_branch'): '2.2.2',    # Dead branch volume
+    ('reptile', 'shelter', 'near_fallen_5m'): '2.3.1', # Supporting fallen logs
+    
+    # Tree
+    ('tree', 'grow', 'trees_planted'): '3.1.1',       # Trees planted
+    ('tree', 'age', 'AGE-IN-PLACE_actions'): '3.2.1', # AGE-IN-PLACE actions
+    ('tree', 'persist', 'eligible_soil'): '3.3.3'     # Eligible soil in urban elements
+}
+
+"""
 CAPABILITIES INFO    
 1.  Bird capabilities:
 
@@ -18,7 +109,7 @@ CAPABILITIES INFO
    
    Urban element / design action: 
    - 1.1.2 Canopy volume across control levels: high, medium, low
-        # search criteria: Total voxels in polydata['maskForTrees'] == 1, broken down by their ['forest_control'], where high == 'street-tree', medium == 'park-tree', low == 'reserve-tree' OR 'improved-tree'
+        # search criteria: Count of 'capabilities-bird-socialise-perch branch', broken down by ['forest_control'], where high == 'street-tree', medium == 'park-tree', low == 'reserve-tree' OR 'improved-tree'
 
 1.2 Feed: Points where 'stat_peeling bark' > 0
    - Birds feed on insects found under peeling bark
@@ -29,7 +120,7 @@ CAPABILITIES INFO
    
    Urban element / design action:
    - 1.2.1 Artificial bark installed on branches, utility poles
-        #search criteria: Total voxels where polydata['stat_epiphyte'] > 0 & polydata['precolonial'] == False
+        #search criteria: Count of 'capabilities-bird-feed-peeling bark' where polydata['precolonial'] == False
         TO DO: could include eucs
 
 1.3. Raise Young: Points where 'stat_hollow' > 0
@@ -41,7 +132,7 @@ CAPABILITIES INFO
 
    Urban element / design action:
    - 1.3.1 Artificial hollows installed on branches, utility poles
-        #search criteria: Total voxels where polydata['stat_hollow'] > 0 & polydata['precolonial'] == False
+        #search criteria: Count of 'capabilities-bird-raise-young-hollow' where polydata['precolonial'] == False
         TO DO: could include eucs
 
 
@@ -341,6 +432,52 @@ def process_capabilities(site, scenario, voxel_size, years=None, include_baselin
     
     # Save statistics to CSV
     stats_df = pd.DataFrame(all_stats)
+    
+    # Debug: print keys to see what we need to map
+    print("\nRaw DataFrame indices before adding capability IDs:")
+    for idx in stats_df.index[:10]:  # Print first 10 for debugging
+        print(f"  {idx}")
+    
+    # Create a new column for capability IDs with a more direct approach
+    capability_ids = []
+    for idx in stats_df.index:
+        # Try direct lookup first
+        capability_id = CAPABILITY_ID_MAP.get(idx)
+        
+        # If not found, try normalizing the key
+        if capability_id is None:
+            # For boolean capability layers (e.g., capabilities-reptile-forage-low-veg)
+            if idx in vtk_data.point_data and np.issubdtype(vtk_data.point_data[idx].dtype, np.bool_):
+                capability_parts = idx.split('-')
+                if len(capability_parts) >= 3:
+                    persona = capability_parts[1]
+                    capability = capability_parts[2]
+                    
+                    # Try to get the ID for the capability level
+                    base_key = f"capabilities-{persona}-{capability}"
+                    sub_id = CAPABILITY_ID_MAP.get(base_key)
+                    
+                    if sub_id:
+                        # Append ".1" to the capability level ID
+                        capability_id = f"{sub_id}.1"
+            
+            # If still not found, use a default
+            if capability_id is None:
+                capability_id = 'NA'
+        
+        capability_ids.append(capability_id)
+    
+    # Add the capability IDs to the DataFrame
+    stats_df['capabilityID'] = capability_ids
+    
+    # Debug: Print mapping results
+    print("\nCapability ID mapping sample (fixed):")
+    for idx, cap_id in zip(stats_df.index[:10], stats_df['capabilityID'][:10]):
+        print(f"  {idx} -> {cap_id}")
+    
+    # Make sure capabilityID is treated as a string to prevent float conversion in CSV
+    stats_df['capabilityID'] = stats_df['capabilityID'].astype(str)
+    
     stats_dir = Path('data/revised/final/stats')
     stats_dir.mkdir(parents=True, exist_ok=True)
     stats_path = stats_dir / f'{site}_{scenario}_capabilities_raw.csv'
@@ -857,7 +994,9 @@ def collect_capability_stats(vtk_data):
             # Collect counts for each unique value
             values, counts = np.unique(data[data != 'none'], return_counts=True)
             for value, count in zip(values, counts):
-                stats[f"{key}-{value}"] = count
+                # Make sure to create a normalized key for mapping
+                if isinstance(value, str):
+                    stats[f"{key}-{value}"] = count
     
     return stats
 
@@ -880,13 +1019,13 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
     Args:
         site (str): Site name
         scenario (str): Scenario name
-        year (str): Year/timestep
+        year (int): Year/timestep
         vtk_data (pyvista.UnstructuredGrid): VTK data with capability information
         tree_df (pd.DataFrame, optional): Tree dataframe for df-based counts
         
     Returns:
         pd.DataFrame: DataFrame containing all counts with columns:
-        [site, scenario, timestep, persona, capability, countname, countelement, count]
+        [site, scenario, timestep, persona, capability, countname, countelement, count, capabilityID]
     """
     # Initialize empty list to store count records
     count_records = []
@@ -894,248 +1033,195 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
     # Convert year to string for consistency
     year_str = str(year)
     
-    #---------------------------------------------------------------------------
-    # 1. BIRD CAPABILITY COUNTS
-    #---------------------------------------------------------------------------
+    # Define common urban element categories used throughout the function
+    URBAN_ELEMENT_TYPES = [
+        'open space', 'green roof', 'brown roof', 'facade', 
+        'roadway', 'busy roadway', 'existing conversion', 
+        'other street potential', 'parking'
+    ]
     
-    # 1.1 Bird socialise: canopy volume across control levels
-    if 'maskForTrees' in vtk_data.point_data and 'forest_control' in vtk_data.point_data:
-        mask_for_trees = vtk_data.point_data['maskForTrees']
-        forest_control = vtk_data.point_data['forest_control']
-        
-        # Define the control level mappings
+    # Helper function to add a count record
+    def add_count_record(persona, capability, countname, countelement, count, capability_id):
+        count_records.append({
+            'site': site,
+            'scenario': scenario,
+            'timestep': year_str,
+            'persona': persona,
+            'capability': capability,
+            'countname': countname,
+            'countelement': countelement.replace(' ', '_'),
+            'count': int(count),
+            'capabilityID': capability_id
+        })
+    
+    # Helper function to handle boolean or string data fields
+    def get_boolean_mask(data_field, condition=None):
+        if np.issubdtype(data_field.dtype, np.bool_):
+            if condition is None:
+                return data_field
+            else:
+                return data_field & condition
+        else:
+            if condition is None:
+                return (data_field != 'none') & (data_field != '')
+            else:
+                return ((data_field != 'none') & (data_field != '')) & condition
+    
+    # Helper function to get precolonial mask
+    def get_precolonial_mask(precolonial_data):
+        if precolonial_data.dtype.kind in ['b', 'B']:
+            return precolonial_data
+        else:
+            return np.array([str(x).lower() == 'true' for x in precolonial_data])
+    
+    # Helper function to process counts by urban element types
+    def count_by_urban_elements(mask_data, urban_data, count_name, persona, capability, capability_id, prefix=""):
+        for element_type in URBAN_ELEMENT_TYPES:
+            element_mask = urban_data == element_type
+            combined_mask = get_boolean_mask(mask_data, element_mask)
+            count = np.sum(combined_mask)
+            
+            element_name = f"{prefix}{element_type}" if prefix else element_type
+            add_count_record(persona, capability, count_name, element_name, count, capability_id)
+    
+    # Helper function to process counts by control levels
+    def count_by_control_levels(mask_data, control_data, count_name, persona, capability, capability_id):
         control_levels = {
             'high': ['street-tree'],
             'medium': ['park-tree'],
             'low': ['reserve-tree', 'improved-tree']
         }
         
-        # Count voxels for each control level
         for level, control_types in control_levels.items():
             for control_type in control_types:
-                mask = (mask_for_trees == 1) & (forest_control == control_type)
-                count = np.sum(mask)
-                
-                count_records.append({
-                    'site': site,
-                    'scenario': scenario,
-                    'timestep': year_str,
-                    'persona': 'bird',
-                    'capability': 'socialise',
-                    'countname': 'canopy_volume',
-                    'countelement': level,
-                    'count': int(count)
-                })
+                combined_mask = get_boolean_mask(mask_data, control_data == control_type)
+                count = np.sum(combined_mask)
+                add_count_record(persona, capability, count_name, level, count, capability_id)
     
-    # 1.2 Bird feed: artificial bark installations
-    if 'stat_epiphyte' in vtk_data.point_data and 'precolonial' in vtk_data.point_data:
-        stat_epiphyte = vtk_data.point_data['stat_epiphyte']
+    # Helper function to process points near a feature using KDTree
+    def count_near_features(feature_mask, urban_data, count_name, prefix, persona, capability, capability_id, distance=5.0):
+        all_points = vtk_data.points
+        feature_points = all_points[feature_mask]
+        
+        if len(feature_points) > 0:
+            feature_tree = cKDTree(feature_points)
+            distances, _ = feature_tree.query(all_points, k=1, distance_upper_bound=distance)
+            near_feature_mask = distances < distance
+            
+            for element_type in URBAN_ELEMENT_TYPES:
+                element_mask = urban_data == element_type
+                count = np.sum(near_feature_mask & element_mask)
+                element_name = f"{prefix}_{element_type}"
+                add_count_record(persona, capability, count_name, element_name, count, capability_id)
+    
+    #---------------------------------------------------------------------------
+    # 1. BIRD CAPABILITY COUNTS
+    #---------------------------------------------------------------------------
+    
+    # 1.1 Bird socialise - Canopy volume across control levels
+    if 'maskForTrees' in vtk_data.point_data and 'forest_control' in vtk_data.point_data:
+        mask_for_trees = vtk_data.point_data['maskForTrees']
+        forest_control = vtk_data.point_data['forest_control']
+        
+        # Create a mask for tree voxels
+        tree_mask = (mask_for_trees == 1)
+        count_by_control_levels(tree_mask, forest_control, 'canopy_volume', 
+                               'bird', 'socialise', '1.1.2')
+    
+    # 1.2 Bird feed - Artificial bark installed
+    if 'capabilities-bird-feed-peeling bark' in vtk_data.point_data and 'precolonial' in vtk_data.point_data:
+        peeling_bark = vtk_data.point_data['capabilities-bird-feed-peeling bark']
         precolonial = vtk_data.point_data['precolonial']
         
-        # Handle numeric/non-numeric epiphyte data
-        if np.issubdtype(stat_epiphyte.dtype, np.number):
-            epiphyte_mask = stat_epiphyte > 0
-        else:
-            epiphyte_mask = (stat_epiphyte != 'none') & (stat_epiphyte != '') & (stat_epiphyte != 'nan')
+        precolonial_mask = get_precolonial_mask(precolonial)
+        artificial_bark_mask = get_boolean_mask(peeling_bark) & (~precolonial_mask)
         
-        # Handle boolean/non-boolean precolonial data
-        if precolonial.dtype.kind in ['b', 'B']:
-            precolonial_mask = precolonial
-        else:
-            precolonial_mask = np.array([str(x).lower() == 'true' for x in precolonial])
-        
-        # Count artificial epiphytes (not precolonial)
-        mask = epiphyte_mask & (~precolonial_mask)
-        count = np.sum(mask)
-        
-        count_records.append({
-            'site': site,
-            'scenario': scenario,
-            'timestep': year_str,
-            'persona': 'bird',
-            'capability': 'feed',
-            'countname': 'artificial_bark',
-            'countelement': 'installed',
-            'count': int(count)
-        })
+        count = np.sum(artificial_bark_mask)
+        add_count_record('bird', 'feed', 'artificial_bark', 'installed', count, '1.2.1')
     
-    # 1.3 Bird raise young: artificial hollows
-    if 'stat_hollow' in vtk_data.point_data and 'precolonial' in vtk_data.point_data:
-        stat_hollow = vtk_data.point_data['stat_hollow']
+    # 1.3 Bird raise young - Artificial hollows installed
+    if 'capabilities-bird-raise-young-hollow' in vtk_data.point_data and 'precolonial' in vtk_data.point_data:
+        hollow = vtk_data.point_data['capabilities-bird-raise-young-hollow']
         precolonial = vtk_data.point_data['precolonial']
         
-        # Handle numeric/non-numeric hollow data
-        if np.issubdtype(stat_hollow.dtype, np.number):
-            hollow_mask = stat_hollow > 0
-        else:
-            hollow_mask = (stat_hollow != 'none') & (stat_hollow != '') & (stat_hollow != 'nan')
+        precolonial_mask = get_precolonial_mask(precolonial)
+        artificial_hollow_mask = get_boolean_mask(hollow) & (~precolonial_mask)
         
-        # Handle boolean/non-boolean precolonial data
-        if precolonial.dtype.kind in ['b', 'B']:
-            precolonial_mask = precolonial
-        else:
-            precolonial_mask = np.array([str(x).lower() == 'true' for x in precolonial])
-        
-        # Count artificial hollows (not precolonial)
-        mask = hollow_mask & (~precolonial_mask)
-        count = np.sum(mask)
-        
-        count_records.append({
-            'site': site,
-            'scenario': scenario,
-            'timestep': year_str,
-            'persona': 'bird',
-            'capability': 'raise-young',
-            'countname': 'artificial_hollows',
-            'countelement': 'installed',
-            'count': int(count)
-        })
+        count = np.sum(artificial_hollow_mask)
+        add_count_record('bird', 'raise-young', 'artificial_hollows', 'installed', count, '1.3.1')
     
     #---------------------------------------------------------------------------
     # 2. REPTILE CAPABILITY COUNTS
     #---------------------------------------------------------------------------
     
-    # 2.1 Reptile traverse: urban elements conversion
-    if 'capabilities-reptile-traverse' in vtk_data.point_data and 'search_urban_elements' in vtk_data.point_data:
-        reptile_traverse = vtk_data.point_data['capabilities-reptile-traverse']
+    # 2.1 Reptile traverse - Count of site voxels converted from urban elements
+    if 'capabilities-reptile-traverse-traversable' in vtk_data.point_data and 'search_urban_elements' in vtk_data.point_data:
+        reptile_traverse = vtk_data.point_data['capabilities-reptile-traverse-traversable']
         urban_elements = vtk_data.point_data['search_urban_elements']
         
-        # Define urban element categories
-        urban_element_types = [
-            'open space', 'green roof', 'brown roof', 'facade', 
-            'roadway', 'busy roadway', 'existing conversion', 
-            'other street potential', 'parking'
-        ]
-        
-        # Count traversable voxels for each urban element type
-        for element_type in urban_element_types:
-            mask = (reptile_traverse == 'traversable') & (urban_elements == element_type)
-            count = np.sum(mask)
-            
-            count_records.append({
-                'site': site,
-                'scenario': scenario,
-                'timestep': year_str,
-                'persona': 'reptile',
-                'capability': 'traverse',
-                'countname': 'urban_conversion',
-                'countelement': element_type.replace(' ', '_'),
-                'count': int(count)
-            })
+        count_by_urban_elements(reptile_traverse, urban_elements, 'urban_conversion', 
+                               'reptile', 'traverse', '2.1.1')
     
-    # 2.2 Reptile forage: mistletoe installations (same as bird feed artificial bark)
-    if 'stat_epiphyte' in vtk_data.point_data and 'precolonial' in vtk_data.point_data:
-        stat_epiphyte = vtk_data.point_data['stat_epiphyte']
+    # 2.2 Reptile forage
+    
+    # 2.2.1 Count of voxels converted from urban elements (low vegetation)
+    if 'capabilities-reptile-forage-low-veg' in vtk_data.point_data and 'search_urban_elements' in vtk_data.point_data:
+        low_veg = vtk_data.point_data['capabilities-reptile-forage-low-veg']
+        urban_elements = vtk_data.point_data['search_urban_elements']
+        
+        count_by_urban_elements(low_veg, urban_elements, 'low_veg', 
+                               'reptile', 'forage', '2.2.1')
+    
+    # 2.2.2 Dead branch volume across control levels
+    if 'capabilities-reptile-forage-dead-branch' in vtk_data.point_data and 'forest_control' in vtk_data.point_data:
+        dead_branch = vtk_data.point_data['capabilities-reptile-forage-dead-branch']
+        forest_control = vtk_data.point_data['forest_control']
+        
+        count_by_control_levels(dead_branch, forest_control, 'dead_branch', 
+                               'reptile', 'forage', '2.2.2')
+    
+    # 2.2.3 Number of epiphytes installed (mistletoe)
+    if 'capabilities-reptile-forage-epiphyte' in vtk_data.point_data and 'precolonial' in vtk_data.point_data:
+        epiphyte = vtk_data.point_data['capabilities-reptile-forage-epiphyte']
         precolonial = vtk_data.point_data['precolonial']
         
-        # Handle numeric/non-numeric epiphyte data
-        if np.issubdtype(stat_epiphyte.dtype, np.number):
-            epiphyte_mask = stat_epiphyte > 0
-        else:
-            epiphyte_mask = (stat_epiphyte != 'none') & (stat_epiphyte != '') & (stat_epiphyte != 'nan')
+        precolonial_mask = get_precolonial_mask(precolonial)
+        epiphyte_mask = get_boolean_mask(epiphyte) & (~precolonial_mask)
         
-        # Handle boolean/non-boolean precolonial data
-        if precolonial.dtype.kind in ['b', 'B']:
-            precolonial_mask = precolonial
-        else:
-            precolonial_mask = np.array([str(x).lower() == 'true' for x in precolonial])
-        
-        # Count mistletoe installations (not precolonial)
-        mask = epiphyte_mask & (~precolonial_mask)
-        count = np.sum(mask)
-        
-        count_records.append({
-            'site': site,
-            'scenario': scenario,
-            'timestep': year_str,
-            'persona': 'reptile',
-            'capability': 'forage',
-            'countname': 'mistletoe',
-            'countelement': 'installed',
-            'count': int(count)
-        })
+        count = np.sum(epiphyte_mask)
+        add_count_record('reptile', 'forage', 'mistletoe', 'installed', count, '2.2.3')
     
-    # 2.3 Reptile shelter: proximity to fallen logs/trees
-    if ('search_urban_elements' in vtk_data.point_data and 
-        ('stat_fallen log' in vtk_data.point_data or 'forest_size' in vtk_data.point_data)):
-        
-        # Get urban elements data
+    # 2.3 Reptile shelter
+    # 2.3.1 and 2.3.2 Ground elements supporting fallen logs/trees
+    if 'search_urban_elements' in vtk_data.point_data:
         urban_elements = vtk_data.point_data['search_urban_elements']
         
-        # Define urban element categories
-        urban_element_types = [
-            'open space', 'green roof', 'brown roof', 'facade', 
-            'roadway', 'busy roadway', 'existing conversion', 
-            'other street potential', 'parking'
-        ]
-        
-        # Create a mask for fallen logs and trees
-        fallen_mask = np.zeros(vtk_data.n_points, dtype=bool)
-        
-        # Check for fallen logs
-        if 'stat_fallen log' in vtk_data.point_data:
-            fallen_log = vtk_data.point_data['stat_fallen log']
-            if np.issubdtype(fallen_log.dtype, np.number):
-                fallen_mask |= (fallen_log > 0)
-            else:
-                fallen_mask |= ((fallen_log != 'none') & (fallen_log != '') & (fallen_log != 'nan'))
-        
-        # Check for fallen trees
-        if 'forest_size' in vtk_data.point_data:
-            forest_size = vtk_data.point_data['forest_size']
-            if forest_size.dtype.kind in ['U', 'S']:  # String types
-                fallen_mask |= (forest_size == 'fallen')
-        
-        # If we have any fallen logs/trees, find nearby points
-        if np.any(fallen_mask):
-            # Get coordinates of fallen log/tree points and all points
-            all_points = vtk_data.points
-            fallen_points = all_points[fallen_mask]
+        # 2.3.1 Count of ground elements supporting fallen logs
+        if 'capabilities-reptile-shelter-fallen-log' in vtk_data.point_data:
+            fallen_log = vtk_data.point_data['capabilities-reptile-shelter-fallen-log']
+            fallen_log_mask = get_boolean_mask(fallen_log)
             
-            # Build KDTree for fallen points
-            if len(fallen_points) > 0:
-                fallen_tree = cKDTree(fallen_points)
-                
-                # Find points within 5m of fallen logs/trees
-                distances, _ = fallen_tree.query(all_points, k=1, distance_upper_bound=5.0)
-                near_fallen_mask = distances < 5.0
-                
-                # Count nearby points for each urban element type
-                for element_type in urban_element_types:
-                    element_mask = urban_elements == element_type
-                    count = np.sum(near_fallen_mask & element_mask)
-                    
-                    count_records.append({
-                        'site': site,
-                        'scenario': scenario,
-                        'timestep': year_str,
-                        'persona': 'reptile',
-                        'capability': 'shelter',
-                        'countname': 'near_fallen_5m',
-                        'countelement': element_type.replace(' ', '_'),
-                        'count': int(count)
-                    })
+            count_near_features(fallen_log_mask, urban_elements, 'near_fallen_5m', 
+                               'log', 'reptile', 'shelter', '2.3.1')
+        
+        # 2.3.2 Count of ground elements supporting fallen trees
+        if 'capabilities-reptile-shelter-fallen-tree' in vtk_data.point_data:
+            fallen_tree = vtk_data.point_data['capabilities-reptile-shelter-fallen-tree']
+            fallen_tree_mask = get_boolean_mask(fallen_tree)
+            
+            count_near_features(fallen_tree_mask, urban_elements, 'near_fallen_5m', 
+                               'tree', 'reptile', 'shelter', '2.3.2')
     
     #---------------------------------------------------------------------------
     # 3. TREE CAPABILITY COUNTS
     #---------------------------------------------------------------------------
     
-    # 3.1 Tree grow: tree planting count
+    # 3.1 Tree grow - Count of number of trees planted this timestep
     if tree_df is not None and 'number_of_trees_to_plant' in tree_df.columns:
         total_trees_planted = tree_df['number_of_trees_to_plant'].sum()
-        
-        count_records.append({
-            'site': site,
-            'scenario': scenario,
-            'timestep': year_str,
-            'persona': 'tree',
-            'capability': 'grow',
-            'countname': 'trees_planted',
-            'countelement': 'total',
-            'count': int(total_trees_planted)
-        })
+        add_count_record('tree', 'grow', 'trees_planted', 'total', total_trees_planted, '3.1.1')
     
-    # 3.2 Tree age: AGE-IN-PLACE actions
+    # 3.2 Tree age - Count of AGE-IN-PLACE actions
     if tree_df is not None and 'rewilded' in tree_df.columns:
         # Define rewilding action types
         rewilding_types = ['footprint-depaved', 'exoskeleton', 'node-rewilded']
@@ -1143,19 +1229,9 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
         # Count occurrences of each rewilding type
         for rwild_type in rewilding_types:
             count = sum(tree_df['rewilded'] == rwild_type)
-            
-            count_records.append({
-                'site': site,
-                'scenario': scenario,
-                'timestep': year_str,
-                'persona': 'tree',
-                'capability': 'age',
-                'countname': 'AGE-IN-PLACE_actions',
-                'countelement': rwild_type,
-                'count': int(count)
-            })
+            add_count_record('tree', 'age', 'AGE-IN-PLACE_actions', rwild_type, count, '3.2.1')
     
-    # 3.3 Tree persist: eligible soil in urban elements
+    # 3.3 Tree persist - Count of site voxels converted from urban elements (eligible soil)
     if 'scenario_rewildingPlantings' in vtk_data.point_data and 'search_urban_elements' in vtk_data.point_data:
         rewilding_plantings = vtk_data.point_data['scenario_rewildingPlantings']
         urban_elements = vtk_data.point_data['search_urban_elements']
@@ -1173,31 +1249,15 @@ def converted_urban_element_counts(site, scenario, year, vtk_data, tree_df=None)
                     except (ValueError, TypeError):
                         pass
         
-        # Define urban element categories
-        urban_element_types = [
-            'open space', 'green roof', 'brown roof', 'facade', 
-            'roadway', 'busy roadway', 'existing conversion', 
-            'other street potential', 'parking'
-        ]
-        
-        # Count eligible soil voxels for each urban element type
-        for element_type in urban_element_types:
-            mask = plantings_mask & (urban_elements == element_type)
-            count = np.sum(mask)
-            
-            count_records.append({
-                'site': site,
-                'scenario': scenario,
-                'timestep': year_str,
-                'persona': 'tree',
-                'capability': 'persist',
-                'countname': 'eligible_soil',
-                'countelement': element_type.replace(' ', '_'),
-                'count': int(count)
-            })
+        count_by_urban_elements(plantings_mask, urban_elements, 'eligible_soil', 
+                               'tree', 'persist', '3.3.3')
     
     # Convert records to DataFrame
     counts_df = pd.DataFrame(count_records)
+    
+    # Ensure capabilityID is string type to prevent floating point conversion in CSV
+    if not counts_df.empty:
+        counts_df['capabilityID'] = counts_df['capabilityID'].astype(str)
     
     return counts_df
 
