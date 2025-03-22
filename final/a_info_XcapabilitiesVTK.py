@@ -192,45 +192,38 @@ CAPABILITIES INFO
 'parking'
 """
 
-
 def create_capabilities_info():
     """Create a dataframe with structured capability information from the docstring."""
     # Define the capabilities directly from docstring (numeric indicator level only)
     data = [
         # Bird capabilities
-        {'persona': 'bird', 'capability': 'socialise', 'numeric_indicator': 'perch-branch', 'capability_id': '1.1.1'},
-        {'persona': 'bird', 'capability': 'feed', 'numeric_indicator': 'peeling-bark', 'capability_id': '1.2.1'},
-        {'persona': 'bird', 'capability': 'raise-young', 'numeric_indicator': 'hollow', 'capability_id': '1.3.1'},
+        {'persona': 'bird', 'capability': 'socialise', 'numeric_indicator': 'perch-branch', 'capability_id': '1.1.1', 'indicator_no': 1},
+        {'persona': 'bird', 'capability': 'feed', 'numeric_indicator': 'peeling-bark', 'capability_id': '1.2.1', 'indicator_no': 2},
+        {'persona': 'bird', 'capability': 'raise-young', 'numeric_indicator': 'hollow', 'capability_id': '1.3.1', 'indicator_no': 3},
         
         # Reptile capabilities
-        {'persona': 'reptile', 'capability': 'traverse', 'numeric_indicator': 'traversable', 'capability_id': '2.1.1'},
-        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'ground-cover', 'capability_id': '2.2.1'},
-        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'dead-branch', 'capability_id': '2.2.2'},
-        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'epiphyte', 'capability_id': '2.2.3'},
-        {'persona': 'reptile', 'capability': 'shelter', 'numeric_indicator': 'fallen-log', 'capability_id': '2.3.1'},
-        {'persona': 'reptile', 'capability': 'shelter', 'numeric_indicator': 'fallen-tree', 'capability_id': '2.3.2'},
+        {'persona': 'reptile', 'capability': 'traverse', 'numeric_indicator': 'traversable', 'capability_id': '2.1.1', 'indicator_no': 1},
+        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'ground-cover', 'capability_id': '2.2.1', 'indicator_no': 2},
+        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'dead-branch', 'capability_id': '2.2.2', 'indicator_no': 3},
+        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'epiphyte', 'capability_id': '2.2.3', 'indicator_no': 4},
+        {'persona': 'reptile', 'capability': 'shelter', 'numeric_indicator': 'fallen-log', 'capability_id': '2.3.1', 'indicator_no': 5},
+        {'persona': 'reptile', 'capability': 'shelter', 'numeric_indicator': 'fallen-tree', 'capability_id': '2.3.2', 'indicator_no': 6},
         
         # Tree capabilities
-        {'persona': 'tree', 'capability': 'grow', 'numeric_indicator': 'volume', 'capability_id': '3.1.1'},
-        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'improved-tree', 'capability_id': '3.2.1'},
-        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'reserve-tree', 'capability_id': '3.2.2'},
-        {'persona': 'tree', 'capability': 'persist', 'numeric_indicator': 'eligible-soil', 'capability_id': '3.3.3'}
+        {'persona': 'tree', 'capability': 'grow', 'numeric_indicator': 'volume', 'capability_id': '3.1.1', 'indicator_no': 1},
+        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'improved-tree', 'capability_id': '3.2.1', 'indicator_no': 2},
+        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'reserve-tree', 'capability_id': '3.2.2', 'indicator_no': 3},
+        {'persona': 'tree', 'capability': 'persist', 'numeric_indicator': 'eligible-soil', 'capability_id': '3.3.3', 'indicator_no': 4}
     ]
     
     # Create dataframe
     df = pd.DataFrame(data)
     
-    # Calculate hpos - position of persona (bird=0, reptile=1, tree=2)
-    df['hpos'] = df.groupby('persona').ngroup()
+    # Assign hpos - first digit of capability id (ie. bird = 1, reptile = 2, tree = 3)
+    df['hpos'] = df['capability_id'].apply(lambda x: int(x.split('.')[0]) - 1)
     
-    # Sort by capability_id within each persona to get correct ordering
-    df = df.sort_values(['persona', 'capability_id'])
-    
-    # Calculate capability_no - unique position for each capability within persona
-    df['capability_no'] = df.groupby(['persona', 'capability']).ngroup()
-    
-    # Calculate indicator_no - sequential position within persona group
-    df['indicator_no'] = df.groupby('persona').cumcount()
+    # Assign capability_no - second digit of capability id
+    df['capability_no'] = df['capability_id'].apply(lambda x: int(x.split('.')[1]) - 1)
     
     # Create layer names for the polydata
     df['layer_name'] = df.apply(
@@ -520,7 +513,7 @@ def main():
     capabilities_info = create_capabilities_info()
     
     # Save capabilities info to CSV
-    output_dir = Path('data/revised/final/capabilities')
+    output_dir = Path('data/revised/final/stats/arboreal-future-stats/data')
     output_dir.mkdir(parents=True, exist_ok=True)
     capabilities_info_path = output_dir / 'capabilities_info.csv'
     capabilities_info.to_csv(capabilities_info_path, index=False)
