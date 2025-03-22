@@ -30,33 +30,41 @@ def get_capability_id(layer_name, capabilities_info):
         return capabilities_info[capabilities_info['layer_name'] == layer_name]['capability_id'].iloc[0]
     return 'NA'  # Return 'NA' if not found
 
-def collect_capability_stats(polydata, capabilities_info):
-    """Collect statistics on capabilities using the capabilities info DataFrame"""
-    stats = {}
+def collect_capability_stats(polydata, capabilities_info, site, scenario, timestep, voxel_size):
+    """
+    Collect statistics on capabilities by copying capabilities_info and adding counts
     
-    # Find all capability layers using layer names from capabilities dataframe
-    capability_keys = [key for key in polydata.point_data.keys() if key.startswith('capabilities_')]
+    Args:
+        polydata: The polydata with capability information
+        capabilities_info: DataFrame with capability mapping information
+        site: Site name
+        scenario: Scenario name
+        timestep: Current timestep/year
+        voxel_size: Voxel size used
+        
+    Returns:
+        DataFrame with capabilities info and counts
+    """
+    # Make a copy of the capabilities_info DataFrame
+    stats_df = capabilities_info.copy()
     
-    # Collect statistics for each capability layer
-    for key in capability_keys:
-        data = polydata.point_data[key]
-        # Count non-none values
-        if np.issubdtype(data.dtype, np.bool_):
-            # Boolean array
-            true_count = np.sum(data)
-            stats[key] = true_count
-        else:
-            # String array
-            non_none_count = np.sum(data != 'none')
-            stats[key] = non_none_count
-            
-            # Collect counts for each unique value
-            values, counts = np.unique(data[data != 'none'], return_counts=True)
-            for value, count in zip(values, counts):
-                if isinstance(value, str):
-                    stats[f"{key}_{value}"] = count
+    # Add context columns
+    stats_df['site'] = site
+    stats_df['scenario'] = scenario
+    stats_df['timestep'] = str(timestep)
+    stats_df['voxel_size'] = voxel_size
     
-    return stats
+    # Initialize count column
+    stats_df['count'] = 0
+    
+    # Fill in counts for each capability
+    for idx, row in stats_df.iterrows():
+        layer_name = row['layer_name']        
+        data = polydata.point_data[layer_name]
+        count = np.sum(data)
+        stats_df.at[idx, 'count'] = count
+    
+    return stats_df
 
 def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None, capabilities_info=None):
     """Generate counts of converted urban elements for different capabilities
@@ -191,7 +199,9 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 1. BIRD CAPABILITY COUNTS
     #---------------------------------------------------------------------------
     
-    # 1.1 Bird socialise - Canopy volume across control levels
+    # 1.1 Bird socialise
+    # 1.1.1 Canopy volume across control levels
+    capability_id = '1.1.1'
     if 'maskForTrees' in polydata.point_data and 'forest_control' in polydata.point_data:
         mask_for_trees = polydata.point_data['maskForTrees']
         forest_control = polydata.point_data['forest_control']
@@ -199,11 +209,13 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         # Create a mask for tree voxels
         tree_mask = (mask_for_trees == 1)
         control_level_counts = count_by_control_levels(tree_mask, forest_control, 'canopy_volume', 
-                               'bird', 'socialise', '1.1.2')
+                               'bird', 'socialise', '1.1.1')
         count_records.extend(control_level_counts)
         print(f"Added {len(control_level_counts)} bird socialise canopy volume records")
     
-    # 1.2 Bird feed - Artificial bark installed
+    # 1.2 Bird feed
+    # 1.2.1 Artificial bark installed
+    capability_id = '1.2.1'
     if 'capabilities_bird_feed_peeling-bark' in polydata.point_data and 'precolonial' in polydata.point_data:
         peeling_bark = polydata.point_data['capabilities_bird_feed_peeling-bark']        
         precolonial_mask = polydata.point_data['precolonial']
@@ -222,7 +234,9 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
             count_records.extend(bark_element_counts)
             print(f"Added {len(bark_element_counts)} bird feed bark by urban element records")
     
-    # 1.3 Bird raise young - Artificial hollows installed
+    # 1.3 Bird raise young
+    # 1.3.1 Artificial hollows installed
+    capability_id = '1.3.1'
     if 'capabilities_bird_raise-young_hollow' in polydata.point_data and 'precolonial' in polydata.point_data:
         hollow = polydata.point_data['capabilities_bird_raise-young_hollow']
         precolonial_mask = polydata.point_data['precolonial']
@@ -245,7 +259,9 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 2. REPTILE CAPABILITY COUNTS
     #---------------------------------------------------------------------------
     
-    # 2.1 Reptile traverse - Count of site voxels converted from urban elements
+    # 2.1 Reptile traverse
+    # 2.1.1 Count of site voxels converted from urban elements
+    capability_id = '2.1.1'
     if 'capabilities_reptile_traverse_traversable' in polydata.point_data and 'search_urban_elements' in polydata.point_data:
         reptile_traverse = polydata.point_data['capabilities_reptile_traverse_traversable']
         urban_elements = polydata.point_data['search_urban_elements']
@@ -256,8 +272,8 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         print(f"Added {len(traverse_counts)} reptile traverse by urban element records")
     
     # 2.2 Reptile forage
-    
     # 2.2.1 Count of voxels converted from urban elements (low vegetation)
+    capability_id = '2.2.1'
     if 'capabilities_reptile_forage_ground-cover' in polydata.point_data and 'search_urban_elements' in polydata.point_data:
         low_veg = polydata.point_data['capabilities_reptile_forage_ground-cover']
         urban_elements = polydata.point_data['search_urban_elements']
@@ -268,6 +284,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         print(f"Added {len(low_veg_counts)} reptile forage low vegetation records")
     
     # 2.2.2 Dead branch volume across control levels
+    capability_id = '2.2.2'
     if 'capabilities_reptile_forage_dead-branch' in polydata.point_data and 'forest_control' in polydata.point_data:
         dead_branch = polydata.point_data['capabilities_reptile_forage_dead-branch']
         forest_control = polydata.point_data['forest_control']
@@ -278,6 +295,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         print(f"Added {len(dead_branch_counts)} reptile forage dead branch by control level records")
     
     # 2.2.3 Number of epiphytes installed (mistletoe)
+    capability_id = '2.2.3'
     if 'capabilities_reptile_forage_epiphyte' in polydata.point_data and 'precolonial' in polydata.point_data:
         epiphyte = polydata.point_data['capabilities_reptile_forage_epiphyte']
         precolonial_mask = polydata.point_data['precolonial']
@@ -289,11 +307,12 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         print(f"Added reptile forage epiphyte record")
     
     # 2.3 Reptile shelter
-    # 2.3.1 and 2.3.2 Ground elements supporting fallen logs/trees
+    
     if 'search_urban_elements' in polydata.point_data:
         urban_elements = polydata.point_data['search_urban_elements']
         
         # 2.3.1 Count of ground elements supporting fallen logs
+        capability_id = '2.3.1'
         if 'capabilities_reptile_shelter_fallen-log' in polydata.point_data:
             fallen_log = polydata.point_data['capabilities_reptile_shelter_fallen-log']
             fallen_log_mask = get_boolean_mask(fallen_log)
@@ -304,6 +323,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
             print(f"Added {len(fallen_log_counts)} reptile shelter fallen log proximity records")
         
         # 2.3.2 Count of ground elements supporting fallen trees
+        capability_id = '2.3.2'
         if 'capabilities_reptile_shelter_fallen-tree' in polydata.point_data:
             fallen_tree = polydata.point_data['capabilities_reptile_shelter_fallen-tree']
             fallen_tree_mask = get_boolean_mask(fallen_tree)
@@ -317,14 +337,18 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 3. TREE CAPABILITY COUNTS
     #---------------------------------------------------------------------------
     
-    # 3.1 Tree grow - Count of number of trees planted this timestep
+    # 3.1 Tree grow
+    # 3.1.1 Count of number of trees planted this timestep
+    capability_id = '3.1.1'
     if tree_df is not None and 'number_of_trees_to_plant' in tree_df.columns:
         total_trees_planted = tree_df['number_of_trees_to_plant'].sum()
         tree_planted_record = create_count_record('tree', 'grow', 'trees_planted', 'total', total_trees_planted, '3.1.1')
         count_records.append(tree_planted_record)
         print(f"Added tree grow planted trees record")
     
-    # 3.2 Tree age - Count of AGE-IN-PLACE actions
+    # 3.2 Tree age
+    # 3.2.1 Count of AGE-IN-PLACE actions
+    capability_id = '3.2.1'
     if tree_df is not None and 'rewilded' in tree_df.columns:
         # Define rewilding action types
         rewilding_types = ['footprint-depaved', 'exoskeleton', 'node-rewilded']
@@ -339,7 +363,9 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         count_records.extend(age_in_place_records)
         print(f"Added {len(age_in_place_records)} tree age age-in-place records")
     
-    # 3.3 Tree persist - Count of site voxels converted from urban elements (eligible soil)
+    # 3.3 Tree persist
+    # 3.3.3 Count of site voxels converted from urban elements (eligible soil)
+    capability_id = '3.3.3'
     if 'scenario_rewildingPlantings' in polydata.point_data and 'search_urban_elements' in polydata.point_data:
         rewilding_plantings = polydata.point_data['scenario_rewildingPlantings']
         urban_elements = polydata.point_data['search_urban_elements']
@@ -418,10 +444,8 @@ def add_hierarchical_info(capabilities_df, capabilities_info):
 def main():
     """Main function to extract capability counts from generated VTK files"""
     # Load capabilities info
-    capabilities_info_path = Path('data/revised/final/capabilities/capabilities_info.csv')
-    if not capabilities_info_path.exists():
-        print("Error: Capabilities info file not found. Please run generate_capabilities.py first.")
-        return
+    capabilities_info_path = Path('data/revised/final/stats/arboreal-future-stats/data/capabilities_info.csv')
+
     
     capabilities_info = pd.read_csv(capabilities_info_path)
     print(f"Loaded capabilities info from {capabilities_info_path}")
@@ -495,29 +519,20 @@ def main():
         if include_baseline:
             print(f"Processing baseline for site: {site}")
             baseline_path = f'data/revised/final/{site}/{site}_baseline_resources_{voxel_size}_with_capabilities.vtk'
-            
-            if not Path(baseline_path).exists():
-                print(f"Warning: Baseline file {baseline_path} not found. Skipping.")
-                continue
-                
+        
             baseline_polydata = pv.read(baseline_path)
             print(f"  Reading capability data from baseline...")
             
             # Collect capability statistics
-            baseline_stats = collect_capability_stats(baseline_polydata, capabilities_info)
-            
-            # Convert to dataframe rows
-            for capability, count in baseline_stats.items():
-                capability_id = get_capability_id(capability, capabilities_info)
-                all_capabilities_counts.append({
-                    'site': site,
-                    'scenario': 'baseline',
-                    'voxel_size': voxel_size,
-                    'capability': capability,
-                    'timestep': 'baseline',
-                    'count': count,
-                    'capabilityID': capability_id
-                })
+            baseline_stats_df = collect_capability_stats(
+                baseline_polydata, 
+                capabilities_info,
+                site=site,
+                scenario='baseline',
+                timestep='baseline',
+                voxel_size=voxel_size
+            )
+            all_capabilities_counts.append(baseline_stats_df)
             
             # Generate urban element counts
             urban_element_counts = converted_urban_element_counts(
@@ -558,20 +573,15 @@ def main():
                     print(f"  Loaded tree dataframe from {tree_df_path}")
                 
                 # Collect capability statistics
-                year_capability_stats = collect_capability_stats(polydata, capabilities_info)
-                
-                # Convert to dataframe rows
-                for capability, count in year_capability_stats.items():
-                    capability_id = get_capability_id(capability, capabilities_info)
-                    all_capabilities_counts.append({
-                        'site': site,
-                        'scenario': scenario,
-                        'voxel_size': voxel_size,
-                        'capability': capability,
-                        'timestep': str(year),
-                        'count': count,
-                        'capabilityID': capability_id
-                    })
+                year_stats_df = collect_capability_stats(
+                    polydata, 
+                    capabilities_info,
+                    site=site,
+                    scenario=scenario,
+                    timestep=year,
+                    voxel_size=voxel_size
+                )
+                all_capabilities_counts.append(year_stats_df)
                 
                 # Generate urban element counts
                 urban_element_counts = converted_urban_element_counts(
@@ -588,7 +598,7 @@ def main():
                     all_urban_elements_counts.append(urban_element_counts)
         
         # Convert to dataframes and add hierarchical position information
-        capabilities_count_df = pd.DataFrame(all_capabilities_counts)
+        capabilities_count_df = pd.concat(all_capabilities_counts, ignore_index=True)
         capabilities_count_df['capabilityID'] = capabilities_count_df['capabilityID'].astype(str)
         
         # Add hierarchical columns using capabilities_info
