@@ -202,6 +202,8 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 1.1 Bird socialise
     # 1.1.1 Canopy volume across control levels
     capability_id = '1.1.1'
+    count_element = 'canopy_volume'
+    
     if 'maskForTrees' in polydata.point_data and 'forest_control' in polydata.point_data:
         mask_for_trees = polydata.point_data['maskForTrees']
         forest_control = polydata.point_data['forest_control']
@@ -216,6 +218,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 1.2 Bird feed
     # 1.2.1 Artificial bark installed
     capability_id = '1.2.1'
+    count_element = 'artificial_bark'
     if 'capabilities_bird_feed_peeling-bark' in polydata.point_data and 'precolonial' in polydata.point_data:
         peeling_bark = polydata.point_data['capabilities_bird_feed_peeling-bark']        
         precolonial_mask = polydata.point_data['precolonial']
@@ -237,6 +240,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 1.3 Bird raise young
     # 1.3.1 Artificial hollows installed
     capability_id = '1.3.1'
+    count_element = 'artificial_hollows'
     if 'capabilities_bird_raise-young_hollow' in polydata.point_data and 'precolonial' in polydata.point_data:
         hollow = polydata.point_data['capabilities_bird_raise-young_hollow']
         precolonial_mask = polydata.point_data['precolonial']
@@ -262,6 +266,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 2.1 Reptile traverse
     # 2.1.1 Count of site voxels converted from urban elements
     capability_id = '2.1.1'
+    count_element = 'urban_conversion'
     if 'capabilities_reptile_traverse_traversable' in polydata.point_data and 'search_urban_elements' in polydata.point_data:
         reptile_traverse = polydata.point_data['capabilities_reptile_traverse_traversable']
         urban_elements = polydata.point_data['search_urban_elements']
@@ -274,6 +279,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 2.2 Reptile forage
     # 2.2.1 Count of voxels converted from urban elements (low vegetation)
     capability_id = '2.2.1'
+    count_element = 'low_veg'
     if 'capabilities_reptile_forage_ground-cover' in polydata.point_data and 'search_urban_elements' in polydata.point_data:
         low_veg = polydata.point_data['capabilities_reptile_forage_ground-cover']
         urban_elements = polydata.point_data['search_urban_elements']
@@ -285,6 +291,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     
     # 2.2.2 Dead branch volume across control levels
     capability_id = '2.2.2'
+    count_element = 'dead_branch'
     if 'capabilities_reptile_forage_dead-branch' in polydata.point_data and 'forest_control' in polydata.point_data:
         dead_branch = polydata.point_data['capabilities_reptile_forage_dead-branch']
         forest_control = polydata.point_data['forest_control']
@@ -296,6 +303,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     
     # 2.2.3 Number of epiphytes installed (mistletoe)
     capability_id = '2.2.3'
+    count_element = 'mistletoe'
     if 'capabilities_reptile_forage_epiphyte' in polydata.point_data and 'precolonial' in polydata.point_data:
         epiphyte = polydata.point_data['capabilities_reptile_forage_epiphyte']
         precolonial_mask = polydata.point_data['precolonial']
@@ -313,6 +321,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         
         # 2.3.1 Count of ground elements supporting fallen logs
         capability_id = '2.3.1'
+        count_element = 'fallen_log'
         if 'capabilities_reptile_shelter_fallen-log' in polydata.point_data:
             fallen_log = polydata.point_data['capabilities_reptile_shelter_fallen-log']
             fallen_log_mask = get_boolean_mask(fallen_log)
@@ -324,6 +333,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         
         # 2.3.2 Count of ground elements supporting fallen trees
         capability_id = '2.3.2'
+        count_element = 'fallen_tree'
         if 'capabilities_reptile_shelter_fallen-tree' in polydata.point_data:
             fallen_tree = polydata.point_data['capabilities_reptile_shelter_fallen-tree']
             fallen_tree_mask = get_boolean_mask(fallen_tree)
@@ -336,10 +346,10 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     #---------------------------------------------------------------------------
     # 3. TREE CAPABILITY COUNTS
     #---------------------------------------------------------------------------
-    
     # 3.1 Tree grow
     # 3.1.1 Count of number of trees planted this timestep
     capability_id = '3.1.1'
+    count_element = 'trees_planted'
     if tree_df is not None and 'number_of_trees_to_plant' in tree_df.columns:
         total_trees_planted = tree_df['number_of_trees_to_plant'].sum()
         tree_planted_record = create_count_record('tree', 'grow', 'trees_planted', 'total', total_trees_planted, '3.1.1')
@@ -349,6 +359,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 3.2 Tree age
     # 3.2.1 Count of AGE-IN-PLACE actions
     capability_id = '3.2.1'
+    count_element = 'AGE-IN-PLACE_actions'
     if tree_df is not None and 'rewilded' in tree_df.columns:
         # Define rewilding action types
         rewilding_types = ['footprint-depaved', 'exoskeleton', 'node-rewilded']
@@ -366,6 +377,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     # 3.3 Tree persist
     # 3.3.3 Count of site voxels converted from urban elements (eligible soil)
     capability_id = '3.3.3'
+    count_element = 'eligible_soil'
     if 'scenario_rewildingPlantings' in polydata.point_data and 'search_urban_elements' in polydata.point_data:
         rewilding_plantings = polydata.point_data['scenario_rewildingPlantings']
         urban_elements = polydata.point_data['search_urban_elements']
