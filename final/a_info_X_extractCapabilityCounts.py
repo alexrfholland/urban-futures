@@ -88,16 +88,19 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     
     # Helper function to handle boolean or string data fields
     def get_boolean_mask(data_field, condition=None):
-        if np.issubdtype(data_field.dtype, np.bool_):
+        # Convert data to numpy array if it isn't already
+        data_array = np.array(data_field)
+        
+        if np.issubdtype(data_array.dtype, np.bool_):
             if condition is None:
-                return data_field
+                return data_array
             else:
-                return data_field & condition
+                return data_array & condition
         else:
             if condition is None:
-                return (data_field != 'none') & (data_field != '')
+                return (data_array != 'none') & (data_array != '')
             else:
-                return ((data_field != 'none') & (data_field != '')) & condition
+                return ((data_array != 'none') & (data_array != '')) & condition
     
     # Helper function to process counts by urban element types
     def count_by_urban_elements(mask_data, urban_data, base_row, countname):
@@ -189,11 +192,13 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         field_name = 'capabilities_bird_feed_peeling-bark'
             
         base_row = capabilities_info[bird_feed_mask].iloc[0]
-        peeling_bark = polydata.point_data[field_name]
-        precolonial_mask = polydata.point_data['forest_precolonial']
+        # Use get_bool_mask to get peeling bark mask
+        peeling_bark_mask = get_bool_mask(field_name, polydata, True)
+        # Use get_bool_mask to get non-precolonial mask
+        non_precolonial_mask = get_bool_mask('forest_precolonial', polydata, False)
         
         # Only count non-precolonial bark (artificial installations)
-        artificial_bark_mask = get_boolean_mask(peeling_bark) & (~precolonial_mask)
+        artificial_bark_mask = peeling_bark_mask & non_precolonial_mask
         count = np.sum(artificial_bark_mask)
         bark_record = create_count_record(base_row, countname, 'installed', count)
         count_records.append(bark_record)
@@ -201,7 +206,7 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         # Additionally break down by urban elements if available
         if has_urban_elements:
             urban_elements = polydata.point_data['search_urban_elements']
-            bark_element_records = count_by_urban_elements(artificial_bark_mask, urban_elements, base_row, f"{countname}_by_element")
+            bark_element_records = count_by_urban_elements(artificial_bark_mask, urban_elements, base_row, countname)
             count_records.extend(bark_element_records)
     
     # 1.3 Bird raise young
@@ -213,11 +218,14 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     if any(bird_raise_young_mask):
         field_name = 'capabilities_bird_raise-young_hollow'
         base_row = capabilities_info[bird_raise_young_mask].iloc[0]
-        hollow = polydata.point_data[field_name]
-        precolonial_mask = polydata.point_data['forest_precolonial']
+        
+        # Use get_bool_mask to get hollow mask
+        hollow_mask = get_bool_mask(field_name, polydata, True)
+        # Use get_bool_mask to get non-precolonial mask
+        non_precolonial_mask = get_bool_mask('forest_precolonial', polydata, False)
         
         # Only count non-precolonial hollows (artificial installations)
-        artificial_hollow_mask = get_boolean_mask(hollow) & (~precolonial_mask)
+        artificial_hollow_mask = hollow_mask & non_precolonial_mask
         count = np.sum(artificial_hollow_mask)
         hollow_record = create_count_record(base_row, countname, 'installed', count)
         count_records.append(hollow_record)
@@ -291,11 +299,14 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         field_name = 'capabilities_reptile_forage_epiphyte'
             
         base_row = capabilities_info[reptile_forage_epiphyte_mask].iloc[0]
-        epiphyte = polydata.point_data[field_name]
-        precolonial_mask = polydata.point_data['forest_precolonial']
+        
+        # Use get_bool_mask to get epiphyte mask
+        epiphyte_mask = get_bool_mask(field_name, polydata, True)
+        # Use get_bool_mask to get non-precolonial mask
+        non_precolonial_mask = get_bool_mask('forest_precolonial', polydata, False)
         
         # Only count non-precolonial epiphytes (installed)
-        artificial_epiphyte_mask = get_boolean_mask(epiphyte) & (~precolonial_mask)
+        artificial_epiphyte_mask = epiphyte_mask & non_precolonial_mask
         count = np.sum(artificial_epiphyte_mask)
         epiphyte_record = create_count_record(base_row, countname, 'installed', count)
         count_records.append(epiphyte_record)
@@ -400,6 +411,52 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
     
     return counts_df
 
+def get_bool_mask(attribute_name, polydata, value=True):
+    """
+    Creates a boolean mask from a polydata attribute that may contain True, False, or NaN values.
+    
+    Args:
+        attribute_name (str): Name of the attribute in polydata.point_data
+        polydata (pyvista.UnstructuredGrid): The polydata containing point attributes
+        value (bool, default=True): Whether to return mask for True or False values
+                                    If True, returns points where attribute is True
+                                    If False, returns points where attribute is False
+                                    NaN values are always excluded (set to False in return mask)
+    
+    Returns:
+        np.ndarray: Boolean mask where True indicates points matching the requested value
+    """
+    # Get the attribute data
+    if attribute_name not in polydata.point_data:
+        raise ValueError(f"Attribute '{attribute_name}' not found in polydata")
+    
+    attr_data = polydata.point_data[attribute_name]
+    
+    # Convert to numpy array to work with it
+    attr_array = np.array(attr_data)
+    
+    # Create mask for NaN values
+    if np.issubdtype(attr_array.dtype, np.floating):
+        nan_mask = np.isnan(attr_array)
+    else:
+        # For non-float types, create empty mask
+        nan_mask = np.zeros(attr_array.shape, dtype=bool)
+    
+    # Create mask for True values
+    if np.issubdtype(attr_array.dtype, np.bool_):
+        true_mask = attr_array
+    else:
+        # Handle string or other types by checking equality with 'true' or '1'
+        true_mask = np.isin(attr_array, [True, 'true', 'True', 1, '1'])
+    
+    # Return appropriate mask based on the requested value
+    if value:
+        # Return True for points where attribute is True and not NaN
+        return true_mask & (~nan_mask)
+    else:
+        # Return True for points where attribute is False and not NaN
+        return (~true_mask) & (~nan_mask)
+
 def main():
     """Main function to extract capability counts from generated VTK files"""
     # Load capabilities info
@@ -462,7 +519,7 @@ def main():
     print("\n===== EXTRACTING CAPABILITY COUNTS =====")
     
     # Create output directory
-    output_dir = Path('data/revised/final/stats/arboreal-future-stats/data/raw')
+    output_dir = Path('data/revised/final/stats/arboreal-future-stats/data')
     output_dir.mkdir(parents=True, exist_ok=True)
     print(f"Results will be saved to {output_dir}")
     
@@ -493,19 +550,6 @@ def main():
             )
             all_capabilities_counts.append(baseline_stats_df)
             
-            # Generate urban element counts
-            urban_element_counts = converted_urban_element_counts(
-                site=site,
-                scenario='baseline',
-                year='baseline',
-                polydata=baseline_polydata,
-                tree_df=None,
-                capabilities_info=capabilities_info
-            )
-            
-            # Add to combined urban elements counts
-            if not urban_element_counts.empty:
-                all_urban_elements_counts.append(urban_element_counts)
         
         # Process each scenario
         for scenario in scenarios:
@@ -518,11 +562,13 @@ def main():
                 # Load VTK file with capabilities
                 vtk_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}_with_capabilities.vtk'
                 
+                
                 if not Path(vtk_path).exists():
                     print(f"Warning: VTK file {vtk_path} not found. Skipping.")
                     continue
                     
                 polydata = pv.read(vtk_path)
+                print(f'loaded vtk file: {vtk_path}')
                 
                 # Load tree dataframe if it exists
                 tree_df_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_treeDF_{year}.csv'
