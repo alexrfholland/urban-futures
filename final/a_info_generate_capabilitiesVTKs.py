@@ -153,11 +153,11 @@ CAPABILITIES INFO
    - 3.1.1 count of number of trees planted this timestep
         # search criteria: sum of df['number_of_trees_to_plant']      
 
-3.2. Age: Points where 'search_design_action' == 'improved-tree' OR 'forest_control' == 'reserve-tree'
+3.2. Age: Points where 'forest_control' == 'improved-tree' OR 'forest_control' == 'reserve-tree'
    - Areas where trees are protected and can mature
    
    Numeric indicators:
-   - 3.2.1 tree_age: Total voxels where search_design_action == 'improved-tree' : 'improved-tree'
+   - 3.2.1 tree_age: Total voxels where forest_control == 'improved-tree' : 'improved-tree'
         - label for graph: 'Canopy volume supported by humans'
    - 3.2.2 tree_age: Total voxels where forest_control == 'reserve-tree' : 'reserve-tree'
         - label for graph: 'Canopy volume autonomous'
@@ -661,7 +661,7 @@ def create_tree_capabilities(vtk_data):
     # 3.2. Tree Age: points in 'improved-tree' OR 'reserve-tree'
     
     # 3.2.1 capability_numeric_indicator: improved tree
-    design_action = vtk_data.point_data['search_design_action']
+    design_action = vtk_data.point_data['forest_control']
     improved_tree_mask = design_action == 'improved-tree'
     
     tree_age_improved_tree |= improved_tree_mask

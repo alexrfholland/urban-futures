@@ -47,75 +47,58 @@ def collect_capability_stats(polydata, capabilities_info, site, scenario, timest
     return stats_df
 
 def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None, capabilities_info=None):
-    """Generate counts of converted urban elements for different capabilities
+    """
+    Generate counts of converted urban elements for different capabilities.
+    
+    For each capability (based on capabilities_info) the function creates count
+    records for each design action. Note that for some actions (e.g. bird feed and 
+    bird raise young) no breakdown by urban element is applied – only an overall count.
     
     Args:
         site (str): Site name
         scenario (str): Scenario name
         year (int): Year/timestep
-        polydata (pyvista.UnstructuredGrid): polydata with capability information
+        polydata (pyvista.UnstructuredGrid): Polydata with capability information
         tree_df (pd.DataFrame, optional): Tree dataframe for df-based counts
         capabilities_info (pd.DataFrame): DataFrame with capability mapping information
         
     Returns:
-        pd.DataFrame: DataFrame containing all counts with columns
+        pd.DataFrame: DataFrame containing all counts with columns.
     """
-    # Initialize empty list to store count records
     count_records = []
-    
-    # Convert year to string for consistency
     year_str = str(year)
-    
-    # Define common urban element categories used throughout the function
     URBAN_ELEMENT_TYPES = [
         'open space', 'green roof', 'brown roof', 'facade', 
         'roadway', 'busy roadway', 'existing conversion', 
         'other street potential', 'parking'
     ]
-    
-    # Helper function to create count records from capabilities_info row
     def create_count_record(base_row, countname, countelement, count):
-        # Create a copy of the base row and update relevant fields
         record = base_row.copy()
         record['site'] = site
         record['scenario'] = scenario
         record['timestep'] = year_str
         record['countname'] = countname
-        record['countelement'] = countelement.replace(' ', '_')
+        record['countelement'] = countelement  # use as is
         record['count'] = int(count)
-        
         return record
-    
-    # Helper function to handle boolean or string data fields
+
     def get_boolean_mask(data_field, condition=None):
-        # Convert data to numpy array if it isn't already
         data_array = np.array(data_field)
-        
         if np.issubdtype(data_array.dtype, np.bool_):
-            if condition is None:
-                return data_array
-            else:
-                return data_array & condition
+            return data_array if condition is None else data_array & condition
         else:
-            if condition is None:
-                return (data_array != 'none') & (data_array != '')
-            else:
-                return ((data_array != 'none') & (data_array != '')) & condition
-    
-    # Helper function to process counts by urban element types
+            base_mask = (data_array != 'none') & (data_array != '')
+            return base_mask if condition is None else base_mask & condition
+
     def count_by_urban_elements(mask_data, urban_data, base_row, countname):
         element_records = []
         for element_type in URBAN_ELEMENT_TYPES:
-            element_mask = urban_data == element_type
+            element_mask = (urban_data == element_type)
             combined_mask = get_boolean_mask(mask_data, element_mask)
             count = np.sum(combined_mask)
-            
-            # Use the element_type directly
-            element_name = element_type  # Will be converted to underscore format in create_count_record
-            element_records.append(create_count_record(base_row, countname, element_name, count))
+            element_records.append(create_count_record(base_row, countname, element_type, count))
         return element_records
-    
-    # Helper function to process counts by control levels
+
     def count_by_control_levels(mask_data, control_data, base_row, countname):
         control_records = []
         control_levels = {
@@ -123,293 +106,196 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
             'medium': ['park-tree'],
             'low': ['reserve-tree', 'improved-tree']
         }
-        
         for level, control_types in control_levels.items():
             level_mask = np.zeros(len(control_data), dtype=bool)
             for control_type in control_types:
                 level_mask |= (control_data == control_type)
-            
             combined_mask = get_boolean_mask(mask_data, level_mask)
             count = np.sum(combined_mask)
             control_records.append(create_count_record(base_row, countname, level, count))
         return control_records
-    
-    # Helper function to process points near a feature using KDTree
+
     def count_near_features(feature_mask, urban_data, base_row, countname, distance=5.0):
         near_feature_records = []
         all_points = polydata.points
         feature_points = all_points[feature_mask]
-        
         if len(feature_points) > 0:
             feature_tree = cKDTree(feature_points)
             distances, _ = feature_tree.query(all_points, k=1, distance_upper_bound=distance)
             near_feature_mask = distances < distance
-            
             for element_type in URBAN_ELEMENT_TYPES:
-                element_mask = urban_data == element_type
+                element_mask = (urban_data == element_type)
                 count = np.sum(near_feature_mask & element_mask)
-                # Use the element_type directly without prefix
-                element_name = element_type  # Will be converted to underscore format in create_count_record
-                near_feature_records.append(create_count_record(base_row, countname, element_name, count))
+                near_feature_records.append(create_count_record(base_row, countname, element_type, count))
         return near_feature_records
-    
-    # Check if we have the necessary data for capability processing
+
     if capabilities_info is None:
         raise ValueError("capabilities_info is required but was not provided")
     
-    # Check if urban elements data is available
     has_urban_elements = 'search_urban_elements' in polydata.point_data
-    
-    #---------------------------------------------------------------------------
-    # 1. BIRD CAPABILITY COUNTS
-    #---------------------------------------------------------------------------
-    
-    # 1.1 Bird socialise
-    # 1.1.1 Urban element / design action: Canopy volume across control levels: high, medium, low
+
+    # 1. BIRD CAPABILITIES
+    # 1.1 Socialise: Count by control levels from 'capabilities_bird_socialise_perch-branch'
     capability_id = '1.1.1'
     countname = 'canopy_volume'
-    
     bird_socialise_mask = capabilities_info['capability_id'] == capability_id
     if any(bird_socialise_mask):
-        # Check required fields
         field_name = 'capabilities_bird_socialise_perch-branch'
-            
         base_row = capabilities_info[bird_socialise_mask].iloc[0]
         perch_branch = polydata.point_data[field_name]
         forest_control = polydata.point_data['forest_control']
-        
-        # Count by control levels (high, medium, low)
         control_level_records = count_by_control_levels(perch_branch, forest_control, base_row, countname)
         count_records.extend(control_level_records)
-    
-    # 1.2 Bird feed
-    # 1.2.1 Urban element / design action: Artificial bark installed on branches, utility poles
+
+    # 1.2 Feed: Count of 'capabilities_bird_feed_peeling-bark' where precolonial is False.
     capability_id = '1.2.1'
     countname = 'artificial_bark'
-    
     bird_feed_mask = capabilities_info['capability_id'] == capability_id
     if any(bird_feed_mask):
         field_name = 'capabilities_bird_feed_peeling-bark'
-            
         base_row = capabilities_info[bird_feed_mask].iloc[0]
-        # Use get_bool_mask to get peeling bark mask
         peeling_bark_mask = get_bool_mask(field_name, polydata, True)
-        # Use get_bool_mask to get non-precolonial mask
         non_precolonial_mask = get_bool_mask('forest_precolonial', polydata, False)
-        
-        # Only count non-precolonial bark (artificial installations)
         artificial_bark_mask = peeling_bark_mask & non_precolonial_mask
         count = np.sum(artificial_bark_mask)
         bark_record = create_count_record(base_row, countname, 'installed', count)
         count_records.append(bark_record)
-        
-        # Additionally break down by urban elements if available
-        if has_urban_elements:
-            urban_elements = polydata.point_data['search_urban_elements']
-            bark_element_records = count_by_urban_elements(artificial_bark_mask, urban_elements, base_row, countname)
-            count_records.extend(bark_element_records)
-    
-    # 1.3 Bird raise young
-    # 1.3.1 Urban element / design action: Artificial hollows installed on branches, utility poles
+        # (No breakdown by urban element is applied)
+
+    # 1.3 Raise Young: Count of 'capabilities_bird_raise-young_hollow' where precolonial is False.
     capability_id = '1.3.1'
     countname = 'artificial_hollows'
-    
     bird_raise_young_mask = capabilities_info['capability_id'] == capability_id
     if any(bird_raise_young_mask):
         field_name = 'capabilities_bird_raise-young_hollow'
         base_row = capabilities_info[bird_raise_young_mask].iloc[0]
-        
-        # Use get_bool_mask to get hollow mask
         hollow_mask = get_bool_mask(field_name, polydata, True)
-        # Use get_bool_mask to get non-precolonial mask
         non_precolonial_mask = get_bool_mask('forest_precolonial', polydata, False)
-        
-        # Only count non-precolonial hollows (artificial installations)
         artificial_hollow_mask = hollow_mask & non_precolonial_mask
         count = np.sum(artificial_hollow_mask)
         hollow_record = create_count_record(base_row, countname, 'installed', count)
         count_records.append(hollow_record)
-        
-        # Additionally break down by urban elements if available
-        if has_urban_elements:
-            urban_elements = polydata.point_data['search_urban_elements']
-            hollow_element_records = count_by_urban_elements(artificial_hollow_mask, urban_elements, base_row, f"{countname}_by_element")
-            count_records.extend(hollow_element_records)
-    
-    #---------------------------------------------------------------------------
-    # 2. REPTILE CAPABILITY COUNTS
-    #---------------------------------------------------------------------------
-    
-    # 2.1 Reptile traverse
-    # 2.1.1 Urban element / design action: Count of site voxels converted from urban elements
+        # (No breakdown by urban element is applied)
+
+    # 2. REPTILE CAPABILITIES
+    # 2.1 Traverse: Count by urban elements from 'capabilities_reptile_traverse_traversable'
     capability_id = '2.1.1'
     countname = 'urban_conversion'
-    
     reptile_traverse_mask = capabilities_info['capability_id'] == capability_id
     if any(reptile_traverse_mask):
         field_name = 'capabilities_reptile_traverse_traversable'
-            
         base_row = capabilities_info[reptile_traverse_mask].iloc[0]
         reptile_traverse = polydata.point_data[field_name]
         urban_elements = polydata.point_data['search_urban_elements']
-        
-        # Count traversable points by urban element type
         traverse_records = count_by_urban_elements(reptile_traverse, urban_elements, base_row, countname)
         count_records.extend(traverse_records)
-    
-    # 2.2 Reptile forage
-    # 2.2.1 Urban element / design action: Count of voxels converted from urban elements (low vegetation)
+
+    # 2.2 Forage:
+    # 2.2.1 Low Vegetation: Count by urban elements from 'capabilities_reptile_forage_ground-cover'
     capability_id = '2.2.1'
     countname = 'low_veg'
-    
     reptile_forage_low_veg_mask = capabilities_info['capability_id'] == capability_id
     if any(reptile_forage_low_veg_mask):
         field_name = 'capabilities_reptile_forage_ground-cover'
-            
         base_row = capabilities_info[reptile_forage_low_veg_mask].iloc[0]
         low_veg = polydata.point_data[field_name]
         urban_elements = polydata.point_data['search_urban_elements']
-        
-        # Count low vegetation points by urban element type
         low_veg_records = count_by_urban_elements(low_veg, urban_elements, base_row, countname)
         count_records.extend(low_veg_records)
-    
-    # 2.2.2 Urban element / design action: Dead branch volume across control levels
+
+    # 2.2.2 Dead Branch: Count by control levels from 'capabilities_reptile_forage_dead-branch'
     capability_id = '2.2.2'
     countname = 'dead_branch'
-    
     reptile_forage_dead_branch_mask = capabilities_info['capability_id'] == capability_id
     if any(reptile_forage_dead_branch_mask):
         field_name = 'capabilities_reptile_forage_dead-branch'
-            
         base_row = capabilities_info[reptile_forage_dead_branch_mask].iloc[0]
         dead_branch = polydata.point_data[field_name]
         forest_control = polydata.point_data['forest_control']
-        
-        # Count dead branch points by control level
         dead_branch_records = count_by_control_levels(dead_branch, forest_control, base_row, countname)
         count_records.extend(dead_branch_records)
-    
-    # 2.2.3 Urban element / design action: Number of epiphytes installed (mistletoe)
+
+    # 2.2.3 Epiphyte: Count of 'capabilities_reptile_forage_epiphyte' where precolonial is False.
     capability_id = '2.2.3'
     countname = 'mistletoe'
-    
     reptile_forage_epiphyte_mask = capabilities_info['capability_id'] == capability_id
     if any(reptile_forage_epiphyte_mask):
         field_name = 'capabilities_reptile_forage_epiphyte'
-            
         base_row = capabilities_info[reptile_forage_epiphyte_mask].iloc[0]
-        
-        # Use get_bool_mask to get epiphyte mask
         epiphyte_mask = get_bool_mask(field_name, polydata, True)
-        # Use get_bool_mask to get non-precolonial mask
         non_precolonial_mask = get_bool_mask('forest_precolonial', polydata, False)
-        
-        # Only count non-precolonial epiphytes (installed)
         artificial_epiphyte_mask = epiphyte_mask & non_precolonial_mask
         count = np.sum(artificial_epiphyte_mask)
         epiphyte_record = create_count_record(base_row, countname, 'installed', count)
         count_records.append(epiphyte_record)
-    
-    # 2.3 Reptile shelter
+
+    # 2.3 Shelter:
     if has_urban_elements:
         urban_elements = polydata.point_data['search_urban_elements']
-        
-        # 2.3.1 Urban element / design action: Count of ground elements supporting fallen logs
+        # 2.3.1 Fallen Log: Count by urban elements using KDTree on 'capabilities_reptile_shelter_fallen-log'
         capability_id = '2.3.1'
         countname = 'near_fallen_5m'
-        
         reptile_shelter_fallen_log_mask = capabilities_info['capability_id'] == capability_id
         if any(reptile_shelter_fallen_log_mask):
             field_name = 'capabilities_reptile_shelter_fallen-log'
-                
             base_row = capabilities_info[reptile_shelter_fallen_log_mask].iloc[0]
             fallen_log = polydata.point_data[field_name]
             fallen_log_mask = get_boolean_mask(fallen_log)
-            
-            # Count urban elements within 5m of fallen logs
             fallen_log_records = count_near_features(fallen_log_mask, urban_elements, base_row, countname)
             count_records.extend(fallen_log_records)
-        
-        # 2.3.2 Urban element / design action: Count of ground elements supporting fallen trees
+        # 2.3.2 Fallen Tree: Count by urban elements using KDTree on 'capabilities_reptile_shelter_fallen-tree'
         capability_id = '2.3.2'
         countname = 'near_fallen_5m'
-        
         reptile_shelter_fallen_tree_mask = capabilities_info['capability_id'] == capability_id
         if any(reptile_shelter_fallen_tree_mask):
             field_name = 'capabilities_reptile_shelter_fallen-tree'
-                
             base_row = capabilities_info[reptile_shelter_fallen_tree_mask].iloc[0]
             fallen_tree = polydata.point_data[field_name]
             fallen_tree_mask = get_boolean_mask(fallen_tree)
-            
-            # Count urban elements within 5m of fallen trees
             fallen_tree_records = count_near_features(fallen_tree_mask, urban_elements, base_row, countname)
             count_records.extend(fallen_tree_records)
-    
-    #---------------------------------------------------------------------------
-    # 3. TREE CAPABILITY COUNTS
-    #---------------------------------------------------------------------------
-    
-    # 3.1 Tree grow
-    # 3.1.1 Urban element / design action: Count of number of trees planted this timestep
+
+    # 3. TREE CAPABILITIES
+    # 3.1 Grow: Sum the number of trees to plant from the dataframe
     capability_id = '3.1.1'
     countname = 'trees_planted'
-    
     tree_grow_mask = capabilities_info['capability_id'] == capability_id
     if any(tree_grow_mask):
-            
         base_row = capabilities_info[tree_grow_mask].iloc[0]
-        print(tree_df)
         total_trees_planted = tree_df['number_of_trees_to_plant'].sum()
         tree_planted_record = create_count_record(base_row, countname, 'total', total_trees_planted)
         count_records.append(tree_planted_record)
-    
-    # 3.2 Tree age
-    # 3.2.1 Urban element / design action: Count of AGE-IN-PLACE actions
+
+    # 3.2 Age: Count AGE-IN-PLACE actions from the dataframe
     capability_id = '3.2.1'
     countname = 'AGE-IN-PLACE_actions'
-    
     tree_age_mask = capabilities_info['capability_id'] == capability_id
     if any(tree_age_mask):
-            
         base_row = capabilities_info[tree_age_mask].iloc[0]
-        
-        # Define rewilding action types
         rewilding_types = ['footprint-depaved', 'exoskeleton', 'node-rewilded']
-        
-        # Count occurrences of each rewilding type
         for rwild_type in rewilding_types:
-            count = sum(tree_df['rewilded'] == rwild_type)
+            count = np.sum(tree_df['rewilded'] == rwild_type)
             age_record = create_count_record(base_row, countname, rwild_type, count)
             count_records.append(age_record)
-    
-    # 3.3 Tree persist
-    # 3.3.3 Urban element / design action: Count of site voxels converted from urban elements (eligible soil)
+
+    # 3.3 Persist: Count eligible soil points by urban elements
     capability_id = '3.3.3'
     countname = 'eligible_soil'
-    
     tree_persist_mask = capabilities_info['capability_id'] == capability_id
     if any(tree_persist_mask):
         field_name = 'scenario_rewildingPlantings'
-            
         base_row = capabilities_info[tree_persist_mask].iloc[0]
         rewilding_plantings = polydata.point_data[field_name]
         urban_elements = polydata.point_data['search_urban_elements']
         plantings_mask = rewilding_plantings >= 1
-
-        # Count eligible soil points by urban element type
         eligible_soil_records = count_by_urban_elements(plantings_mask, urban_elements, base_row, countname)
         count_records.extend(eligible_soil_records)
     
-    # Convert all records to DataFrame
     counts_df = pd.DataFrame(count_records) if count_records else pd.DataFrame()
-    
-    # Ensure capability_id is string type to prevent floating point conversion in CSV
     if not counts_df.empty and 'capability_id' in counts_df.columns:
         counts_df['capability_id'] = counts_df['capability_id'].astype(str)
-    
     return counts_df
+
 
 def get_bool_mask(attribute_name, polydata, value=True):
     """
@@ -456,6 +342,46 @@ def get_bool_mask(attribute_name, polydata, value=True):
     else:
         # Return True for points where attribute is False and not NaN
         return (~true_mask) & (~nan_mask)
+
+def add_empty_rows(count_df, capabilities_info):
+    """
+    Given the combined urban elements counts DataFrame (across all time steps),
+    group by persona and numeric indicator (countname), then for each group determine
+    the union of countelements present in the overall dataset for that countname.
+    For any group missing one of these countelements, add a row using the group's base row,
+    setting countelement to the missing value and count to 0.
+    
+    Args:
+        count_df (pd.DataFrame): Combined urban element counts DataFrame.
+        capabilities_info (pd.DataFrame): Base capabilities info DataFrame.
+        
+    Returns:
+        pd.DataFrame: Updated DataFrame with zero-valued rows added.
+    """
+    # First, determine the overall expected countelements per countname.
+    expected_by_countname = {}
+    for countname, group in count_df.groupby('countname'):
+        expected_by_countname[countname] = set(group['countelement'].unique())
+    
+    new_rows = []
+    # Group by persona and countname. If "persona" does not exist, use "capability" instead.
+    group_columns = ['persona', 'countname'] if 'persona' in count_df.columns else ['capability', 'countname']
+    for keys, group in count_df.groupby(group_columns):
+        # keys = (persona, countname) or (capability, countname)
+        countname_val = keys[1] if len(keys) > 1 else keys[0]
+        expected = expected_by_countname.get(countname_val, set())
+        present = set(group['countelement'].unique())
+        missing = expected - present
+        for missing_element in missing:
+            base_row = group.iloc[0].copy()
+            base_row['countelement'] = missing_element
+            base_row['count'] = 0
+            new_rows.append(base_row)
+    if new_rows:
+        new_df = pd.DataFrame(new_rows)
+        count_df = pd.concat([count_df, new_df], ignore_index=True)
+    return count_df
+
 
 def main():
     """Main function to extract capability counts from generated VTK files"""
@@ -614,6 +540,7 @@ def main():
         # Save urban element counts for this site (all scenarios combined)
         if all_urban_elements_counts:
             urban_elements_count_df = pd.concat(all_urban_elements_counts, ignore_index=True)
+            urban_elements_count_df = add_empty_rows(urban_elements_count_df, capabilities_info)
             counts_path = output_dir / f'{site}_all_scenarios_{voxel_size}_urban_element_counts.csv'
             urban_elements_count_df.to_csv(counts_path, index=False)
             print(f"Saved urban element counts to {counts_path}")
