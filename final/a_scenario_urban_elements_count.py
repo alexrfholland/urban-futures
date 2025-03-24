@@ -294,7 +294,7 @@ def create_urban_elements_layer(scenario_vtk):
     # Apply urban element classifications in order
     
     #tree resources
-    if 'resource_other' in scenario_vtk.point_data:
+    """if 'resource_other' in scenario_vtk.point_data:
         mask = ~np.isnan(scenario_vtk.point_data['resource_other'])
         search_urban_elements[mask] = 'arboreal'
         print(f"  arboreal points: {np.sum(mask):,}")
@@ -326,7 +326,7 @@ def create_urban_elements_layer(scenario_vtk):
                 search_urban_elements[size_mask] = tree_type
                 print(f"  {tree_type} points: {np.sum(size_mask):,}")
     else:
-        print("  'forest_size' not found in point data")
+        print("  'forest_size' not found in point data")"""
 
     if 'FEATURES-road_terrainInfo_isOpenSpace' in scenario_vtk.point_data:
         mask = scenario_vtk.point_data['FEATURES-road_terrainInfo_isOpenSpace'] == 1
