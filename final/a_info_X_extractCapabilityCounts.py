@@ -99,6 +99,84 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
             element_records.append(create_count_record(base_row, countname, element_type, count))
         return element_records
 
+    def count_points_near_senescent_trees(polydata, base_row, countname, distance=1.0):
+        """
+        Count points near senescent trees (large, senescing, snag, fallen) by rewilded status.
+        
+        Args:
+            polydata: The polydata containing point attributes
+            base_row: Base row data to use for all records
+            countname: Name of the count metric
+            distance: Distance threshold in meters (default 1.0)
+            
+        Returns:
+            List of count records for each rewilded type near senescent trees
+        """
+        count_records = []
+        
+        # Identify senescent tree points (either forest_size == [senescing, snag, fallen] or forest_useful_life_expectancy < 10)
+        forest_size = polydata.point_data['forest_size']
+        forest_ule = polydata.point_data['forest_useful_life_expectancy']
+        
+        senescent_mask = np.zeros(len(forest_size), dtype=bool)
+        senescent_stages = ['senescing', 'snag', 'fallen']
+        
+        for stage in senescent_stages:
+            senescent_mask |= (forest_size == stage)
+            
+        # Add trees with low useful life expectancy
+        senescent_mask |= (forest_ule < 10)
+        
+        # Get coordinates of all points and senescent points
+        all_points = polydata.points
+        senescent_points = all_points[senescent_mask]
+        
+        # If no senescent points found, return empty records
+        if len(senescent_points) == 0:
+            return count_records
+        
+        # Extract only x,y coordinates (ignore z) for distance calculation
+        all_points_2d = all_points[:, :2]
+        senescent_points_2d = senescent_points[:, :2]
+        
+        # Build KDTree with 2D coordinates of senescent points
+        tree = cKDTree(senescent_points_2d)
+        
+        # Find all points within distance of any senescent point
+        distances, _ = tree.query(all_points_2d, k=1, distance_upper_bound=distance)
+        near_senescent_mask = distances <= distance
+        
+        # Mask out existing tree points using maskForTrees
+        tree_mask = polydata.point_data['maskforTrees']
+        non_tree_mask = ~tree_mask
+        
+        # Combined mask: points near senescent trees that are not trees themselves
+        eligible_points_mask = near_senescent_mask & non_tree_mask
+        
+        # Count points by rewilded status
+        scenario_rewilded = polydata.point_data['scenario_rewilded']
+        rewilded_types = ['exoskeleton', 'footprint-depaved', 'rewilded']
+        
+        # Count for each rewilded type
+        for rwild_type in rewilded_types:
+            rwild_mask = (scenario_rewilded == rwild_type)
+            combined_mask = eligible_points_mask & rwild_mask
+            count = np.sum(combined_mask)
+            count_records.append(create_count_record(base_row, countname, rwild_type, count))
+        
+        # Count 'none' category (all eligible points not in the rewilded types or node-rewilded)
+        none_mask = eligible_points_mask
+        for rwild_type in rewilded_types:
+            none_mask &= (scenario_rewilded != rwild_type)
+        # Also exclude node-rewilded points
+        none_mask &= (scenario_rewilded != 'node-rewilded')
+        
+        count = np.sum(none_mask)
+        count_records.append(create_count_record(base_row, countname, 'none', count))
+        
+        return count_records
+        
+
     def count_by_control_levels(mask_data, control_data, base_row, countname):
         control_records = []
         control_levels = {
@@ -114,7 +192,30 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
             count = np.sum(combined_mask)
             control_records.append(create_count_record(base_row, countname, level, count))
         return control_records
+    
+    def count_by_lifecycle_stage(polydata, base_row, countname):
 
+        lifecycle_records = []
+        forest_size = polydata.point_data['forest_size']
+        lifecycle_stages = ['small', 'medium', 'large', 'senescing', 'snag', 'fallen']
+        countelements = {
+            'small':'sprout',
+            'medium':'mid-phase',
+            'large':'large',
+            'senescing':'senescent',
+            'snag':'snag',
+            'fallen':'fallen'
+        }
+        for stage in lifecycle_stages:
+            # Create a mask for this stage
+            stage_mask = (forest_size == stage)
+            # Count the number of points matching this stage
+            count = np.sum(stage_mask)
+            # Create a record for this stage
+            lifecycle_records.append(create_count_record(base_row, countname, countelements[stage], count))
+        
+        return lifecycle_records
+    
     def count_near_features(feature_mask, urban_data, base_row, countname, distance=5.0):
         near_feature_records = []
         all_points = polydata.points
@@ -158,9 +259,14 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         non_precolonial_mask = get_bool_mask('forest_precolonial', polydata, False)
         artificial_bark_mask = peeling_bark_mask & non_precolonial_mask
         count = np.sum(artificial_bark_mask)
+
+        #if year is >175, reduce bark_record to 10%
+        if year > 175:
+            count = count * 0.1
+        
         bark_record = create_count_record(base_row, countname, 'installed', count)
+        
         count_records.append(bark_record)
-        # (No breakdown by urban element is applied)
 
     # 1.3 Raise Young: Count of 'capabilities_bird_raise-young_hollow' where precolonial is False.
     capability_id = '1.3.1'
@@ -174,8 +280,12 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
         artificial_hollow_mask = hollow_mask & non_precolonial_mask
         count = np.sum(artificial_hollow_mask)
         hollow_record = create_count_record(base_row, countname, 'installed', count)
+        #if year is >175, reduce bark_record to 10%
+        if year > 175:
+            count = count * 0.1
+        
+        hollow_record = create_count_record(base_row, countname, 'installed', count)
         count_records.append(hollow_record)
-        # (No breakdown by urban element is applied)
 
     # 2. REPTILE CAPABILITIES
     # 2.1 Traverse: Count by urban elements from 'capabilities_reptile_traverse_traversable'
@@ -256,29 +366,39 @@ def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None,
             count_records.extend(fallen_tree_records)
 
     # 3. TREE CAPABILITIES
-    # 3.1 Grow: Sum the number of trees to plant from the dataframe
+    #3.1.1 Grow:  Canopy across life cycle stages
+    # search criteria: Count of 'forest_control' per control class 
     capability_id = '3.1.1'
-    countname = 'trees_planted'
+    countname = 'lifecycle_stage'
     tree_grow_mask = capabilities_info['capability_id'] == capability_id
     if any(tree_grow_mask):
         base_row = capabilities_info[tree_grow_mask].iloc[0]
-        total_trees_planted = tree_df['number_of_trees_to_plant'].sum()
-        tree_planted_record = create_count_record(base_row, countname, 'total', total_trees_planted)
-        count_records.append(tree_planted_record)
+        points = polydata.point_data['forest_control']
+        forest_control = polydata.point_data['forest_control']
+        control_level_records = count_by_control_levels(points, forest_control, base_row, countname)
+        count_records.extend(control_level_records)
 
-    # 3.2 Age: Count AGE-IN-PLACE actions from the dataframe
+    # 3.2.1 Age: Count AGE-IN-PLACE actions from the dataframe
     capability_id = '3.2.1'
     countname = 'AGE-IN-PLACE_actions'
     tree_age_mask = capabilities_info['capability_id'] == capability_id
-    if any(tree_age_mask):
+
+    if any(tree_grow_mask):
         base_row = capabilities_info[tree_age_mask].iloc[0]
-        rewilding_types = ['footprint-depaved', 'exoskeleton', 'node-rewilded']
+        age_records = count_points_near_senescent_trees(polydata, base_row, countname, distance=1.0)
+        count_records.extend(age_records)
+    
+    """if any(tree_age_mask):
+        base_row = capabilities_info[tree_age_mask].iloc[0]
+        rewilding_types = ['paved', 'footprint-depaved', 'exoskeleton', 'node-rewilded']
         for rwild_type in rewilding_types:
             count = np.sum(tree_df['rewilded'] == rwild_type)
+            if year <60 and rwild_type == 'node-rewilded':
+                count = count * 0.1
             age_record = create_count_record(base_row, countname, rwild_type, count)
-            count_records.append(age_record)
+            count_records.append(age_record)"""
 
-    # 3.3 Persist: Count eligible soil points by urban elements
+    # 3.3.1 Persist: Count eligible soil points by urban elements
     capability_id = '3.3.3'
     countname = 'eligible_soil'
     tree_persist_mask = capabilities_info['capability_id'] == capability_id

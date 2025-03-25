@@ -27,6 +27,26 @@ def get_lifecycle_colors():
         "artificial": (255, 0, 0)        # Red
     }
 
+
+def get_resource_colours():
+    """
+    Get color definitions for resource categories.
+    
+    Returns:
+    dict: Dictionary mapping resource categories to RGB color tuples (0-255 range)
+    """
+    return {
+        "other": (158, 158, 158),
+        "perch branch": (255, 152, 0),
+        "dead branch": (33, 150, 243),
+        "peeling bark": (255, 235, 59),
+        "epiphyte": (139, 195, 74),
+        "fallen log": (121, 85, 72),
+        "hollow": (156, 39, 176)
+    }
+
+
+
 def get_bioenvelope_colors():
     """
     Get color definitions for bioenvelope categories.

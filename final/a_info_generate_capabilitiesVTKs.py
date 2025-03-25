@@ -150,7 +150,7 @@ CAPABILITIES INFO
         - label for graph: 'Forest biovolume'
 
    #Urban element / design action: 
-   - 3.1.1 count of number of trees planted this timestep
+   - 3.1.1 count of urban forest canopy co
         # search criteria: sum of df['number_of_trees_to_plant']      
 
 3.2. Age: Points where 'forest_control' == 'improved-tree' OR 'forest_control' == 'reserve-tree'

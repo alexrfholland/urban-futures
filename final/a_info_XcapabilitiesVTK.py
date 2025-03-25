@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pyvista as pv
 from pathlib import Path
-
+import a_vis_colors
 """
 STRUCTURE OF CAPABILITIES:
     # Numeric indicator layers
@@ -194,30 +194,42 @@ CAPABILITIES INFO
 
 def create_capabilities_info():
     """Create a dataframe with structured capability information from the docstring."""
+    lifecycle_colors = a_vis_colors.get_lifecycle_colors()
+    resource_colors = a_vis_colors.get_resource_colours()
+    envelope_colors = a_vis_colors.get_bioenvelope_colors()
+    
     # Define the capabilities directly from docstring (numeric indicator level only)
     data = [
         # Bird capabilities
-        {'persona': 'bird', 'capability': 'socialise', 'numeric_indicator': 'perch-branch', 'capability_id': '1.1.1', 'indicator_no': 1},
-        {'persona': 'bird', 'capability': 'feed', 'numeric_indicator': 'peeling-bark', 'capability_id': '1.2.1', 'indicator_no': 2},
-        {'persona': 'bird', 'capability': 'raise-young', 'numeric_indicator': 'hollow', 'capability_id': '1.3.1', 'indicator_no': 3},
+        {'persona': 'bird', 'capability': 'socialise', 'numeric_indicator': 'perch-branch', 'capability_id': '1.1.1', 'indicator_no': 1, 'color': resource_colors['perch branch']},
+        {'persona': 'bird', 'capability': 'feed', 'numeric_indicator': 'peeling-bark', 'capability_id': '1.2.1', 'indicator_no': 2, 'color': resource_colors['peeling bark']},
+        {'persona': 'bird', 'capability': 'raise-young', 'numeric_indicator': 'hollow', 'capability_id': '1.3.1', 'indicator_no': 3, 'color': resource_colors['hollow']},
         
         # Reptile capabilities
-        {'persona': 'reptile', 'capability': 'traverse', 'numeric_indicator': 'traversable', 'capability_id': '2.1.1', 'indicator_no': 1},
-        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'ground-cover', 'capability_id': '2.2.1', 'indicator_no': 2},
-        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'dead-branch', 'capability_id': '2.2.2', 'indicator_no': 3},
-        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'epiphyte', 'capability_id': '2.2.3', 'indicator_no': 4},
-        {'persona': 'reptile', 'capability': 'shelter', 'numeric_indicator': 'fallen-log', 'capability_id': '2.3.1', 'indicator_no': 5},
-        {'persona': 'reptile', 'capability': 'shelter', 'numeric_indicator': 'fallen-tree', 'capability_id': '2.3.2', 'indicator_no': 6},
+        {'persona': 'reptile', 'capability': 'traverse', 'numeric_indicator': 'traversable', 'capability_id': '2.1.1', 'indicator_no': 1, 'color': envelope_colors['brownRoof']},
+        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'ground-cover', 'capability_id': '2.2.1', 'indicator_no': 2, 'color': envelope_colors['rewilded']},
+        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'dead-branch', 'capability_id': '2.2.2', 'indicator_no': 3, 'color': resource_colors['dead branch']},
+        {'persona': 'reptile', 'capability': 'forage', 'numeric_indicator': 'epiphyte', 'capability_id': '2.2.3', 'indicator_no': 4, 'color': resource_colors['epiphyte']},
+        {'persona': 'reptile', 'capability': 'shelter', 'numeric_indicator': 'fallen-log', 'capability_id': '2.3.1', 'indicator_no': 5, 'color': resource_colors['fallen log']},
+        {'persona': 'reptile', 'capability': 'shelter', 'numeric_indicator': 'fallen-tree', 'capability_id': '2.3.2', 'indicator_no': 6, 'color': lifecycle_colors['fallen']},
         
         # Tree capabilities
-        {'persona': 'tree', 'capability': 'grow', 'numeric_indicator': 'volume', 'capability_id': '3.1.1', 'indicator_no': 1},
-        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'improved-tree', 'capability_id': '3.2.1', 'indicator_no': 2},
-        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'reserve-tree', 'capability_id': '3.2.2', 'indicator_no': 3},
-        {'persona': 'tree', 'capability': 'persist', 'numeric_indicator': 'eligible-soil', 'capability_id': '3.3.3', 'indicator_no': 4}
+        {'persona': 'tree', 'capability': 'grow', 'numeric_indicator': 'volume', 'capability_id': '3.1.1', 'indicator_no': 1, 'color': resource_colors['other']},
+        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'improved-tree', 'capability_id': '3.2.1', 'indicator_no': 2, 'color': lifecycle_colors['large']},
+        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'reserve-tree', 'capability_id': '3.2.2', 'indicator_no': 3, 'color': lifecycle_colors['large']},
+        {'persona': 'tree', 'capability': 'persist', 'numeric_indicator': 'eligible-soil', 'capability_id': '3.3.3', 'indicator_no': 4, 'color': envelope_colors['rewilded']}
     ]
+
+    # Create color_hex key-value pairs in each dictionary
+    for item in data:
+        rgb = item['color']
+        item['color_hex'] = f'#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}'
     
     # Create dataframe
     df = pd.DataFrame(data)
+    
+    # Add RGB string representation (e.g., 'rgb(255, 152, 0)')
+    df['color_rgb_string'] = df['color'].apply(lambda x: f'rgb({x[0]}, {x[1]}, {x[2]})')
     
     # Assign hpos - first digit of capability id (ie. bird = 1, reptile = 2, tree = 3)
     df['hpos'] = df['capability_id'].apply(lambda x: int(x.split('.')[0]) - 1)
