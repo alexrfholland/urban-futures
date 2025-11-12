@@ -144,9 +144,8 @@ CAPABILITIES INFO
    - Areas where trees can grow and establish
    
    Numeric indicators:
-   - 3.1.1 tree_grow: Total voxels where stat_other > 0 : 'volume'
+   - 3.1.1 tree_grow (Canopy biovolume): Total voxels where stat_other > 0 : 'volume'
         - label for graph: 'Forest biovolume'
-
    #Urban element / design action: 
    - 3.1.1 count of number of trees planted this timestep
         # search criteria: sum of df['number_of_trees_to_plant']      
@@ -155,6 +154,7 @@ CAPABILITIES INFO
    - Areas where trees are protected and can mature
    
    Numeric indicators:
+   #TODO: change numeric indicators to 3.2.1: forest_size == 'senesent', 3.2.2: forest_size == 'snag' or 'fallen'
    - 3.2.1 tree_age: Total voxels where forest_control == 'improved-tree' : 'improved-tree'
         - label for graph: 'Canopy volume supported by humans'
    - 3.2.2 tree_age: Total voxels where forest_control == 'reserve-tree' : 'reserve-tree'
@@ -169,11 +169,14 @@ CAPABILITIES INFO
 3.3. Persist: Terrain points eligible for new tree plantings (ie. depaved and unmanaged land away from trees)
 
     Numeric indicator:
-    - 3.3.3 scenario_rewildingPlantings >= 1 : 'eligible-soil'
+    - 3.3.1 scenario_rewildingPlantings >= 1 : 'eligible-soil'
         - label for graph: 'Ground area for tree recruitment'
+    - 3.3.2 volume of saplings
+        - #search criteria: count where 'forest_size' == 'small'
+        - label for graph: 'Sapling volume'
 
     #Urban element / design action:
-    -3.3.3/ Count of site voxels converted from: car parks, roads, etc
+    -3.3.1/ Count of site voxels converted from: car parks, roads, etc
         #count of subset of polydata['scenario_rewildingPlantings'] >= 1, broken down by the defined urban element catagories in polydata['search_urban_elements']
 
 """
@@ -197,6 +200,12 @@ def create_capabilities_info():
     lifecycle_colors = a_vis_colors.get_lifecycle_colors()
     resource_colors = a_vis_colors.get_resource_colours()
     envelope_colors = a_vis_colors.get_bioenvelope_colors()
+    # Darken the 'other' color to make it less grey and more visible
+    other_colour = (
+        max(0, resource_colors['other'][0] - 30),
+        max(0, resource_colors['other'][1] - 30),
+        max(0, resource_colors['other'][2] - 30)
+    )
     
     # Define the capabilities directly from docstring (numeric indicator level only)
     data = [
@@ -214,10 +223,11 @@ def create_capabilities_info():
         {'persona': 'reptile', 'capability': 'shelter', 'numeric_indicator': 'fallen-tree', 'capability_id': '2.3.2', 'indicator_no': 6, 'color': lifecycle_colors['fallen']},
         
         # Tree capabilities
-        {'persona': 'tree', 'capability': 'grow', 'numeric_indicator': 'volume', 'capability_id': '3.1.1', 'indicator_no': 1, 'color': resource_colors['other']},
-        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'improved-tree', 'capability_id': '3.2.1', 'indicator_no': 2, 'color': lifecycle_colors['large']},
-        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'reserve-tree', 'capability_id': '3.2.2', 'indicator_no': 3, 'color': lifecycle_colors['large']},
-        {'persona': 'tree', 'capability': 'persist', 'numeric_indicator': 'eligible-soil', 'capability_id': '3.3.3', 'indicator_no': 4, 'color': envelope_colors['rewilded']}
+        {'persona': 'tree', 'capability': 'grow', 'numeric_indicator': 'volume', 'capability_id': '3.1.1', 'indicator_no': 1, 'color': other_colour},
+        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'senescing-tree', 'capability_id': '3.2.1', 'indicator_no': 2, 'color': lifecycle_colors['senescing']},
+        {'persona': 'tree', 'capability': 'age', 'numeric_indicator': 'rotting-tree', 'capability_id': '3.2.2', 'indicator_no': 3, 'color': lifecycle_colors['fallen']},
+        {'persona': 'tree', 'capability': 'persist', 'numeric_indicator': 'eligible-soil', 'capability_id': '3.3.3', 'indicator_no': 4, 'color': envelope_colors['rewilded']},
+        {'persona': 'tree', 'capability': 'persist', 'numeric_indicator': 'sapling-volume', 'capability_id': '3.3.3', 'indicator_no': 5, 'color': lifecycle_colors['small']}
     ]
 
     # Create color_hex key-value pairs in each dictionary
@@ -433,57 +443,52 @@ def create_reptile_capabilities(polydata):
 def create_tree_capabilities(polydata):
     print("  Creating tree capability layers...")
     
-    # Initialize capability_numeric_indicator layers (boolean arrays)
-    tree_grow_volume = np.zeros(polydata.n_points, dtype=bool)
-    tree_age_improved_tree = np.zeros(polydata.n_points, dtype=bool)
-    tree_age_reserve_tree = np.zeros(polydata.n_points, dtype=bool)
-    tree_persist_eligible_soil = np.zeros(polydata.n_points, dtype=bool)
+    # Initialize boolean arrays for all capabilities
+    n_points = polydata.n_points
+    tree_grow_volume = np.zeros(n_points, dtype=bool)
+    tree_age_senescent_tree = np.zeros(n_points, dtype=bool)
+    tree_age_rotting_tree = np.zeros(n_points, dtype=bool)
+    tree_persist_eligible_soil = np.zeros(n_points, dtype=bool)
+    tree_persist_sapling_volume = np.zeros(n_points, dtype=bool)
     
-    # Initialize individual_capability layers (string arrays)
-    capabilities_tree_grow = np.full(polydata.n_points, 'none', dtype='<U20')
-    capabilities_tree_age = np.full(polydata.n_points, 'none', dtype='<U20')
-    capabilities_tree_persist = np.full(polydata.n_points, 'none', dtype='<U20')
+    # Initialize string arrays for capability categories
+    capabilities_tree_grow = np.full(n_points, '', dtype='U20')
+    capabilities_tree_age = np.full(n_points, '', dtype='U20')
+    capabilities_tree_persist = np.full(n_points, '', dtype='U20')
+    capabilities_tree = np.full(n_points, '', dtype='U20')
     
-    # Initialize persona_aggregate_capabilities layer
-    capabilities_tree = np.full(polydata.n_points, 'none', dtype='<U20')
-    
-    # 3.1. Tree Grow: points in 'stat_other' > 0
-    # - Areas where trees can grow and establish
-    other_data = polydata.point_data['stat_other']
-    if np.issubdtype(other_data.dtype, np.number):
-        volume_mask = other_data > 0
-    else:
-        volume_mask = (other_data != 'none') & (other_data != '') & (other_data != 'nan')
-    
-    # 3.1.1 capability_numeric_indicator: volume
+    # 3.1. Tree Grow: Biovolume
+    # 3.1.1 capability_numeric_indicator: biovolume
+    #print all point data keys
+    print(polydata.point_data.keys())
+    volume_mask = polydata.point_data['resource_other'] >= 0
     tree_grow_volume |= volume_mask
-    capabilities_tree_grow[volume_mask] = 'volume'
+    capabilities_tree_grow[volume_mask] = 'biovolume'
     capabilities_tree[volume_mask] = 'grow'
-    print(f"    Tree grow points: {np.sum(volume_mask):,}")
-    
-    # 3.2. Tree Age: points in 'improved-tree' OR 'reserve-tree'
-    
-    # 3.2.1 capability_numeric_indicator: improved tree
-    design_action = polydata.point_data['forest_control']
-    improved_tree_mask = design_action == 'improved-tree'
-    
-    tree_age_improved_tree |= improved_tree_mask
-    capabilities_tree_age[improved_tree_mask] = 'improved-tree'
+    print(f"    Tree grow points: {np.sum(tree_grow_volume):,}")
+
+    # 3.2. Tree Age: 
+    # 3.2.1 capability_numeric_indicator: senescent tree
+    #forest_size == 'senescing'
+    senescent_tree_mask = polydata.point_data['forest_size'] == 'senescing'
+    tree_age_senescent_tree |= senescent_tree_mask
+    capabilities_tree_age[senescent_tree_mask] = 'senescing-tree'
     # Override any existing values (later capabilities take precedence)
-    capabilities_tree[improved_tree_mask] = 'age'
-    print(f"    Tree age points from improved-tree: {np.sum(improved_tree_mask):,}")
+    capabilities_tree[senescent_tree_mask] = 'age'
+    print(f"    Tree age points from senescing-tree: {np.sum(senescent_tree_mask):,}")
     
-    # 3.2.2 capability_numeric_indicator: reserve tree
-    forest_control = polydata.point_data['forest_control']
-    reserve_tree_mask = forest_control == 'reserve-tree'
-    
-    tree_age_reserve_tree |= reserve_tree_mask
-    capabilities_tree_age[reserve_tree_mask] = 'reserve-tree'
+    # 3.2.2 capability_numeric_indicator: 'dead'
+    #polydata.point_data['forest_size'] == 'snag' or 'fallen'
+    dead_tree_mask = (polydata.point_data['forest_size'] == 'snag') | (polydata.point_data['forest_size'] == 'fallen')
+    tree_age_rotting_tree |= dead_tree_mask
+    capabilities_tree_age[dead_tree_mask] = 'rotting-tree'
     # Override any existing values (later capabilities take precedence)
-    capabilities_tree[reserve_tree_mask] = 'age'
-    print(f"    Tree age points from reserve-tree: {np.sum(reserve_tree_mask):,}")
+    capabilities_tree[dead_tree_mask] = 'age'
+    print(f"    Tree age points from decay-tree: {np.sum(dead_tree_mask):,}")
     
-    # 3.3.3 capability_numeric_indicator: eligible soil
+    # 3.3. Tree Persist
+    # 3.3.1 Tree Persist: eligible soil
+    #  capability_numeric_indicator: eligible soil
     # Use rewilding plantings
     rewilding_data = polydata.point_data['scenario_rewildingPlantings']
     if np.issubdtype(rewilding_data.dtype, np.number):
@@ -502,13 +507,22 @@ def create_tree_capabilities(polydata):
     # Override any existing values (later capabilities take precedence)
     capabilities_tree[eligible_soil_mask] = 'persist'
     print(f"    Tree persist points from eligible soil (scenario): {np.sum(eligible_soil_mask):,}")
+
+    #3.3.2 Tree Persist: sapling volume
+    #  capability_numeric_indicator: sapling volume
+    # Use small trees
+    small_tree_mask = polydata.point_data['forest_size'] == 'small'
+    tree_persist_sapling_volume |= small_tree_mask
+    capabilities_tree_persist[small_tree_mask] = 'sapling-volume'
+    # Override any existing values (later capabilities take precedence)
+    capabilities_tree[small_tree_mask] = 'persist'
     
     # Add capability_numeric_indicator layers to polydata
     polydata.point_data['capabilities_tree_grow_volume'] = tree_grow_volume
-    polydata.point_data['capabilities_tree_age_improved-tree'] = tree_age_improved_tree
-    polydata.point_data['capabilities_tree_age_reserve-tree'] = tree_age_reserve_tree
+    polydata.point_data['capabilities_tree_age_senescing-tree'] = tree_age_senescent_tree
+    polydata.point_data['capabilities_tree_age_rotting-tree'] = tree_age_rotting_tree
     polydata.point_data['capabilities_tree_persist_eligible-soil'] = tree_persist_eligible_soil
-    
+    polydata.point_data['capabilities_tree_persist_sapling-volume'] = tree_persist_sapling_volume
     # Add individual_capability layers to polydata
     polydata.point_data['capabilities_tree_grow'] = capabilities_tree_grow
     polydata.point_data['capabilities_tree_age'] = capabilities_tree_age

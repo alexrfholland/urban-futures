@@ -572,9 +572,9 @@ for tree_id, filename in fileNameDic.items():
     ]
     
 
-    """plotter = pv.Plotter()
+    plotter = pv.Plotter()
     plotter.add_mesh(voxelPoly, color='grey', point_size=10, opacity=0.25, render_points_as_spheres=True)
-    plotter.add_mesh(poly, scalars='community', cmap='Set2', line_width=10)"""
+    plotter.add_mesh(poly, scalars='community', cmap='Set2', line_width=10)
 
     # Initialize the plotter with multiple subplots
     num_methods = len(community_detection_method_names)

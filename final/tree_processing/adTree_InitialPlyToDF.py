@@ -248,8 +248,9 @@ def plot_all_trees(treeDFs, tree_sizes):
     polyList = []
     
     for tree_id, df in treeDFs.items():
-        poly = create_polydata_from_df(df)
-        polyList.append(poly)
+        if tree_id in [12]:
+            poly = create_polydata_from_df(df)
+            polyList.append(poly)
 
     n_plots = len(polyList)
     n_cols = min(n_plots, 4)
@@ -264,7 +265,7 @@ def plot_all_trees(treeDFs, tree_sizes):
         p.subplot(row, col)
         p.add_mesh(poly, scalars='branch_id', cmap='turbo', line_width=4)
         p.camera_position = 'xy'
-        p.reset_camera()
+        #p.reset_camera()
     p.show()
 
 def plot_connected_lines(df):

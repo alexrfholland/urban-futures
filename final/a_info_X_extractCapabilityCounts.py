@@ -42,9 +42,43 @@ def collect_capability_stats(polydata, capabilities_info, site, scenario, timest
         layer_name = row['layer_name']        
         data = polydata.point_data[layer_name]
         count = np.sum(data)
+        print(f'{layer_name} count: {count}')
         stats_df.at[idx, 'count'] = count
     
     return stats_df
+
+def get_site_conditions(polydata, site, voxel_size):
+    """
+    Count the unique values in the 'search_urban_elements' column.
+    
+    Args:
+        polydata: The polydata with urban elements information
+        site: Site name
+        voxel_size: Voxel size used
+        
+    Returns:
+        DataFrame with urban elements counts
+    """
+    if 'search_urban_elements' not in polydata.point_data:
+        print(f"Warning: 'search_urban_elements' column not found in the polydata for site {site}")
+        return pd.DataFrame()
+    
+    # Extract the urban elements column
+    urban_elements = polydata.point_data['search_urban_elements']
+    
+    # Convert to pandas Series for easier counting
+    urban_series = pd.Series(urban_elements)
+    
+    # Count unique values
+    counts = urban_series.value_counts().reset_index()
+    counts.columns = ['urban_element', 'count']
+    
+    # Add site and voxel_size columns
+    counts['site'] = site
+    counts['voxel_size'] = voxel_size
+    
+    return counts
+
 
 def converted_urban_element_counts(site, scenario, year, polydata, tree_df=None, capabilities_info=None):
     """
@@ -568,6 +602,8 @@ def main():
     output_dir = Path('data/revised/final/stats/arboreal-future-stats/data')
     output_dir.mkdir(parents=True, exist_ok=True)
     print(f"Results will be saved to {output_dir}")
+
+    site_conditions_dataframes = []
     
     # Process each site
     for site in sites:
@@ -595,7 +631,8 @@ def main():
                 voxel_size=voxel_size
             )
             all_capabilities_counts.append(baseline_stats_df)
-            
+
+        site_conditions_df = None
         
         # Process each scenario
         for scenario in scenarios:
@@ -647,7 +684,12 @@ def main():
                 # Add to combined urban elements counts
                 if not urban_element_counts.empty:
                     all_urban_elements_counts.append(urban_element_counts)
+
+                if site_conditions_df is None:
+                    site_conditions_df = get_site_conditions(polydata, site, voxel_size)
+                    site_conditions_dataframes.append(site_conditions_df)
         
+
         # Convert to dataframes
         capabilities_count_df = pd.concat(all_capabilities_counts, ignore_index=True)
         capabilities_count_df['capability_id'] = capabilities_count_df['capability_id'].astype(str)
@@ -664,6 +706,12 @@ def main():
             counts_path = output_dir / f'{site}_all_scenarios_{voxel_size}_urban_element_counts.csv'
             urban_elements_count_df.to_csv(counts_path, index=False)
             print(f"Saved urban element counts to {counts_path}")
+        
+        # Save site conditions for this site (all scenarios combined)
+        #all_site_conditions_df = pd.concat(site_conditions_dataframes, ignore_index=True)
+        site_conditions_path = output_dir / f'{site}_{voxel_size}_site_conditions.csv'
+        site_conditions_df.to_csv(site_conditions_path, index=False)
+        print(f"Saved site conditions to {site_conditions_path}")
     
     print("\n===== All processing completed =====")
 

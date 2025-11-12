@@ -286,4 +286,109 @@ BIOENVELOPE_STAGES = get_bioenvelope_stages()
 BIOENVELOPE_TO_INT = get_bioenvelope_to_int_mapping()
 INT_TO_BIOENVELOPE = get_int_to_bioenvelope_mapping()
 LIFECYCLE_DISPLAY_NAMES = get_lifecycle_display_names()
-BIOENVELOPE_DISPLAY_NAMES = get_bioenvelope_display_names() 
+BIOENVELOPE_DISPLAY_NAMES = get_bioenvelope_display_names()
+
+# --- Urban Elements --- #
+
+def get_urban_element_colors():
+    """
+    Get color definitions for urban element categories.
+    
+    Returns:
+    dict: Dictionary mapping urban element categories to RGB color tuples (0-255 range)
+    """
+    bio_colors = get_bioenvelope_colors() # Get bioenvelope colors for reuse
+    return {
+        'none': (255, 255, 255),               # White
+        'open space': bio_colors.get('otherGround', (190, 186, 218)), # Soft blue from bioenvelope
+        'green roof': bio_colors.get('greenRoof', (127, 201, 127)), # Green from bioenvelope
+        'brown roof': bio_colors.get('brownRoof', (253, 180, 98)), # Brown from bioenvelope
+        'facade': bio_colors.get('livingFacade', (179, 222, 105)), # Pink/Green from bioenvelope
+        'roadway': (176, 58, 46),              # Burnt Red
+        'busy roadway': (255, 0, 0),              # Bright Red
+        'existing conversion': bio_colors.get('node-rewilded', (27, 158, 119)), # Green from bioenvelope
+        'other street potential': bio_colors.get('exoskeleton', (255, 217, 47)), # Yellow from bioenvelope
+        'parking': bio_colors.get('footprint-depaved', (251, 128, 114)) # Orange from bioenvelope
+    }
+
+def get_urban_element_stages():
+    """
+    Get the ordered list of urban element categories.
+    
+    Returns:
+    list: Ordered list of urban element category names
+    """
+    # Ensure 'none' is first if present, otherwise maintain dict order
+    colors = get_urban_element_colors()
+    stages = list(colors.keys())
+    if 'none' in stages:
+        stages.insert(0, stages.pop(stages.index('none')))
+    return stages
+
+def get_urban_element_to_int_mapping():
+    """
+    Get mapping from urban element categories to integer indices.
+    
+    Returns:
+    dict: Dictionary mapping urban element categories to integer indices (starting from 1)
+    """
+    # Assign index 0 to 'none' if it exists, others start from 1
+    stages = get_urban_element_stages()
+    mapping = {}
+    current_index = 1
+    for stage in stages:
+        if stage == 'none':
+            mapping[stage] = 0
+        else:
+            mapping[stage] = current_index
+            current_index += 1
+    return mapping
+    # Original simple mapping: {stage: i+1 for i, stage in enumerate(get_urban_element_stages())}
+
+def get_int_to_urban_element_mapping():
+    """
+    Get mapping from integer indices to urban element categories.
+    
+    Returns:
+    dict: Dictionary mapping integer indices to urban element category names
+    """
+    return {v: k for k, v in get_urban_element_to_int_mapping().items()}
+
+def get_urban_element_display_names():
+    """
+    Get user-friendly display names for urban element categories.
+    
+    Returns:
+    dict: Dictionary mapping urban element category keys to display names
+    """
+    # Simple title case for now, can be customized later
+    return {stage: stage.replace('_', ' ').title() for stage in get_urban_element_stages()}
+
+def get_urban_element_colormap():
+    """
+    Get the colormap for urban element categories.
+    
+    Returns:
+    matplotlib.colors.LinearSegmentedColormap: Colormap for urban element categories
+    """
+    return create_colormap_from_dict(get_urban_element_colors(), "urban_element_cmap")
+
+def map_to_urban_element_indices(data):
+    """
+    Map data to urban element category indices.
+    
+    Parameters:
+    data (array-like): Array of urban element category names
+    
+    Returns:
+    numpy.ndarray: Array of urban element category indices
+    """
+    # Use the mapping that assigns 0 to 'none'
+    return map_categories_to_indices(data, get_urban_element_to_int_mapping(), default=0)
+
+# Add Urban Element Constants
+URBAN_ELEMENT_COLORS = get_urban_element_colors()
+URBAN_ELEMENT_STAGES = get_urban_element_stages()
+URBAN_ELEMENT_TO_INT = get_urban_element_to_int_mapping()
+INT_TO_URBAN_ELEMENT = get_int_to_urban_element_mapping()
+URBAN_ELEMENT_DISPLAY_NAMES = get_urban_element_display_names() 
