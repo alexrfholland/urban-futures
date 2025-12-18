@@ -3,11 +3,11 @@ import importlib
 
 # Import required modules
 import a_scenario_initialiseDS
-# Import a_scenario_runscenario but don't use it directly in imports to avoid potential circular dependencies
 import a_scenario_runscenario
 import a_scenario_generateVTKs
 import a_scenario_urban_elements_count
 import a_scenario_get_baselines
+import a_scenario_params
 
 # Note: a_scenario_generateVTKs now imports assign_rewilded_status directly from a_scenario_runscenario
 
@@ -210,8 +210,9 @@ def main():
     # Default values
     default_sites = ['trimmed-parade', 'city', 'uni']
     default_scenarios = ['positive', 'trending']
-    default_years = [0, 10, 30, 60, 180]
+    default_base_years = [0, 10, 30, 60, 180]
     default_voxel_size = 1
+    default_interval = 30  # Sub-timestep interval between 60 and 180
     
     # Ask for sites
     sites_input = input(f"Enter site(s) to process (comma-separated) or press Enter for default {default_sites}: ")
@@ -223,13 +224,27 @@ def main():
     scenarios = scenarios_input.split(',') if scenarios_input else default_scenarios
     scenarios = [scenario.strip() for scenario in scenarios]
     
-    # Ask for years/trimesters
-    years_input = input(f"Enter years to process (comma-separated) or press Enter for default {default_years}: ")
+    # Ask for sub-timestep interval
+    interval_input = input(f"Enter sub-timestep interval between 60-180 years (default {default_interval}, 0 to disable): ")
     try:
-        years = [int(year.strip()) for year in years_input.split(',')] if years_input else default_years
+        interval = int(interval_input) if interval_input else default_interval
+        if interval <= 0:
+            interval = None
     except ValueError:
-        print("Invalid input for years. Using default values.")
-        years = default_years
+        print("Invalid input for interval. Using default value.")
+        interval = default_interval
+    
+    # Generate years with sub-timesteps
+    years = a_scenario_params.generate_timesteps(default_base_years, interval)
+    print(f"Generated timesteps: {years}")
+    
+    # Allow user to override years
+    years_input = input(f"Enter years to process (comma-separated) or press Enter to use generated {years}: ")
+    try:
+        if years_input:
+            years = [int(year.strip()) for year in years_input.split(',')]
+    except ValueError:
+        print("Invalid input for years. Using generated timesteps.")
     
     # Ask for voxel size
     voxel_size_input = input(f"Enter voxel size (default {default_voxel_size}): ")
@@ -251,7 +266,8 @@ def main():
     print("\n===== Processing with the following parameters =====")
     print(f"Sites: {sites}")
     print(f"Scenarios: {scenarios}")
-    print(f"Years/Trimesters: {years}")
+    print(f"Sub-timestep interval: {interval if interval else 'disabled'}")
+    print(f"Years/Timesteps: {years}")
     print(f"Voxel Size: {voxel_size}")
     print(f"Skip Scenario Simulation: {skip_scenario}")
     print(f"Enable Visualization: {enable_visualization}")

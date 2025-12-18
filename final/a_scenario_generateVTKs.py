@@ -134,10 +134,10 @@ def create_bioEnvelope_catagories(ds, params):
     #--------------------------------------------------------------------------
     # STEP 1: CREATE BIO-ENVELOPE ELIGIBILITY MASK
     # Determine which voxels are eligible for bio-envelope based on simulation parameters
+    # Note: Parameters are pre-interpolated for sub-timesteps
     #--------------------------------------------------------------------------
-    year = params['years_passed']
-    turnThreshold = params['sim_TurnsThreshold'][year]
-    resistanceThreshold = params['sim_averageResistance'][year]
+    turnThreshold = params['sim_TurnsThreshold']
+    resistanceThreshold = params.get('sim_averageResistance', 0)
 
     bioMask = (ds['sim_Turns'] <= turnThreshold) & (ds['sim_averageResistance'] <= resistanceThreshold) & (ds['sim_Turns'] >= 0)
     ds['bioMask'] = bioMask
@@ -480,10 +480,8 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     Returns:
     xarray.Dataset: Updated dataset
     """
-    # Get scenario parameters from the centralized module
-    paramsDic = a_scenario_params.get_scenario_parameters()
-    params = paramsDic[(site, scenario)]
-    params['years_passed'] = year
+    # Get scenario parameters with interpolation for sub-timesteps
+    params = a_scenario_params.get_params_for_year(site, scenario, year)
     
     # Output file path
     output_path = f'data/revised/final/{site}'

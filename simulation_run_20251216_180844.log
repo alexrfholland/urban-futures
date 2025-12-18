@@ -1,0 +1,54 @@
+Enter site(s) to process (comma-separated) or press Enter for default ['trimmed-parade', 'city', 'uni']: Enter scenario(s) to process (comma-separated) or press Enter for default ['positive', 'trending']: Enter years to process (comma-separated) or press Enter for default [0, 10, 30, 60, 180]: Enter voxel size (default 1): Skip scenario simulation if data files exist? (yes/no, default no): Enable visualization during VTK generation? (yes/no, default no): 
+===== Processing with the following parameters =====
+Sites: ['trimmed-parade', 'city', 'uni']
+Scenarios: ['positive', 'trending']
+Years/Trimesters: [0, 10, 30, 60, 180]
+Voxel Size: 1
+Skip Scenario Simulation: False
+Enable Visualization: False
+
+Proceed with these settings? (yes/no, default yes): 
+===== STEP 2: PROCESSING SCENARIOS =====
+
+===== Processing trimmed-parade with positive scenario =====
+
+Step 1: Initializing site xarray dataset
+Traceback (most recent call last):
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/file_manager.py", line 211, in _acquire_with_cache_info
+    file = self._cache[self._key]
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/lru_cache.py", line 56, in __getitem__
+    value = self._cache[key]
+KeyError: [<class 'netCDF4._netCDF4.Dataset'>, ('/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/data/revised/final/trimmed-parade/trimmed-parade_1_voxelArray_RewildingNodes.nc',), 'r', (('clobber', True), ('diskless', False), ('format', 'NETCDF4'), ('persist', False)), '367b65ee-226e-4d32-8a66-4d6e5acc8ed5']
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_manager.py", line 367, in <module>
+    main()
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_manager.py", line 276, in main
+    scenario_vtk_files = process_scenario(
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_manager.py", line 95, in process_scenario
+    subsetDS = a_scenario_initialiseDS.initialize_dataset(site, voxel_size)
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_initialiseDS.py", line 291, in initialize_dataset
+    xarray_dataset = xr.open_dataset(filepath)
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/api.py", line 588, in open_dataset
+    backend_ds = backend.open_dataset(
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 645, in open_dataset
+    store = NetCDF4DataStore.open(
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 408, in open
+    return cls(manager, group=group, mode=mode, lock=lock, autoclose=autoclose)
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 355, in __init__
+    self.format = self.ds.data_model
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 417, in ds
+    return self._acquire()
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 411, in _acquire
+    with self._manager.acquire_context(needs_lock) as root:
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py", line 135, in __enter__
+    return next(self.gen)
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/file_manager.py", line 199, in acquire_context
+    file, cached = self._acquire_with_cache_info(needs_lock)
+  File "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.venv/lib/python3.10/site-packages/xarray/backends/file_manager.py", line 217, in _acquire_with_cache_info
+    file = self._opener(*self._args, **kwargs)
+  File "src/netCDF4/_netCDF4.pyx", line 2470, in netCDF4._netCDF4.Dataset.__init__
+  File "src/netCDF4/_netCDF4.pyx", line 2107, in netCDF4._netCDF4._ensure_nc_success
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/data/revised/final/trimmed-parade/trimmed-parade_1_voxelArray_RewildingNodes.nc'
