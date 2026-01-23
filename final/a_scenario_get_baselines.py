@@ -460,7 +460,7 @@ def main():
     
     parser = argparse.ArgumentParser(description='Generate baseline trees and resources for a site.')
     parser.add_argument('site', type=str, help='Site name (e.g., trimmed-parade, city, uni)')
-    parser.add_argument('--voxel-size', type=int, default=1, help='Voxel size for the simulation (default: 1)')
+    parser.add_argument('--voxel-size', type=float, default=1, help='Voxel size for the simulation (default: 1)')
     parser.add_argument('--output-folder', type=str, default='data/revised/final/baselines', 
                         help='Folder to save output files (default: data/revised/final/baselines)')
     

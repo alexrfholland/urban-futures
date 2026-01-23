@@ -214,7 +214,7 @@ SUPPORT_ACTIONS = {
     # Tree support actions - track by rewilding status
     'Tree.self.senescent': {'breakdown': 'rewilding_status'},
     'Tree.others.notpaved': {'breakdown': 'urban_element'},
-    'Tree.generations.shrub': {'breakdown': 'urban_element'},
+    'Tree.generations.grassland': {'breakdown': 'urban_element'},
 }
 
 # Control levels for canopy breakdown
@@ -493,6 +493,18 @@ def count_support_actions(polydata, indicator_id, indicator_mask):
                 'action_value': rwild_type,
                 'count': count
             })
+
+    # Bird actions: artificial structures deployed
+    if indicator_id.startswith('Bird.') and 'forest_size' in polydata.point_data:
+        forest_size = polydata.point_data['forest_size']
+        artificial_mask = (forest_size == 'artificial')
+        count = np.sum(indicator_mask & artificial_mask)
+        records.append({
+            'indicator_id': indicator_id,
+            'action_type': 'artificial_structures_deployed',
+            'action_value': 'artificial',
+            'count': count
+        })
     
     # Also count artificial (non-precolonial) if specified
     if config.get('also_count') == 'artificial' and 'forest_precolonial' in polydata.point_data:
@@ -707,7 +719,7 @@ def main():
                         help='Single year, or omit for all')
     parser.add_argument('--interval', type=int, default=None,
                         help='Sub-timestep interval (e.g., 30 for years 90, 120, 150)')
-    parser.add_argument('--voxel-size', type=int, default=1)
+    parser.add_argument('--voxel-size', type=float, default=1)
     parser.add_argument('--no-save', action='store_true',
                         help='Do not save VTK files')
     

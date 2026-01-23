@@ -104,6 +104,23 @@ def combine_sites(sites=None, voxel_size=1):
     
     if all_indicators:
         combined_indicators = pd.concat(all_indicators, ignore_index=True)
+        trending_counts = combined_indicators[
+            combined_indicators['scenario'] == 'trending'
+        ][['site', 'year', 'indicator_id', 'voxel_size', 'count']].rename(
+            columns={'count': 'trending_count'}
+        )
+        combined_indicators = combined_indicators.merge(
+            trending_counts,
+            on=['site', 'year', 'indicator_id', 'voxel_size'],
+            how='left'
+        )
+        combined_indicators['increase from trending'] = pd.NA
+        non_baseline_mask = combined_indicators['scenario'] != 'baseline'
+        combined_indicators.loc[non_baseline_mask, 'increase from trending'] = (
+            combined_indicators.loc[non_baseline_mask, 'count']
+            / combined_indicators.loc[non_baseline_mask, 'trending_count']
+        )
+        combined_indicators = combined_indicators.drop(columns=['trending_count'])
         combined_path = OUTPUT_DIR / f'all_sites_{voxel_size}_indicator_counts.csv'
         combined_indicators.to_csv(combined_path, index=False)
         print(f"\nSaved: {combined_path}")
@@ -173,7 +190,7 @@ def main():
     )
     parser.add_argument('--site', type=str, default='all',
                         help='Site name, or "all" to combine all sites')
-    parser.add_argument('--voxel-size', type=int, default=1)
+    parser.add_argument('--voxel-size', type=float, default=1)
     parser.add_argument('--summary', action='store_true',
                         help='Print summary table')
     parser.add_argument('--debug', action='store_true',

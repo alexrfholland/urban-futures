@@ -35,7 +35,8 @@ PLOT_DIR = SCRIPT_DIR.parent / 'data' / 'revised' / 'final' / 'output' / 'plots'
 
 # --- GRAPH DIMENSIONS ---
 GRAPH_WIDTH = 800               # Total width in pixels
-GRAPH_HEIGHT_PER_SITE = 800     # Height per site subplot in pixels
+# GRAPH_HEIGHT_PER_SITE = 800     # Height per site subplot in pixels
+GRAPH_HEIGHT_PER_SITE = 640     # Height per site subplot in pixels (80%)
 
 # --- BASELINE SETTINGS ---
 BASELINE_YEAR = -50             # X position of baseline on graph
@@ -133,6 +134,44 @@ def prepare_plot_data(raw_data, sites):
     plot_data = plot_data.drop_duplicates(subset=keys + ['year'], keep='first')
     
     return plot_data
+
+
+def aggregate_persona_capability(raw_data, sites):
+    """
+    Aggregate indicators to persona x capability per site/scenario/year.
+    Combines all indicators within each persona-capability group.
+    """
+    df = raw_data[raw_data['site'].isin(sites)].copy()
+
+    baseline = df[df['scenario'] == 'baseline'].copy()
+    baseline_sum = baseline.groupby(
+        ['site', 'persona', 'capability', 'voxel_size']
+    )['count'].sum().reset_index().rename(
+        columns={'count': 'baseline_count'}
+    )
+
+    grouped = df[df['scenario'].isin(['positive', 'trending'])].groupby(
+        ['site', 'scenario', 'year', 'persona', 'capability', 'voxel_size']
+    )['count'].sum().reset_index()
+
+    grouped = grouped.merge(
+        baseline_sum,
+        on=['site', 'persona', 'capability', 'voxel_size'],
+        how='left'
+    )
+
+    grouped['pct_of_baseline'] = np.where(
+        grouped['baseline_count'] > 0,
+        (grouped['count'] / grouped['baseline_count'] * 100).round(1),
+        np.nan
+    )
+
+    grouped['indicator_id'] = (
+        grouped['persona'] + '.' + grouped['capability'] + '.combined'
+    )
+    grouped['label'] = grouped['persona'] + ' ' + grouped['capability'] + ' combined'
+
+    return grouped
 
 
 # =============================================================================
@@ -698,7 +737,7 @@ def create_combined_stream_graph(loess_data, sites, color_by='capability'):
 # =============================================================================
 
 def generate_stream_graph(sites=None, voxel_size=1, color_by='capability', save=True, show=True,
-                          width=None, height_per_site=None, combined=False):
+                          width=None, height_per_site=None, combined=False, combined_aggregated=False):
     """
     Generate stream graph for specified sites.
     
@@ -727,27 +766,37 @@ def generate_stream_graph(sites=None, voxel_size=1, color_by='capability', save=
     print(f"Loading data for sites: {sites}")
     raw_data = load_indicator_data(sites, voxel_size)
     
+    if combined_aggregated:
+        print("Aggregating persona-capability streams...")
+        raw_data = aggregate_persona_capability(raw_data, sites)
+
     print("Preparing plot data with baseline anchors...")
     plot_data = prepare_plot_data(raw_data, sites)
     
     print("Applying smoothing spline...")
     loess_data = apply_loess_smoothing(plot_data, smoothing=SMOOTHING_FACTOR)
     
-    if combined:
+    if combined_aggregated:
+        print("Creating combined stream graph (aggregated)...")
+        fig = create_combined_stream_graph(loess_data, sites, color_by=color_by)
+        graph_height = GRAPH_HEIGHT_PER_SITE * 2  # Double height for combined
+        mode = 'combined-aggregated'
+    elif combined:
         print("Creating combined stream graph...")
         fig = create_combined_stream_graph(loess_data, sites, color_by=color_by)
         graph_height = GRAPH_HEIGHT_PER_SITE * 2  # Double height for combined
+        mode = 'combined'
     else:
         print("Creating faceted stream graph...")
         fig = create_stream_graph(loess_data, sites, color_by=color_by)
         graph_height = GRAPH_HEIGHT_PER_SITE * len(sites)
+        mode = 'faceted'
     
     if save:
         PLOT_DIR.mkdir(parents=True, exist_ok=True)
         sites_str = '-'.join(sites)
         import time
         timestamp = int(time.time())
-        mode = 'combined' if combined else 'faceted'
         filename = f'stream_graph_{mode}_{voxel_size}_{sites_str}_{timestamp}.html'
         filepath = PLOT_DIR / filename
         # Manually set width/height in div style to force fixed size
@@ -798,6 +847,8 @@ def main():
     parser.add_argument('--no-save', action='store_true', help='Do not save HTML file')
     parser.add_argument('--combined', action='store_true', 
                         help='Combine all sites into one stream graph (default: faceted by site)')
+    parser.add_argument('--combined-aggregated', action='store_true',
+                        help='Combine sites and aggregate persona-capability streams')
     
     args = parser.parse_args()
     
@@ -811,7 +862,8 @@ def main():
         show=not args.no_show,
         width=args.width,
         height_per_site=args.height,
-        combined=args.combined
+        combined=args.combined,
+        combined_aggregated=args.combined_aggregated
     )
 
 
