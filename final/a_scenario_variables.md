@@ -358,4 +358,47 @@ These variables enable finer-grained analysis of:
 - Coverage of different design interventions
 - Distribution of urban features that support biodiversity
 - Changes in habitat composition across different scenario years
-- Spatial relationships between urban elements and habitat types 
+- Spatial relationships between urban elements and habitat types
+
+## Variables from a_info_proposal_interventions.py
+
+### 20. proposal opportunity and intervention metrics
+
+**Purpose**: Quantify proposal opportunities and proposal-to-intervention support patterns per `site/scenario/year`.
+
+**Inputs used**:
+- Tree dataframe fields: `action`, `size`, `control`, `rewilded`, `isNewTree`, `precolonial`
+- Urban feature VTK fields: `search_bioavailable`, `search_urban_elements`, `search_design_action`, `scenario_rewilded`, `scenario_bioEnvelope`, `forest_size`, `forest_control`, `forest_precolonial`
+
+**Default parameters**:
+- `COLONISE_DISTANCE_M = 5`
+- Colonise exclusions in `search_urban_elements`: `open space`, `roadway`, `busy roadway`, `parking`, `other street potential` (with truncation-safe match for stored `other street potenti`)
+
+**Proposal opportunity rules**:
+- `Decay`: Trees where `isNewTree == False` and `action in {'AGE-IN-PLACE', 'SENESCENT'}`
+- `Release Control`: Trees where `isNewTree == False` and `size in {'medium', 'large'}`; voxels where `forest_size in {'medium', 'large'}`
+- `Colonise`: Voxels where `search_bioavailable != 'arboreal'`, within 5m of (`search_bioavailable == 'arboreal'` OR `scenario_bioEnvelope != 'none'`), excluding paved/open urban classes above
+- `Recruit`, `Deploy`, `Translocate`: Stub rows (status `stub`) until definitions are finalized
+
+**Intervention support rules**:
+- `Decay` full `Brace`: tree `rewilded == 'exoskeleton'`; voxel `scenario_rewilded == 'exoskeleton'`
+- `Decay` partial `Buffer`: tree `rewilded in {'node-rewilded','footprint-depaved'}`; voxel `scenario_rewilded in {'node-rewilded','footprint-depaved','rewilded'}`
+- `Release Control` full `Eliminate pruning`: `control/forest_control == 'reserve-tree'`
+- `Release Control` partial `Reduce pruning`: `control/forest_control == 'park-tree'`
+- `Colonise` full `Connect (green envelopes)`: `scenario_bioEnvelope in {'livingFacade','greenRoof','otherGround'}`
+- `Colonise` full `Depave`: `scenario_rewilded in {'footprint-depaved','node-rewilded','rewilded'}`
+- `Colonise` partial `Connect (brown envelopes)`: `scenario_bioEnvelope == 'brownRoof'`
+
+**Percentage denominator**:
+- `supported_tree_pct` and `supported_voxel_pct` are calculated against proposal opportunity totals for the same `site + scenario + year + proposal`.
+
+**CSV outputs**:
+- `{site}_{voxel_size}_proposal_opportunities.csv`
+  - Columns: `site, scenario, year, proposal_id, proposal_label, opportunity_tree_count, opportunity_voxel_count, status, notes`
+- `{site}_{voxel_size}_proposal_interventions.csv`
+  - Columns: `site, scenario, year, proposal_id, support_level, support_label, status, supported_tree_count, supported_tree_pct, supported_voxel_count, supported_voxel_pct, proposal_tree_count, proposal_voxel_count, notes`
+- `{site}_{voxel_size}_proposal_qc.csv`
+  - Columns: `site, scenario, year, check_name, passed, value, details`
+- All-sites combined outputs:
+  - `all_sites_{voxel_size}_proposal_opportunities.csv`
+  - `all_sites_{voxel_size}_proposal_interventions.csv`

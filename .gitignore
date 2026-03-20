@@ -10,6 +10,8 @@ src/compute.client/python_client/dist/
 .aws
 venv
 .env
+.claude/
+.tmp/
 docker-compose.yml
 
 .
@@ -46,6 +48,7 @@ RhinoCompute.cs
 /src/rhino.compute/logs/
 # .gitignore
 .venv/
+.vscode/
 data/
 outputs/
 util/
@@ -56,3 +59,5 @@ output_with_kde.nc
 blender_compositor_cmaps.zip
 
 draft/
+final/assesment/ddl/
+final/assesment/comparison_real-world_properties/pdf/

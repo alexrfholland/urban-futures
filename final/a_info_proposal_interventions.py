@@ -169,10 +169,10 @@ REQUIRED_VTK_ARRAYS = [
 #
 # Decay opportunity:
 #   tree_df.isNewTree == False AND tree_df.action in {'AGE-IN-PLACE','SENESCENT'}
-# Decay partial support (Buffer):
+# Decay full support (Buffer):
 #   tree_df.rewilded in {'node-rewilded','footprint-depaved'}
 #   vtk.scenario_rewilded in {'node-rewilded','footprint-depaved','rewilded'}
-# Decay full support (Brace):
+# Decay partial support (Brace):
 #   tree_df.rewilded == 'exoskeleton'
 #   vtk.scenario_rewilded == 'exoskeleton'
 #
@@ -538,14 +538,14 @@ def compute_metrics_for_combo(
                     scenario,
                     year,
                     "decay",
-                    "partial",
+                    "full",
                     "Buffer",
                     int(tree_mask.sum()),
                     int(np.sum(voxel_mask)),
                     decay_tree_count,
                     decay_voxel_count,
                     status="computed",
-                    notes="Partial support mapped to node/footprint/generic rewilded.",
+                    notes="Full support mapped to node/footprint/generic rewilded.",
                 )
             )
 
@@ -558,14 +558,14 @@ def compute_metrics_for_combo(
                     scenario,
                     year,
                     "decay",
-                    "full",
+                    "partial",
                     "Brace",
                     int(tree_mask.sum()),
                     int(np.sum(voxel_mask)),
                     decay_tree_count,
                     decay_voxel_count,
                     status="computed",
-                    notes="Full support mapped to exoskeleton.",
+                    notes="Partial support mapped to exoskeleton.",
                 )
             )
 

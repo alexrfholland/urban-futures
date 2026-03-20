@@ -1,0 +1,13 @@
+persona,capability,indicator_id,vtk_point_data_layer_name,count,pct_of_voxels
+Bird,self,Bird.self.peeling,indicator_Bird_self_peeling,82023,7.99
+Bird,others,Bird.others.perch,indicator_Bird_others_perch,665854,64.90
+Bird,generations,Bird.generations.hollow,indicator_Bird_generations_hollow,1790,0.17
+Lizard,self,Lizard.self.grass,indicator_Lizard_self_grass,162071,15.80
+Lizard,self,Lizard.self.dead,indicator_Lizard_self_dead,234779,22.88
+Lizard,self,Lizard.self.epiphyte,indicator_Lizard_self_epiphyte,960,0.09
+Lizard,others,Lizard.others.notpaved,indicator_Lizard_others_notpaved,162071,15.80
+Lizard,generations,Lizard.generations.nurse-log,indicator_Lizard_generations_nurse-log,145425,14.17
+Lizard,generations,Lizard.generations.fallen-tree,indicator_Lizard_generations_fallen-tree,12543,1.22
+Tree,self,Tree.self.senescent,indicator_Tree_self_senescent,105864,10.32
+Tree,others,Tree.others.notpaved,indicator_Tree_others_notpaved,162071,15.80
+Tree,generations,Tree.generations.grassland,indicator_Tree_generations_grassland,162071,15.80
