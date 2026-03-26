@@ -1,0 +1,56 @@
+persona,capability,indicator,action_type,support_condition,year_180_human_led,year_180_nonhuman_led,higher_pathway,times_higher
+Bird,Acquire Resources,Peeling bark,Installed structure,Installed artificial structures,4039,14110,nonhuman-led,3.49x
+Bird,Acquire Resources,Peeling bark,Control condition,High-control canopy,7370,1282,human-led,5.75x
+Bird,Acquire Resources,Peeling bark,Control condition,Low-control canopy,5736,26838,nonhuman-led,4.68x
+Bird,Acquire Resources,Peeling bark,Control condition,Medium-control canopy,283,72,human-led,3.93x
+Bird,Communicate,Perchable canopy,Control condition,High-control canopy,122977,31194,human-led,3.94x
+Bird,Communicate,Perchable canopy,Control condition,Low-control canopy,44424,223541,nonhuman-led,5.03x
+Bird,Communicate,Perchable canopy,Control condition,Medium-control canopy,7321,2590,human-led,2.83x
+Bird,Reproduce,Hollows,Installed structure,Installed artificial structures,121,430,nonhuman-led,3.55x
+Bird,Reproduce,Hollows,Control condition,High-control canopy,189,36,human-led,5.25x
+Bird,Reproduce,Hollows,Control condition,Low-control canopy,170,939,nonhuman-led,5.52x
+Bird,Reproduce,Hollows,Control condition,Medium-control canopy,1,1,equal,1.00x
+Lizard,Acquire Resources,Dead branches,Control condition,High-control canopy,19983,5284,human-led,3.78x
+Lizard,Acquire Resources,Dead branches,Control condition,Low-control canopy,21542,93650,nonhuman-led,4.35x
+Lizard,Acquire Resources,Dead branches,Control condition,Medium-control canopy,1226,747,human-led,1.64x
+Lizard,Acquire Resources,Epiphytes,Installed structure,Installed artificial structures,96,306,nonhuman-led,3.19x
+Lizard,Acquire Resources,Epiphytes,Control condition,High-control canopy,1,2,nonhuman-led,2.00x
+Lizard,Acquire Resources,Epiphytes,Control condition,Low-control canopy,94,303,nonhuman-led,3.22x
+Lizard,Acquire Resources,Epiphytes,Control condition,Medium-control canopy,1,1,equal,1.00x
+Lizard,Acquire Resources,Grasslands / ground cover,Urban element,Brown roof,3672,29481,nonhuman-led,8.03x
+Lizard,Acquire Resources,Grasslands / ground cover,Urban element,Busy roadway,623,6121,nonhuman-led,9.83x
+Lizard,Acquire Resources,Grasslands / ground cover,Urban element,Existing conversion,233,1250,nonhuman-led,5.36x
+Lizard,Acquire Resources,Grasslands / ground cover,Urban element,Facade,12265,124227,nonhuman-led,10.13x
+Lizard,Acquire Resources,Grasslands / ground cover,Urban element,Green roof,7356,53358,nonhuman-led,7.25x
+Lizard,Acquire Resources,Grasslands / ground cover,Urban element,Unclassified / other,8800,53682,nonhuman-led,6.10x
+Lizard,Acquire Resources,Grasslands / ground cover,Urban element,Open space,1260,6753,nonhuman-led,5.36x
+Lizard,Acquire Resources,Grasslands / ground cover,Urban element,Parking,980,5684,nonhuman-led,5.80x
+Lizard,Acquire Resources,Grasslands / ground cover,Urban element,Roadway,112,811,nonhuman-led,7.24x
+Lizard,Communicate,Non-paved surface,Urban element,Brown roof,3672,29481,nonhuman-led,8.03x
+Lizard,Communicate,Non-paved surface,Urban element,Existing conversion,233,1250,nonhuman-led,5.36x
+Lizard,Communicate,Non-paved surface,Urban element,Facade,12349,124273,nonhuman-led,10.06x
+Lizard,Communicate,Non-paved surface,Urban element,Green roof,7362,53364,nonhuman-led,7.25x
+Lizard,Communicate,Non-paved surface,Urban element,Unclassified / other,8800,53682,nonhuman-led,6.10x
+Lizard,Communicate,Non-paved surface,Urban element,Open space,7953,7953,equal,1.00x
+Lizard,Reproduce,Nurse logs,Urban element,Brown roof,456,2518,nonhuman-led,5.52x
+Lizard,Reproduce,Nurse logs,Urban element,Busy roadway,119,806,nonhuman-led,6.77x
+Lizard,Reproduce,Nurse logs,Urban element,Existing conversion,129,202,nonhuman-led,1.57x
+Lizard,Reproduce,Nurse logs,Urban element,Facade,549,2429,nonhuman-led,4.42x
+Lizard,Reproduce,Nurse logs,Urban element,Green roof,669,2116,nonhuman-led,3.16x
+Lizard,Reproduce,Nurse logs,Urban element,Unclassified / other,5921,31402,nonhuman-led,5.30x
+Lizard,Reproduce,Nurse logs,Urban element,Open space,388,981,nonhuman-led,2.53x
+Lizard,Reproduce,Nurse logs,Urban element,Parking,117,682,nonhuman-led,5.83x
+Lizard,Reproduce,Nurse logs,Urban element,Roadway,8,62,nonhuman-led,7.75x
+Tree,Acquire Resources,Senescent biovolume,Rewilding status,Exoskeleton,4,12,nonhuman-led,3.00x
+Tree,Acquire Resources,Senescent biovolume,Rewilding status,Footprint depaved,36,128,nonhuman-led,3.56x
+Tree,Acquire Resources,Senescent biovolume,Rewilding status,Node rewilded,3,70,nonhuman-led,23.33x
+Tree,Acquire Resources,Senescent biovolume,Rewilding status,Unclassified / other,7858,22558,nonhuman-led,2.87x
+Tree,Communicate,Soil near canopy,Urban element,Existing conversion,233,1250,nonhuman-led,5.36x
+Tree,Communicate,Soil near canopy,Urban element,Unclassified / other,8800,53682,nonhuman-led,6.10x
+Tree,Communicate,Soil near canopy,Urban element,Open space,7953,7953,equal,1.00x
+Tree,Reproduce,Recruitment grassland,Urban element,Busy roadway,622,6121,nonhuman-led,9.84x
+Tree,Reproduce,Recruitment grassland,Urban element,Existing conversion,193,1250,nonhuman-led,6.48x
+Tree,Reproduce,Recruitment grassland,Urban element,Unclassified / other,8753,53595,nonhuman-led,6.12x
+Tree,Reproduce,Recruitment grassland,Urban element,Open space,1260,6753,nonhuman-led,5.36x
+Tree,Reproduce,Recruitment grassland,Urban element,Parking,980,5674,nonhuman-led,5.79x
+Tree,Reproduce,Recruitment grassland,Urban element,Roadway,112,766,nonhuman-led,6.84x

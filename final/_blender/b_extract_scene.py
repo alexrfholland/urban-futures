@@ -129,23 +129,19 @@ def extract_ground(site, voxel_size, years, filePATH):
         for year in years:
             print(f"\nProcessing year {year}...")
             
-            ground = b_generate_rewilded_ground.generate_rewilded_ground(
+            _, ground = b_generate_rewilded_ground.generate_rewilded_ground(
                 site=site,
                 voxel_size=voxel_size,
                 year=year,
-                noise_scale=1.0,
-                max_height_variation=1,
-                detail_scale=10.0,
-                detail_amplitude=0.1
             )
             print("Generated rewilded ground")
 
             output_base = f'{filePATH}/scenes/{site}_{year}_rewilded.ply'
             print("Saving ground...")
-            a_vtk_to_ply.export_polydata_to_ply(
+            a_vtk_to_ply.export_polydata_points_to_ply(
                 ground, 
                 output_base, 
-                attributesToTransfer=['scenario_rewilded', 'sim_Turns']
+                attributesToTransfer=['scenario_rewilded', 'sim_Turns', 'sim_averageResistance']
             )
     
 def main():
@@ -282,6 +278,4 @@ if __name__ == "__main__":
             treesDF_subset.to_csv(f'{output_base}_trees_yr{year}.csv', index=False)
             
             print(f"Successfully saved all components for scene {scene}, year {year}")"""
-
-
 

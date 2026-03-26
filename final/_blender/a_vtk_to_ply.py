@@ -22,6 +22,16 @@ resource_cols = [
     'resource_other'
 ]
 
+resource_int_to_binary = {
+    0: 'resource_other',
+    1: 'resource_perch branch',
+    2: 'resource_dead branch',
+    3: 'resource_peeling bark',
+    4: 'resource_epiphyte',
+    5: 'resource_fallen log',
+    6: 'resource_hollow',
+}
+
 def determine_attributes(mesh, attributesToTransfer):
     """
     Determine which point data attributes to transfer based on user input.
@@ -188,6 +198,47 @@ def map_columns_mesh(mesh):
 
     return mesh
 
+
+def ensure_resource_binary_columns(mesh):
+    """
+    Ensure missing resource_* point-data columns are synthesized from int_resource.
+    Only creates columns for resource values actually present on the mesh.
+    """
+    working_mesh = mesh.copy()
+
+    if 'resource' in working_mesh.point_data and 'int_resource' not in working_mesh.point_data:
+        working_mesh = map_columns_mesh(working_mesh)
+
+    missing_resource_cols = [col for col in resource_cols if col not in working_mesh.point_data]
+    if not missing_resource_cols:
+        return working_mesh, []
+
+    if 'int_resource' not in working_mesh.point_data:
+        print("No int_resource found; cannot synthesize missing resource_* columns")
+        return working_mesh, []
+
+    values = np.asarray(working_mesh.point_data['int_resource'])
+    if values.ndim != 1:
+        values = values.reshape(-1)
+
+    rounded = np.rint(values).astype(np.int32, copy=False)
+    present_values = set(np.unique(rounded).tolist())
+
+    created = []
+    for resource_value, attr_name in resource_int_to_binary.items():
+        if attr_name not in missing_resource_cols:
+            continue
+        if resource_value not in present_values:
+            continue
+
+        working_mesh.point_data[attr_name] = (rounded == resource_value).astype(np.uint8)
+        created.append(attr_name)
+
+    if created:
+        print(f"Synthesized missing resource_* columns from int_resource: {created}")
+
+    return working_mesh, created
+
 def export_polydata_to_ply(mesh, filename, attributesToTransfer=None):
     """
     Export a PyVista PolyData object to a PLY file using trimesh.
@@ -196,7 +247,10 @@ def export_polydata_to_ply(mesh, filename, attributesToTransfer=None):
     print("Starting export of PolyData to PLY")
 
     if 'resource' in mesh.point_data:
-        mesh = map_columns_mesh(mesh)
+        resource_array = np.asarray(mesh.point_data['resource'])
+        if np.issubdtype(resource_array.dtype, np.str_) or np.issubdtype(resource_array.dtype, np.object_):
+            mesh = map_columns_mesh(mesh)
+    mesh, _ = ensure_resource_binary_columns(mesh)
         
     # Default attributes to look for
     default_attributes = ['int_resource', 'isSenescent', 'isTerminal', 'cluster_id']
@@ -258,6 +312,109 @@ def export_polydata_to_ply(mesh, filename, attributesToTransfer=None):
     print(f"\nSuccessfully exported PLY file with vertex attributes:")
     print("Vertex attributes:", list(vertex_attributes.keys()))
 
+
+def _select_available_attributes(mesh, attributesToTransfer=None):
+    working_mesh = mesh.copy()
+
+    if 'resource' in working_mesh.point_data:
+        resource_array = np.asarray(working_mesh.point_data['resource'])
+        if np.issubdtype(resource_array.dtype, np.str_) or np.issubdtype(resource_array.dtype, np.object_):
+            working_mesh = map_columns_mesh(working_mesh)
+    working_mesh, _ = ensure_resource_binary_columns(working_mesh)
+
+    default_attributes = ['int_resource', 'isSenescent', 'isTerminal', 'cluster_id']
+    default_attributes.extend(resource_cols)
+
+    if attributesToTransfer is None:
+        requested = default_attributes
+    else:
+        requested = list(dict.fromkeys(list(attributesToTransfer) + resource_cols))
+
+    available = determine_attributes(working_mesh, requested)
+    return working_mesh, available
+
+
+def _append_point_attribute_fields(vertex_dict, key, array):
+    if array.ndim > 1:
+        for component_index in range(array.shape[1]):
+            vertex_dict[f"{key}_{component_index}"] = array[:, component_index]
+    else:
+        vertex_dict[key] = array
+
+
+def _write_point_cloud_ply(vertex_dict, filename, num_points):
+    vertex_dtype = []
+    for key, values in vertex_dict.items():
+        if key in ['x', 'y', 'z']:
+            vertex_dtype.append((key, 'f4'))
+            continue
+
+        if key in ['red', 'green', 'blue']:
+            vertex_dtype.append((key, 'u1'))
+            continue
+
+        if np.issubdtype(values.dtype, np.floating):
+            vertex_dtype.append((key, 'f4'))
+        elif np.issubdtype(values.dtype, np.integer):
+            vertex_dtype.append((key, 'i4'))
+        elif np.issubdtype(values.dtype, np.bool_):
+            vertex_dtype.append((key, 'u1'))
+        else:
+            vertex_dtype.append((key, 'f4'))
+
+    structured_array = np.empty(num_points, dtype=vertex_dtype)
+    for field_name in structured_array.dtype.names:
+        values = vertex_dict[field_name]
+        if field_name in ['x', 'y', 'z']:
+            structured_array[field_name] = values.astype(np.float32)
+        elif field_name in ['red', 'green', 'blue']:
+            structured_array[field_name] = values.astype(np.uint8)
+        elif np.issubdtype(values.dtype, np.floating):
+            structured_array[field_name] = values.astype(np.float32)
+        elif np.issubdtype(values.dtype, np.integer):
+            structured_array[field_name] = values.astype(np.int32)
+        elif np.issubdtype(values.dtype, np.bool_):
+            structured_array[field_name] = values.astype(np.uint8)
+        else:
+            structured_array[field_name] = values.astype(np.float32)
+
+    ply_element = PlyElement.describe(structured_array, 'vertex')
+    PlyData([ply_element], text=False).write(filename)
+
+
+def export_polydata_points_to_ply(mesh, filename, attributesToTransfer=None):
+    """
+    Export a PyVista PolyData object to a vertex-only PLY file.
+    Only requested point attributes are written.
+    """
+    print("Starting export of PolyData points to PLY")
+
+    point_mesh, available_attributes = _select_available_attributes(mesh, attributesToTransfer)
+    point_mesh = convert_string_attributes(point_mesh, filename)
+
+    num_points = point_mesh.n_points
+    print(f"Number of points to export: {num_points}")
+
+    vertex_dict = {
+        'x': point_mesh.points[:, 0].astype(np.float32),
+        'y': point_mesh.points[:, 1].astype(np.float32),
+        'z': point_mesh.points[:, 2].astype(np.float32),
+    }
+
+    for key in available_attributes:
+        actual_key = f"{key}_int" if f"{key}_int" in point_mesh.point_data else key
+        if actual_key not in point_mesh.point_data:
+            continue
+
+        array = np.asarray(point_mesh.point_data[actual_key])
+        if np.issubdtype(array.dtype, np.number) or np.issubdtype(array.dtype, np.bool_):
+            _append_point_attribute_fields(vertex_dict, key, array)
+            print(f"Added point attribute '{key}' (shape: {array.shape})")
+
+    _write_point_cloud_ply(vertex_dict, filename, num_points)
+    print(f"\nSuccessfully exported point-cloud PLY file with vertex attributes:")
+    print("Vertex attributes:", [key for key in vertex_dict.keys() if key not in {'x', 'y', 'z'}])
+
 # Example usage
 if __name__ == "__main__":
     # Define input and output folders
@@ -300,7 +457,7 @@ if __name__ == "__main__":
     elif user_input == 2:
         print('processing logs')
         input_folder = "data/revised/final/logMeshes"
-        output_folder = "data/revised/final/logMeshesPLY"
+        output_folder = "data/revised/final/logMeshesPly"
 
         # Create output folder if it doesn't exist
         os.makedirs(output_folder, exist_ok=True)
@@ -321,15 +478,15 @@ if __name__ == "__main__":
             
             try:
                 mesh = pv.read(vtk_file)
-
                 for resource in resource_cols:
                     mesh.point_data[resource] = 0
-
-                mesh.point_data['resource'] = 'fallen log'
                 mesh.point_data['resource_fallen log'] = 1
                 mesh.point_data['isSenescent'] = True
+                mesh = map_columns_mesh(mesh)
+                del mesh.point_data['resource']
+                mesh.point_data['resource'] = np.asarray(mesh.point_data['int_resource'], dtype=np.float32)
                 
-                export_polydata_to_ply(mesh, output_path,attributesToTransfer=['resource'])
+                export_polydata_to_ply(mesh, output_path, attributesToTransfer=['resource'])
             except Exception as e:
                 print(f"Error processing {vtk_file}: {str(e)}")
     elif user_input == 4:

@@ -1,287 +1,153 @@
-import os, pyvista as pv
-import pandas as pd
-import numpy as np
-from scipy.spatial import cKDTree
-from noise import pnoise2  # for Perlin noise
-
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent))  # Add parent directory to path
+
+import pyvista as pv
+
+sys.path.append(str(Path(__file__).parent))
+sys.path.append(str(Path(__file__).parent.parent))
+
 import a_vtk_to_ply
-
-def generate_normals(voxelPolydata: pv.PolyData, site):
-    print(f"Loading site and road voxels for {site}...")
-    siteVoxels = pv.read(f'data/revised/{site}-siteVoxels-masked.vtk')
-    roadVoxels = pv.read(f'data/revised/{site}-roadVoxels-coloured.vtk')
-
-    print("Extracting points and normals...")
-    # Extract points
-    siteVoxelsPoints = siteVoxels.points
-    roadVoxelsPoints = roadVoxels.points
-    combinedPoints = np.concatenate((siteVoxelsPoints, roadVoxelsPoints), axis=0)
-
-    # Extract and combine normals 
-    siteNormals = np.column_stack((siteVoxels.point_data['orig_normal_x'],
-                                  siteVoxels.point_data['orig_normal_y'],
-                                  siteVoxels.point_data['orig_normal_z']))
-    roadNormals = np.full((roadVoxelsPoints.shape[0], 3), [0, 0, 1])
-    combinedNormals = np.concatenate((siteNormals, roadNormals), axis=0)
-
-    print(f"Building KD-tree for {len(combinedPoints)} points...")
-    tree = cKDTree(combinedPoints)
-
-    print("Finding nearest neighbors and averaging normals...")
-    # Query all points at once
-    distances, indices = tree.query(voxelPolydata.points, k=100, distance_upper_bound=1.0)
-    
-    # Create mask for valid distances
-    valid_mask = distances < np.inf
-    
-    # Initialize normals array
-    normals = np.zeros((voxelPolydata.n_points, 3))
-    
-    # Calculate average normals for points with valid neighbors
-    valid_points = valid_mask.any(axis=1)
-    n_defaults = np.sum(~valid_points)
-    print(f"Assigning default normal to {n_defaults} points with no valid neighbors")
-    
-    # Handle points with valid neighbors
-    for_averaging = np.zeros_like(normals)
-    for_averaging[valid_points] = np.array([
-        np.mean(combinedNormals[indices[i][valid_mask[i]]], axis=0)
-        for i in np.where(valid_points)[0]
-    ])
-    
-    # Normalize the averaged normals
-    norms = np.linalg.norm(for_averaging[valid_points], axis=1)
-    for_averaging[valid_points] /= norms[:, np.newaxis]
-    
-    # Set default normal [0,0,1] for points with no valid neighbors
-    for_averaging[~valid_points] = [0, 0, 1]
-    
-    normals[:] = for_averaging
-
-    print("Adding normals to point data...")
-    voxelPolydata.point_data['normals'] = normals
-    voxelPolydata.point_data['normal_magnitude'] = np.linalg.norm(normals, axis=1)
-
-    print("\nCreating oriented glyphs...")
-    # Get the normal vectors directly from your data
-    normal_vectors = voxelPolydata.point_data['normals']
-    
-    # Set as vector field for visualization
-    voxelPolydata.point_data['Normals'] = normal_vectors
-    
-    # Create glyph with color based on normal magnitude
-    """glyph = voxelPolydata.glyph(
-        orient='Normals',
-        scale=False  
-        )
-    
-    # Create plotter
-    plotter = pv.Plotter()
-
-    
-    # Add the normal glyphs
-    plotter.add_mesh(
-        glyph,
-    )
-    
-    # Show the plot
-    plotter.show()
-    """
-
-    return voxelPolydata
+from b_rewilded_surface_shell import (
+    SHELL_DISTANCE,
+    SURFACE_VOXEL_SIZE,
+    SURFACE_VOXEL_SPACING,
+    extract_isosurface_from_points,
+    select_explicit_export_keys,
+    surface_mesh_to_voxel_shell,
+    transfer_point_data_nearest,
+)
 
 
+SITE = 'uni'
+SCENARIOS = ['positive', 'trending']
+VOXEL_SIZE = 1
+YEARS = [10, 30, 60, 180]
+OUTPUT_SUBDIR = 'ply'
+REQUIRED_ATTRS = ['scenario_rewilded', 'sim_Turns', 'sim_averageResistance']
 
 
+def resolve_scenario_vtk_path(site: str, voxel_size: int, year: int, scenario: str | None = None) -> Path:
+    file_path = Path(f'data/revised/final/{site}')
+    candidates = []
+    if scenario:
+        candidates.append(file_path / f'{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk')
+    candidates.append(file_path / f'{site}_{voxel_size}_scenarioYR{year}.vtk')
 
-# Function to extract isosurface from PolyData. AI get rid of the resource_name parameter, and use spacing of 0.25 for all cases.
-def extract_isosurface_from_polydata(polydata: pv.PolyData, isovalue: float = .5) -> pv.PolyData:
-    print(f'polydata has {polydata.n_points} points')
-    spacing = (1, 1, 1)  # Fixed spacing as requested
-    
-    if polydata is not None and polydata.n_points > 0:
-        points = polydata.points
-        x, y, z = points.T
-        x_min, x_max = x.min(), x.max()
-        y_min, y_max = y.min(), y.max()
-        z_min, z_max = z.min(), z.max()
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
 
-        dims = (
-            int((x_max - x_min) / spacing[0]) + 1,
-            int((y_max - y_min) / spacing[1]) + 1,
-            int((z_max - z_min) / spacing[2]) + 1
-        )
+    raise FileNotFoundError(f'No scenario VTK found for site={site}, scenario={scenario}, year={year}')
 
-        grid = pv.ImageData(dimensions=dims, spacing=spacing, origin=(x_min, y_min, z_min))
-        scalars = np.zeros(grid.n_points)
 
-        for px, py, pz in points:
-            ix = int((px - x_min) / spacing[0])
-            iy = int((py - y_min) / spacing[1])
-            iz = int((pz - z_min) / spacing[2])
-            grid_idx = ix + iy * dims[0] + iz * dims[0] * dims[1]
-            scalars[grid_idx] = 2
-
-        grid.point_data['values'] = scalars
-        isosurface = grid.contour(isosurfaces=[isovalue], scalars='values', method='flying_edges', compute_normals=True)
-        return isosurface.extract_surface()
+def select_ground_points(poly: pv.PolyData) -> pv.PolyData:
+    if 'maskForRewilding' in poly.point_data:
+        mask = poly.point_data['maskForRewilding'].astype(bool)
+        print(f"Using maskForRewilding for ground selection: {mask.sum()} points")
     else:
-        return None
+        mask = poly.point_data['scenario_rewilded'] != 'none'
+        print(f"Using scenario_rewilded fallback mask: {mask.sum()} points")
 
-def transfer_point_data(original_poly: pv.PolyData, target_poly: pv.PolyData):
-    if original_poly is None or original_poly.n_points == 0:
-        print("WARNING: No valid original PolyData to transfer from.")
-        return target_poly
+    return poly.extract_points(mask)
 
-    if target_poly is None or target_poly.n_points == 0:
-        print("WARNING: No valid target PolyData to transfer onto.")
-        return target_poly
 
-    # Build a cKDTree on the original points
-    kd_tree = cKDTree(original_poly.points)
-
-    # Find the nearest neighbor indices for each target point
-    distances, indices = kd_tree.query(target_poly.points)
-
-    # Transfer all point data attributes
-    for key in original_poly.point_data.keys():
-        print(f"Transferring attribute '{key}'...")
-        target_poly.point_data[key] = original_poly.point_data[key][indices]
-    
+def _backfill_missing_attrs(target_poly: pv.PolyData, fallback_poly: pv.PolyData, required_attrs: list[str]) -> pv.PolyData:
+    missing_attrs = [attr for attr in required_attrs if attr in fallback_poly.point_data and attr not in target_poly.point_data]
+    if missing_attrs:
+        print(f"Backfilling missing attrs from fallback source: {missing_attrs}")
+        target_poly = transfer_point_data_nearest(
+            fallback_poly,
+            target_poly,
+            numeric_only=False,
+            explicit_keys=missing_attrs,
+        )
     return target_poly
 
-def subdivide_and_add_detail(mesh: pv.PolyData, detail_scale: float = 5.0, detail_amplitude: float = 0.1) -> pv.PolyData:
-    """
-    Subdivides the mesh and applies additional Perlin noise for finer detail
-    
-    Args:
-        mesh: Input mesh to subdivide and detail
-        detail_scale: Scale of the fine detail noise (higher = more frequent variations)
-        detail_amplitude: Maximum height of the fine detail variations in meters
-    """
-    # Subdivide the mesh
-    subdivided = mesh.subdivide(1, subfilter='linear')
-    
-    # Get points for noise application
-    points = subdivided.points
-    
-    # Apply fine detail noise
-    for i, (x, y, z) in enumerate(points):
-        # Use a higher frequency noise for detail
-        detail_noise = pnoise2(x * detail_scale, y * detail_scale)
-        # Add small height variation
-        points[i, 2] += detail_noise * detail_amplitude
-    
-    subdivided.points = points
-    return subdivided
 
-def generate_rewilded_ground(site: str, voxel_size: int, year: int, 
-                           noise_scale: float = 1.0, 
-                           max_height_variation: float = 0.5,
-                           detail_scale: float = 10.0,
-                           detail_amplitude: float = 0.1) -> pv.PolyData:
-    """
-    Generate rewilded ground surface with Perlin noise-based terrain variations
-    
-    Args:
-        site: Name of the site
-        voxel_size: Voxel size for processing
-        year: Scenario year
-        noise_scale: Scale of primary Perlin noise (lower = smoother variations)
-        max_height_variation: Maximum height variation in meters
-        detail_scale: Scale of fine detail noise
-        detail_amplitude: Height of fine detail variations
-    
-    Returns:
-        pv.PolyData: Processed ground surface with terrain variations
-    """
-    filePATH = f'data/revised/final/{site}'
-    vtkPath = f'{filePATH}/{site}_{voxel_size}_scenarioYR{year}.vtk'
-    print(f'loading polydata from {vtkPath}')
+def generate_rewilded_ground(site: str, voxel_size: int, year: int, scenario: str | None = None):
+    vtk_path = resolve_scenario_vtk_path(site, voxel_size, year, scenario)
+    print(f'loading polydata from {vtk_path}')
+    poly = pv.read(vtk_path)
 
-    poly = pv.read(vtkPath)
+    ground_points = select_ground_points(poly)
+    if ground_points.n_points == 0:
+        return None, None
 
-    generate_normals(poly, site)
+    surface_mesh = extract_isosurface_from_points(
+        ground_points,
+        spacing=SURFACE_VOXEL_SPACING,
+    )
+    if surface_mesh is None or surface_mesh.n_points == 0:
+        return None, None
 
-    """# Convert to pandas Series for value_counts()
-    rewilding_enabled = pd.Series(poly['scenario_rewildingEnabled'])
-    rewilded = pd.Series(poly['scenario_rewilded'])
+    explicit_keys = select_explicit_export_keys(ground_points.point_data.keys())
+    surface_mesh = transfer_point_data_nearest(
+        ground_points,
+        surface_mesh,
+        numeric_only=True,
+        explicit_keys=explicit_keys,
+    )
 
-    print("Unique values and counts for scenario_rewildingEnabled:")
-    print(rewilding_enabled.value_counts())
-    print("\nUnique values and counts for scenario_rewilded:")
-    print(rewilded.value_counts())
+    shell_points = surface_mesh_to_voxel_shell(
+        surface_mesh,
+        voxel_size=SURFACE_VOXEL_SIZE,
+        shell_distance=SHELL_DISTANCE,
+    )
+    if shell_points is None or shell_points.n_points == 0:
+        return surface_mesh, None
 
-    # Create masks and extract ground points
-    under_canopy_mask = (poly['scenario_rewilded'] != 'None') & (poly['scenario_rewilded'] != 'none')
-    rewilded_mask = poly['scenario_rewildingEnabled'] > 0
-    combined_mask = under_canopy_mask | rewilded_mask
-    ground_poly = poly.extract_points(combined_mask)
+    shell_points = transfer_point_data_nearest(
+        surface_mesh,
+        shell_points,
+        numeric_only=True,
+        explicit_keys=REQUIRED_ATTRS,
+    )
+    shell_points = _backfill_missing_attrs(shell_points, ground_points, REQUIRED_ATTRS)
+    return surface_mesh, shell_points
 
-    # Store original heights
-    ground_poly.point_data['orgZ'] = ground_poly.points[:, 2].copy()
-
-    # Apply primary Perlin noise
-    points = ground_poly.points
-    new_z = np.zeros(len(points))
-    for i, (x, y, _) in enumerate(points):
-        noise_val = pnoise2(x * noise_scale, y * noise_scale)
-        height_offset = (noise_val + 1) * 0.5 * max_height_variation
-        new_z[i] = points[i, 2] + height_offset
-
-    ground_poly.point_data['newZ'] = new_z
-    modified_points = points.copy()
-    modified_points[:, 2] = new_z
-    ground_poly.points = modified_points
-
-    # Generate surface
-    iso_surface = extract_isosurface_from_polydata(ground_poly)
-    iso_surface = transfer_point_data(ground_poly, iso_surface)
-    
-    # Add fine detail
-    iso_surface = subdivide_and_add_detail(
-        iso_surface,
-        detail_scale=detail_scale,
-        detail_amplitude=detail_amplitude
-    )"""
-
-    return
-
-    return iso_surface
 
 def main():
-    # Configuration
-    site = 'trimmed-parade'
-    site = 'city'
-    voxel_size = 1
-    years = [30]  # or [10, 30, 60, 180]
-    
-    # Create output directory
-    filePATH = f'data/revised/final/{site}'
-    os.makedirs(os.path.dirname(f'{filePATH}/ply'), exist_ok=True)
+    site = SITE
+    scenarios = SCENARIOS
+    voxel_size = VOXEL_SIZE
+    years = YEARS
 
-    # Process each year
-    for year in years:
-        iso_surface = generate_rewilded_ground(
-            site=site,
-            voxel_size=voxel_size,
-            year=year,
-            noise_scale=1.0,
-            max_height_variation=0.5,
-            detail_scale=10.0,
-            detail_amplitude=0.1
-        )
+    file_path = Path(f'data/revised/final/{site}')
+    output_dir = file_path / OUTPUT_SUBDIR
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-        iso_surface.plot(scalars='scenario_rewilded')
+    for scenario in scenarios:
+        for year in years:
+            try:
+                surface_mesh, shell_points = generate_rewilded_ground(
+                    site=site,
+                    voxel_size=voxel_size,
+                    year=year,
+                    scenario=scenario,
+                )
+            except FileNotFoundError as exc:
+                print(exc)
+                continue
 
-        # Export with vertex attributes
-        attributes = ['scenario_rewilded', 'sim_Turns']
-        outputFilePath = f'{filePATH}/ply/{site}_{voxel_size}_ground_scenarioYR{year}.ply'
-        a_vtk_to_ply.export_polydata_to_ply(iso_surface, outputFilePath, attributesToTransfer=attributes)
+            if surface_mesh is None or shell_points is None:
+                print(f"No ground output for year {year} and {scenario}")
+                continue
+
+            attributes = ['scenario_rewilded', 'sim_Turns']
+            if 'sim_averageResistance' in shell_points.point_data:
+                attributes.append('sim_averageResistance')
+
+            output_name = f'{site}_{scenario}_{voxel_size}_ground_scenarioYR{year}' if scenario else f'{site}_{voxel_size}_ground_scenarioYR{year}'
+            output_base = output_dir / output_name
+            a_vtk_to_ply.export_polydata_points_to_ply(
+                shell_points,
+                str(output_base.with_suffix('.ply')),
+                attributesToTransfer=attributes,
+            )
+            surface_mesh.save(str(output_base.with_suffix('.vtk')))
+            print(f"Saved ground shell points to {output_base.with_suffix('.ply')}")
+            print(f"Saved ground surface mesh to {output_base.with_suffix('.vtk')}")
+
 
 if __name__ == "__main__":
     main()
-
