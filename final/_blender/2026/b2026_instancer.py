@@ -591,6 +591,36 @@ def stable_hash_index(parts, modulo):
     return int.from_bytes(digest[:8], 'big') % modulo
 
 
+def choose_stable_match_with_reuse_avoidance(matches, needed, usage_key, used_filenames_by_bucket):
+    if len(matches) == 0:
+        return None, 0, False
+
+    base_idx = stable_hash_index(
+        (
+            needed.get('precolonial', ''),
+            needed.get('size', ''),
+            needed.get('control', ''),
+            needed.get('id', 0),
+        ),
+        len(matches),
+    )
+
+    if usage_key is None:
+        return matches.iloc[base_idx], base_idx, False
+
+    used_filenames = used_filenames_by_bucket.setdefault(usage_key, set())
+    filenames = matches['filename'].tolist()
+
+    for offset in range(len(matches)):
+        idx = (base_idx + offset) % len(matches)
+        filename = filenames[idx]
+        if filename not in used_filenames:
+            used_filenames.add(filename)
+            return matches.iloc[idx], idx, offset != 0
+
+    return matches.iloc[base_idx], base_idx, False
+
+
 def normalize_small_tree_proportion(value):
     if value <= 0:
         return 0.0
@@ -1223,6 +1253,7 @@ def process_collection(df, ply_folder, node_type, year_collection, variant_suffi
             )
 
         print("\nCreating fallback mapping...")
+        used_filenames_by_bucket = {}
         for idx, needed in needed_templates.iterrows():
             print(f"\nProcessing template {idx + 1}/{len(needed_templates)}:")
             print(
@@ -1244,12 +1275,17 @@ def process_collection(df, ply_folder, node_type, year_collection, variant_suffi
                     (available_templates['size'] == needed['size']) &
                     (available_templates['control'] == needed['control'])
                 )
+                precolonial_size_match_mask = (
+                    (available_templates['precolonial'] == needed['precolonial']) &
+                    (available_templates['size'] == needed['size'])
+                )
             else:
                 exact_match_mask = (
                     (available_templates['size'] == needed['size']) &
                     (available_templates['id'] == needed['id'])
                 )
                 best_match_mask = available_templates['size'] == needed['size']
+                precolonial_size_match_mask = available_templates['size'] == needed['size']
 
             size_match_mask = available_templates['size'] == needed['size']
 
@@ -1261,20 +1297,61 @@ def process_collection(df, ply_folder, node_type, year_collection, variant_suffi
                 print(f"   Using: {match['filename']}")
             elif best_match_mask.any():
                 matches = available_templates[best_match_mask]
-                random_idx = get_random_index(needed, len(matches))
-                match = matches.iloc[random_idx]
+                usage_key = (
+                    'best_match',
+                    needed.get('precolonial', ''),
+                    needed.get('size', ''),
+                    needed.get('control', ''),
+                )
+                match, random_idx, reused_alternate = choose_stable_match_with_reuse_avoidance(
+                    matches,
+                    needed,
+                    usage_key,
+                    used_filenames_by_bucket,
+                )
                 fallback_map[needed['filename']] = match['filename']
                 print("↳ No exact match, falling back to best match")
                 print(f"   Found {len(matches)} matching templates")
                 print(f"   Selected index {random_idx}: {match['filename']}")
+                if reused_alternate:
+                    print("   Adjusted selection to avoid reusing an earlier fallback in this bucket")
+            elif precolonial_size_match_mask.any():
+                matches = available_templates[precolonial_size_match_mask]
+                usage_key = (
+                    'precolonial_size',
+                    needed.get('precolonial', ''),
+                    needed.get('size', ''),
+                )
+                match, random_idx, reused_alternate = choose_stable_match_with_reuse_avoidance(
+                    matches,
+                    needed,
+                    usage_key,
+                    used_filenames_by_bucket,
+                )
+                fallback_map[needed['filename']] = match['filename']
+                print("↳ No control match, falling back to same precolonial + size")
+                print(f"   Found {len(matches)} precolonial/size-matching templates")
+                print(f"   Selected index {random_idx}: {match['filename']}")
+                if reused_alternate:
+                    print("   Adjusted selection to avoid reusing an earlier fallback in this bucket")
             elif size_match_mask.any():
                 matches = available_templates[size_match_mask]
-                random_idx = get_random_index(needed, len(matches))
-                match = matches.iloc[random_idx]
+                usage_key = (
+                    'size_only',
+                    needed.get('size', ''),
+                )
+                match, random_idx, reused_alternate = choose_stable_match_with_reuse_avoidance(
+                    matches,
+                    needed,
+                    usage_key,
+                    used_filenames_by_bucket,
+                )
                 fallback_map[needed['filename']] = match['filename']
-                print("↳ No control match, falling back to size match")
+                print("↳ No same-precolonial match, falling back to size-only match")
                 print(f"   Found {len(matches)} size-matching templates")
                 print(f"   Selected index {random_idx}: {match['filename']}")
+                if reused_alternate:
+                    print("   Adjusted selection to avoid reusing an earlier fallback in this bucket")
             else:
                 random_idx = get_random_index(needed, len(available_templates))
                 match = available_templates.iloc[random_idx]

@@ -32,6 +32,21 @@ resource_int_to_binary = {
     6: 'resource_hollow',
 }
 
+
+def ensure_fallen_size_resource_flag(mesh, filename):
+    """
+    Fallen-size tree templates should behave like whole fallen-log assets for the
+    binary resource mask, without flattening the other overlapping resource flags.
+    """
+    stem = Path(filename).stem
+    if "size.fallen" not in stem:
+        return mesh
+
+    working_mesh = mesh.copy()
+    working_mesh.point_data['resource_fallen log'] = np.ones(working_mesh.n_points, dtype=np.uint8)
+    print("Forced resource_fallen log = 1 for all points on fallen-size template")
+    return working_mesh
+
 def determine_attributes(mesh, attributesToTransfer):
     """
     Determine which point data attributes to transfer based on user input.
@@ -246,6 +261,8 @@ def export_polydata_to_ply(mesh, filename, attributesToTransfer=None):
     """
     print("Starting export of PolyData to PLY")
 
+    mesh = ensure_fallen_size_resource_flag(mesh, filename)
+
     if 'resource' in mesh.point_data:
         resource_array = np.asarray(mesh.point_data['resource'])
         if np.issubdtype(resource_array.dtype, np.str_) or np.issubdtype(resource_array.dtype, np.object_):
@@ -313,8 +330,8 @@ def export_polydata_to_ply(mesh, filename, attributesToTransfer=None):
     print("Vertex attributes:", list(vertex_attributes.keys()))
 
 
-def _select_available_attributes(mesh, attributesToTransfer=None):
-    working_mesh = mesh.copy()
+def _select_available_attributes(mesh, attributesToTransfer=None, filename=None):
+    working_mesh = ensure_fallen_size_resource_flag(mesh, filename or "")
 
     if 'resource' in working_mesh.point_data:
         resource_array = np.asarray(working_mesh.point_data['resource'])
@@ -389,7 +406,11 @@ def export_polydata_points_to_ply(mesh, filename, attributesToTransfer=None):
     """
     print("Starting export of PolyData points to PLY")
 
-    point_mesh, available_attributes = _select_available_attributes(mesh, attributesToTransfer)
+    point_mesh, available_attributes = _select_available_attributes(
+        mesh,
+        attributesToTransfer,
+        filename=filename,
+    )
     point_mesh = convert_string_attributes(point_mesh, filename)
 
     num_points = point_mesh.n_points

@@ -1,0 +1,162 @@
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+import bpy
+
+
+REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
+EXR_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6_baseline-city"
+DEFAULT_OUTPUT_DIR = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "outputs" / "exr_city_blender_baseline_refresh_20260326" / "normals"
+DEFAULT_BLEND_PATH = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "exr_city_blender_baseline_refresh_normals.blend"
+
+TREE_ID = 3
+
+
+def preferred_exr_path(stem: str) -> Path:
+    exr_8k = EXR_ROOT / f"{stem}_8k.exr"
+    exr_default = EXR_ROOT / f"{stem}.exr"
+    return exr_8k if exr_8k.exists() else exr_default
+
+
+OUTPUT_DIR = Path(os.environ.get("EDGE_LAB_OUTPUT_DIR", str(DEFAULT_OUTPUT_DIR)))
+BLEND_PATH = Path(os.environ.get("EDGE_LAB_BLEND_PATH", str(DEFAULT_BLEND_PATH)))
+PATHWAY_EXR = Path(os.environ.get("EDGE_LAB_PATHWAY_EXR", str(preferred_exr_path("city-pathway_state"))))
+PRIORITY_EXR = Path(os.environ.get("EDGE_LAB_PRIORITY_EXR", str(preferred_exr_path("city-city_priority"))))
+EXISTING_EXR = Path(os.environ.get("EDGE_LAB_EXISTING_EXR", str(preferred_exr_path("city-existing_condition"))))
+
+
+def log(message: str) -> None:
+    print(f"[render_exr_normals_baseline_blender] {message}")
+
+
+def clear_node_tree(node_tree: bpy.types.NodeTree) -> None:
+    for link in list(node_tree.links):
+        node_tree.links.remove(link)
+    for node in list(node_tree.nodes):
+        node_tree.nodes.remove(node)
+
+
+def ensure_link(node_tree: bpy.types.NodeTree, from_socket, to_socket) -> None:
+    for link in list(to_socket.links):
+        node_tree.links.remove(link)
+    node_tree.links.new(from_socket, to_socket)
+
+
+def new_node(node_tree, bl_idname, name, label, location, color=None):
+    node = node_tree.nodes.new(bl_idname)
+    node.name = name
+    node.label = label
+    node.location = location
+    if color is not None:
+        node.use_custom_color = True
+        node.color = color
+    return node
+
+
+def image_node(node_tree, path: Path, name: str, label: str, location):
+    node = new_node(node_tree, "CompositorNodeImage", name, label, location, color=(0.12, 0.18, 0.10))
+    node.image = bpy.data.images.load(str(path), check_existing=True)
+    return node
+
+
+def id_mask_node(node_tree, index_socket, name: str, label: str, location):
+    node = new_node(node_tree, "CompositorNodeIDMask", name, label, location, color=(0.18, 0.18, 0.10))
+    node.index = TREE_ID
+    node.use_antialiasing = True
+    ensure_link(node_tree, index_socket, node.inputs["ID value"])
+    return node
+
+
+def math_node(node_tree, operation: str, name: str, label: str, location):
+    node = new_node(node_tree, "CompositorNodeMath", name, label, location, color=(0.18, 0.16, 0.20))
+    node.operation = operation
+    node.use_clamp = True
+    return node
+
+
+def set_alpha_node(node_tree, image_socket, alpha_socket, name: str, label: str, location):
+    node = new_node(node_tree, "CompositorNodeSetAlpha", name, label, location, color=(0.16, 0.20, 0.16))
+    node.mode = "REPLACE_ALPHA"
+    ensure_link(node_tree, image_socket, node.inputs["Image"])
+    ensure_link(node_tree, alpha_socket, node.inputs["Alpha"])
+    return node
+
+
+def output_node(node_tree, image_socket, stem: str, location):
+    node = new_node(node_tree, "CompositorNodeOutputFile", f"Output {stem}", f"Output {stem}", location, color=(0.12, 0.20, 0.14))
+    node.base_path = str(OUTPUT_DIR)
+    node.format.file_format = "PNG"
+    node.format.color_mode = "RGBA"
+    node.format.color_depth = "8"
+    node.file_slots[0].path = f"{stem}_"
+    ensure_link(node_tree, image_socket, node.inputs[0])
+    return OUTPUT_DIR / f"{stem}_0001.png"
+
+
+def rename_output(rendered_path: Path) -> Path:
+    final_path = rendered_path.with_name(rendered_path.name.replace("_0001", ""))
+    if rendered_path.exists():
+        if final_path.exists():
+            final_path.unlink()
+        rendered_path.replace(final_path)
+        log(f"Renamed {rendered_path.name} -> {final_path.name}")
+    return final_path
+
+
+def build_scene(scene: bpy.types.Scene) -> list[Path]:
+    scene.use_nodes = True
+    scene.render.resolution_x = 3840
+    scene.render.resolution_y = 2160
+    scene.render.resolution_percentage = 100
+    scene.render.image_settings.file_format = "PNG"
+    scene.render.image_settings.color_mode = "RGBA"
+    scene.render.film_transparent = True
+    scene.render.use_compositing = True
+    scene.render.use_sequencer = False
+    scene.frame_start = 1
+    scene.frame_end = 1
+    scene.frame_current = 1
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    node_tree = scene.node_tree
+    clear_node_tree(node_tree)
+
+    pathway = image_node(node_tree, PATHWAY_EXR, "EXR Pathway", "EXR Pathway", (-1600.0, 500.0))
+    priority = image_node(node_tree, PRIORITY_EXR, "EXR Priority", "EXR Priority", (-1600.0, 120.0))
+    existing = image_node(node_tree, EXISTING_EXR, "EXR Existing", "EXR Existing", (-1600.0, -260.0))
+
+    mask_pathway = id_mask_node(node_tree, pathway.outputs["IndexOB"], "mask_visible-arboreal_pathway", "mask_visible-arboreal_pathway", (-1240.0, 360.0))
+    mask_all_priority = id_mask_node(node_tree, priority.outputs["IndexOB"], "mask_all-arboreal_priority", "mask_all-arboreal_priority", (-1240.0, -20.0))
+    mask_visible_priority = math_node(node_tree, "MULTIPLY", "mask_visible-arboreal_priority", "mask_visible-arboreal_priority", (-1020.0, -20.0))
+    ensure_link(node_tree, mask_all_priority.outputs["Alpha"], mask_visible_priority.inputs[0])
+    ensure_link(node_tree, mask_pathway.outputs["Alpha"], mask_visible_priority.inputs[1])
+
+    pathway_normal = set_alpha_node(node_tree, pathway.outputs["Normal"], mask_pathway.outputs["Alpha"], "Normal Pathway Trees", "Normal Pathway Trees", (-900.0, 500.0))
+    priority_normal = set_alpha_node(node_tree, priority.outputs["Normal"], mask_visible_priority.outputs["Value"], "Normal Priority Trees", "Normal Priority Trees", (-900.0, 120.0))
+    existing_normal = set_alpha_node(node_tree, existing.outputs["Normal"], existing.outputs["Alpha"], "Normal Existing Full", "Normal Existing Full", (-900.0, -260.0))
+
+    rendered_paths = [
+        output_node(node_tree, pathway_normal.outputs["Image"], "pathway_tree_normal", (-520.0, 500.0)),
+        output_node(node_tree, priority_normal.outputs["Image"], "priority_tree_normal", (-520.0, 120.0)),
+        output_node(node_tree, existing_normal.outputs["Image"], "existing_condition_normal_full", (-520.0, -260.0)),
+    ]
+
+    composite = new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (-120.0, 120.0))
+    ensure_link(node_tree, pathway_normal.outputs["Image"], composite.inputs[0])
+    return rendered_paths
+
+
+def main() -> None:
+    scene = bpy.context.scene
+    rendered_paths = build_scene(scene)
+    bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
+    log(f"Saved {BLEND_PATH}")
+    bpy.ops.render.render(write_still=False)
+    for path in rendered_paths:
+        rename_output(path)
+
+
+if __name__ == "__main__":
+    main()

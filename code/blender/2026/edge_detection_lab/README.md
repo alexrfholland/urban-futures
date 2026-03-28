@@ -30,15 +30,56 @@ Current explicit PNG workflow:
 - each detector now writes both `thin` and `regular` variable-width outline versions
 
 EXR workflow:
-- source EXRs live in `data/blender/2026/2026 futures heroes6-city`
-- the EXR renderer reads `Image.*`, `Alpha.V`, `Depth.V`, `IndexOB.V`, and `Normal.*`
-- `Mist.V` is only present in `city-pathway_state.exr`, so the EXR pipeline does not depend on Mist for the main path
-- the positive visible-tree mask is built from `city-pathway_state.exr` using `IndexOB == 3`
-- that visible-tree mask is used to punch trees out of the non-tree layers before stacking, so building and envelope pixels do not show through tree antialiasing
-- `city-city_bioenvelope.exr` contains base-city pixels as well as envelope pixels, so the EXR renderer isolates `IndexOB == 5` from that file instead of trusting the file name alone
-- `city-trending_state.exr` also contains base-city `IndexOB` values, so the EXR renderer isolates `IndexOB == 3` for the tree contribution there
+- source EXRs live under `data/blender/2026/`
+- main EXR channels used in the lab are `Image.*`, `Alpha.V`, `AO.*`, `Depth.V`, `IndexOB.V`, `Normal.*`, and, where available, `Mist.V`
+- arboreal visibility masks are built from `IndexOB == 3`
+- the positive visible-arboreal mask usually comes from `pathway_state`
+- the visible priority mask is `priority(IndexOB == 3) * pathway visible-arboreal`
+- the base layer uses `IndexOB == 1` and `IndexOB == 2`
+- the bioenvelope layer uses `IndexOB == 5`
 - outline colour is fixed to `#22123B`
-- each detector writes both `thin` and `regular` variable-width outline versions
+- flat arboreal resource exports use `sRGB / Standard` so the palette lands on the intended hex values
+
+Key passes we generate now:
+- arboreal resource fills for `pathway` and `priority`
+  - per-resource PNGs
+  - combined coloured resource stack
+- AO
+  - `pathway_ao_masked.png`
+  - `priority_ao_masked.png`
+  - `existing_condition_ao_full.png`
+- normals
+  - `pathway_tree_normal.png`
+  - `priority_tree_normal.png`
+  - `existing_condition_normal_full.png`
+- shading
+  - `pathway_shading.png`
+  - `priority_shading.png`
+  - these come from the existing compositor group `_AO SHADING.001`
+  - `_AO SHADING.001` takes `AO`, `Normal`, and `Alpha`
+  - inside the group: `AO -> Denoise`, `Normal -> same Denoise`, then `Color Ramp -> Overlay -> Set Alpha`
+  - the final shading PNGs have the pathway / priority visible-arboreal masks applied
+- mist-based arboreal outlines
+  - `pathway_mist_kirsch_thin.png`
+  - `pathway_mist_kirsch_fine.png`
+  - `pathway_mist_kirsch_extra_thin.png`
+  - `priority_mist_kirsch_thin.png`
+  - `priority_mist_kirsch_fine.png`
+  - `priority_mist_kirsch_extra_thin.png`
+- depth-based arboreal outliner
+  - `pathway_depth_outliner.png`
+  - `priority_depth_outliner.png`
+  - this matches the baseline compositor's `_OUTLINER.001` logic without the thicker focus-object overlay
+  - core path is `Depth -> Normalize -> Kirsch -> hard threshold -> flat purple colour`, then masked back to visible arboreal alpha
+
+Current arboreal resource palette:
+- `hollow` = `#ce6dd9`
+- `epiphyte` = `#c5e28e`
+- `dead` / `dead_branch` = `#ffcc01`
+- `peeling` / `peeling_bark` = `#ff85be`
+- `fallen` / `fallen_log` = `#8f89bf`
+- `perch` / `perch_branch` = `#ffcb00`
+- `other` / `none` = `#cecece`
 
 Expected inputs:
 - put PNGs in `inputs/`
@@ -95,3 +136,25 @@ Outputs from the EXR renderer:
   - one `*_composite.png` image per detector/width combination
   - a contact sheet PNG
 - `outputs/exr_city_heroes6/summary.json`
+
+Typical current output bundles:
+- `resources/`
+  - per-resource flat-colour PNGs
+  - one combined resource PNG for pathway
+  - one combined resource PNG for priority
+- `ao/`
+  - masked pathway AO
+  - masked priority AO
+  - full existing-condition AO
+- `normals/`
+  - masked pathway normals
+  - masked priority normals
+  - full existing-condition normals
+- `shading/`
+  - masked pathway shading
+  - masked priority shading
+- `outlines_mist/`
+  - mist-derived Kirsch outline sizes for arboreals
+- `depth_outliner/`
+  - normalized visible-arboreal depth prep PNGs
+  - final depth-derived outliner PNGs

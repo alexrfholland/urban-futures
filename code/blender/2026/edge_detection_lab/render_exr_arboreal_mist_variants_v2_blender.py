@@ -4,7 +4,9 @@ from array import array
 import json
 import os
 from pathlib import Path
+import re
 import shutil
+import subprocess
 
 import bpy
 
@@ -59,6 +61,25 @@ WORKFLOW_NOTES = os.environ.get(
     else "Adds local normalization to the filtered edge-response field before width shaping, with one mild hybrid screen-lift variant for comparison.",
 )
 PREP_ROOT = Path(os.environ.get("EDGE_LAB_PREP_OUTPUT_DIR", str(OUTPUT_ROOT / "_prep")))
+
+
+def detect_resolution_from_exr(path: Path) -> tuple[int, int]:
+    try:
+        info = subprocess.check_output(
+            ["oiiotool", "--info", "-v", str(path)],
+            text=True,
+            stderr=subprocess.STDOUT,
+        )
+        match = re.search(r":\s+(\d+)\s+x\s+(\d+),", info)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+    except Exception:
+        pass
+    return 3840, 2160
+
+
+RENDER_WIDTH = int(os.environ.get("EDGE_LAB_RESOLUTION_X", detect_resolution_from_exr(PATHWAY_EXR)[0]))
+RENDER_HEIGHT = int(os.environ.get("EDGE_LAB_RESOLUTION_Y", detect_resolution_from_exr(PATHWAY_EXR)[1]))
 
 SCREENLIFT_VARIANTS = (
     {
@@ -482,8 +503,8 @@ def rename_output(rendered_path: Path) -> Path:
 
 def configure_scene(scene: bpy.types.Scene) -> None:
     scene.use_nodes = True
-    scene.render.resolution_x = 3840
-    scene.render.resolution_y = 2160
+    scene.render.resolution_x = RENDER_WIDTH
+    scene.render.resolution_y = RENDER_HEIGHT
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
@@ -501,13 +522,13 @@ def configure_scene(scene: bpy.types.Scene) -> None:
 
 def vertical_gain_image(name: str, bottom_gain: float, power: float) -> bpy.types.Image:
     existing = bpy.data.images.get(name)
-    if existing is not None and (existing.size[0] != 3840 or existing.size[1] != 2160):
+    if existing is not None and (existing.size[0] != RENDER_WIDTH or existing.size[1] != RENDER_HEIGHT):
         bpy.data.images.remove(existing)
         existing = None
-    image = existing or bpy.data.images.new(name=name, width=3840, height=2160, alpha=True, float_buffer=True)
+    image = existing or bpy.data.images.new(name=name, width=RENDER_WIDTH, height=RENDER_HEIGHT, alpha=True, float_buffer=True)
     pixels = array("f")
-    width = 3840
-    height = 2160
+    width = RENDER_WIDTH
+    height = RENDER_HEIGHT
     for y in range(height):
         fac = 1.0 - (y / (height - 1))
         gain = 1.0 + (bottom_gain - 1.0) * (fac**power)

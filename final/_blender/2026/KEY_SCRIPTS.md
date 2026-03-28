@@ -19,7 +19,7 @@
     - `trending_state`: shows the main `trending` collection
   - the priority branch is city-only and only built for the `positive` scenario when the `city_priority` view layer exists
   - imports `resource_*` binary attributes from tree PLYs, with fallback from `int_resource` when a PLY is missing them
-  - it has optional follow-up hooks for `b2026_clipbox_setup.py` and `b2026_camera_clipboxes.py`, but those only run when `AUTO_RUN_CLIPBOX_SETUP` and/or `AUTO_RUN_CAMERA_CLIPBOXES` are enabled
+  - do not rely on `AUTO_RUN_CLIPBOX_SETUP` or `AUTO_RUN_CAMERA_CLIPBOXES`; run the two follow-up scripts manually after instancing
 
 ## Clipbox Setup
 - Script: [b2026_clipbox_setup.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/_blender/2026/b2026_clipbox_setup.py)
@@ -53,11 +53,11 @@
 - `trending_state`
   - main trending scenario collection
 
-## Order Of Operations
+## When Changing State
 1. Run the instancer.
 2. The instancer builds the available scenarios and configures the city view layers: `pathway_state`, `city_priority`, `trending_state`.
-3. If the auto-run flags are enabled, the instancer then runs clipbox setup and camera clipboxes automatically.
-4. If the auto-run flags are disabled, run clipbox setup manually after instancing, then run camera clipboxes.
+3. Run clipbox setup manually after instancing.
+4. Then run camera clipboxes.
 
 If you are using embedded Blender text blocks instead of the external files, keep the embedded copies in sync with these scripts.
 
@@ -67,41 +67,3 @@ If you are using embedded Blender text blocks instead of the external files, kee
   - scans the tree PLY library
   - finds legacy files missing `resource_*` vertex properties
   - rewrites those files to add only the resource-binary columns actually used by that tree model
-
-## TODO
-- Current outstanding issue: we are still manually adjusting the `resource_*` binary properties on the following tree PLY models.
-- To do: trace the upstream export step that is dropping or miswriting those binary attributes.
-- `precolonial.False_size.fallen_control.improved-tree_id.10.ply`
-- `precolonial.False_size.fallen_control.improved-tree_id.11.ply`
-- `precolonial.False_size.fallen_control.improved-tree_id.12.ply`
-- `precolonial.False_size.fallen_control.improved-tree_id.13.ply`
-- `precolonial.False_size.fallen_control.improved-tree_id.14.ply`
-- `precolonial.False_size.fallen_control.improved-tree_id.7.ply`
-- `precolonial.False_size.fallen_control.improved-tree_id.8.ply`
-- `precolonial.False_size.fallen_control.improved-tree_id.9.ply`
-- `precolonial.False_size.large_control.park-tree_id.8.ply`
-- `precolonial.False_size.large_control.reserve-tree_id.8.ply`
-- `precolonial.False_size.large_control.street-tree_id.8.ply`
-- `precolonial.False_size.propped_control.improved-tree_id.10.ply`
-- `precolonial.False_size.propped_control.improved-tree_id.11.ply`
-- `precolonial.False_size.propped_control.improved-tree_id.12.ply`
-- `precolonial.False_size.propped_control.improved-tree_id.13.ply`
-- `precolonial.False_size.propped_control.improved-tree_id.14.ply`
-- `precolonial.False_size.propped_control.improved-tree_id.7.ply`
-- `precolonial.False_size.propped_control.improved-tree_id.8.ply`
-- `precolonial.False_size.propped_control.improved-tree_id.9.ply`
-- `precolonial.False_size.senescing_control.reserve-tree_id.10.ply`
-- `precolonial.False_size.senescing_control.reserve-tree_id.11.ply`
-- `precolonial.False_size.senescing_control.reserve-tree_id.12.ply`
-- `precolonial.False_size.senescing_control.reserve-tree_id.13.ply`
-- `precolonial.False_size.senescing_control.reserve-tree_id.14.ply`
-- `precolonial.False_size.senescing_control.reserve-tree_id.7.ply`
-- `precolonial.False_size.senescing_control.reserve-tree_id.8.ply`
-- `precolonial.False_size.senescing_control.reserve-tree_id.9.ply`
-- `precolonial.False_size.snag_control.improved-tree_id.8.ply`
-- `precolonial.True_size.propped_control.improved-tree_id.11.ply`
-- `precolonial.True_size.propped_control.improved-tree_id.12.ply`
-- `precolonial.True_size.propped_control.improved-tree_id.13.ply`
-- `precolonial.True_size.propped_control.improved-tree_id.14.ply`
-- `precolonial.True_size.propped_control.improved-tree_id.15.ply`
-- `precolonial.True_size.propped_control.improved-tree_id.16.ply`

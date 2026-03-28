@@ -71,6 +71,20 @@ This lab has multiple experimental scripts. Reuse should reference a named workf
 - Source script: `code/blender/2026/edge_detection_lab/render_exr_ao_v2_blender.py`
 - Purpose: masked AO extraction from EXRs.
 
+## `blender_exr_lightweight_shading_v1`
+
+- Source script: `code/blender/2026/edge_detection_lab/add_named_masks_and_render_baseline_lightweight_ao.py`
+- Reuses existing compositor group: `_AO SHADING.001` from the lightweight compositor blend
+- Additional adaptation: renames the group output to `shading`, builds named arboreal masks, and exports masked `pathway_shading` and `priority_shading` PNGs plus the full base AO pass.
+- Purpose: reuse the inherited city compositor shading treatment for arboreal pathway / priority layers instead of rebuilding a separate shading look in the lab.
+
+## `blender_exr_lightweight_shading_zoom3x_v1`
+
+- Source script: `code/blender/2026/edge_detection_lab/render_zoom3x_lightweight_shading.py`
+- Reuses workflow: `blender_exr_lightweight_shading_v1`
+- Additional adaptation: fixed-target zoom3x exporter that repaths the lightweight baseline compositor to the `city_zoom3x_8k` EXRs, applies the visible arboreal masks, and writes only the two masked shading PNGs at `7680 x 4320`.
+- Purpose: one-off lightweight compositor shading export for the baseline zoom3x 8K deliverable set.
+
 ## `blender_exr_normals_v2`
 
 - Source script: `code/blender/2026/edge_detection_lab/render_exr_normals_v2_blender.py`
@@ -90,6 +104,13 @@ This lab has multiple experimental scripts. Reuse should reference a named workf
 - Additional adaptation: applies the established pathway / priority / trending arboreal visibility masks to the explicit EXR resource mask channels, colors each resource fill using the adjusted palette, and exports both per-resource PNGs and a combined stack with `hollow` on top.
 - Palette note: `code/blender/2026/edge_detection_lab/ARBOREAL_RESOURCE_COLOURS.md`
 - Purpose: headless Blender compositor export of arboreal resource fill layers for pathway, priority, and trending.
+
+## `blender_exr_arboreal_depth_outliner_v1`
+
+- Source script: `code/blender/2026/edge_detection_lab/render_exr_arboreal_depth_outliner_baseline_blender.py`
+- Reuses existing compositor logic from: `_OUTLINER.001` in the baseline city compositor
+- Additional adaptation: keeps only the core depth-outline branch, `Depth -> Normalize -> Kirsch -> hard threshold -> flat purple colour`, and reapplies the visible arboreal mask to the output alpha.
+- Purpose: reproduce the baseline compositor's internal branch-detail linework from normalized depth without the thicker `TRIM_THICK_FOCUS_OBJECT_OUTLINE.001` overlay.
 
 ## `blender_priority_resource_outline_normals_v1`
 
