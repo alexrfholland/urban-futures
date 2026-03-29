@@ -1,5 +1,14 @@
 # Blender Agent Guide
 
+## 0. Refactor Status
+
+We are currently doing a limited compatibility-first refactor of the Blender-facing data endpoints.
+
+- Current scope: the last-mile Blender bundle only, not the full upstream simulation pipeline.
+- Current target: move the canonical Blender bundle to `data-refactored/...` while preserving the legacy `data/...` tree during transition.
+- Current helper names: `refactored_data_read_path(...)` and `refactored_data_write_path(...)`.
+- Planned refactor areas: `refactor_documentation/`, `refactor_data/`, `refactor_code/`.
+
 ## 1. Project Context
 
 This folder covers Blender scene building, rendering, and EXR/compositor handoff for the broader PyVista simulation project. It supports the Futures journal project. The manuscript is here:
@@ -279,6 +288,18 @@ Materials and AOV support:
 - [`final/_blender/2026/b2026_city_envelope_aov_setup.py`](./2026/b2026_city_envelope_aov_setup.py)
 - [`final/_blender/2026/b2026_transfer_vtk_sim_layers.py`](./2026/b2026_transfer_vtk_sim_layers.py)
 
+`b2026_transfer_vtk_sim_layers.py`:
+
+- reads the per-state VTK at `data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk`
+- transfers state-linked point data onto the base world point clouds
+- current world targets are the base / buildings point cloud and the high-res road point cloud for the active site
+- writes Blender point attributes:
+  - `sim_Turns`
+  - `sim_Nodes`
+  - `scenario_bioEnvelope`
+  - `scenario_bioEnvelopeSimple`
+  - `sim_Matched`
+
 EXR outputs and compositor builders:
 
 - [`final/_blender/2026/b2026_setup_view_layer_exr_outputs.py`](./2026/b2026_setup_view_layer_exr_outputs.py)
@@ -300,15 +321,21 @@ Embedded names that matter operationally:
 - disk: `b2026_camera_clipboxes.py`
   - embedded: `camera_clipboxes_SS`
 
-### 5.4. Reference Docs
+### 5.4. Further Info
+
+- [`final/_blender/DATA_PIPELINE_SCRIPT_SUMMARIES.md`](./DATA_PIPELINE_SCRIPT_SUMMARIES.md)
+  - maps the Blender-facing inputs back through the upstream data pipeline, step by step, so you can see where each file comes from and where the branches diverge.
+
+### 5.5. Reference Docs
 
 For detailed enums, attribute inventories, and current notes:
 
 - [`final/_blender/TEMPLATE_BLEND.md`](./TEMPLATE_BLEND.md)
+- [`final/_blender/paraview-to-blender-info.md`](./paraview-to-blender-info.md)
 - [`final/_blender/2026/KEY_SCRIPTS.md`](./2026/KEY_SCRIPTS.md)
 - [`final/_blender/2026/pyvista-attributes-to-blender-info.md`](./2026/pyvista-attributes-to-blender-info.md)
 
-### 5.5. TODO
+### 5.6. TODO
 
 - define what stays in the model Blender compositor and what moves to the lightweight compositor
 - create an `AGENTS.md` for the edge-detection lab work and the compositor workflow

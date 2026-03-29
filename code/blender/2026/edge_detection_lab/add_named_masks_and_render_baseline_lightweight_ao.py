@@ -48,6 +48,14 @@ def require_node(node_tree: bpy.types.NodeTree, name: str) -> bpy.types.Node:
     return node
 
 
+def require_any_node(node_tree: bpy.types.NodeTree, names: list[str]) -> bpy.types.Node:
+    for name in names:
+        node = node_tree.nodes.get(name)
+        if node is not None:
+            return node
+    raise ValueError(f"Missing node from candidates: {names}")
+
+
 def ensure_link(node_tree: bpy.types.NodeTree, from_socket, to_socket) -> None:
     for link in list(to_socket.links):
         node_tree.links.remove(link)
@@ -200,9 +208,9 @@ def main() -> None:
     remove_existing_helper_nodes(node_tree)
     ao_shading_group = ensure_ao_shading_output_name(node_tree)
 
-    pathway = require_node(node_tree, "City EXR :: pathway_state")
-    priority = require_node(node_tree, "City EXR :: city_priority")
-    existing = require_node(node_tree, "City EXR :: existing_condition")
+    pathway = require_any_node(node_tree, ["EXR :: pathway_state", "City EXR :: pathway_state"])
+    priority = require_any_node(node_tree, ["EXR :: priority", "EXR :: city_priority"])
+    existing = require_any_node(node_tree, ["EXR :: existing_condition", "City EXR :: existing_condition"])
     repath_exr_node(pathway, PATHWAY_EXR)
     repath_exr_node(priority, PRIORITY_EXR)
     repath_exr_node(existing, EXISTING_EXR)

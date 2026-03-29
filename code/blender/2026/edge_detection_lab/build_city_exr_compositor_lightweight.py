@@ -55,7 +55,7 @@ TEST_RENDER_PATH = Path(
 )
 EXR_ROOT_OVERRIDE = env_str("B2026_EXR_ROOT", "")
 RUN_TEST = env_flag("B2026_RUN_TEST", True)
-IMAGE_NODE_PREFIX = "City EXR :: "
+IMAGE_NODE_PREFIX = "EXR :: "
 HIDDEN_HELPER_PREFIXES = (
     "ViewLayer EXR :: ",
     "Snapshot Setup :: ",
@@ -72,6 +72,13 @@ EXPECTED_VIEW_LAYERS = (
     "city_bioenvelope",
     "trending_state",
 )
+CANONICAL_IMAGE_LAYER_NAMES = {
+    "pathway_state": "pathway_state",
+    "existing_condition": "existing_condition",
+    "city_priority": "priority",
+    "city_bioenvelope": "bioenvelope",
+    "trending_state": "trending_state",
+}
 
 
 def log(message: str) -> None:
@@ -344,7 +351,8 @@ def replace_render_layers_with_exr_images(
             loaded_images[layer_name] = image
 
         image_node = node_tree.nodes.new("CompositorNodeImage")
-        image_node.name = f"{IMAGE_NODE_PREFIX}{layer_name}"
+        image_layer_name = CANONICAL_IMAGE_LAYER_NAMES.get(layer_name, layer_name)
+        image_node.name = f"{IMAGE_NODE_PREFIX}{image_layer_name}"
         image_node.label = image_node.name
         image_node.location = render_node.location.copy()
         image_node.width = render_node.width

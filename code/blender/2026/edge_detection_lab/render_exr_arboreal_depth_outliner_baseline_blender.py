@@ -9,7 +9,12 @@ import bpy
 
 
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
-EXR_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6_baseline-city"
+EXR_ROOT = Path(
+    os.environ.get(
+        "EDGE_LAB_EXR_ROOT",
+        str(REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6_baseline-city"),
+    )
+)
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "data"
@@ -41,8 +46,8 @@ def preferred_exr_path(stem: str) -> Path:
 
 OUTPUT_DIR = Path(os.environ.get("EDGE_LAB_OUTPUT_DIR", str(DEFAULT_OUTPUT_DIR)))
 BLEND_PATH = Path(os.environ.get("EDGE_LAB_BLEND_PATH", str(DEFAULT_BLEND_PATH)))
-PATHWAY_EXR = Path(os.environ.get("EDGE_LAB_PATHWAY_EXR", str(preferred_exr_path("city-pathway_state"))))
-PRIORITY_EXR = Path(os.environ.get("EDGE_LAB_PRIORITY_EXR", str(preferred_exr_path("city-city_priority"))))
+PATHWAY_EXR = Path(os.environ.get("EDGE_LAB_PATHWAY_EXR", str(preferred_exr_path("pathway_state"))))
+PRIORITY_EXR = Path(os.environ.get("EDGE_LAB_PRIORITY_EXR", str(preferred_exr_path("priority"))))
 
 
 def log(message: str) -> None:
@@ -70,6 +75,13 @@ def new_node(node_tree, bl_idname, name: str, label: str, location, color=None):
     if color is not None:
         node.use_custom_color = True
         node.color = color
+    return node
+
+
+def frame_node(node_tree, name: str, label: str, location, color):
+    node = new_node(node_tree, "NodeFrame", name, label, location, color=color)
+    node.label_size = 18
+    node.shrink = False
     return node
 
 
@@ -190,8 +202,9 @@ def detect_resolution(exr_paths: list[Path], images: list[bpy.types.Image]) -> t
     return 3840, 2160
 
 
-def build_outliner_branch(node_tree, exr_node, mask_socket, prefix: str, y: float) -> list[Path]:
+def build_outliner_branch(node_tree, exr_node, mask_socket, prefix: str, y: float, parent) -> list[Path]:
     depth_norm = normalize_node(node_tree, exr_node.outputs["Depth"], f"{prefix}_depth_normalize", f"{prefix} depth normalize", (-980.0, y))
+    depth_norm.parent = parent
     depth_prepped = set_alpha_node(
         node_tree,
         depth_norm.outputs[0],
@@ -201,13 +214,19 @@ def build_outliner_branch(node_tree, exr_node, mask_socket, prefix: str, y: floa
         (-760.0, y),
         "REPLACE_ALPHA",
     )
+    depth_prepped.parent = parent
     kirsch = filter_node(node_tree, depth_norm.outputs[0], f"{prefix}_kirsch", f"{prefix} kirsch", (-540.0, y), "KIRSCH")
+    kirsch.parent = parent
     ramp = ramp_node(node_tree, kirsch.outputs["Image"], f"{prefix}_ramp", f"{prefix} hard threshold", (-320.0, y), OUTLINER_THRESHOLD)
+    ramp.parent = parent
     ramp_bw = rgb_to_bw_node(node_tree, ramp.outputs["Image"], f"{prefix}_ramp_bw", f"{prefix} ramp bw", (-100.0, y))
+    ramp_bw.parent = parent
     masked_alpha = math_node(node_tree, "MULTIPLY", f"{prefix}_masked_alpha", f"{prefix} masked alpha", (120.0, y))
+    masked_alpha.parent = parent
     ensure_link(node_tree, ramp_bw.outputs["Val"], masked_alpha.inputs[0])
     ensure_link(node_tree, mask_socket, masked_alpha.inputs[1])
     edge_rgb = rgb_node(node_tree, f"{prefix}_edge_rgb", f"{prefix} edge rgb", (120.0, y - 180.0), EDGE_COLOR_LINEAR)
+    edge_rgb.parent = parent
     edge_masked = set_alpha_node(
         node_tree,
         edge_rgb.outputs[0],
@@ -217,10 +236,12 @@ def build_outliner_branch(node_tree, exr_node, mask_socket, prefix: str, y: floa
         (360.0, y),
         "REPLACE_ALPHA",
     )
-    return [
-        output_node(node_tree, depth_prepped.outputs["Image"], f"{prefix}_depth_normalized_visible_arboreal", (840.0, y + 120.0)),
-        output_node(node_tree, edge_masked.outputs["Image"], f"{prefix}_depth_outliner", (620.0, y - 120.0)),
-    ]
+    edge_masked.parent = parent
+    depth_output = output_node(node_tree, depth_prepped.outputs["Image"], f"{prefix}_depth_normalized_visible_arboreal", (840.0, y + 120.0))
+    node_tree.nodes[f"Output {prefix}_depth_normalized_visible_arboreal"].parent = parent
+    edge_output = output_node(node_tree, edge_masked.outputs["Image"], f"{prefix}_depth_outliner", (620.0, y - 120.0))
+    node_tree.nodes[f"Output {prefix}_depth_outliner"].parent = parent
+    return [depth_output, edge_output]
 
 
 def build_scene(scene: bpy.types.Scene) -> list[Path]:
@@ -249,8 +270,15 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
     node_tree = scene.node_tree
     clear_node_tree(node_tree)
 
+    inputs_frame = frame_node(node_tree, "Frame Inputs", "EXR Inputs", (-1600.0, 600.0), (0.16, 0.16, 0.16))
+    masks_frame = frame_node(node_tree, "Frame Masks", "Visible Arboreal Masks", (-1280.0, 500.0), (0.18, 0.18, 0.14))
+    pathway_frame = frame_node(node_tree, "Frame Pathway", "Pathway Depth Outliner", (-1080.0, 560.0), (0.16, 0.20, 0.16))
+    priority_frame = frame_node(node_tree, "Frame Priority", "Priority Depth Outliner", (-1080.0, 20.0), (0.16, 0.20, 0.16))
+
     pathway = image_node(node_tree, PATHWAY_EXR, "EXR Pathway", "EXR Pathway", (-1500.0, 420.0))
+    pathway.parent = inputs_frame
     priority = image_node(node_tree, PRIORITY_EXR, "EXR Priority", "EXR Priority", (-1500.0, -120.0))
+    priority.parent = inputs_frame
 
     width, height = detect_resolution([PATHWAY_EXR, PRIORITY_EXR], [pathway.image, priority.image])
     scene.render.resolution_x = width
@@ -265,6 +293,7 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         "mask_visible-arboreal_pathway",
         (-1240.0, 300.0),
     )
+    mask_visible_pathway.parent = masks_frame
     mask_all_priority = id_mask_node(
         node_tree,
         priority.outputs["IndexOB"],
@@ -273,6 +302,7 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         "mask_all-arboreal_priority",
         (-1240.0, -260.0),
     )
+    mask_all_priority.parent = masks_frame
     mask_visible_priority = math_node(
         node_tree,
         "MULTIPLY",
@@ -280,15 +310,18 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         "mask_visible-arboreal_priority",
         (-1020.0, -120.0),
     )
+    mask_visible_priority.parent = masks_frame
     ensure_link(node_tree, mask_all_priority.outputs["Alpha"], mask_visible_priority.inputs[0])
     ensure_link(node_tree, mask_visible_pathway.outputs["Alpha"], mask_visible_priority.inputs[1])
 
     rendered_paths: list[Path] = []
-    rendered_paths.extend(build_outliner_branch(node_tree, pathway, mask_visible_pathway.outputs["Alpha"], "pathway", 420.0))
-    rendered_paths.extend(build_outliner_branch(node_tree, priority, mask_visible_priority.outputs["Value"], "priority", -120.0))
+    rendered_paths.extend(build_outliner_branch(node_tree, pathway, mask_visible_pathway.outputs["Alpha"], "pathway", 420.0, pathway_frame))
+    rendered_paths.extend(build_outliner_branch(node_tree, priority, mask_visible_priority.outputs["Value"], "priority", -120.0, priority_frame))
 
-    new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (1120.0, 140.0))
-    new_node(node_tree, "CompositorNodeViewer", "Viewer", "Viewer", (1120.0, -60.0))
+    composite = new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (1120.0, 140.0))
+    viewer = new_node(node_tree, "CompositorNodeViewer", "Viewer", "Viewer", (1120.0, -60.0))
+    composite.parent = pathway_frame
+    viewer.parent = pathway_frame
     return rendered_paths
 
 

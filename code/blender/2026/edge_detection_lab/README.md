@@ -2,11 +2,39 @@
 
 This folder is an isolated compositor-only Blender experiment for testing edge detection on urban-scale renders.
 
+Reference docs:
+- [WORKFLOW_REGISTRY.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/WORKFLOW_REGISTRY.md)
+- [OUTPUT_SUITE_SPEC.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/OUTPUT_SUITE_SPEC.md)
+- [ARBOREAL_RESOURCE_COLOURS.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/ARBOREAL_RESOURCE_COLOURS.md)
+
 Layout:
 - `code/blender/2026/edge_detection_lab/` contains the runnable Blender Python script.
 - `code/blender/2026/edge_detection_lab/render_depth_edge_variants.py` contains the practical local renderer for the current PNG workflow.
 - `code/blender/2026/edge_detection_lab/render_exr_edge_variants.py` contains the EXR-based renderer for the `2026 futures heroes6-city` outputs.
 - `data/blender/2026/edge_detection_lab/` contains the saved `.blend`, inputs, and outputs.
+
+Canonical lightweight compositor pattern:
+- `code/blender/2026/edge_detection_lab/build_city_exr_compositor_lightweight.py` builds the template compositor blend from the heavy scene.
+- `code/blender/2026/edge_detection_lab/repath_city_exr_compositor_inputs.py` repaths that template to another EXR set.
+- `data/blender/2026/edge_detection_lab/outputs/edge_lab_output_suite_baseline_20260329/blends/lightweight_classic_inputs.blend` is the prepared classic lightweight compositor for the current baseline EXRs.
+- Camera choice stays in the heavy blend. `worldcam` vs `zoom3x` is not a separate compositor workflow.
+- Use the repath script for baseline or alternate camera EXRs instead of creating another compositor-only blend builder.
+- Canonical EXR filenames are:
+  - `pathway_state.exr`
+  - `priority.exr`
+  - `existing_condition.exr`
+  - optional: `bioenvelope.exr`
+  - optional: `trending_state.exr`
+
+Combined output-suite compositor:
+- `code/blender/2026/edge_detection_lab/build_edge_lab_combined_compositor.py` builds one combined blend from the separate output-family blends.
+- `data/blender/2026/edge_detection_lab/edge_lab_output_suite_combined.blend` is the current combined file.
+- The combined file keeps one scene per output family:
+  - `AO`
+  - `Normals`
+  - `Resources`
+  - `MistOutlines`
+  - `DepthOutliner`
 
 What the scaffold does:
 - creates a dedicated scene named `edge_detection_lab`

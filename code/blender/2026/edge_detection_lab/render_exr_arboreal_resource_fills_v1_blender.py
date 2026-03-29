@@ -1,18 +1,36 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import re
+import subprocess
 
 import bpy
 
 
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
-EXR_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6-city"
-OUTPUT_DIR = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "outputs" / "exr_city_blender_arboreal_resource_fills_v1"
-BLEND_PATH = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "exr_city_blender_arboreal_resource_fills_v1.blend"
+EXR_ROOT = Path(
+    os.environ.get(
+        "EDGE_LAB_EXR_ROOT",
+        str(REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6-city"),
+    )
+)
+OUTPUT_DIR = Path(
+    os.environ.get(
+        "EDGE_LAB_OUTPUT_DIR",
+        str(REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "outputs" / "exr_city_blender_arboreal_resource_fills_v1"),
+    )
+)
+BLEND_PATH = Path(
+    os.environ.get(
+        "EDGE_LAB_BLEND_PATH",
+        str(REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "exr_city_blender_arboreal_resource_fills_v1.blend"),
+    )
+)
 
-PATHWAY_EXR = EXR_ROOT / "city-pathway_state.exr"
-PRIORITY_EXR = EXR_ROOT / "city-city_priority.exr"
-TRENDING_EXR = EXR_ROOT / "city-trending_state.exr"
+PATHWAY_EXR = Path(os.environ.get("EDGE_LAB_PATHWAY_EXR", str(EXR_ROOT / "pathway_state.exr")))
+PRIORITY_EXR = Path(os.environ.get("EDGE_LAB_PRIORITY_EXR", str(EXR_ROOT / "priority.exr")))
+TRENDING_EXR = Path(os.environ.get("EDGE_LAB_TRENDING_EXR", str(EXR_ROOT / "trending_state.exr")))
 
 TREE_ID = 3
 
@@ -27,6 +45,25 @@ RESOURCE_SPECS = (
 )
 
 STACK_TOP_TO_BOTTOM = ("hollow", "epiphyte", "fallen", "peeling", "dead", "perch", "other")
+
+
+def detect_resolution_from_exr(path: Path) -> tuple[int, int]:
+    try:
+        info = subprocess.check_output(
+            ["oiiotool", "--info", "-v", str(path)],
+            text=True,
+            stderr=subprocess.STDOUT,
+        )
+        match = re.search(r":\s+(\d+)\s+x\s+(\d+),", info)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+    except Exception:
+        pass
+    image = bpy.data.images.load(str(path), check_existing=True)
+    width, height = image.size[:]
+    if width > 0 and height > 0:
+        return int(width), int(height)
+    return 3840, 2160
 
 
 def log(message: str) -> None:
@@ -61,6 +98,13 @@ def new_node(
     if color is not None:
         node.use_custom_color = True
         node.color = color
+    return node
+
+
+def frame_node(node_tree: bpy.types.NodeTree, name: str, label: str, location: tuple[float, float], color: tuple[float, float, float]):
+    node = new_node(node_tree, "NodeFrame", name, label, location, color=color)
+    node.label_size = 18
+    node.shrink = False
     return node
 
 
@@ -146,9 +190,10 @@ def rename_output(rendered_path: Path) -> Path:
 
 
 def configure_scene(scene: bpy.types.Scene) -> None:
+    render_width, render_height = detect_resolution_from_exr(PATHWAY_EXR)
     scene.use_nodes = True
-    scene.render.resolution_x = 3840
-    scene.render.resolution_y = 2160
+    scene.render.resolution_x = render_width
+    scene.render.resolution_y = render_height
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
@@ -159,9 +204,19 @@ def configure_scene(scene: bpy.types.Scene) -> None:
     scene.frame_end = 1
     scene.frame_current = 1
     try:
+        scene.display_settings.display_device = "sRGB"
+    except Exception:
+        pass
+    try:
+        scene.view_settings.view_transform = "Standard"
+    except Exception:
+        pass
+    try:
         scene.view_settings.look = "None"
     except Exception:
         pass
+    scene.view_settings.exposure = 0.0
+    scene.view_settings.gamma = 1.0
 
 
 def srgb_channel_to_linear(value: int) -> float:
@@ -205,6 +260,7 @@ def build_scene_layer(
     resource_base_mask_socket,
     rendered_paths: list[Path],
     y: float,
+    parent,
 ):
     colored_outputs: dict[str, object] = {}
 
@@ -219,6 +275,7 @@ def build_scene_layer(
             f"{slug}_{resource['slug']}_mask",
             (-620.0, resource_y),
         )
+        node_tree.nodes[f"{slug}_{resource['slug']}_mask"].parent = parent
         color_image = solid_color_image(
             node_tree,
             source_image_socket,
@@ -227,6 +284,8 @@ def build_scene_layer(
             (-360.0, resource_y),
             hex_to_linear_rgba(resource["hex"]),
         )
+        node_tree.nodes[f"{slug}_{resource['slug']}_fill_color_rgb"].parent = parent
+        node_tree.nodes[f"{slug}_{resource['slug']}_fill_color"].parent = parent
         rgba = set_alpha_node(
             node_tree,
             color_image,
@@ -235,6 +294,7 @@ def build_scene_layer(
             f"{slug}_{resource['slug']}_rgba",
             (-100.0, resource_y),
         )
+        rgba.parent = parent
         rendered_paths.append(
             output_node(
                 node_tree,
@@ -243,6 +303,7 @@ def build_scene_layer(
                 (180.0, resource_y),
             )
         )
+        node_tree.nodes[f"Output {slug}_{resource['slug']}"].parent = parent
         colored_outputs[resource["slug"]] = rgba.outputs["Image"]
 
     stack_bottom_to_top = list(reversed(STACK_TOP_TO_BOTTOM))
@@ -257,6 +318,7 @@ def build_scene_layer(
             combined_socket,
             colored_outputs[resource_slug],
         )
+        over.parent = parent
         combined_socket = over.outputs["Image"]
 
     rendered_paths.append(
@@ -267,6 +329,7 @@ def build_scene_layer(
             (2100.0, combined_y),
         )
     )
+    node_tree.nodes[f"Output {slug}_resource_combined"].parent = parent
     return combined_socket
 
 
@@ -277,9 +340,20 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
     node_tree = scene.node_tree
     clear_node_tree(node_tree)
 
+    inputs_frame = frame_node(node_tree, "Frame Inputs", "EXR Inputs", (-1820.0, 1180.0), (0.16, 0.16, 0.16))
+    masks_frame = frame_node(node_tree, "Frame Masks", "Visible Arboreal Masks", (-1360.0, 1120.0), (0.18, 0.18, 0.14))
+    pathway_frame = frame_node(node_tree, "Frame Pathway", "Pathway Resource Fills", (-760.0, 1120.0), (0.16, 0.20, 0.16))
+    priority_frame = frame_node(node_tree, "Frame Priority", "Priority Resource Fills", (-760.0, -180.0), (0.16, 0.20, 0.16))
+    trending_frame = frame_node(node_tree, "Frame Trending", "Trending Resource Fills", (-760.0, -1480.0), (0.16, 0.20, 0.16))
+
     pathway = image_node(node_tree, PATHWAY_EXR, "EXR Pathway", "EXR Pathway", (-1700.0, 960.0))
+    pathway.parent = inputs_frame
     priority = image_node(node_tree, PRIORITY_EXR, "EXR Priority", "EXR Priority", (-1700.0, -340.0))
-    trending = image_node(node_tree, TRENDING_EXR, "EXR Trending", "EXR Trending", (-1700.0, -1640.0))
+    priority.parent = inputs_frame
+    trending = None
+    if TRENDING_EXR.exists():
+        trending = image_node(node_tree, TRENDING_EXR, "EXR Trending", "EXR Trending", (-1700.0, -1640.0))
+        trending.parent = inputs_frame
 
     mask_pathway = id_mask_node(
         node_tree,
@@ -288,13 +362,7 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         "mask_visible_arboreal_pathway",
         (-1280.0, 920.0),
     )
-    mask_trending = id_mask_node(
-        node_tree,
-        trending.outputs["IndexOB"],
-        "mask_visible_arboreal_trending",
-        "mask_visible_arboreal_trending",
-        (-1280.0, -1680.0),
-    )
+    mask_pathway.parent = masks_frame
     mask_priority_all = id_mask_node(
         node_tree,
         priority.outputs["IndexOB"],
@@ -302,6 +370,7 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         "mask_all_arboreal_priority",
         (-1280.0, -380.0),
     )
+    mask_priority_all.parent = masks_frame
     mask_priority_visible = multiply_sockets(
         node_tree,
         mask_priority_all.outputs["Alpha"],
@@ -310,6 +379,17 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         "mask_visible_arboreal_priority",
         (-1040.0, -380.0),
     )
+    node_tree.nodes["mask_visible_arboreal_priority"].parent = masks_frame
+    mask_trending = None
+    if trending is not None:
+        mask_trending = id_mask_node(
+            node_tree,
+            trending.outputs["IndexOB"],
+            "mask_visible_arboreal_trending",
+            "mask_visible_arboreal_trending",
+            (-1280.0, -1680.0),
+        )
+        mask_trending.parent = masks_frame
 
     rendered_paths: list[Path] = []
     composite_source = build_scene_layer(
@@ -320,6 +400,7 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         mask_pathway.outputs["Alpha"],
         rendered_paths,
         760.0,
+        pathway_frame,
     )
     build_scene_layer(
         node_tree,
@@ -329,18 +410,22 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         mask_priority_visible,
         rendered_paths,
         -540.0,
+        priority_frame,
     )
-    build_scene_layer(
-        node_tree,
-        "trending",
-        trending,
-        trending.outputs["Image"],
-        mask_trending.outputs["Alpha"],
-        rendered_paths,
-        -1840.0,
-    )
+    if trending is not None and mask_trending is not None:
+        build_scene_layer(
+            node_tree,
+            "trending",
+            trending,
+            trending.outputs["Image"],
+            mask_trending.outputs["Alpha"],
+            rendered_paths,
+            -1840.0,
+            trending_frame,
+        )
 
     composite = new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (2400.0, 200.0))
+    composite.parent = pathway_frame
     ensure_link(node_tree, composite_source, composite.inputs[0])
     return rendered_paths
 

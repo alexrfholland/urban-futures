@@ -2,6 +2,22 @@
 
 This lab has multiple experimental scripts. Reuse should reference a named workflow first, then the adapter.
 
+For the canonical output contract, use:
+- [OUTPUT_SUITE_SPEC.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/OUTPUT_SUITE_SPEC.md)
+
+## `city_exr_compositor_template_v1`
+
+- Canonical script: `code/blender/2026/edge_detection_lab/build_city_exr_compositor_lightweight.py`
+- Purpose: build the canonical city lightweight compositor from the heavy Blender scene, replacing live Render Layers nodes with multilayer EXR image nodes while keeping the compositor graph intact.
+
+## `city_exr_compositor_repath_v1`
+
+- Canonical script: `code/blender/2026/edge_detection_lab/repath_city_exr_compositor_inputs.py`
+- Reuses workflow: `city_exr_compositor_template_v1`
+- Additional adaptation: repaths the existing `EXR :: <layer>` image nodes to another EXR input set, such as baseline or another heavy-scene camera render, without creating a separate compositor workflow.
+- Canonical EXR filenames are `pathway_state.exr`, `priority.exr`, `existing_condition.exr`, and optional `bioenvelope.exr`, `trending_state.exr`.
+- Note: zoom3x vs worldcam is not a compositor distinction. It is just a different EXR set from the heavy blend.
+
 ## `png_depth_tuned_v1`
 
 - Canonical script: `code/blender/2026/edge_detection_lab/render_depth_edge_variants.py`
@@ -84,6 +100,7 @@ This lab has multiple experimental scripts. Reuse should reference a named workf
 - Reuses workflow: `blender_exr_lightweight_shading_v1`
 - Additional adaptation: fixed-target zoom3x exporter that repaths the lightweight baseline compositor to the `city_zoom3x_8k` EXRs, applies the visible arboreal masks, and writes only the two masked shading PNGs at `7680 x 4320`.
 - Purpose: one-off lightweight compositor shading export for the baseline zoom3x 8K deliverable set.
+- Status: special-case adapter, not a separate canonical compositor workflow.
 
 ## `blender_exr_normals_v2`
 

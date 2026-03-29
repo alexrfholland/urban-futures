@@ -12,7 +12,12 @@ import bpy
 
 
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
-EXR_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6-city"
+EXR_ROOT = Path(
+    os.environ.get(
+        "EDGE_LAB_EXR_ROOT",
+        str(REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6-city"),
+    )
+)
 OUTPUT_ROOT = Path(
     os.environ.get(
         "EDGE_LAB_OUTPUT_DIR",
@@ -26,9 +31,9 @@ BLEND_PATH = Path(
     )
 )
 
-PATHWAY_EXR = Path(os.environ.get("EDGE_LAB_PATHWAY_EXR", str(EXR_ROOT / "city-pathway_state0000.exr")))
-PRIORITY_EXR = Path(os.environ.get("EDGE_LAB_PRIORITY_EXR", str(EXR_ROOT / "city-city_priority0000.exr")))
-TRENDING_EXR = Path(os.environ.get("EDGE_LAB_TRENDING_EXR", str(EXR_ROOT / "city-trending_state0000.exr")))
+PATHWAY_EXR = Path(os.environ.get("EDGE_LAB_PATHWAY_EXR", str(EXR_ROOT / "pathway_state.exr")))
+PRIORITY_EXR = Path(os.environ.get("EDGE_LAB_PRIORITY_EXR", str(EXR_ROOT / "priority.exr")))
+TRENDING_EXR = Path(os.environ.get("EDGE_LAB_TRENDING_EXR", str(EXR_ROOT / "trending_state.exr")))
 
 TREE_ID = 3
 EDGE_COLOR_LINEAR = (0.015996, 0.006048822, 0.043735046, 1.0)
@@ -347,6 +352,32 @@ def new_node(
     return node
 
 
+def frame_node(
+    node_tree: bpy.types.NodeTree,
+    name: str,
+    label: str,
+    location: tuple[float, float],
+    color: tuple[float, float, float],
+):
+    frame = node_tree.nodes.get(name)
+    if frame is None:
+        frame = node_tree.nodes.new("NodeFrame")
+        frame.name = name
+    frame.label = label
+    frame.location = location
+    frame.label_size = 18
+    frame.use_custom_color = True
+    frame.color = color
+    frame.shrink = False
+    return frame
+
+
+def parent_nodes(frame: bpy.types.Node, *nodes: bpy.types.Node) -> None:
+    for node in nodes:
+        if node is not None:
+            node.parent = frame
+
+
 def image_node(node_tree: bpy.types.NodeTree, path: Path, name: str, label: str, location: tuple[float, float]):
     node = new_node(node_tree, "CompositorNodeImage", name, label, location, color=(0.12, 0.18, 0.10))
     node.image = bpy.data.images.load(str(path), check_existing=True)
@@ -515,9 +546,19 @@ def configure_scene(scene: bpy.types.Scene) -> None:
     scene.frame_end = 1
     scene.frame_current = 1
     try:
+        scene.display_settings.display_device = "sRGB"
+    except Exception:
+        pass
+    try:
+        scene.view_settings.view_transform = "Standard"
+    except Exception:
+        pass
+    try:
         scene.view_settings.look = "None"
     except Exception:
         pass
+    scene.view_settings.exposure = 0.0
+    scene.view_settings.gamma = 1.0
 
 
 def vertical_gain_image(name: str, bottom_gain: float, power: float) -> bpy.types.Image:
@@ -639,46 +680,55 @@ def build_prep_stage(scene: bpy.types.Scene) -> dict[str, tuple[Path, Path]]:
     node_tree = scene.node_tree
     clear_node_tree(node_tree)
 
-    pathway = image_node(node_tree, PATHWAY_EXR, "EXR Pathway", "EXR Pathway", (-1500.0, 720.0))
-    priority = image_node(node_tree, PRIORITY_EXR, "EXR Priority", "EXR Priority", (-1500.0, 120.0))
-    trending = image_node(node_tree, TRENDING_EXR, "EXR Trending", "EXR Trending", (-1500.0, -480.0))
+    exr_frame = frame_node(node_tree, "Frame Prep EXR Inputs", "EXR Inputs", (-1700.0, 820.0), (0.16, 0.16, 0.16))
+    mask_frame = frame_node(node_tree, "Frame Prep Masks", "Visible Arboreal Masks", (-1380.0, 740.0), (0.18, 0.18, 0.12))
+    prep_frame = frame_node(node_tree, "Frame Prep Mist", "Mist Prep", (-920.0, 760.0), (0.14, 0.18, 0.20))
+    output_frame = frame_node(node_tree, "Frame Prep Outputs", "Prep Outputs", (-320.0, 760.0), (0.12, 0.20, 0.14))
+
+    pathway = image_node(node_tree, PATHWAY_EXR, "EXR Pathway", "EXR Pathway", (-1540.0, 560.0))
+    priority = image_node(node_tree, PRIORITY_EXR, "EXR Priority", "EXR Priority", (-1540.0, 200.0))
+    trending = image_node(node_tree, TRENDING_EXR, "EXR Trending", "EXR Trending", (-1540.0, -160.0)) if TRENDING_EXR.exists() else None
+    parent_nodes(exr_frame, pathway, priority, trending)
 
     mask_visible_pathway = id_mask_node(
         node_tree,
         pathway.outputs["IndexOB"],
         "mask_visible-arboreal_pathway",
         "mask_visible-arboreal_pathway",
-        (-1220.0, 580.0),
-    )
-    mask_visible_trending = id_mask_node(
-        node_tree,
-        trending.outputs["IndexOB"],
-        "mask_visible-arboreal_trending",
-        "mask_visible-arboreal_trending",
-        (-1220.0, -620.0),
+        (-1180.0, 420.0),
     )
     mask_all_priority = id_mask_node(
         node_tree,
         priority.outputs["IndexOB"],
         "mask_all-arboreal_priority",
         "mask_all-arboreal_priority",
-        (-1220.0, -20.0),
+        (-1180.0, 60.0),
     )
     mask_visible_priority = math_node(
         node_tree,
         "MULTIPLY",
         "mask_visible-arboreal_priority",
         "mask_visible-arboreal_priority",
-        (-1000.0, -20.0),
+        (-940.0, 60.0),
     )
     ensure_link(node_tree, mask_all_priority.outputs["Alpha"], mask_visible_priority.inputs[0])
     ensure_link(node_tree, mask_visible_pathway.outputs["Alpha"], mask_visible_priority.inputs[1])
+    parent_nodes(mask_frame, mask_visible_pathway, mask_all_priority, mask_visible_priority)
 
     scene_specs = [
-        ("pathway", pathway, mask_visible_pathway.outputs["Alpha"], 720.0),
-        ("priority", priority, mask_visible_priority.outputs["Value"], 120.0),
-        ("trending", trending, mask_visible_trending.outputs["Alpha"], -480.0),
+        ("pathway", pathway, mask_visible_pathway.outputs["Alpha"], 520.0),
+        ("priority", priority, mask_visible_priority.outputs["Value"], 160.0),
     ]
+    if trending is not None:
+        mask_visible_trending = id_mask_node(
+            node_tree,
+            trending.outputs["IndexOB"],
+            "mask_visible-arboreal_trending",
+            "mask_visible-arboreal_trending",
+            (-1180.0, -300.0),
+        )
+        parent_nodes(mask_frame, mask_visible_trending)
+        scene_specs.append(("trending", trending, mask_visible_trending.outputs["Alpha"], -200.0))
 
     rendered_paths: list[Path] = []
     final_paths: dict[str, tuple[Path, Path]] = {}
@@ -691,14 +741,14 @@ def build_prep_stage(scene: bpy.types.Scene) -> dict[str, tuple[Path, Path]]:
             alpha_socket,
             f"{scene_name}_visible_arboreal",
             f"{scene_name}_visible_arboreal",
-            (-760.0, y + 90.0),
+            (-760.0, y + 80.0),
         )
         mist_normalized = normalize_node(
             node_tree,
             exr_node.outputs["Mist"],
             f"{scene_name}_mist_normalized",
             f"{scene_name}_mist_normalized",
-            (-760.0, y - 170.0),
+            (-760.0, y - 110.0),
         )
         mist_visible = set_alpha_node(
             node_tree,
@@ -706,8 +756,9 @@ def build_prep_stage(scene: bpy.types.Scene) -> dict[str, tuple[Path, Path]]:
             alpha_socket,
             f"{scene_name}_mist_normalized_visible",
             f"{scene_name}_mist_normalized_visible",
-            (-500.0, y - 170.0),
+            (-500.0, y - 110.0),
         )
+        parent_nodes(prep_frame, visible, mist_normalized, mist_visible)
 
         visible_path = file_output_node(
             node_tree,
@@ -715,23 +766,26 @@ def build_prep_stage(scene: bpy.types.Scene) -> dict[str, tuple[Path, Path]]:
             scene_dir,
             f"Output {scene_name} Visible",
             f"Output {scene_name} Visible",
-            (-220.0, y + 90.0),
+            (-220.0, y + 80.0),
             f"{scene_name}_visible_arboreal",
         )
+        node_tree.nodes[f"Output {scene_name} Visible"].parent = output_frame
         mist_path = file_output_node(
             node_tree,
             mist_visible.outputs["Image"],
             scene_dir,
             f"Output {scene_name} Mist Visible",
             f"Output {scene_name} Mist Visible",
-            (-220.0, y - 170.0),
+            (-220.0, y - 110.0),
             f"{scene_name}_mist_normalized_visible",
         )
+        node_tree.nodes[f"Output {scene_name} Mist Visible"].parent = output_frame
         rendered_paths.extend([visible_path, mist_path])
         final_paths[scene_name] = (visible_path, mist_path)
 
     composite = new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (120.0, 240.0))
     ensure_link(node_tree, pathway.outputs["Image"], composite.inputs[0])
+    parent_nodes(output_frame, composite)
 
     BLEND_PATH.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
@@ -748,10 +802,16 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
     node_tree = scene.node_tree
     clear_node_tree(node_tree)
 
-    visible = image_node(node_tree, visible_path, f"{scene_name}_visible_png", f"{scene_name}_visible_png", (-1560.0, 220.0))
-    mist_visible = image_node(node_tree, mist_visible_path, f"{scene_name}_mist_visible_png", f"{scene_name}_mist_visible_png", (-1560.0, -60.0))
-    mist_bw = rgb_to_bw_node(node_tree, mist_visible.outputs["Image"], f"{scene_name}_mist_bw", f"{scene_name}_mist_bw", (-1300.0, -60.0))
-    mist_rgba = separate_rgba_node(node_tree, mist_visible.outputs["Image"], f"{scene_name}_mist_rgba", f"{scene_name}_mist_rgba", (-1300.0, -260.0))
+    input_frame = frame_node(node_tree, "Frame Variant Inputs", "Variant Inputs", (-1720.0, 360.0), (0.16, 0.16, 0.16))
+    signal_frame = frame_node(node_tree, "Frame Variant Signal", "Edge Signal", (-1160.0, 320.0), (0.18, 0.16, 0.10))
+    width_frame = frame_node(node_tree, "Frame Variant Width", "Width Shaping", (-260.0, 320.0), (0.18, 0.14, 0.18))
+    output_frame = frame_node(node_tree, "Frame Variant Output", "Composite And Outputs", (1120.0, 320.0), (0.12, 0.20, 0.14))
+
+    visible = image_node(node_tree, visible_path, f"{scene_name}_visible_png", f"{scene_name}_visible_png", (-1560.0, 160.0))
+    mist_visible = image_node(node_tree, mist_visible_path, f"{scene_name}_mist_visible_png", f"{scene_name}_mist_visible_png", (-1560.0, -120.0))
+    mist_bw = rgb_to_bw_node(node_tree, mist_visible.outputs["Image"], f"{scene_name}_mist_bw", f"{scene_name}_mist_bw", (-1300.0, -120.0))
+    mist_rgba = separate_rgba_node(node_tree, mist_visible.outputs["Image"], f"{scene_name}_mist_rgba", f"{scene_name}_mist_rgba", (-1300.0, -320.0))
+    parent_nodes(input_frame, visible, mist_visible, mist_bw, mist_rgba)
     variant_name = f"{scene_name}_{spec['name']}"
 
     filter_input = mist_bw.outputs["Val"]
@@ -782,6 +842,7 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
         f"{variant_name}_normalized",
         (filter_input_x + 240.0, -60.0),
     )
+    parent_nodes(signal_frame, edge_filter, edge_normalized)
 
     edge_signal = edge_normalized.outputs[0]
     if VARIANT_PRESET == "edgelocalratio":
@@ -815,6 +876,7 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
             (filter_input_x + 960.0, -60.0),
         )
         edge_signal = edge_screen_normalized.outputs[0]
+        parent_nodes(signal_frame, gain, gain_rgba, edge_lifted, edge_screen_normalized)
 
     edge_alpha = build_edge_width(node_tree, edge_signal, mist_rgba.outputs["A"], variant_name, spec, 260.0)
 
@@ -826,6 +888,8 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
         (1180.0, -180.0),
         EDGE_COLOR_LINEAR,
     )
+    edge_rgb_node = node_tree.nodes[f"{variant_name}_edge_rgb"]
+    edge_rgb_rgb_node = node_tree.nodes[f"{variant_name}_edge_rgb_rgb"]
     edge_rgba = set_alpha_node(
         node_tree,
         edge_image,
@@ -842,6 +906,19 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
         visible.outputs["Image"],
         edge_rgba.outputs["Image"],
     )
+    for node_name in (
+        f"{variant_name}_presence",
+        f"{variant_name}_strong",
+        f"{variant_name}_core",
+        f"{variant_name}_wide",
+        f"{variant_name}_combined",
+        f"{variant_name}_soften",
+        f"{variant_name}_masked",
+    ):
+        node = node_tree.nodes.get(node_name)
+        if node is not None:
+            node.parent = width_frame
+    parent_nodes(output_frame, edge_rgb_node, edge_rgb_rgb_node, edge_rgba, composite_image)
 
     edge_only_rendered = file_output_node(
         node_tree,
@@ -852,7 +929,9 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
         (1640.0, -180.0),
         variant_name if RENDER_MODE == "edges_only" else f"{variant_name}_edges",
     )
+    node_tree.nodes[f"Output {variant_name} Edge"].parent = output_frame
     composite = new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (1880.0, 80.0))
+    parent_nodes(output_frame, composite)
     if RENDER_MODE == "edges_only":
         ensure_link(node_tree, edge_rgba.outputs["Image"], composite.inputs[0])
         bpy.ops.render.render(write_still=False)
@@ -863,6 +942,7 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
     viewer = new_node(node_tree, "CompositorNodeViewer", "Viewer", "Viewer", (1880.0, -80.0))
     ensure_link(node_tree, composite_image.outputs["Image"], composite.inputs[0])
     ensure_link(node_tree, composite_image.outputs["Image"], viewer.inputs[0])
+    parent_nodes(output_frame, viewer, composite)
 
     composite_path = output_dir / f"{variant_name}_composite.png"
     scene.render.filepath = str(composite_path)
