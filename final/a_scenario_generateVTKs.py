@@ -9,11 +9,18 @@ import pandas as pd
 import xarray as xr
 import numpy as np
 import pyvista as pv
+import sys
+from pathlib import Path
 import a_helper_functions
 import a_voxeliser
 import a_scenario_params  # Import the centralized parameters module
 # Import the assign_rewilded_status function directly
 from a_scenario_runscenario import calculate_rewilded_status
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import hook_state_nodedf_path
 
 
 #==============================================================================
@@ -563,7 +570,12 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
 
     # Save combinedDF_scenario to csv
     print(f'Saving {year} combinedDF_scenario to csv')
-    combinedDF_scenario.to_csv(f'{output_path}/{site}_{scenario}_{voxel_size}_nodeDF_{year}.csv', index=False)
+    legacy_node_df_path = f'{output_path}/{site}_{scenario}_{voxel_size}_nodeDF_{year}.csv'
+    combinedDF_scenario.to_csv(legacy_node_df_path, index=False)
+
+    refactored_node_df_path = hook_state_nodedf_path(site, scenario, year, voxel_size)
+    combinedDF_scenario.to_csv(refactored_node_df_path, index=False)
+    print(f'Saved refactored nodeDF to {refactored_node_df_path}')
     
     # Print statistics
     print_simulation_statistics(combinedDF_scenario, year, site)

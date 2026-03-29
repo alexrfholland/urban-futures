@@ -4,7 +4,18 @@ import b_generate_rewilded_ground
 import pandas as pd
 import a_vtk_to_ply
 import numpy as np
+import sys
 from scipy.spatial import cKDTree
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import (
+    hook_world_buildings_ply_path,
+    hook_world_road_ply_path,
+    legacy_world_reference_vtk_path,
+)
 
 def calculate_average_point_spacing(points):
     """Calculate average distance to nearest neighbor for each point"""
@@ -153,10 +164,12 @@ def main():
 
     filePATH = f'data/revised/final/{site}'
 
-    siteVoxels = pv.read(f"data/revised/{site}-siteVoxels-masked.vtk")
-    siteVoxels.save(f'{filePATH}/{site}_buildings.ply', texture='colors')
+    siteVoxels = pv.read(legacy_world_reference_vtk_path(site, 'site'))
+    legacy_buildings_path = f'{filePATH}/{site}_buildings.ply'
+    siteVoxels.save(legacy_buildings_path, texture='colors')
+    siteVoxels.save(str(hook_world_buildings_ply_path(site)), texture='colors')
 
-    roadVoxels = pv.read(f"data/revised/{site}-roadVoxels-coloured.vtk")
+    roadVoxels = pv.read(legacy_world_reference_vtk_path(site, 'road'))
     
     print(f"Starting scene extraction for site: {site}")
     
@@ -170,6 +183,7 @@ def main():
     highResRoad = interpolate_road_voxels(roadVoxels)
     output_base = f'{filePATH}/{site}_highResRoad.ply'
     highResRoad.save(output_base, texture='colors')
+    highResRoad.save(str(hook_world_road_ply_path(site)), texture='colors')
 
     print(f"High res road points: {highResRoad.n_points}")
     print(f"Saved high res road ply saved to to {filePATH}/{site}_highResRoad.ply")
@@ -278,4 +292,3 @@ if __name__ == "__main__":
             treesDF_subset.to_csv(f'{output_base}_trees_yr{year}.csv', index=False)
             
             print(f"Successfully saved all components for scene {scene}, year {year}")"""
-

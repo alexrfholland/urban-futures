@@ -7,14 +7,31 @@ import pyvista as pv
 from PIL import Image
 from matplotlib import colormaps
 
-
 TARGET_SITES = ("trimmed-parade", "city")
+TARGET_SCENARIOS = ("positive", "trending")
 TARGET_YEAR = 180
 VOXEL_SIZE = 1.0
 VALUE_KEY = "sim_Turns"
 TEXTURE_SUBDIR = Path("textures/rewilded_sim_turns")
-PLY_SUBDIR = Path("ply")
 COLORMAP_NAME = "viridis"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def format_voxel_size(voxel_size: float | int) -> str:
+    numeric = float(voxel_size)
+    if numeric.is_integer():
+        return str(int(numeric))
+    return str(voxel_size)
+
+
+def hook_state_vtk_latest_path(site: str, scenario: str, year: int, voxel_size: float | int) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return REPO_ROOT / "_data-refactored" / "final-hooks" / "vtks" / site / f"{site}_{scenario}_{voxel}_yr{year}_state_with_indicators.vtk"
+
+
+def hook_bioenvelope_ply_path(site: str, scenario: str, year: int, voxel_size: float | int) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return REPO_ROOT / "_data-refactored" / "final-hooks" / "bioenvelopes" / site / f"{site}_{scenario}_{voxel}_envelope_scenarioYR{year}.ply"
 
 PROJECTION_SPECS = {
     "z_pos": {"u_axis": "x", "v_axis": "y", "depth_axis": "z", "extreme": "max"},
@@ -39,34 +56,34 @@ def normalize_values(values: np.ndarray, value_min: float, value_max: float) -> 
     return np.clip(normalized, 0.0, 1.0)
 
 
-def parse_scenario_from_stem(site: str, stem: str) -> str | None:
-    prefix = f"{site}_"
-    suffix = f"_scenarioYR{TARGET_YEAR}"
-    if not stem.startswith(prefix) or not stem.endswith(suffix):
-        return None
+def resolve_state_vtk_path(site: str, scenario: str) -> Path | None:
+    vtk_path = hook_state_vtk_latest_path(site, scenario, TARGET_YEAR, VOXEL_SIZE)
+    if vtk_path.exists():
+        return vtk_path
 
-    middle = stem[len(prefix) : -len(suffix)]
-    if middle.endswith("_1"):
-        scenario = middle[:-2]
-        return scenario or None
+    voxel = format_voxel_size(VOXEL_SIZE)
+    legacy_path = Path("data/revised/final/output") / f"{site}_{scenario}_{voxel}_scenarioYR{TARGET_YEAR}_urban_features_with_indicators.vtk"
+    if legacy_path.exists():
+        return legacy_path
+
     return None
 
 
-def matching_ply_candidates(site: str, scenario: str | None, surface_kind: str) -> list[str]:
-    if scenario:
-        basename = f"{site}_{scenario}_1_{surface_kind}_scenarioYR{TARGET_YEAR}.ply"
+def existing_ply_candidates(site: str, scenario: str, surface_kind: str) -> list[str]:
+    voxel = format_voxel_size(VOXEL_SIZE)
+    if surface_kind == "envelope":
+        candidates = [
+            hook_bioenvelope_ply_path(site, scenario, TARGET_YEAR, VOXEL_SIZE),
+            Path(f"data/revised/final/{site}/ply/{site}_{scenario}_{voxel}_envelope_scenarioYR{TARGET_YEAR}.ply"),
+        ]
+    elif surface_kind == "ground":
+        candidates = [
+            Path(f"data/revised/final/{site}/ply/{site}_{scenario}_{voxel}_ground_scenarioYR{TARGET_YEAR}.ply"),
+        ]
     else:
-        basename = f"{site}_1_{surface_kind}_scenarioYR{TARGET_YEAR}.ply"
-    return [basename]
+        candidates = []
 
-
-def existing_ply_candidates(vtk_path: Path, site: str, scenario: str | None, surface_kind: str) -> list[str]:
-    ply_dir = vtk_path.parent / PLY_SUBDIR
-    return [
-        basename
-        for basename in matching_ply_candidates(site, scenario, surface_kind)
-        if (ply_dir / basename).exists()
-    ]
+    return [str(path) for path in candidates if path.exists()]
 
 
 def select_surface_mask(poly: pv.PolyData, surface_kind: str) -> np.ndarray | None:
@@ -234,9 +251,7 @@ def write_texture_set(
     print(f"Saved metadata to {metadata_path}")
 
 
-def process_vtk(vtk_path: Path) -> None:
-    site = vtk_path.parent.name
-    scenario = parse_scenario_from_stem(site, vtk_path.stem)
+def process_state(site: str, scenario: str, vtk_path: Path) -> None:
     print(f"Processing {vtk_path.name} for site={site}, scenario={scenario}")
 
     poly = pv.read(vtk_path)
@@ -245,7 +260,7 @@ def process_vtk(vtk_path: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     for surface_kind in ("envelope", "ground"):
-        ply_candidates = existing_ply_candidates(vtk_path, site, scenario, surface_kind)
+        ply_candidates = existing_ply_candidates(site, scenario, surface_kind)
         if not ply_candidates:
             print(f"Skipping {surface_kind}: no matching PLY candidates on disk")
             continue
@@ -272,9 +287,12 @@ def process_vtk(vtk_path: Path) -> None:
 
 def main():
     for site in TARGET_SITES:
-        site_dir = Path(f"data/revised/final/{site}")
-        for vtk_path in sorted(site_dir.glob(f"*scenarioYR{TARGET_YEAR}.vtk")):
-            process_vtk(vtk_path)
+        for scenario in TARGET_SCENARIOS:
+            vtk_path = resolve_state_vtk_path(site, scenario)
+            if vtk_path is None:
+                print(f"Skipping {site}/{scenario}: no assessed state VTK found")
+                continue
+            process_state(site, scenario, vtk_path)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,169 @@
+site,year,proposal_id,proposal_label,measure,metric_column,positive_value,trending_value,delta_trending_minus_positive,trending_pct_of_positive,positive_multiple_of_trending
+city,0,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,21598,920,-20678,4.259654,23.476087
+city,0,decay,Decay,decay opportunity voxels,opportunity_voxel_count,24089,1191,-22898,4.944165,20.225861
+city,0,decay,Decay,trees reaching senescence,opportunity_tree_count,0,0,0,,
+city,0,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+city,0,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+city,0,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,259199,244296,-14903,94.250364,1.061004
+city,0,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,130011,123223,-6788,94.778903,1.055087
+city,10,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,58477,1242,-57235,2.123912,47.082931
+city,10,decay,Decay,decay opportunity voxels,opportunity_voxel_count,25517,1680,-23837,6.583846,15.18869
+city,10,decay,Decay,trees reaching senescence,opportunity_tree_count,5,1,-4,20.0,5.0
+city,10,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+city,10,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+city,10,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,297971,244038,-53933,81.899916,1.221002
+city,10,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,134747,122633,-12114,91.009818,1.098783
+city,30,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,127615,1896,-125719,1.485719,67.307489
+city,30,decay,Decay,decay opportunity voxels,opportunity_voxel_count,32823,2323,-30500,7.077354,14.129574
+city,30,decay,Decay,trees reaching senescence,opportunity_tree_count,53,5,-48,9.433962,10.6
+city,30,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+city,30,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+city,30,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,331358,226439,-104919,68.336663,1.463343
+city,30,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,156726,102148,-54578,65.176167,1.534303
+city,60,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,245095,5470,-239625,2.231788,44.80713
+city,60,decay,Decay,decay opportunity voxels,opportunity_voxel_count,46286,3227,-43059,6.971871,14.343353
+city,60,decay,Decay,trees reaching senescence,opportunity_tree_count,144,69,-75,47.916667,2.086957
+city,60,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+city,60,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+city,60,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,372484,210447,-162037,56.498266,1.769966
+city,60,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,165119,79619,-85500,48.219163,2.073864
+city,90,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,243946,10783,-233163,4.420241,22.623203
+city,90,decay,Decay,decay opportunity voxels,opportunity_voxel_count,55698,4363,-51335,7.833315,12.765987
+city,90,decay,Decay,trees reaching senescence,opportunity_tree_count,253,90,-163,35.573123,2.811111
+city,90,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+city,90,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+city,90,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,401188,259900,-141288,64.782596,1.543624
+city,90,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,190927,117919,-73008,61.761301,1.619137
+city,120,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,243352,14820,-228532,6.089944,16.420513
+city,120,decay,Decay,decay opportunity voxels,opportunity_voxel_count,55698,4916,-50782,8.82617,11.329943
+city,120,decay,Decay,trees reaching senescence,opportunity_tree_count,256,90,-166,35.15625,2.844444
+city,120,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+city,120,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+city,120,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,447295,333341,-113954,74.523748,1.341854
+city,120,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,238675,195058,-43617,81.725359,1.22361
+city,150,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,240438,21226,-219212,8.828055,11.327523
+city,150,decay,Decay,decay opportunity voxels,opportunity_voxel_count,55698,5353,-50345,9.610758,10.405007
+city,150,decay,Decay,trees reaching senescence,opportunity_tree_count,256,90,-166,35.15625,2.844444
+city,150,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+city,150,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+city,150,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,521084,357453,-163631,68.597961,1.457769
+city,150,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,315182,214802,-100380,68.151735,1.467314
+city,180,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,240886,27528,-213358,11.427812,8.750581
+city,180,decay,Decay,decay opportunity voxels,opportunity_voxel_count,55698,5821,-49877,10.451004,9.568459
+city,180,decay,Decay,trees reaching senescence,opportunity_tree_count,256,90,-166,35.15625,2.844444
+city,180,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+city,180,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+city,180,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,494002,361098,-132904,73.096465,1.368055
+city,180,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,288808,214745,-74063,74.355627,1.344888
+trimmed-parade,0,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,12689,17,-12672,0.133974,746.411765
+trimmed-parade,0,decay,Decay,decay opportunity voxels,opportunity_voxel_count,15007,39,-14968,0.259879,384.794872
+trimmed-parade,0,decay,Decay,trees reaching senescence,opportunity_tree_count,0,0,0,,
+trimmed-parade,0,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+trimmed-parade,0,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+trimmed-parade,0,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,390149,357996,-32153,91.75879,1.089814
+trimmed-parade,0,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,270263,253862,-16401,93.931467,1.064606
+trimmed-parade,10,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,8901,21,-8880,0.235929,423.857143
+trimmed-parade,10,decay,Decay,decay opportunity voxels,opportunity_voxel_count,11164,39,-11125,0.349337,286.25641
+trimmed-parade,10,decay,Decay,trees reaching senescence,opportunity_tree_count,12,1,-11,8.333333,12.0
+trimmed-parade,10,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+trimmed-parade,10,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+trimmed-parade,10,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,411345,359040,-52305,87.284396,1.14568
+trimmed-parade,10,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,293590,255285,-38305,86.952893,1.150048
+trimmed-parade,30,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,37878,22,-37856,0.058081,1721.727273
+trimmed-parade,30,decay,Decay,decay opportunity voxels,opportunity_voxel_count,48916,39,-48877,0.079729,1254.25641
+trimmed-parade,30,decay,Decay,trees reaching senescence,opportunity_tree_count,94,2,-92,2.12766,47.0
+trimmed-parade,30,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+trimmed-parade,30,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+trimmed-parade,30,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,462568,302930,-159638,65.48875,1.52698
+trimmed-parade,30,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,309776,200127,-109649,64.603778,1.547897
+trimmed-parade,60,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,44163,31,-44132,0.070195,1424.612903
+trimmed-parade,60,decay,Decay,decay opportunity voxels,opportunity_voxel_count,57397,39,-57358,0.067948,1471.717949
+trimmed-parade,60,decay,Decay,trees reaching senescence,opportunity_tree_count,204,13,-191,6.372549,15.692308
+trimmed-parade,60,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+trimmed-parade,60,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+trimmed-parade,60,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,492363,273458,-218905,55.539917,1.800507
+trimmed-parade,60,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,332900,170432,-162468,51.196155,1.953272
+trimmed-parade,90,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,44723,36,-44687,0.080495,1242.305556
+trimmed-parade,90,decay,Decay,decay opportunity voxels,opportunity_voxel_count,60755,39,-60716,0.064192,1557.820513
+trimmed-parade,90,decay,Decay,trees reaching senescence,opportunity_tree_count,408,21,-387,5.147059,19.428571
+trimmed-parade,90,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+trimmed-parade,90,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+trimmed-parade,90,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,518726,247164,-271562,47.648277,2.098712
+trimmed-parade,90,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,350433,143724,-206709,41.013261,2.438236
+trimmed-parade,120,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,46403,36,-46367,0.077581,1288.972222
+trimmed-parade,120,decay,Decay,decay opportunity voxels,opportunity_voxel_count,63183,39,-63144,0.061725,1620.076923
+trimmed-parade,120,decay,Decay,trees reaching senescence,opportunity_tree_count,444,21,-423,4.72973,21.142857
+trimmed-parade,120,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+trimmed-parade,120,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+trimmed-parade,120,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,543986,330185,-213801,60.697334,1.647519
+trimmed-parade,120,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,376344,225681,-150663,59.966679,1.667593
+trimmed-parade,150,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,47367,32,-47335,0.067558,1480.21875
+trimmed-parade,150,decay,Decay,decay opportunity voxels,opportunity_voxel_count,64773,39,-64734,0.06021,1660.846154
+trimmed-parade,150,decay,Decay,trees reaching senescence,opportunity_tree_count,444,21,-423,4.72973,21.142857
+trimmed-parade,150,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+trimmed-parade,150,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+trimmed-parade,150,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,650012,398405,-251607,61.291945,1.631536
+trimmed-parade,150,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,478064,293778,-184286,61.451605,1.627297
+trimmed-parade,180,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,48750,33,-48717,0.067692,1477.272727
+trimmed-parade,180,decay,Decay,decay opportunity voxels,opportunity_voxel_count,66650,39,-66611,0.058515,1708.974359
+trimmed-parade,180,decay,Decay,trees reaching senescence,opportunity_tree_count,444,21,-423,4.72973,21.142857
+trimmed-parade,180,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+trimmed-parade,180,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+trimmed-parade,180,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,607137,406600,-200537,66.970058,1.493205
+trimmed-parade,180,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,440356,301137,-139219,68.384898,1.462311
+uni,0,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,6025,126,-5899,2.091286,47.81746
+uni,0,decay,Decay,decay opportunity voxels,opportunity_voxel_count,6910,175,-6735,2.532562,39.485714
+uni,0,decay,Decay,trees reaching senescence,opportunity_tree_count,0,0,0,,
+uni,0,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,0,0,0,,
+uni,0,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,0,0,0,,
+uni,0,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,163829,154311,-9518,94.190284,1.061681
+uni,0,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,76011,70508,-5503,92.760258,1.078048
+uni,10,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,46717,621,-46096,1.329281,75.228663
+uni,10,decay,Decay,decay opportunity voxels,opportunity_voxel_count,10136,779,-9357,7.685478,13.011553
+uni,10,decay,Decay,trees reaching senescence,opportunity_tree_count,2,1,-1,50.0,2.0
+uni,10,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,43436,0,-43436,0.0,
+uni,10,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,61,0,-61,0.0,
+uni,10,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,225219,153807,-71412,68.292196,1.464296
+uni,10,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,124176,70089,-54087,56.443274,1.77169
+uni,30,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,94591,1362,-93229,1.439883,69.450073
+uni,30,decay,Decay,decay opportunity voxels,opportunity_voxel_count,19116,1623,-17493,8.49027,11.778189
+uni,30,decay,Decay,trees reaching senescence,opportunity_tree_count,44,2,-42,4.545455,22.0
+uni,30,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,42045,0,-42045,0.0,
+uni,30,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,61,0,-61,0.0,
+uni,30,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,249652,138961,-110691,55.661881,1.796562
+uni,30,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,137595,55155,-82440,40.085032,2.494697
+uni,60,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,167458,2543,-164915,1.51859,65.85057
+uni,60,decay,Decay,decay opportunity voxels,opportunity_voxel_count,54343,2841,-51502,5.227904,19.128124
+uni,60,decay,Decay,trees reaching senescence,opportunity_tree_count,64,4,-60,6.25,16.0
+uni,60,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,59656,0,-59656,0.0,
+uni,60,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+uni,60,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,364240,162373,-201867,44.578575,2.24323
+uni,60,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,194258,76652,-117606,39.458864,2.534285
+uni,90,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,166784,3040,-163744,1.822717,54.863158
+uni,90,decay,Decay,decay opportunity voxels,opportunity_voxel_count,54733,3522,-51211,6.434875,15.540318
+uni,90,decay,Decay,trees reaching senescence,opportunity_tree_count,102,19,-83,18.627451,5.368421
+uni,90,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,59052,0,-59052,0.0,
+uni,90,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+uni,90,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,397375,181018,-216357,45.553444,2.195224
+uni,90,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,227098,95385,-131713,42.001691,2.380857
+uni,120,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,165962,3694,-162268,2.225811,44.92745
+uni,120,decay,Decay,decay opportunity voxels,opportunity_voxel_count,54736,4211,-50525,7.693291,12.998338
+uni,120,decay,Decay,trees reaching senescence,opportunity_tree_count,108,19,-89,17.592593,5.684211
+uni,120,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,55873,0,-55873,0.0,
+uni,120,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+uni,120,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,478321,244602,-233719,51.137625,1.955507
+uni,120,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,307667,156888,-150779,50.992794,1.961061
+uni,150,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,200779,4132,-196647,2.057984,48.591239
+uni,150,decay,Decay,decay opportunity voxels,opportunity_voxel_count,54736,4726,-50010,8.634171,11.581887
+uni,150,decay,Decay,trees reaching senescence,opportunity_tree_count,108,19,-89,17.592593,5.684211
+uni,150,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,54157,0,-54157,0.0,
+uni,150,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+uni,150,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,499845,260744,-239101,52.164971,1.916995
+uni,150,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,327774,172914,-154860,52.754032,1.89559
+uni,180,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,200686,4732,-195954,2.357912,42.410397
+uni,180,decay,Decay,decay opportunity voxels,opportunity_voxel_count,54736,5227,-49509,9.549474,10.471781
+uni,180,decay,Decay,trees reaching senescence,opportunity_tree_count,108,19,-89,17.592593,5.684211
+uni,180,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,55586,0,-55586,0.0,
+uni,180,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+uni,180,recruit,Recruit,recruitable ground voxels,opportunity_voxel_count,496858,261578,-235280,52.64643,1.899464
+uni,180,release_control,Release-Control,arboreal voxels,opportunity_voxel_count,325209,174536,-150673,53.668871,1.863277

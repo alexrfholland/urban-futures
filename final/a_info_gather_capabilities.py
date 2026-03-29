@@ -18,10 +18,15 @@ The indicator definitions are at the TOP of this file for easy editing.
 import numpy as np
 import pandas as pd
 import pyvista as pv
+import sys
 from pathlib import Path
 from scipy.spatial import cKDTree
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
 import a_scenario_params
+from refactor_code.paths import hook_baseline_state_vtk_path, hook_state_vtk_latest_path
 
 # Base path relative to this script's location (works from any directory)
 SCRIPT_DIR = Path(__file__).parent
@@ -622,10 +627,12 @@ def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True):
         })
         action_counts.append(record)
     
-    # Save VTK with indicators to output folder
+    # Save VTK with indicators to refactored final-hooks state path
     if save_vtk:
-        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        output_path = OUTPUT_DIR / vtk_path.name.replace('.vtk', '_with_indicators.vtk')
+        if scenario == 'baseline':
+            output_path = hook_baseline_state_vtk_path(site, voxel_size)
+        else:
+            output_path = hook_state_vtk_latest_path(site, scenario, year, voxel_size)
         polydata.save(str(output_path))
         print(f"\nSaved: {output_path}")
     
@@ -757,4 +764,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

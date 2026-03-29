@@ -15,6 +15,10 @@ except ImportError:
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import hook_state_vtk_latest_path
+
 VENV_PYTHON = REPO_ROOT / ".venv" / "bin" / "python"
 CACHE_DIR = REPO_ROOT / "data" / "blender" / "2026" / "vtk_sim_layer_cache"
 REPORT_PATH = REPO_ROOT / "data" / "blender" / "2026" / "vtk_year180_point_data_layers.md"
@@ -54,12 +58,12 @@ LOCAL_NEIGHBOR_OFFSETS = np.array(
 
 SITE_CONFIGS = {
     "trimmed-parade": {
-        "vtk_path": REPO_ROOT / "data" / "revised" / "final" / "trimmed-parade" / f"trimmed-parade_{SCENARIO}_1_scenarioYR{YEAR}.vtk",
+        "vtk_path": hook_state_vtk_latest_path("trimmed-parade", SCENARIO, YEAR, 1),
         "object_names": ["trimmed-parade_base", "trimmed-parade_highResRoad"],
         "clip_box_name": "ClipBox",
     },
     "city": {
-        "vtk_path": REPO_ROOT / "data" / "revised" / "final" / "city" / f"city_{SCENARIO}_1_scenarioYR{YEAR}.vtk",
+        "vtk_path": hook_state_vtk_latest_path("city", SCENARIO, YEAR, 1),
         "object_names": ["city_buildings.001", "city_highResRoad.001"],
         "clip_box_name": "City_ClipBox",
     },

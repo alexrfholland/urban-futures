@@ -1,14 +1,18 @@
 import bpy
 import runpy
 from pathlib import Path
+import sys
+
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import hook_bioenvelope_ply_path
 
 
 PARADE_SCENE_NAME = "parade-senescent"
 TARGET_COLLECTION_NAME = "Parade_envelope"
-SOURCE_PLY_PATH = Path(
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/"
-    "data/revised/final/trimmed-parade/ply/trimmed-parade_positive_1_envelope_scenarioYR180.ply"
-)
+SOURCE_PLY_PATH = hook_bioenvelope_ply_path("trimmed-parade", "positive", 180, 1)
 TARGET_OBJECT_NAME = "trimmed-parade_positive_1_envelope_scenarioYR180"
 LEGACY_GROUND_OBJECTS = ("trimmed-parade_180_rewilded",)
 ENVELOPE_NODE_GROUP_NAME = "Envelope"

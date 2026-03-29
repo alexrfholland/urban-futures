@@ -10,9 +10,12 @@ from pathlib import Path
 # Add parent directory to Python path
 parent_dir = str(Path(__file__).parent.parent)
 sys.path.append(parent_dir)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
 # Update import to use _blender directory
 from _blender import a_vtk_to_ply
+from refactor_code.paths import hook_tree_ply_library_dir
 
 def get_snag(filename):
     """Load and return the snag mesh."""
@@ -163,6 +166,10 @@ if __name__ == '__main__':
     ply_filepath = os.path.join(ply_path, f'{artficialTreeName}.ply')
 
     a_vtk_to_ply.export_polydata_to_ply(clipped_snag, ply_filepath)
+    a_vtk_to_ply.export_polydata_to_ply(
+        clipped_snag,
+        str(hook_tree_ply_library_dir() / f'{artficialTreeName}.ply'),
+    )
 
     print(f"Voxelized point cloud saved to {export_path}")
     print(f"artifical tree saved to {ply_filepath}")

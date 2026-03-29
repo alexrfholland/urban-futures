@@ -4,6 +4,13 @@ import numpy as np
 import pyvista as pv
 import a_helper_functions, a_resource_distributor_dataframes
 import os
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import hook_baseline_terrain_vtk_path, hook_baseline_trees_csv_path
 
 
 #f"data/revised/final/{site}-roadVoxels-coloured.vtk"
@@ -443,9 +450,17 @@ def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/base
     
     print(f'Saving baseline trees to {trees_csv_path}')
     baseline_tree_df.to_csv(trees_csv_path, index=False)
+
+    refactored_trees_csv_path = hook_baseline_trees_csv_path(site)
+    baseline_tree_df.to_csv(refactored_trees_csv_path, index=False)
+    print(f'Saved refactored baseline trees to {refactored_trees_csv_path}')
     
     print(f'Saving terrain polydata to {terrain_vtk_path}')
     terrain_polydata.save(terrain_vtk_path)
+
+    refactored_terrain_vtk_path = hook_baseline_terrain_vtk_path(site, voxel_size)
+    terrain_polydata.save(refactored_terrain_vtk_path)
+    print(f'Saved refactored baseline terrain VTK to {refactored_terrain_vtk_path}')
     
     print(f'Saving combined polydata to {combined_vtk_path}')
     combinedPoly.save(combined_vtk_path)

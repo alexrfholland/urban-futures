@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import re
+from datetime import datetime
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -35,17 +36,13 @@ SITE_REPORT_LABELS = {
 }
 SITE_REPORT_ORDER = ["trimmed-parade", "uni", "city"]
 DEFAULT_TABLE_YEARS = [0, 10, 30, 60, 90, 120, 150, 180]
+REPO_ROOT = Path(__file__).resolve().parents[1]
+REFACTORED_STATISTICS_ROOT = REPO_ROOT / "_statistics-refactored"
 
-COLONISE_DISTANCE_M = 5.0
-EXCLUDED_URBAN_VALUES = {
-    "open space",
-    "roadway",
-    "busy roadway",
-    "parking",
-    "other street potential",
-}
+RECRUIT_DISTANCE_M = 20.0
+BUILDING_URBAN_VALUES = {"facade", "green roof", "brown roof"}
 
-CONNECT_PROPOSAL_VALUES = {
+COLONISE_PROPOSAL_VALUES = {
     "brownroof",
     "greenroof",
     "livingfacade",
@@ -54,52 +51,135 @@ CONNECT_PROPOSAL_VALUES = {
     "otherground",
     "rewilded",
 }
-CONNECT_FULL_VALUES = {"greenroof", "node-rewilded", "rewilded"}
-CONNECT_PARTIAL_VALUES = {"brownroof", "footprint-depaved", "livingfacade"}
+COLONISE_REWILD_VALUES = {"node-rewilded", "footprint-depaved", "rewilded"}
+COLONISE_ENRICH_VALUES = {"greenroof"}
+COLONISE_ROUGHEN_VALUES = {"brownroof", "livingfacade"}
+
+DECAY_BUFFER_VALUES = {"node-rewilded", "footprint-depaved"}
+RECRUIT_BUFFER_VALUES = {"node-rewilded", "footprint-depaved"}
+RECRUIT_REWILD_VALUES = {"otherground", "rewilded"}
+
+PROPOSAL_COUNT_EXPORTS = {
+    "deploy_structure": [
+        ("opportunity_tree_count", "utility poles"),
+        ("opportunity_voxel_count", "artificial canopy voxels"),
+    ],
+    "decay": [
+        ("opportunity_tree_count", "trees reaching senescence"),
+        ("opportunity_voxel_count", "decay opportunity voxels"),
+    ],
+    "recruit": [
+        ("opportunity_voxel_count", "recruitable ground voxels"),
+    ],
+    "colonise": [
+        ("opportunity_voxel_count", "colonisable surface voxels"),
+    ],
+    "release_control": [
+        ("opportunity_voxel_count", "arboreal voxels"),
+    ],
+}
+
+INTERVENTION_SUPPORT_LEVELS = {
+    ("deploy_structure", "Adapt-Utility-Pole"): "full",
+    ("deploy_structure", "Upgrade-Feature"): "full",
+    ("decay", "Buffer-Feature"): "full",
+    ("decay", "Brace-Feature"): "partial",
+    ("recruit", "Buffer-Feature"): "partial",
+    ("recruit", "Rewild-Ground"): "full",
+    ("colonise", "Rewild-Ground"): "mixed",
+    ("colonise", "Enrich-Envelope"): "full",
+    ("colonise", "Roughen-Envelope"): "partial",
+    ("release_control", "Buffer-Feature"): "full",
+    ("release_control", "Brace-Feature"): "partial",
+}
+
+INTERVENTION_COUNT_EXPORTS = {
+    ("deploy_structure", "Adapt-Utility-Pole"): [
+        ("supported_tree_count", "utility poles"),
+        ("supported_voxel_count", "artificial canopy voxels"),
+    ],
+    ("deploy_structure", "Upgrade-Feature"): [
+        ("supported_voxel_count", "upgraded-feature voxels"),
+    ],
+    ("decay", "Buffer-Feature"): [
+        ("supported_tree_count", "senescing trees"),
+        ("supported_voxel_count", "buffer-feature voxels"),
+    ],
+    ("decay", "Brace-Feature"): [
+        ("supported_tree_count", "senescing trees"),
+        ("supported_voxel_count", "brace-feature voxels"),
+    ],
+    ("recruit", "Buffer-Feature"): [
+        ("supported_voxel_count", "recruit grassland voxels"),
+    ],
+    ("recruit", "Rewild-Ground"): [
+        ("supported_voxel_count", "recruit grassland voxels"),
+    ],
+    ("colonise", "Rewild-Ground"): [
+        ("supported_voxel_count", "rewilded ground voxels"),
+    ],
+    ("colonise", "Enrich-Envelope"): [
+        ("supported_tree_count", "enabled rooftop logs"),
+        ("supported_voxel_count", "green roof voxels"),
+    ],
+    ("colonise", "Roughen-Envelope"): [
+        ("supported_voxel_count", "roughened envelope voxels"),
+    ],
+    ("release_control", "Buffer-Feature"): [
+        ("supported_voxel_count", "arboreal voxels"),
+    ],
+    ("release_control", "Brace-Feature"): [
+        ("supported_voxel_count", "arboreal voxels"),
+    ],
+}
 
 PROPOSAL_IDS = [
+    "deploy_structure",
     "decay",
-    "release_control",
-    "colonise",
     "recruit",
-    "deploy",
-    "translocate",
+    "colonise",
+    "release_control",
 ]
 
 PROPOSAL_LABELS = {
+    "deploy_structure": "Deploy-Structure",
     "decay": "Decay",
-    "release_control": "Release Control",
-    "colonise": "Colonise",
     "recruit": "Recruit",
-    "deploy": "Deploy",
-    "translocate": "Translocate",
+    "colonise": "Colonise",
+    "release_control": "Release-Control",
 }
 
 PROPOSAL_ALIASES = {
+    "deploy": "deploy_structure",
+    "deploy structure": "deploy_structure",
+    "deploy_structure": "deploy_structure",
+    "deploy-structure": "deploy_structure",
     "decay": "decay",
+    "recruit": "recruit",
+    "colonise": "colonise",
+    "colonize": "colonise",
     "release control": "release_control",
     "release_control": "release_control",
     "release-control": "release_control",
-    "colonise": "colonise",
-    "colonize": "colonise",
-    "recruit": "recruit",
-    "deploy": "deploy",
-    "translocate": "translocate",
 }
 
 INTERVENTION_ALIASES = {
-    "buffer": "Buffer",
-    "brace": "Brace",
-    "eliminate pruning": "Eliminate pruning",
-    "reduce pruning": "Reduce pruning",
-    "connect (green envelopes)": "Connect (green envelopes)",
-    "depave": "Depave",
-    "connect (brown envelopes)": "Connect (brown envelopes)",
-    "connect (full)": "Connect (full)",
-    "connect full": "Connect (full)",
-    "connect (partial)": "Connect (partial)",
-    "connect partial": "Connect (partial)",
-    "stub": "Stub",
+    "buffer": "Buffer-Feature",
+    "buffer feature": "Buffer-Feature",
+    "buffer-feature": "Buffer-Feature",
+    "brace": "Brace-Feature",
+    "brace feature": "Brace-Feature",
+    "brace-feature": "Brace-Feature",
+    "rewild ground": "Rewild-Ground",
+    "rewild-ground": "Rewild-Ground",
+    "adapt utility pole": "Adapt-Utility-Pole",
+    "adapt-utility-pole": "Adapt-Utility-Pole",
+    "upgrade feature": "Upgrade-Feature",
+    "upgrade-feature": "Upgrade-Feature",
+    "enrich envelope": "Enrich-Envelope",
+    "enrich-envelope": "Enrich-Envelope",
+    "roughen envelope": "Roughen-Envelope",
+    "roughen-envelope": "Roughen-Envelope",
 }
 
 OPPORTUNITY_COLUMNS = [
@@ -153,12 +233,14 @@ REQUIRED_TREE_COLUMNS = [
 REQUIRED_VTK_ARRAYS = [
     "search_bioavailable",
     "search_urban_elements",
-    "search_design_action",
     "scenario_outputs",
     "scenario_rewilded",
     "scenario_bioEnvelope",
     "forest_control",
     "forest_precolonial",
+    "forest_size",
+    "indicator_Tree_generations_grassland",
+    "indicator_Bird_self_peeling",
 ]
 
 # -----------------------------------------------------------------------------
@@ -167,34 +249,48 @@ REQUIRED_VTK_ARRAYS = [
 # This script does not infer proposals/interventions from text. It maps them
 # directly to existing model fields so each metric is reproducible:
 #
+# Deploy-Structure opportunity / Adapt-Utility-Pole:
+#   pole_df.isEnabled == True AND pole_df.size == 'artificial'
+#   AND pole_df.precolonial == False
+# Upgrade-Feature:
+#   vtk.forest_precolonial == False AND vtk.indicator_Bird_self_peeling == True
+#
 # Decay opportunity:
 #   tree_df.isNewTree == False AND tree_df.action in {'AGE-IN-PLACE','SENESCENT'}
-# Decay full support (Buffer):
+# Decay Buffer-Feature:
 #   tree_df.rewilded in {'node-rewilded','footprint-depaved'}
-#   vtk.scenario_rewilded in {'node-rewilded','footprint-depaved','rewilded'}
-# Decay partial support (Brace):
+#   vtk.scenario_bioEnvelope in {'node-rewilded','footprint-depaved'}
+# Decay Brace-Feature:
 #   tree_df.rewilded == 'exoskeleton'
-#   vtk.scenario_rewilded == 'exoskeleton'
+#   vtk.scenario_bioEnvelope == 'exoskeleton'
 #
-# Release Control opportunity:
-#   vtk.search_bioavailable == 'arboreal'
-# Release Control full support (Eliminate pruning):
-#   vtk.forest_control in {'reserve-tree','improved-tree'}
-# Release Control partial support (Reduce pruning):
-#   vtk.forest_control == 'park-tree'
+# Recruit opportunity:
+#   all ground_only voxels within 20m of a canopy-feature
+# Recruit Buffer-Feature:
+#   vtk.indicator_Tree_generations_grassland == True
+#   AND vtk.scenario_bioEnvelope in {'node-rewilded','footprint-depaved'}
+# Recruit Rewild-Ground:
+#   vtk.indicator_Tree_generations_grassland == True
+#   AND vtk.scenario_bioEnvelope in {'otherGround','rewilded'}
 #
-# Connect (stored under proposal_id='colonise') opportunity:
+# Colonise opportunity:
 #   vtk.scenario_outputs in {
 #       'brownRoof','greenRoof','livingFacade','footprint-depaved',
 #       'node-rewilded','otherGround','rewilded'
 #   }
-# Connect full support:
-#   vtk.scenario_outputs in {'greenRoof','node-rewilded','rewilded'}
-# Connect partial support:
-#   vtk.scenario_outputs in {'brownRoof','footprint-depaved','livingFacade'}
+# Colonise Rewild-Ground:
+#   vtk.scenario_outputs in {'node-rewilded','footprint-depaved','rewilded'}
+# Colonise Enrich-Envelope:
+#   vtk.scenario_outputs == 'greenRoof'
+# Colonise Roughen-Envelope:
+#   vtk.scenario_outputs in {'brownRoof','livingFacade'}
 #
-# Recruit / Deploy / Translocate:
-#   Explicit stub rows in this pass (status='stub').
+# Release-Control opportunity:
+#   vtk.search_bioavailable == 'arboreal'
+# Release-Control Buffer-Feature:
+#   vtk.forest_control in {'reserve-tree','improved-tree'}
+# Release-Control Brace-Feature:
+#   vtk.forest_control == 'park-tree'
 # -----------------------------------------------------------------------------
 
 
@@ -255,6 +351,16 @@ def normalize_scalar(value) -> str:
 def vtk_str_array(values) -> np.ndarray:
     # Deliberately avoid per-value Python normalization loops.
     return np.asarray(values).astype(str)
+
+
+def vtk_bool_array(values) -> np.ndarray:
+    array = np.asarray(values)
+    if array.dtype == bool:
+        return array
+    if np.issubdtype(array.dtype, np.number):
+        return array.astype(float) != 0
+    lowered = np.char.lower(array.astype(str))
+    return np.isin(lowered, ["true", "1", "yes", "y", "t"])
 
 
 def normalize_series(series: pd.Series) -> pd.Series:
@@ -369,6 +475,16 @@ def get_vtk_path(site: str, scenario: str, year: int, voxel_size: float) -> Path
     return candidates[0]
 
 
+def get_pole_path(site: str, scenario: str, year: int, voxel_size: float) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return DATA_DIR / site / f"{site}_{scenario}_{voxel}_poleDF_{year}.csv"
+
+
+def get_log_path(site: str, scenario: str, year: int, voxel_size: float) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return DATA_DIR / site / f"{site}_{scenario}_{voxel}_logDF_{year}.csv"
+
+
 def discover_scenarios(site: str, voxel_size: float) -> list[str]:
     voxel = format_voxel_size(voxel_size)
     base = DATA_DIR / site
@@ -407,11 +523,9 @@ def should_include_intervention(label: str, intervention_filter: str | None) -> 
     return intervention_filter is None or intervention_filter == label
 
 
-def build_excluded_urban_mask(urban_values: np.ndarray) -> np.ndarray:
+def build_building_mask(urban_values: np.ndarray) -> np.ndarray:
     lower = np.char.lower(urban_values.astype(str))
-    base_mask = np.isin(lower, list(EXCLUDED_URBAN_VALUES))
-    truncated_mask = np.char.startswith(lower, "other street potenti")
-    return base_mask | truncated_mask
+    return np.isin(lower, list(BUILDING_URBAN_VALUES))
 
 
 def points_within_distance(points: np.ndarray, reference_mask: np.ndarray, distance_m: float) -> np.ndarray:
@@ -493,6 +607,11 @@ def compute_metrics_for_combo(
         qc_row(site, scenario, year, "required_vtk_arrays_present", True, "ok", "All required VTK arrays present.")
     )
 
+    pole_path = get_pole_path(site, scenario, year, voxel_size)
+    log_path = get_log_path(site, scenario, year, voxel_size)
+    pole_df = pd.read_csv(pole_path) if pole_path.exists() else pd.DataFrame()
+    log_df = pd.read_csv(log_path) if log_path.exists() else pd.DataFrame()
+
     action = normalize_series(tree_df["action"])
     rewilded = normalize_series(tree_df["rewilded"])
     is_new_tree = bool_series(tree_df["isNewTree"])
@@ -503,6 +622,89 @@ def compute_metrics_for_combo(
     search_bioavailable = vtk_str_array(poly.point_data["search_bioavailable"])
     search_urban_elements = vtk_str_array(poly.point_data["search_urban_elements"])
     forest_control = vtk_str_array(poly.point_data["forest_control"])
+    forest_precolonial = vtk_bool_array(poly.point_data["forest_precolonial"])
+    forest_size = vtk_str_array(poly.point_data["forest_size"])
+    recruit_indicator = vtk_bool_array(poly.point_data["indicator_Tree_generations_grassland"])
+    peeling_indicator = vtk_bool_array(poly.point_data["indicator_Bird_self_peeling"])
+
+    scenario_rewilded_lower = np.char.lower(scenario_rewilded)
+    scenario_bio_envelope_lower = np.char.lower(scenario_bio_envelope)
+    scenario_outputs_lower = np.char.lower(scenario_outputs)
+    search_bioavailable_lower = np.char.lower(search_bioavailable)
+    search_urban_elements_lower = np.char.lower(search_urban_elements)
+    forest_control_lower = np.char.lower(forest_control)
+    forest_size_lower = np.char.lower(forest_size)
+
+    # ------------------------------------------------------------------
+    # DEPLOY-STRUCTURE
+    # ------------------------------------------------------------------
+    if should_include_proposal("deploy_structure", proposal_filter):
+        if not pole_df.empty and {"isEnabled", "size", "precolonial"}.issubset(pole_df.columns):
+            pole_is_enabled = bool_series(pole_df["isEnabled"])
+            pole_size = normalize_series(pole_df["size"])
+            pole_precolonial = bool_series(pole_df["precolonial"])
+            deploy_pole_mask = pole_is_enabled & (pole_size == "artificial") & (~pole_precolonial)
+            deploy_structure_count = int(deploy_pole_mask.sum())
+        else:
+            deploy_structure_count = 0
+
+        deploy_voxel_mask = (forest_size_lower == "artificial") & (~forest_precolonial)
+        deploy_voxel_count = int(np.sum(deploy_voxel_mask))
+
+        opportunity_rows.append(
+            opportunity_row(
+                site,
+                scenario,
+                year,
+                "deploy_structure",
+                deploy_structure_count,
+                deploy_voxel_count,
+                status="computed",
+                notes="Number of utility poles designed for artificial canopies this turn.",
+            )
+        )
+
+        if should_include_intervention("Adapt-Utility-Pole", intervention_filter):
+            intervention_rows.append(
+                intervention_row(
+                    site,
+                    scenario,
+                    year,
+                    "deploy_structure",
+                    "",
+                    "Adapt-Utility-Pole",
+                    deploy_structure_count,
+                    deploy_voxel_count,
+                    deploy_structure_count,
+                    deploy_voxel_count,
+                    status="computed",
+                    notes="Measured from enabled artificial poles in poleDF.",
+                )
+            )
+
+        if should_include_intervention("Upgrade-Feature", intervention_filter):
+            upgrade_voxel_mask = (~forest_precolonial) & peeling_indicator
+            intervention_rows.append(
+                intervention_row(
+                    site,
+                    scenario,
+                    year,
+                    "deploy_structure",
+                    "",
+                    "Upgrade-Feature",
+                    pd.NA,
+                    int(np.sum(upgrade_voxel_mask)),
+                    deploy_structure_count,
+                    deploy_voxel_count,
+                    status="computed",
+                    notes=(
+                        "Assumes all peeling bark in elms is artificial bark installation; "
+                        "currently does not track artificial hollows in upgraded canopies."
+                    ),
+                )
+            )
+        else:
+            upgrade_voxel_mask = np.zeros(poly.n_points, dtype=bool)
 
     # ------------------------------------------------------------------
     # DECAY
@@ -511,7 +713,7 @@ def compute_metrics_for_combo(
         decay_tree_opp = (~is_new_tree) & action.isin(["AGE-IN-PLACE", "SENESCENT"])
         decay_tree_count = int(decay_tree_opp.sum())
         decay_voxel_opp = np.isin(
-            scenario_rewilded,
+            scenario_rewilded_lower,
             ["exoskeleton", "footprint-depaved", "node-rewilded", "rewilded"],
         )
         decay_voxel_count = int(np.sum(decay_voxel_opp))
@@ -525,47 +727,111 @@ def compute_metrics_for_combo(
                 decay_tree_count,
                 decay_voxel_count,
                 status="computed",
-                notes="Opportunity trees: non-new trees with action AGE-IN-PLACE or SENESCENT.",
+                notes="Number of trees reaching senescence this turn.",
             )
         )
 
-        if should_include_intervention("Buffer", intervention_filter):
-            tree_mask = decay_tree_opp & rewilded.isin(["node-rewilded", "footprint-depaved"])
-            voxel_mask = np.isin(scenario_rewilded, ["node-rewilded", "footprint-depaved", "rewilded"])
+        if should_include_intervention("Buffer-Feature", intervention_filter):
+            tree_mask = decay_tree_opp & rewilded.isin(list(DECAY_BUFFER_VALUES))
+            voxel_mask = np.isin(scenario_bio_envelope_lower, list(DECAY_BUFFER_VALUES))
             intervention_rows.append(
                 intervention_row(
                     site,
                     scenario,
                     year,
                     "decay",
-                    "full",
-                    "Buffer",
+                    "",
+                    "Buffer-Feature",
                     int(tree_mask.sum()),
                     int(np.sum(voxel_mask)),
                     decay_tree_count,
                     decay_voxel_count,
                     status="computed",
-                    notes="Full support mapped to node/footprint/generic rewilded.",
+                    notes="Ageing feature can senesce and collapse in place.",
                 )
             )
 
-        if should_include_intervention("Brace", intervention_filter):
+        if should_include_intervention("Brace-Feature", intervention_filter):
             tree_mask = decay_tree_opp & (rewilded == "exoskeleton")
-            voxel_mask = scenario_rewilded == "exoskeleton"
+            voxel_mask = scenario_bio_envelope_lower == "exoskeleton"
             intervention_rows.append(
                 intervention_row(
                     site,
                     scenario,
                     year,
                     "decay",
-                    "partial",
-                    "Brace",
+                    "",
+                    "Brace-Feature",
                     int(tree_mask.sum()),
                     int(np.sum(voxel_mask)),
                     decay_tree_count,
                     decay_voxel_count,
                     status="computed",
-                    notes="Partial support mapped to exoskeleton.",
+                    notes="Ageing feature retained in place without collapse zone.",
+                )
+            )
+
+    # ------------------------------------------------------------------
+    # RECRUIT
+    # ------------------------------------------------------------------
+    if should_include_proposal("recruit", proposal_filter):
+        canopy_feature_mask = ~np.isin(forest_size_lower, ["", "nan", "none"])
+        if "stat_fallen log" in poly.point_data:
+            fallen_log = np.asarray(poly.point_data["stat_fallen log"])
+            if np.issubdtype(fallen_log.dtype, np.number):
+                canopy_feature_mask |= fallen_log > 0
+        building_mask = build_building_mask(search_urban_elements)
+        recruit_voxel_opp = points_within_distance(poly.points, canopy_feature_mask, RECRUIT_DISTANCE_M) & (~building_mask)
+        recruit_voxel_count = int(np.sum(recruit_voxel_opp))
+
+        opportunity_rows.append(
+            opportunity_row(
+                site,
+                scenario,
+                year,
+                "recruit",
+                pd.NA,
+                recruit_voxel_count,
+                status="computed",
+                notes="All ground_only voxels within 20m of a canopy-feature.",
+            )
+        )
+
+        if should_include_intervention("Buffer-Feature", intervention_filter):
+            voxel_mask = recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_BUFFER_VALUES))
+            intervention_rows.append(
+                intervention_row(
+                    site,
+                    scenario,
+                    year,
+                    "recruit",
+                    "",
+                    "Buffer-Feature",
+                    pd.NA,
+                    int(np.sum(voxel_mask)),
+                    pd.NA,
+                    recruit_voxel_count,
+                    status="computed",
+                    notes="Recruit grassland in node-rewilded or footprint-depaved bioEnvelope states.",
+                )
+            )
+
+        if should_include_intervention("Rewild-Ground", intervention_filter):
+            voxel_mask = recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_REWILD_VALUES))
+            intervention_rows.append(
+                intervention_row(
+                    site,
+                    scenario,
+                    year,
+                    "recruit",
+                    "",
+                    "Rewild-Ground",
+                    pd.NA,
+                    int(np.sum(voxel_mask)),
+                    pd.NA,
+                    recruit_voxel_count,
+                    status="computed",
+                    notes="Recruit grassland in otherGround or rewilded bioEnvelope states.",
                 )
             )
 
@@ -573,13 +839,9 @@ def compute_metrics_for_combo(
     # RELEASE CONTROL
     # ------------------------------------------------------------------
     if should_include_proposal("release_control", proposal_filter):
-        search_bioavailable_lower = np.char.lower(search_bioavailable)
-        forest_control_lower = np.char.lower(forest_control)
         release_voxel_opp = search_bioavailable_lower == "arboreal"
 
-        # Release control is voxel-defined in this framing.
-        release_tree_opp = pd.Series([False] * len(tree_df), index=tree_df.index)
-        release_tree_count = 0
+        release_tree_count = pd.NA
         release_voxel_count = int(np.sum(release_voxel_opp))
 
         opportunity_rows.append(
@@ -591,12 +853,11 @@ def compute_metrics_for_combo(
                 release_tree_count,
                 release_voxel_count,
                 status="computed",
-                notes="Opportunity voxels: all arboreal voxels.",
+                notes="All arboreal voxels.",
             )
         )
 
-        if should_include_intervention("Eliminate pruning", intervention_filter):
-            tree_mask = release_tree_opp
+        if should_include_intervention("Buffer-Feature", intervention_filter):
             voxel_mask = release_voxel_opp & np.isin(
                 forest_control_lower, ["reserve-tree", "reserve tree", "improved-tree", "improved tree"]
             )
@@ -606,19 +867,18 @@ def compute_metrics_for_combo(
                     scenario,
                     year,
                     "release_control",
-                    "full",
-                    "Eliminate pruning",
-                    int(tree_mask.sum()),
+                    "",
+                    "Buffer-Feature",
+                    pd.NA,
                     int(np.sum(voxel_mask)),
                     release_tree_count,
                     release_voxel_count,
                     status="computed",
-                    notes="Full support where forest_control is reserve-tree or improved-tree.",
+                    notes="Assumes pruning withdrawn from canopy.",
                 )
             )
 
-        if should_include_intervention("Reduce pruning", intervention_filter):
-            tree_mask = release_tree_opp
+        if should_include_intervention("Brace-Feature", intervention_filter):
             voxel_mask = release_voxel_opp & np.isin(forest_control_lower, ["park-tree", "park tree"])
             intervention_rows.append(
                 intervention_row(
@@ -626,14 +886,14 @@ def compute_metrics_for_combo(
                     scenario,
                     year,
                     "release_control",
-                    "partial",
-                    "Reduce pruning",
-                    int(tree_mask.sum()),
+                    "",
+                    "Brace-Feature",
+                    pd.NA,
                     int(np.sum(voxel_mask)),
                     release_tree_count,
                     release_voxel_count,
                     status="computed",
-                    notes="Partial support where forest_control is park-tree.",
+                    notes="Assumes intermediate pruning withdrawn from canopy.",
                 )
             )
 
@@ -641,10 +901,8 @@ def compute_metrics_for_combo(
     # COLONISE
     # ------------------------------------------------------------------
     if should_include_proposal("colonise", proposal_filter):
-        scenario_outputs_lower = np.char.lower(scenario_outputs)
-        colonise_voxel_opp = np.isin(scenario_outputs_lower, list(CONNECT_PROPOSAL_VALUES))
-
-        colonise_tree_count = 0
+        colonise_voxel_opp = np.isin(scenario_outputs_lower, list(COLONISE_PROPOSAL_VALUES))
+        colonise_tree_count = pd.NA
         colonise_voxel_count = int(np.sum(colonise_voxel_opp))
         opportunity_rows.append(
             opportunity_row(
@@ -655,87 +913,75 @@ def compute_metrics_for_combo(
                 colonise_tree_count,
                 colonise_voxel_count,
                 status="computed",
-                notes=(
-                    "Connect proposal voxels from scenario_outputs in "
-                    "{brownRoof,greenRoof,livingFacade,footprint-depaved,node-rewilded,otherGround,rewilded}."
-                ),
+                notes="Voxels designated as brownRoof, greenRoof, livingFacade, footprint-depaved, node-rewilded, otherGround, rewilded.",
             )
         )
 
-        if should_include_intervention("Connect (full)", intervention_filter):
-            voxel_mask = colonise_voxel_opp & np.isin(scenario_outputs_lower, list(CONNECT_FULL_VALUES))
+        if should_include_intervention("Rewild-Ground", intervention_filter):
+            voxel_mask = colonise_voxel_opp & np.isin(scenario_outputs_lower, list(COLONISE_REWILD_VALUES))
             intervention_rows.append(
                 intervention_row(
                     site,
                     scenario,
                     year,
                     "colonise",
-                    "full",
-                    "Connect (full)",
-                    0,
+                    "",
+                    "Rewild-Ground",
+                    pd.NA,
                     int(np.sum(voxel_mask)),
                     colonise_tree_count,
                     colonise_voxel_count,
                     status="computed",
-                    notes="Full support where scenario_outputs is greenRoof, node-rewilded, or rewilded.",
+                    notes="Rewilded ground grouped from node-rewilded, footprint-depaved, and rewilded.",
                 )
             )
 
-        if should_include_intervention("Connect (partial)", intervention_filter):
-            voxel_mask = colonise_voxel_opp & np.isin(scenario_outputs_lower, list(CONNECT_PARTIAL_VALUES))
+        if should_include_intervention("Enrich-Envelope", intervention_filter):
+            voxel_mask = colonise_voxel_opp & np.isin(scenario_outputs_lower, list(COLONISE_ENRICH_VALUES))
+            if not log_df.empty and {"isEnabled", "roofID"}.issubset(log_df.columns):
+                log_enabled = bool_series(log_df["isEnabled"])
+                roof_present = log_df["roofID"].notna()
+                enrich_feature_count = int((log_enabled & roof_present).sum())
+            else:
+                enrich_feature_count = pd.NA
             intervention_rows.append(
                 intervention_row(
                     site,
                     scenario,
                     year,
                     "colonise",
-                    "partial",
-                    "Connect (partial)",
-                    0,
+                    "",
+                    "Enrich-Envelope",
+                    enrich_feature_count,
                     int(np.sum(voxel_mask)),
                     colonise_tree_count,
                     colonise_voxel_count,
                     status="computed",
-                    notes="Partial support where scenario_outputs is brownRoof, footprint-depaved, or livingFacade.",
+                    notes=(
+                        "Green roof envelope counted here; rooftop logs are measured from logDF and "
+                        "still need a dedicated field for explicit Blender highlighting."
+                    ),
                 )
             )
 
-    # ------------------------------------------------------------------
-    # STUBS
-    # ------------------------------------------------------------------
-    if include_stubs:
-        for proposal_id in ["recruit", "deploy", "translocate"]:
-            if not should_include_proposal(proposal_id, proposal_filter):
-                continue
-            opportunity_rows.append(
-                opportunity_row(
+        if should_include_intervention("Roughen-Envelope", intervention_filter):
+            voxel_mask = colonise_voxel_opp & np.isin(scenario_outputs_lower, list(COLONISE_ROUGHEN_VALUES))
+            intervention_rows.append(
+                intervention_row(
                     site,
                     scenario,
                     year,
-                    proposal_id,
+                    "colonise",
+                    "",
+                    "Roughen-Envelope",
                     pd.NA,
-                    pd.NA,
-                    status="stub",
-                    notes="Stub placeholder; metric definition deferred.",
+                    int(np.sum(voxel_mask)),
+                    colonise_tree_count,
+                    colonise_voxel_count,
+                    status="computed",
+                    notes="Brown roof and living facade roughening counted together.",
                 )
             )
-            if should_include_intervention("Stub", intervention_filter):
-                intervention_rows.append(
-                    intervention_row(
-                        site,
-                        scenario,
-                        year,
-                        proposal_id,
-                        "stub",
-                        "Stub",
-                        pd.NA,
-                        pd.NA,
-                        pd.NA,
-                        pd.NA,
-                        status="stub",
-                        notes="Stub placeholder; intervention mapping deferred.",
-                    )
-                )
 
     # QC checks specific to filtered brace test path
     if proposal_filter is not None and intervention_filter is not None:
@@ -864,6 +1110,372 @@ def combine_all_sites(voxel_size: float):
     print(f"Saved: {out_opp}")
     print(f"Saved: {out_int}")
     return combined_opp, combined_int
+
+
+def build_refactor_raw_tables(
+    sites: list[str],
+    scenarios: list[str],
+    years: list[int],
+    voxel_size: float,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    proposal_rows: list[dict] = []
+    intervention_rows: list[dict] = []
+
+    for site in sites:
+        for scenario in scenarios:
+            for year in years:
+                opportunity_rows, intervention_metric_rows, _ = compute_metrics_for_combo(
+                    site=site,
+                    scenario=scenario,
+                    year=year,
+                    voxel_size=voxel_size,
+                    proposal_filter=None,
+                    intervention_filter=None,
+                    include_stubs=False,
+                )
+                for row in opportunity_rows:
+                    for metric_column, measure in PROPOSAL_COUNT_EXPORTS.get(row["proposal_id"], []):
+                        proposal_rows.append(
+                            {
+                                "site": site,
+                                "scenario": scenario,
+                                "year": year,
+                                "proposal_id": row["proposal_id"],
+                                "proposal_label": row["proposal_label"],
+                                "measure": measure,
+                                "metric_column": metric_column,
+                                "value": row.get(metric_column, pd.NA),
+                                "notes": row.get("notes", ""),
+                            }
+                        )
+                for row in intervention_metric_rows:
+                    key = (row["proposal_id"], row["support_label"])
+                    for metric_column, measure in INTERVENTION_COUNT_EXPORTS.get(key, []):
+                        intervention_rows.append(
+                            {
+                                "site": site,
+                                "scenario": scenario,
+                                "year": year,
+                                "proposal_id": row["proposal_id"],
+                                "proposal_label": PROPOSAL_LABELS[row["proposal_id"]],
+                                "intervention": row["support_label"],
+                                "support": INTERVENTION_SUPPORT_LEVELS.get(key, ""),
+                                "measure": measure,
+                                "metric_column": metric_column,
+                                "value": row.get(metric_column, pd.NA),
+                                "notes": row.get("notes", ""),
+                            }
+                        )
+
+    raw_proposals = pd.DataFrame(
+        proposal_rows,
+        columns=[
+            "site",
+            "scenario",
+            "year",
+            "proposal_id",
+            "proposal_label",
+            "measure",
+            "metric_column",
+            "value",
+            "notes",
+        ],
+    )
+    raw_interventions = pd.DataFrame(
+        intervention_rows,
+        columns=[
+            "site",
+            "scenario",
+            "year",
+            "proposal_id",
+            "proposal_label",
+            "intervention",
+            "support",
+            "measure",
+            "metric_column",
+            "value",
+            "notes",
+        ],
+    )
+    return raw_proposals, raw_interventions
+
+
+def refactor_statistics_dir(*parts: str) -> Path:
+    path = REFACTORED_STATISTICS_ROOT
+    for part in parts:
+        path /= part
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def refactor_site_raw_path(site: str, kind: str) -> Path:
+    return refactor_statistics_dir("raw", site, f"{kind}.csv")
+
+
+def refactor_aggregate_path(folder: str, kind: str) -> Path:
+    return refactor_statistics_dir(folder, f"{kind}.csv")
+
+
+def update_timestamp() -> str:
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def read_csv_or_empty(path: Path, columns: list[str]) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame(columns=columns)
+    return ensure_columns(pd.read_csv(path), columns)
+
+
+def replace_scope_rows(
+    existing_df: pd.DataFrame,
+    incoming_df: pd.DataFrame,
+    scope_df: pd.DataFrame,
+    scope_columns: list[str],
+    output_columns: list[str],
+) -> pd.DataFrame:
+    existing_df = ensure_columns(existing_df.copy(), output_columns)
+    incoming_df = ensure_columns(incoming_df.copy(), output_columns)
+
+    if scope_df.empty:
+        return existing_df if incoming_df.empty else ensure_columns(incoming_df, output_columns)
+
+    scope_df = scope_df[scope_columns].drop_duplicates()
+    existing_without_replaced = existing_df.merge(
+        scope_df,
+        on=scope_columns,
+        how="left",
+        indicator=True,
+    )
+    existing_without_replaced = existing_without_replaced[
+        existing_without_replaced["_merge"] == "left_only"
+    ].drop(columns=["_merge"])
+
+    combined = pd.concat([existing_without_replaced, incoming_df], ignore_index=True)
+    sort_columns = [column for column in output_columns if column != "notes"]
+    combined = combined.sort_values(sort_columns, kind="stable").reset_index(drop=True)
+    return ensure_columns(combined, output_columns)
+
+
+def collect_all_site_raw_tables(kind: str, columns: list[str]) -> pd.DataFrame:
+    raw_root = refactor_statistics_dir("raw")
+    site_paths = sorted(raw_root.glob(f"*/{kind}.csv"))
+    frames = [ensure_columns(pd.read_csv(path), columns) for path in site_paths if path.exists()]
+    if not frames:
+        return pd.DataFrame(columns=columns)
+    combined = pd.concat(frames, ignore_index=True)
+    return ensure_columns(combined, columns)
+
+
+def build_comparison_table(
+    raw_df: pd.DataFrame,
+    key_columns: list[str],
+) -> pd.DataFrame:
+    if raw_df.empty:
+        return pd.DataFrame(columns=key_columns + [
+            "positive_value",
+            "trending_value",
+            "delta_trending_minus_positive",
+            "trending_pct_of_positive",
+            "positive_multiple_of_trending",
+        ])
+
+    pivot = raw_df.pivot_table(
+        index=key_columns,
+        columns="scenario",
+        values="value",
+        aggfunc="first",
+    ).reset_index()
+    if "positive" not in pivot.columns:
+        pivot["positive"] = pd.NA
+    if "trending" not in pivot.columns:
+        pivot["trending"] = pd.NA
+
+    def pct_of_positive(row):
+        positive = row["positive_value"]
+        trending = row["trending_value"]
+        if pd.isna(positive) or pd.isna(trending) or float(positive) == 0:
+            return pd.NA
+        return round(float(trending) / float(positive) * 100.0, 6)
+
+    def positive_multiple(row):
+        positive = row["positive_value"]
+        trending = row["trending_value"]
+        if pd.isna(positive) or pd.isna(trending) or float(trending) == 0:
+            return pd.NA
+        return round(float(positive) / float(trending), 6)
+
+    comparison = pivot.rename(columns={"positive": "positive_value", "trending": "trending_value"})
+    comparison["delta_trending_minus_positive"] = comparison["trending_value"] - comparison["positive_value"]
+    comparison["trending_pct_of_positive"] = comparison.apply(pct_of_positive, axis=1)
+    comparison["positive_multiple_of_trending"] = comparison.apply(positive_multiple, axis=1)
+    return comparison
+
+
+def build_highlights_table(comparison_df: pd.DataFrame, key_columns: list[str], top_n: int = 15) -> pd.DataFrame:
+    if comparison_df.empty:
+        return pd.DataFrame(columns=["highlight_type"] + key_columns + [
+            "positive_value",
+            "trending_value",
+            "delta_trending_minus_positive",
+            "trending_pct_of_positive",
+            "positive_multiple_of_trending",
+        ])
+
+    positive_dominates = comparison_df[
+        comparison_df["positive_value"].fillna(0) > comparison_df["trending_value"].fillna(0)
+    ].copy()
+    positive_dominates = positive_dominates.sort_values(
+        ["trending_pct_of_positive", "positive_multiple_of_trending"],
+        ascending=[True, False],
+        na_position="last",
+    ).head(top_n)
+    positive_dominates["highlight_type"] = "positive_dominates"
+
+    trending_dominates = comparison_df[
+        comparison_df["trending_value"].fillna(0) > comparison_df["positive_value"].fillna(0)
+    ].copy()
+    trending_dominates = trending_dominates.sort_values(
+        ["delta_trending_minus_positive"],
+        ascending=[False],
+        na_position="last",
+    ).head(top_n)
+    trending_dominates["highlight_type"] = "trending_dominates"
+
+    ordered_columns = ["highlight_type"] + key_columns + [
+        "positive_value",
+        "trending_value",
+        "delta_trending_minus_positive",
+        "trending_pct_of_positive",
+        "positive_multiple_of_trending",
+    ]
+    return pd.concat([positive_dominates, trending_dominates], ignore_index=True)[ordered_columns]
+
+
+def save_refactor_statistics_exports(
+    raw_proposals: pd.DataFrame,
+    raw_interventions: pd.DataFrame,
+    sites: list[str],
+    scenarios: list[str],
+    years: list[int],
+):
+    proposal_raw_columns = [
+        "site",
+        "scenario",
+        "year",
+        "proposal_id",
+        "proposal_label",
+        "measure",
+        "metric_column",
+        "value",
+        "notes",
+        "last_updated",
+    ]
+    intervention_raw_columns = [
+        "site",
+        "scenario",
+        "year",
+        "proposal_id",
+        "proposal_label",
+        "intervention",
+        "support",
+        "measure",
+        "metric_column",
+        "value",
+        "notes",
+        "last_updated",
+    ]
+
+    timestamp = update_timestamp()
+    raw_proposals = raw_proposals.copy()
+    raw_interventions = raw_interventions.copy()
+    raw_proposals["last_updated"] = timestamp
+    raw_interventions["last_updated"] = timestamp
+
+    scope_columns = ["site", "scenario", "year"]
+    requested_scope = pd.DataFrame(
+        [(site, scenario, year) for site in sites for scenario in scenarios for year in years],
+        columns=scope_columns,
+    )
+    updated_sites = sorted(set(sites))
+
+    for site in updated_sites:
+        site_proposals = ensure_columns(
+            raw_proposals[raw_proposals["site"] == site].copy(),
+            proposal_raw_columns,
+        )
+        site_interventions = ensure_columns(
+            raw_interventions[raw_interventions["site"] == site].copy(),
+            intervention_raw_columns,
+        )
+
+        proposals_raw_path = refactor_site_raw_path(site, "proposals")
+        interventions_raw_path = refactor_site_raw_path(site, "interventions")
+
+        existing_site_proposals = read_csv_or_empty(proposals_raw_path, proposal_raw_columns)
+        existing_site_interventions = read_csv_or_empty(interventions_raw_path, intervention_raw_columns)
+        site_scope = requested_scope[requested_scope["site"] == site]
+
+        upserted_site_proposals = replace_scope_rows(
+            existing_site_proposals,
+            site_proposals,
+            site_scope,
+            scope_columns,
+            proposal_raw_columns,
+        )
+        upserted_site_interventions = replace_scope_rows(
+            existing_site_interventions,
+            site_interventions,
+            site_scope,
+            scope_columns,
+            intervention_raw_columns,
+        )
+
+        upserted_site_proposals.to_csv(proposals_raw_path, index=False)
+        upserted_site_interventions.to_csv(interventions_raw_path, index=False)
+        print(f"Saved: {proposals_raw_path}")
+        print(f"Saved: {interventions_raw_path}")
+
+    legacy_raw_paths = [
+        refactor_statistics_dir("raw", "proposals.csv"),
+        refactor_statistics_dir("raw", "interventions.csv"),
+    ]
+    for legacy_path in legacy_raw_paths:
+        if legacy_path.exists():
+            legacy_path.unlink()
+
+    proposal_keys = ["site", "year", "proposal_id", "proposal_label", "measure", "metric_column"]
+    intervention_keys = [
+        "site",
+        "year",
+        "proposal_id",
+        "proposal_label",
+        "intervention",
+        "support",
+        "measure",
+        "metric_column",
+    ]
+    all_raw_proposals = collect_all_site_raw_tables("proposals", proposal_raw_columns)
+    all_raw_interventions = collect_all_site_raw_tables("interventions", intervention_raw_columns)
+
+    proposal_comparisons = build_comparison_table(all_raw_proposals, proposal_keys)
+    intervention_comparisons = build_comparison_table(all_raw_interventions, intervention_keys)
+    proposal_highlights = build_highlights_table(proposal_comparisons, proposal_keys)
+    intervention_highlights = build_highlights_table(intervention_comparisons, intervention_keys)
+
+    proposals_comparison_path = refactor_aggregate_path("comparison", "proposals")
+    interventions_comparison_path = refactor_aggregate_path("comparison", "interventions")
+    proposals_highlight_path = refactor_aggregate_path("highlights", "proposals")
+    interventions_highlight_path = refactor_aggregate_path("highlights", "interventions")
+
+    proposal_comparisons.to_csv(proposals_comparison_path, index=False)
+    intervention_comparisons.to_csv(interventions_comparison_path, index=False)
+    proposal_highlights.to_csv(proposals_highlight_path, index=False)
+    intervention_highlights.to_csv(interventions_highlight_path, index=False)
+
+    print(f"Saved: {proposals_comparison_path}")
+    print(f"Saved: {interventions_comparison_path}")
+    print(f"Saved: {proposals_highlight_path}")
+    print(f"Saved: {interventions_highlight_path}")
 
 
 def compute_tree_only_decay_counts(site: str, scenario: str, year: int, voxel_size: float) -> dict:
@@ -1381,8 +1993,9 @@ def compute_connect_voxel_counts(site: str, scenario: str, year: int, voxel_size
             "year": year,
             "source_exists": False,
             "proposal_voxel_count": pd.NA,
-            "full_connect_voxel_count": pd.NA,
-            "partial_connect_voxel_count": pd.NA,
+            "rewild_ground_voxel_count": pd.NA,
+            "enrich_envelope_voxel_count": pd.NA,
+            "roughen_envelope_voxel_count": pd.NA,
             "status": "missing_vtk",
             "notes": f"Missing file: {vtk_path}",
         }
@@ -1395,8 +2008,9 @@ def compute_connect_voxel_counts(site: str, scenario: str, year: int, voxel_size
             "year": year,
             "source_exists": True,
             "proposal_voxel_count": pd.NA,
-            "full_connect_voxel_count": pd.NA,
-            "partial_connect_voxel_count": pd.NA,
+            "rewild_ground_voxel_count": pd.NA,
+            "enrich_envelope_voxel_count": pd.NA,
+            "roughen_envelope_voxel_count": pd.NA,
             "status": "missing_required_arrays",
             "notes": "Missing arrays: scenario_outputs",
         }
@@ -1404,9 +2018,10 @@ def compute_connect_voxel_counts(site: str, scenario: str, year: int, voxel_size
     scenario_outputs = vtk_str_array(poly.point_data["scenario_outputs"])
     scenario_outputs_lower = np.char.lower(scenario_outputs)
 
-    proposal_mask = np.isin(scenario_outputs_lower, list(CONNECT_PROPOSAL_VALUES))
-    full_mask = proposal_mask & np.isin(scenario_outputs_lower, list(CONNECT_FULL_VALUES))
-    partial_mask = proposal_mask & np.isin(scenario_outputs_lower, list(CONNECT_PARTIAL_VALUES))
+    proposal_mask = np.isin(scenario_outputs_lower, list(COLONISE_PROPOSAL_VALUES))
+    rewild_mask = proposal_mask & np.isin(scenario_outputs_lower, list(COLONISE_REWILD_VALUES))
+    enrich_mask = proposal_mask & np.isin(scenario_outputs_lower, list(COLONISE_ENRICH_VALUES))
+    roughen_mask = proposal_mask & np.isin(scenario_outputs_lower, list(COLONISE_ROUGHEN_VALUES))
 
     return {
         "site": site,
@@ -1414,8 +2029,9 @@ def compute_connect_voxel_counts(site: str, scenario: str, year: int, voxel_size
         "year": year,
         "source_exists": True,
         "proposal_voxel_count": int(np.sum(proposal_mask)),
-        "full_connect_voxel_count": int(np.sum(full_mask)),
-        "partial_connect_voxel_count": int(np.sum(partial_mask)),
+        "rewild_ground_voxel_count": int(np.sum(rewild_mask)),
+        "enrich_envelope_voxel_count": int(np.sum(enrich_mask)),
+        "roughen_envelope_voxel_count": int(np.sum(roughen_mask)),
         "status": "computed",
         "notes": "",
     }
@@ -1438,8 +2054,9 @@ def build_connect_voxel_df(
         "year",
         "source_exists",
         "proposal_voxel_count",
-        "full_connect_voxel_count",
-        "partial_connect_voxel_count",
+        "rewild_ground_voxel_count",
+        "enrich_envelope_voxel_count",
+        "roughen_envelope_voxel_count",
         "status",
         "notes",
     ]
@@ -1465,8 +2082,9 @@ def aggregate_all_sites_connect_voxels(
                         "year": year,
                         "source_exists": False,
                         "proposal_voxel_count": pd.NA,
-                        "full_connect_voxel_count": pd.NA,
-                        "partial_connect_voxel_count": pd.NA,
+                        "rewild_ground_voxel_count": pd.NA,
+                        "enrich_envelope_voxel_count": pd.NA,
+                        "roughen_envelope_voxel_count": pd.NA,
                         "status": "missing_vtk",
                         "notes": "No site records available for this scenario/year.",
                     }
@@ -1480,8 +2098,9 @@ def aggregate_all_sites_connect_voxels(
                     "year": year,
                     "source_exists": True,
                     "proposal_voxel_count": int(subset["proposal_voxel_count"].fillna(0).sum()),
-                    "full_connect_voxel_count": int(subset["full_connect_voxel_count"].fillna(0).sum()),
-                    "partial_connect_voxel_count": int(subset["partial_connect_voxel_count"].fillna(0).sum()),
+                    "rewild_ground_voxel_count": int(subset["rewild_ground_voxel_count"].fillna(0).sum()),
+                    "enrich_envelope_voxel_count": int(subset["enrich_envelope_voxel_count"].fillna(0).sum()),
+                    "roughen_envelope_voxel_count": int(subset["roughen_envelope_voxel_count"].fillna(0).sum()),
                     "status": "computed",
                     "notes": "",
                 }
@@ -1492,34 +2111,40 @@ def aggregate_all_sites_connect_voxels(
 def render_single_connect_table(title: str, subset: pd.DataFrame, years: list[int]) -> str:
     year_to_row = {int(row["year"]): row for _, row in subset.iterrows()}
     proposal_cells = []
-    full_cells = []
-    partial_cells = []
+    rewild_cells = []
+    enrich_cells = []
+    roughen_cells = []
 
     for year in years:
         row = year_to_row.get(year)
         if row is None:
             proposal_cells.append("NA")
-            full_cells.append("NA")
-            partial_cells.append("NA")
+            rewild_cells.append("NA")
+            enrich_cells.append("NA")
+            roughen_cells.append("NA")
             continue
         proposal_cells.append(format_count_cell(row["proposal_voxel_count"]))
-        full_cells.append(format_count_pct_cell(row["full_connect_voxel_count"], row["proposal_voxel_count"]))
-        partial_cells.append(format_count_pct_cell(row["partial_connect_voxel_count"], row["proposal_voxel_count"]))
+        rewild_cells.append(format_count_pct_cell(row["rewild_ground_voxel_count"], row["proposal_voxel_count"]))
+        enrich_cells.append(format_count_pct_cell(row["enrich_envelope_voxel_count"], row["proposal_voxel_count"]))
+        roughen_cells.append(format_count_pct_cell(row["roughen_envelope_voxel_count"], row["proposal_voxel_count"]))
 
     total_proposal = sum_with_na(subset["proposal_voxel_count"])
-    total_full = sum_with_na(subset["full_connect_voxel_count"])
-    total_partial = sum_with_na(subset["partial_connect_voxel_count"])
+    total_rewild = sum_with_na(subset["rewild_ground_voxel_count"])
+    total_enrich = sum_with_na(subset["enrich_envelope_voxel_count"])
+    total_roughen = sum_with_na(subset["roughen_envelope_voxel_count"])
 
     proposal_total_cell = format_count_cell(total_proposal)
-    full_total_cell = format_count_pct_cell(total_full, total_proposal)
-    partial_total_cell = format_count_pct_cell(total_partial, total_proposal)
+    rewild_total_cell = format_count_pct_cell(total_rewild, total_proposal)
+    enrich_total_cell = format_count_pct_cell(total_enrich, total_proposal)
+    roughen_total_cell = format_count_pct_cell(total_roughen, total_proposal)
 
     header = "| Metric | " + " | ".join(str(y) for y in years) + " | Total |"
     divider = "|---|" + "|".join(["---:"] * (len(years) + 1)) + "|"
     row_proposal = "| Proposal voxels [x] | " + " | ".join(proposal_cells) + f" | {proposal_total_cell} |"
-    row_full = "| Full Connect | " + " | ".join(full_cells) + f" | {full_total_cell} |"
-    row_partial = "| Partial Connect | " + " | ".join(partial_cells) + f" | {partial_total_cell} |"
-    return "\n".join([title, header, divider, row_proposal, row_full, row_partial, ""])
+    row_rewild = "| Rewild-Ground | " + " | ".join(rewild_cells) + f" | {rewild_total_cell} |"
+    row_enrich = "| Enrich-Envelope | " + " | ".join(enrich_cells) + f" | {enrich_total_cell} |"
+    row_roughen = "| Roughen-Envelope | " + " | ".join(roughen_cells) + f" | {roughen_total_cell} |"
+    return "\n".join([title, header, divider, row_proposal, row_rewild, row_enrich, row_roughen, ""])
 
 
 def generate_connect_comparison_tables(
@@ -1610,6 +2235,15 @@ def main():
             "(site-scenario and all-sites totals) and exit."
         ),
     )
+    parser.add_argument(
+        "--export-refactor-statistics",
+        action="store_true",
+        help=(
+            "Upsert per-site long-format raw proposal/intervention tables with last_updated, "
+            "then rebuild aggregate comparison and highlights tables in "
+            "_statistics-refactored."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -1653,6 +2287,25 @@ def main():
         )
         save_connect_comparison_outputs(args.voxel_size, per_site_df, all_sites_df, markdown)
         print("\n" + markdown)
+        return
+
+    if args.export_refactor_statistics:
+        report_sites = SITE_REPORT_ORDER if args.site == "all" else [args.site]
+        scenarios = [args.scenario] if args.scenario else list(DEFAULT_SCENARIOS)
+        years = parse_years_arg(args.table_years)
+        raw_proposals, raw_interventions = build_refactor_raw_tables(
+            sites=report_sites,
+            scenarios=scenarios,
+            years=years,
+            voxel_size=args.voxel_size,
+        )
+        save_refactor_statistics_exports(
+            raw_proposals,
+            raw_interventions,
+            sites=report_sites,
+            scenarios=scenarios,
+            years=years,
+        )
         return
 
     sites = SITES if args.site == "all" else [args.site]

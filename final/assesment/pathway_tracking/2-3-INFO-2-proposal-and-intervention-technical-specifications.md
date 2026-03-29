@@ -1,11 +1,14 @@
-# Proposed Proposal And Intervention Tables
+# 2.3-INFO-2 Proposal And Intervention Technical Specifications
 
-This note freezes the currently proposed manuscript-aligned mapping for the last assessment steps:
+This note freezes the current technical mapping for:
 
 - `2.3-INFO-2. Proposal Opportunities`
 - `2.3-INFO-3. Community Response`
+- `2.3-INFO-3.1. Refactor Statistics Exports`
 
-It simplifies the earlier draft by separating:
+For conceptual definitions and manuscript-facing descriptions, use [2-3-INFO-2-proposal-and-intervention-descriptions.md](./2-3-INFO-2-proposal-and-intervention-descriptions.md).
+
+It separates:
 
 - how each proposal or intervention is measured for assessment
 - how each proposal or intervention is visualised in Blender
@@ -20,9 +23,7 @@ Use this five-proposal manuscript set:
 - `Colonise`
 - `Release-Control`
 
-Do not emit:
-
-- `Translocate`
+Do not emit any extra stub proposals outside the five manuscript proposals.
 
 ## Intervention Set
 
@@ -122,19 +123,21 @@ The current values are:
 - `brownRoof`
 - `none`
 
-## Practical Translation To Script Labels
+## Refactor Statistics Export
 
-| Current code label | Proposed emitted label |
-| --- | --- |
-| `Deploy` | `Deploy-Structure` |
-| `Buffer` | `Buffer-Feature` |
-| `Brace` | `Brace-Feature` |
-| `Eliminate pruning` | `Buffer-Feature` |
-| `Reduce pruning` | `Brace-Feature` |
-| `Connect (full)` on `greenRoof` | `Enrich-Envelope` |
-| `Connect (full)` on `node-rewilded`, `rewilded`, `footprint-depaved` | `Rewild-Ground` |
-| `Connect (partial)` on `brownRoof`, `livingFacade` | `Roughen-Envelope` |
-| `Translocate` | remove |
+`a_info_proposal_interventions.py --export-refactor-statistics` now writes:
+
+- per-site raw long tables:
+  - `_statistics-refactored/raw/{site}/proposals.csv`
+  - `_statistics-refactored/raw/{site}/interventions.csv`
+- aggregate comparison longs:
+  - `_statistics-refactored/comparison/proposals.csv`
+  - `_statistics-refactored/comparison/interventions.csv`
+- aggregate highlights:
+  - `_statistics-refactored/highlights/proposals.csv`
+  - `_statistics-refactored/highlights/interventions.csv`
+
+Each raw row carries `last_updated`. Partial reruns replace only the requested `site + scenario + year` scope in the site raw files, then rebuild aggregate comparison and highlight outputs.
 
 ## Open Temporary Assumptions
 

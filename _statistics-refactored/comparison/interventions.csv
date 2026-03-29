@@ -1,0 +1,344 @@
+site,year,proposal_id,proposal_label,intervention,support,measure,metric_column,positive_value,trending_value,delta_trending_minus_positive,trending_pct_of_positive,positive_multiple_of_trending
+city,0,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,0,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,21598.0,920.0,-20678.0,4.259654,23.476087
+city,0,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,0,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,0,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,0.0,0.0,0.0,,
+city,0,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,24062.0,1160.0,-22902.0,4.820879,20.743103
+city,0,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,0.0,0.0,0.0,,
+city,0,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,0,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+city,0,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,1080.0,269.0,-811.0,24.907407,4.01487
+city,0,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,15274.0,1150.0,-14124.0,7.529134,13.281739
+city,0,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,26.0,30.0,4.0,115.384615,0.866667
+city,0,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,99.0,5434.0,5335.0,5488.888889,0.018219
+city,0,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,11111.0,2231.0,-8880.0,20.079201,4.980278
+city,10,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,241.0,,,,
+city,10,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,10321.0,0.0,-10321.0,0.0,
+city,10,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,22301.0,1242.0,-21059.0,5.569257,17.955717
+city,10,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,23404.0,0.0,-23404.0,0.0,
+city,10,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,11.0,163.0,152.0,1481.818182,0.067485
+city,10,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,1.0,1.0,0.0,100.0,1.0
+city,10,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,20133.0,1146.0,-18987.0,5.692147,17.568063
+city,10,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,4.0,0.0,-4.0,0.0,
+city,10,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,10,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+city,10,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,1787.0,379.0,-1408.0,21.20873,4.71504
+city,10,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,12395.0,1136.0,-11259.0,9.164986,10.911092
+city,10,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,6867.0,367.0,-6500.0,5.344401,18.711172
+city,10,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,1349.0,5351.0,4002.0,396.664196,0.252102
+city,10,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,13776.0,3853.0,-9923.0,27.968931,3.575396
+city,30,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,475.0,19.0,-456.0,4.0,25.0
+city,30,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,30474.0,166.0,-30308.0,0.544727,183.578313
+city,30,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,21418.0,1649.0,-19769.0,7.699132,12.988478
+city,30,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,70585.0,81.0,-70504.0,0.114755,871.419753
+city,30,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,715.0,352.0,-363.0,49.230769,2.03125
+city,30,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,6.0,3.0,-3.0,50.0,2.0
+city,30,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,13534.0,1059.0,-12475.0,7.824738,12.779981
+city,30,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,47.0,2.0,-45.0,4.255319,23.5
+city,30,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,30,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+city,30,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,9879.0,818.0,-9061.0,8.28019,12.077017
+city,30,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,12641.0,1049.0,-11592.0,8.298394,12.050524
+city,30,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,16055.0,883.0,-15172.0,5.499844,18.182333
+city,30,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,70697.0,39603.0,-31094.0,56.017936,1.785143
+city,30,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,53529.0,4960.0,-48569.0,9.266005,10.792137
+city,60,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,819.0,64.0,-755.0,7.814408,12.796875
+city,60,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,51061.0,1515.0,-49546.0,2.967039,33.70363
+city,60,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,38716.0,2461.0,-36255.0,6.356545,15.731816
+city,60,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,144503.0,1461.0,-143042.0,1.011052,98.906913
+city,60,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,2754.0,472.0,-2282.0,17.138707,5.834746
+city,60,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,19.0,7.0,-12.0,36.842105,2.714286
+city,60,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,8627.0,619.0,-8008.0,7.175148,13.936995
+city,60,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,104.0,25.0,-79.0,24.038462,4.16
+city,60,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,60,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+city,60,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,15446.0,3376.0,-12070.0,21.856791,4.575237
+city,60,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,8584.0,609.0,-7975.0,7.094595,14.095238
+city,60,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,45677.0,2083.0,-43594.0,4.560282,21.928469
+city,60,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,12454.0,10507.0,-1947.0,84.366469,1.185305
+city,60,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,93270.0,21187.0,-72083.0,22.715771,4.402228
+city,90,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,819.0,94.0,-725.0,11.477411,8.712766
+city,90,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,50879.0,2902.0,-47977.0,5.703728,17.532391
+city,90,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,38216.0,3288.0,-34928.0,8.603726,11.622871
+city,90,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,144394.0,4266.0,-140128.0,2.954416,33.847632
+city,90,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,3010.0,583.0,-2427.0,19.368771,5.16295
+city,90,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,31.0,9.0,-22.0,29.032258,3.444444
+city,90,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,15493.0,1160.0,-14333.0,7.487252,13.356034
+city,90,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,185.0,44.0,-141.0,23.783784,4.204545
+city,90,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,90,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+city,90,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,23213.0,6913.0,-16300.0,29.780726,3.357876
+city,90,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,15343.0,1150.0,-14193.0,7.495275,13.341739
+city,90,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,39383.0,2887.0,-36496.0,7.330574,13.641496
+city,90,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,4503.0,4606.0,103.0,102.287364,0.977638
+city,90,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,163182.0,38769.0,-124413.0,23.758135,4.209085
+city,120,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,819.0,120.0,-699.0,14.652015,6.825
+city,120,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,50804.0,3818.0,-46986.0,7.515156,13.306443
+city,120,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,38206.0,3796.0,-34410.0,9.935612,10.064805
+city,120,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,143825.0,6648.0,-137177.0,4.622284,21.634326
+city,120,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,3010.0,583.0,-2427.0,19.368771,5.16295
+city,120,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,31.0,9.0,-22.0,29.032258,3.444444
+city,120,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,15499.0,1160.0,-14339.0,7.484354,13.361207
+city,120,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,188.0,44.0,-144.0,23.404255,4.272727
+city,120,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,120,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+city,120,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,20320.0,5842.0,-14478.0,28.75,3.478261
+city,120,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,15365.0,1150.0,-14215.0,7.484543,13.36087
+city,120,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,39317.0,3572.0,-35745.0,9.085129,11.006999
+city,120,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,5687.0,11272.0,5585.0,198.206436,0.504524
+city,120,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,178192.0,34102.0,-144090.0,19.137784,5.225265
+city,150,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,819.0,144.0,-675.0,17.582418,5.6875
+city,150,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,50529.0,5490.0,-45039.0,10.865048,9.203825
+city,150,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,37870.0,4267.0,-33603.0,11.267494,8.875088
+city,150,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,141577.0,10661.0,-130916.0,7.530178,13.279899
+city,150,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,3010.0,583.0,-2427.0,19.368771,5.16295
+city,150,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,31.0,9.0,-22.0,29.032258,3.444444
+city,150,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,15499.0,1160.0,-14339.0,7.484354,13.361207
+city,150,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,188.0,44.0,-144.0,23.404255,4.272727
+city,150,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,150,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+city,150,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,19095.0,5457.0,-13638.0,28.578162,3.499175
+city,150,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,15377.0,1150.0,-14227.0,7.478702,13.371304
+city,150,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,39376.0,4370.0,-35006.0,11.098131,9.010526
+city,150,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,6576.0,14554.0,7978.0,221.319951,0.451835
+city,150,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,254308.0,49596.0,-204712.0,19.502336,5.127591
+city,180,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,819.0,193.0,-626.0,23.565324,4.243523
+city,180,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,50498.0,6658.0,-43840.0,13.184681,7.58456
+city,180,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,38242.0,4726.0,-33516.0,12.35814,8.091832
+city,180,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,141775.0,14548.0,-127227.0,10.26133,9.745326
+city,180,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,3010.0,583.0,-2427.0,19.368771,5.16295
+city,180,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,31.0,9.0,-22.0,29.032258,3.444444
+city,180,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,15499.0,1160.0,-14339.0,7.484354,13.361207
+city,180,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,188.0,44.0,-144.0,23.404255,4.272727
+city,180,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+city,180,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+city,180,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,14110.0,4039.0,-10071.0,28.625089,3.493439
+city,180,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,15370.0,1150.0,-14220.0,7.482108,13.365217
+city,180,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,39415.0,5636.0,-33779.0,14.299125,6.993435
+city,180,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,6150.0,12135.0,5985.0,197.317073,0.506799
+city,180,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,229338.0,47884.0,-181454.0,20.879226,4.78945
+trimmed-parade,0,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,0,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,12689.0,17.0,-12672.0,0.133974,746.411765
+trimmed-parade,0,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,0,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,0,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,0,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,14990.0,0.0,-14990.0,0.0,
+trimmed-parade,0,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,0,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,0,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,0,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,1589.0,165.0,-1424.0,10.383889,9.630303
+trimmed-parade,0,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,13419.0,0.0,-13419.0,0.0,
+trimmed-parade,0,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,15.0,37.0,22.0,246.666667,0.405405
+trimmed-parade,0,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,654.0,139285.0,138631.0,21297.400612,0.004695
+trimmed-parade,0,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,19597.0,0.0,-19597.0,0.0,
+trimmed-parade,10,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,10,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,8901.0,21.0,-8880.0,0.235929,423.857143
+trimmed-parade,10,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,10,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,428.0,0.0,-428.0,0.0,
+trimmed-parade,10,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,4.0,0.0,-4.0,0.0,
+trimmed-parade,10,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,10716.0,0.0,-10716.0,0.0,
+trimmed-parade,10,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,8.0,0.0,-8.0,0.0,
+trimmed-parade,10,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,10,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,10,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,2290.0,252.0,-2038.0,11.004367,9.087302
+trimmed-parade,10,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,8950.0,0.0,-8950.0,0.0,
+trimmed-parade,10,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,18.0,37.0,19.0,205.555556,0.486486
+trimmed-parade,10,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,7082.0,146653.0,139571.0,2070.785089,0.048291
+trimmed-parade,10,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,21319.0,0.0,-21319.0,0.0,
+trimmed-parade,30,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,30,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,37878.0,22.0,-37856.0,0.058081,1721.727273
+trimmed-parade,30,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,30,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,4847.0,0.0,-4847.0,0.0,
+trimmed-parade,30,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,37.0,0.0,-37.0,0.0,
+trimmed-parade,30,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,12189.0,0.0,-12189.0,0.0,
+trimmed-parade,30,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,55.0,0.0,-55.0,0.0,
+trimmed-parade,30,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,30,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,30,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,14260.0,170.0,-14090.0,1.192146,83.882353
+trimmed-parade,30,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,12186.0,0.0,-12186.0,0.0,
+trimmed-parade,30,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,31300.0,37.0,-31263.0,0.118211,845.945946
+trimmed-parade,30,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,170756.0,167918.0,-2838.0,98.337979,1.016901
+trimmed-parade,30,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,96289.0,0.0,-96289.0,0.0,
+trimmed-parade,60,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,60,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,44163.0,31.0,-44132.0,0.070195,1424.612903
+trimmed-parade,60,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,60,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,6375.0,0.0,-6375.0,0.0,
+trimmed-parade,60,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,46.0,0.0,-46.0,0.0,
+trimmed-parade,60,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,8387.0,0.0,-8387.0,0.0,
+trimmed-parade,60,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,152.0,0.0,-152.0,0.0,
+trimmed-parade,60,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,60,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,60,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,22090.0,130.0,-21960.0,0.588502,169.923077
+trimmed-parade,60,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,8381.0,0.0,-8381.0,0.0,
+trimmed-parade,60,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,42036.0,37.0,-41999.0,0.08802,1136.108108
+trimmed-parade,60,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,127192.0,144899.0,17707.0,113.921473,0.877798
+trimmed-parade,60,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,188725.0,1700.0,-187025.0,0.900782,111.014706
+trimmed-parade,90,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,90,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,44723.0,36.0,-44687.0,0.080495,1242.305556
+trimmed-parade,90,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,90,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,6937.0,0.0,-6937.0,0.0,
+trimmed-parade,90,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,55.0,0.0,-55.0,0.0,
+trimmed-parade,90,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,14853.0,0.0,-14853.0,0.0,
+trimmed-parade,90,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,336.0,0.0,-336.0,0.0,
+trimmed-parade,90,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,90,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,90,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,29215.0,17.0,-29198.0,0.058189,1718.529412
+trimmed-parade,90,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,14847.0,0.0,-14847.0,0.0,
+trimmed-parade,90,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,38217.0,37.0,-38180.0,0.096816,1032.891892
+trimmed-parade,90,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,24316.0,58138.0,33822.0,239.093601,0.418246
+trimmed-parade,90,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,317273.0,0.0,-317273.0,0.0,
+trimmed-parade,120,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,120,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,46403.0,36.0,-46367.0,0.077581,1288.972222
+trimmed-parade,120,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,120,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,6937.0,0.0,-6937.0,0.0,
+trimmed-parade,120,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,55.0,0.0,-55.0,0.0,
+trimmed-parade,120,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,14990.0,0.0,-14990.0,0.0,
+trimmed-parade,120,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,368.0,0.0,-368.0,0.0,
+trimmed-parade,120,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,120,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,120,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,28447.0,50.0,-28397.0,0.175765,568.94
+trimmed-parade,120,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,14984.0,0.0,-14984.0,0.0,
+trimmed-parade,120,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,40157.0,37.0,-40120.0,0.092138,1085.324324
+trimmed-parade,120,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,12875.0,121568.0,108693.0,944.217476,0.105908
+trimmed-parade,120,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,351796.0,0.0,-351796.0,0.0,
+trimmed-parade,150,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,150,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47367.0,32.0,-47335.0,0.067558,1480.21875
+trimmed-parade,150,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,150,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,6937.0,0.0,-6937.0,0.0,
+trimmed-parade,150,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,55.0,0.0,-55.0,0.0,
+trimmed-parade,150,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,14990.0,0.0,-14990.0,0.0,
+trimmed-parade,150,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,368.0,0.0,-368.0,0.0,
+trimmed-parade,150,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,150,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,150,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,21792.0,102.0,-21690.0,0.468062,213.647059
+trimmed-parade,150,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,14984.0,0.0,-14984.0,0.0,
+trimmed-parade,150,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,42463.0,37.0,-42426.0,0.087135,1147.648649
+trimmed-parade,150,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,12211.0,185375.0,173164.0,1518.098436,0.065872
+trimmed-parade,150,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,452422.0,0.0,-452422.0,0.0,
+trimmed-parade,180,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,180,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,48750.0,33.0,-48717.0,0.067692,1477.272727
+trimmed-parade,180,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,180,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,6937.0,0.0,-6937.0,0.0,
+trimmed-parade,180,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,55.0,0.0,-55.0,0.0,
+trimmed-parade,180,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,14990.0,0.0,-14990.0,0.0,
+trimmed-parade,180,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,368.0,0.0,-368.0,0.0,
+trimmed-parade,180,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+trimmed-parade,180,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+trimmed-parade,180,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,17319.0,119.0,-17200.0,0.687107,145.537815
+trimmed-parade,180,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,14982.0,0.0,-14982.0,0.0,
+trimmed-parade,180,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,43552.0,37.0,-43515.0,0.084956,1177.081081
+trimmed-parade,180,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,17795.0,191004.0,173209.0,1073.357685,0.093166
+trimmed-parade,180,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,407604.0,0.0,-407604.0,0.0,
+uni,0,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,0,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,6025.0,126.0,-5899.0,2.091286,47.81746
+uni,0,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,0,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,0,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,0.0,0.0,0.0,,
+uni,0,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,6872.0,130.0,-6742.0,1.891735,52.861538
+uni,0,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,0.0,0.0,0.0,,
+uni,0,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,0,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,0.0,0.0,0.0,,
+uni,0,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,383.0,8.0,-375.0,2.088773,47.875
+uni,0,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,6809.0,130.0,-6679.0,1.909238,52.376923
+uni,0,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,35.0,42.0,7.0,120.0,0.833333
+uni,0,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,0,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,6106.0,582.0,-5524.0,9.531608,10.491409
+uni,10,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,7451.0,0.0,-7451.0,0.0,
+uni,10,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,8888.0,621.0,-8267.0,6.986949,14.312399
+uni,10,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,26920.0,0.0,-26920.0,0.0,
+uni,10,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,34.0,57.0,23.0,167.647059,0.596491
+uni,10,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,1.0,1.0,0.0,100.0,1.0
+uni,10,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,3570.0,130.0,-3440.0,3.641457,27.461538
+uni,10,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,1.0,0.0,-1.0,0.0,
+uni,10,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,43436.0,0.0,-43436.0,0.0,
+uni,10,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,61.0,0.0,-61.0,0.0,
+uni,10,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,7924.0,107.0,-7817.0,1.350328,74.056075
+uni,10,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,3548.0,130.0,-3418.0,3.664036,27.292308
+uni,10,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,8345.0,587.0,-7758.0,7.034152,14.216354
+uni,10,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,10,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,49270.0,833.0,-48437.0,1.690684,59.147659
+uni,30,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,20110.0,0.0,-20110.0,0.0,
+uni,30,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,16527.0,1362.0,-15165.0,8.24106,12.134361
+uni,30,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,52214.0,0.0,-52214.0,0.0,
+uni,30,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,209.0,157.0,-52.0,75.119617,1.33121
+uni,30,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,4.0,2.0,-2.0,50.0,2.0
+uni,30,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,5687.0,130.0,-5557.0,2.285915,43.746154
+uni,30,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,40.0,0.0,-40.0,0.0,
+uni,30,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,42045.0,0.0,-42045.0,0.0,
+uni,30,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,61.0,0.0,-61.0,0.0,
+uni,30,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,15078.0,359.0,-14719.0,2.380952,42.0
+uni,30,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,5657.0,130.0,-5527.0,2.298038,43.515385
+uni,30,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,16289.0,1301.0,-14988.0,7.986985,12.520369
+uni,30,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,2734.0,960.0,-1774.0,35.113387,2.847917
+uni,30,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,85073.0,2480.0,-82593.0,2.915143,34.303629
+uni,60,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,31445.0,0.0,-31445.0,0.0,
+uni,60,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47601.0,2543.0,-45058.0,5.342325,18.718443
+uni,60,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,79873.0,0.0,-79873.0,0.0,
+uni,60,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,910.0,157.0,-753.0,17.252747,5.796178
+uni,60,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,10.0,2.0,-8.0,20.0,5.0
+uni,60,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,6508.0,120.0,-6388.0,1.843884,54.233333
+uni,60,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,52.0,0.0,-52.0,0.0,
+uni,60,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,59656.0,0.0,-59656.0,0.0,
+uni,60,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,90.0,0.0,-90.0,0.0,
+uni,60,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,20366.0,248.0,-20118.0,1.217716,82.120968
+uni,60,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,6453.0,120.0,-6333.0,1.8596,53.775
+uni,60,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,52398.0,2464.0,-49934.0,4.70247,21.265422
+uni,60,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,60,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,135972.0,4415.0,-131557.0,3.246992,30.797735
+uni,90,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,31295.0,0.0,-31295.0,0.0,
+uni,90,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47307.0,3040.0,-44267.0,6.42611,15.561513
+uni,90,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,79649.0,0.0,-79649.0,0.0,
+uni,90,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,1346.0,272.0,-1074.0,20.208024,4.948529
+uni,90,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,21.0,6.0,-15.0,28.571429,3.5
+uni,90,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,6691.0,130.0,-6561.0,1.942908,51.469231
+uni,90,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,73.0,5.0,-68.0,6.849315,14.6
+uni,90,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,59052.0,0.0,-59052.0,0.0,
+uni,90,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,90.0,0.0,-90.0,0.0,
+uni,90,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,21493.0,1851.0,-19642.0,8.612106,11.611561
+uni,90,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,6630.0,130.0,-6500.0,1.960784,51.0
+uni,90,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,52496.0,2937.0,-49559.0,5.594712,17.874021
+uni,90,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,90,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,179037.0,10851.0,-168186.0,6.060758,16.499585
+uni,120,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,31272.0,0.0,-31272.0,0.0,
+uni,120,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47352.0,3694.0,-43658.0,7.801149,12.818625
+uni,120,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,78819.0,0.0,-78819.0,0.0,
+uni,120,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,1346.0,272.0,-1074.0,20.208024,4.948529
+uni,120,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,21.0,6.0,-15.0,28.571429,3.5
+uni,120,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,6868.0,130.0,-6738.0,1.892836,52.830769
+uni,120,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,79.0,5.0,-74.0,6.329114,15.8
+uni,120,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,55873.0,0.0,-55873.0,0.0,
+uni,120,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,90.0,0.0,-90.0,0.0,
+uni,120,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,20008.0,2105.0,-17903.0,10.520792,9.504988
+uni,120,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,6807.0,130.0,-6677.0,1.909799,52.361538
+uni,120,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,52717.0,3684.0,-49033.0,6.988258,14.309718
+uni,120,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,120,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,208715.0,13354.0,-195361.0,6.398199,15.629399
+uni,150,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,38917.0,0.0,-38917.0,0.0,
+uni,150,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47113.0,4132.0,-42981.0,8.770403,11.401985
+uni,150,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,105059.0,0.0,-105059.0,0.0,
+uni,150,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,1335.0,272.0,-1063.0,20.374532,4.908088
+uni,150,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,21.0,6.0,-15.0,28.571429,3.5
+uni,150,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,6826.0,130.0,-6696.0,1.904483,52.507692
+uni,150,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,79.0,5.0,-74.0,6.329114,15.8
+uni,150,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,54157.0,0.0,-54157.0,0.0,
+uni,150,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,90.0,0.0,-90.0,0.0,
+uni,150,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,18801.0,1420.0,-17381.0,7.55279,13.240141
+uni,150,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,6770.0,130.0,-6640.0,1.920236,52.076923
+uni,150,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,53473.0,4209.0,-49264.0,7.871262,12.704443
+uni,150,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,150,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,227472.0,15428.0,-212044.0,6.782373,14.744102
+uni,180,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,38757.0,0.0,-38757.0,0.0,
+uni,180,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47614.0,4732.0,-42882.0,9.938253,10.06213
+uni,180,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,104661.0,0.0,-104661.0,0.0,
+uni,180,decay,Decay,Brace-Feature,partial,brace-feature voxels,supported_voxel_count,1335.0,272.0,-1063.0,20.374532,4.908088
+uni,180,decay,Decay,Brace-Feature,partial,senescing trees,supported_tree_count,21.0,6.0,-15.0,28.571429,3.5
+uni,180,decay,Decay,Buffer-Feature,full,buffer-feature voxels,supported_voxel_count,6826.0,130.0,-6696.0,1.904483,52.507692
+uni,180,decay,Decay,Buffer-Feature,full,senescing trees,supported_tree_count,79.0,5.0,-74.0,6.329114,15.8
+uni,180,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,artificial canopy voxels,supported_voxel_count,55586.0,0.0,-55586.0,0.0,
+uni,180,deploy_structure,Deploy-Structure,Adapt-Utility-Pole,full,utility poles,supported_tree_count,90.0,0.0,-90.0,0.0,
+uni,180,deploy_structure,Deploy-Structure,Upgrade-Feature,full,upgraded-feature voxels,supported_voxel_count,16570.0,1077.0,-15493.0,6.499698,15.38533
+uni,180,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_voxel_count,6770.0,130.0,-6640.0,1.920236,52.076923
+uni,180,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,53312.0,4462.0,-48850.0,8.369598,11.948005
+uni,180,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
+uni,180,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,215515.0,9663.0,-205852.0,4.483679,22.303115

@@ -50,6 +50,7 @@ RhinoCompute.cs
 .venv/
 .vscode/
 data/
+data-refactored/
 outputs/
 util/
 pathwalker_3d_results/

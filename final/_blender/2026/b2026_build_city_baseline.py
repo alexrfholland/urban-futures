@@ -2,13 +2,18 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import sys
 from pathlib import Path
 
 import bpy
 import pandas as pd
 
 
-REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import hook_baseline_terrain_ply_path, hook_baseline_trees_csv_path
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 SOURCE_SCENE_NAME = os.environ.get("B2026_BASELINE_SOURCE_SCENE", "city")
 SOURCE_SCENE_BACKUP_NAME = os.environ.get("B2026_BASELINE_SOURCE_BACKUP_SCENE", "city_source")
@@ -16,13 +21,13 @@ BASELINE_SCENE_NAME = os.environ.get("B2026_BASELINE_SCENE_NAME", "city")
 BASELINE_TERRAIN_PLY = Path(
     os.environ.get(
         "B2026_BASELINE_TERRAIN_PLY",
-        str(REPO_ROOT / "data" / "revised" / "final" / "baselines" / "city_baseline_terrain_1.ply"),
+        str(hook_baseline_terrain_ply_path("city", 1)),
     )
 )
 BASELINE_TREE_CSV = Path(
     os.environ.get(
         "B2026_BASELINE_TREE_CSV",
-        str(REPO_ROOT / "data" / "revised" / "final" / "baselines" / "city_baseline_trees.csv"),
+        str(hook_baseline_trees_csv_path("city")),
     )
 )
 BASELINE_RENDER_PATH = Path(

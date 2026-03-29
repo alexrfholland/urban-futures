@@ -24,16 +24,41 @@ VOXEL_SIZE = 1
 YEARS = [10, 30, 60, 180]
 OUTPUT_SUBDIR = 'ply'
 REQUIRED_ATTRS = ['scenario_rewilded', 'sim_Turns', 'sim_averageResistance']
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def format_voxel_size(voxel_size: float | int) -> str:
+    numeric = float(voxel_size)
+    if numeric.is_integer():
+        return str(int(numeric))
+    return str(voxel_size)
+
+
+def hook_state_vtk_latest_path(site: str, scenario: str, year: int, voxel_size: int) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return REPO_ROOT / "_data-refactored" / "final-hooks" / "vtks" / site / f"{site}_{scenario}_{voxel}_yr{year}_state_with_indicators.vtk"
 
 
 def resolve_scenario_vtk_path(site: str, voxel_size: int, year: int, scenario: str | None = None) -> Path:
+    if scenario:
+        vtk_path = hook_state_vtk_latest_path(site, scenario, year, voxel_size)
+        if vtk_path.exists():
+            return vtk_path
+
+    voxel = format_voxel_size(voxel_size)
+    legacy_assessed_candidates = []
+    if scenario:
+        legacy_assessed_candidates.append(
+            Path("data/revised/final/output") / f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features_with_indicators.vtk"
+        )
+
     file_path = Path(f'data/revised/final/{site}')
     candidates = []
     if scenario:
         candidates.append(file_path / f'{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk')
     candidates.append(file_path / f'{site}_{voxel_size}_scenarioYR{year}.vtk')
 
-    for candidate in candidates:
+    for candidate in legacy_assessed_candidates + candidates:
         if candidate.exists():
             return candidate
 

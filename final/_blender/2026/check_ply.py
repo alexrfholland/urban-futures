@@ -1,10 +1,14 @@
 from collections import Counter
 from pathlib import Path
+import sys
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import hook_tree_ply_library_dir
 
 
-TREE_PLY_FOLDER = Path(
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/treeMeshesPly"
-)
+TREE_PLY_FOLDER = hook_tree_ply_library_dir()
 
 RESOURCE_PROPERTY_BY_RAW_VALUE_ZERO_BASED = {
     0: "resource_other",

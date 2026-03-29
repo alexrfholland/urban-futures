@@ -1,15 +1,20 @@
 from pathlib import Path
 import math
 import re
+import sys
 
 import bpy
 from mathutils import Vector
 
 
-REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import hook_log_ply_library_dir, hook_tree_ply_library_dir
+
 DEFAULT_LOG_FILEPATH = REPO_ROOT / "data/blender/2026/logs/instancer_city_180_trending_20260323_024211.log"
-TREE_PLY_FOLDER = REPO_ROOT / "data/revised/final/treeMeshesPly"
-LOG_PLY_FOLDER = REPO_ROOT / "data/revised/final/logMeshesPly"
+TREE_PLY_FOLDER = hook_tree_ply_library_dir()
+LOG_PLY_FOLDER = hook_log_ply_library_dir()
 TARGET_MATERIAL_NAME = "MINIMAL_RESOURCES"
 
 GRID_COLLECTION_PREFIX = "ModelGrid"

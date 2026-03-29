@@ -276,6 +276,14 @@ Chain note:
 
 ### 2.3. Assessment / Info Scripts
 
+Related docs:
+- [comparison structure.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_classes/comparison%20structure.md) defines the overall assessment structure and provides examples, particularly used in the city year-180 hero image.
+- [2-3-INFO-1-capability-indicators.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-1-capability-indicators.md)
+- [2-3-INFO-2-proposal-and-intervention-descriptions.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-2-proposal-and-intervention-descriptions.md)
+- [2-3-INFO-2-proposal-and-intervention-technical-specifications.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-2-proposal-and-intervention-technical-specifications.md)
+- [2-3-INFO-4-implementation-action-counts-info.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-4-implementation-action-counts-info.md)
+- [2-3-INFO-5-graph-outputs.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-5-graph-outputs.md)
+
 `2.3-INFO-1. Indicator Outcomes`
 Script:
 - `final/a_info_gather_capabilities.py`
@@ -303,23 +311,9 @@ Chain note:
 - The source of truth for the capability definitions lives in `a_info_gather_capabilities.py`.
 - `a_info_gather_capabilities.py` is the only script in this step that writes a VTK.
 - The VTK layer names use `indicator_{Persona}_{capability}_{indicator}` rather than the dotted ids in code.
-
-Capability layers written into `*_urban_features_with_indicators.vtk`:
-
-| Persona | Capability | Indicator label | VTK array name |
-| --- | --- | --- | --- |
-| Bird | `self` | Peeling bark volume | `indicator_Bird_self_peeling` |
-| Bird | `others` | Perchable canopy volume | `indicator_Bird_others_perch` |
-| Bird | `generations` | Hollow count | `indicator_Bird_generations_hollow` |
-| Lizard | `self` | Ground cover area | `indicator_Lizard_self_grass` |
-| Lizard | `self` | Dead branch volume | `indicator_Lizard_self_dead` |
-| Lizard | `self` | Epiphyte count | `indicator_Lizard_self_epiphyte` |
-| Lizard | `others` | Non-paved surface area | `indicator_Lizard_others_notpaved` |
-| Lizard | `generations` | Nurse log volume | `indicator_Lizard_generations_nurse-log` |
-| Lizard | `generations` | Fallen tree volume | `indicator_Lizard_generations_fallen-tree` |
-| Tree | `self` | Senescing tree volume | `indicator_Tree_self_senescent` |
-| Tree | `others` | Soil near canopy features | `indicator_Tree_others_notpaved` |
-| Tree | `generations` | Grassland for recruitment | `indicator_Tree_generations_grassland` |
+Related docs:
+- [comparison_pathways_indicators.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_indicators.md)
+- [2-3-INFO-1-capability-indicators.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-1-capability-indicators.md)
 
 `2.3-INFO-2. Proposal Opportunities`
 Script:
@@ -327,24 +321,28 @@ Script:
 Inputs:
 - `indicator outcomes state [vtk]` - `data/revised/final/output/{site}_{scenario}_{voxel_size}_scenarioYR{year}_urban_features_with_indicators.vtk`
 - `scenario treeDF [dataframe csv]` - `data/revised/final/{site}/{site}_{scenario}_{voxel_size}_treeDF_{year}.csv`
+- `scenario poleDF [optional dataframe csv]` - `data/revised/final/{site}/{site}_{scenario}_{voxel_size}_poleDF_{year}.csv`
 Description of processing:
-- Reads the assessed scenario state and yearly tree table, then counts where each manuscript proposal becomes possible under the current code logic.
+- Reads the assessed scenario state plus yearly scenario tables, then counts where each manuscript proposal becomes possible under the current code logic.
 Outputs:
 - `proposal opportunities [dataframe csv]` - `data/revised/final/output/csv/{site}_{voxel_size}_proposal_opportunities.csv`
 Chain note:
 - The manuscript defines five proposals: `Deploy Structure`, `Decay`, `Recruit`, `Colonise`, and `Release Control`.
-- The current script computes `Decay`, `Colonise`, and `Release Control`, and still writes stub rows for `Deploy Structure` and `Recruit`.
-- This step does not read `nodeDF`; it reads `treeDF_{year}.csv` and the assessed VTK.
+- Proposal measurement is now split across direct feature counts and VTK opportunity masks.
+- This step does not read `nodeDF`; it reads `treeDF_{year}.csv`, optional `poleDF_{year}.csv`, and the assessed VTK.
+Related docs:
+- [2-3-INFO-2-proposal-and-intervention-descriptions.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-2-proposal-and-intervention-descriptions.md)
+- [2-3-INFO-2-proposal-and-intervention-technical-specifications.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-2-proposal-and-intervention-technical-specifications.md)
 
-Proposal opportunity tracking:
+Proposal summary:
 
-| Proposal | What gets counted as an opportunity to make this proposal | Current tracking | Node DF name | Node DF column | Node DF field/value used | VTK name | VTK point data attribute name | VTK point data attribute field/value used |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `Deploy Structure` | stub row only | stub only | none | none | none | none | none | none |
-| `Decay` | existing non-new trees marked for aging in place or senescence, plus related rewilded opportunity voxels | computed | `treeDF_{year}.csv` | `isNewTree`, `action` | `isNewTree == False`; `action == AGE-IN-PLACE` or `SENESCENT` | `*_urban_features_with_indicators.vtk` | `scenario_rewilded` | `exoskeleton`, `footprint-depaved`, `node-rewilded`, `rewilded` |
-| `Recruit` | stub row only | stub only | none | none | none | none | none | none |
-| `Colonise` | candidate roof, facade, and rewilded-ground voxels | computed | none | none | none | `*_urban_features_with_indicators.vtk` | `scenario_outputs` | `brownRoof`, `greenRoof`, `livingFacade`, `footprint-depaved`, `node-rewilded`, `otherGround`, `rewilded` |
-| `Release Control` | arboreal canopy voxels | computed | none | none | none | `*_urban_features_with_indicators.vtk` | `search_bioavailable` | `arboreal` |
+| Proposal | Core opportunity |
+| --- | --- |
+| `Deploy-Structure` | utility poles designed for artificial canopies this turn |
+| `Decay` | trees reaching senescence this turn |
+| `Recruit` | `ground_only` voxels within `20m` of a canopy-feature |
+| `Colonise` | colonisable roof, facade, and rewilded-ground voxels |
+| `Release-Control` | arboreal voxels |
 
 `2.3-INFO-3. Community Response`
 Script:
@@ -352,32 +350,53 @@ Script:
 Inputs:
 - `indicator outcomes state [vtk]` - `data/revised/final/output/{site}_{scenario}_{voxel_size}_scenarioYR{year}_urban_features_with_indicators.vtk`
 - `scenario treeDF [dataframe csv]` - `data/revised/final/{site}/{site}_{scenario}_{voxel_size}_treeDF_{year}.csv`
+- `scenario poleDF [optional dataframe csv]` - `data/revised/final/{site}/{site}_{scenario}_{voxel_size}_poleDF_{year}.csv`
+- `scenario logDF [optional dataframe csv]` - `data/revised/final/{site}/{site}_{scenario}_{voxel_size}_logDF_{year}.csv`
 Description of processing:
-- Reads the same proposal state and counts which proposal space receives full support or partial support under the current code mapping; refused space is inferred as the remaining opportunity space not assigned to a support row.
+- Reads the same proposal state and counts which manuscript intervention states are present under each proposal using the current measurement and Blender mapping.
 Outputs:
 - `proposal interventions [dataframe csv]` - `data/revised/final/output/csv/{site}_{voxel_size}_proposal_interventions.csv`
 - `proposal qc [dataframe csv]` - `data/revised/final/output/csv/{site}_{voxel_size}_proposal_qc.csv`
 Chain note:
 - The manuscript intervention set is `Buffer Feature`, `Brace Feature`, `Rewild Ground`, `Adapt Utility Pole`, `Upgrade Feature`, `Enrich Envelope`, and `Roughen Envelope`.
-- The current script still uses older support labels for some proposals, so the table below distinguishes manuscript language from the measured code labels.
-- This step also does not read `nodeDF`; it measures support from `treeDF_{year}.csv` and the assessed VTK.
+- The intervention table is now expressed in manuscript-facing labels.
+- This step also does not read `nodeDF`; it measures support from `treeDF_{year}.csv`, optional `poleDF_{year}.csv`, optional `logDF_{year}.csv`, and the assessed VTK.
+Related docs:
+- [2-3-INFO-2-proposal-and-intervention-descriptions.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-2-proposal-and-intervention-descriptions.md)
+- [2-3-INFO-2-proposal-and-intervention-technical-specifications.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-2-proposal-and-intervention-technical-specifications.md)
 
-Community-response tracking:
+Intervention summary:
 
-| Proposal | Intervention family | Support level | Current code measurement label | Node DF name | Node DF column | Node DF field/value used | VTK name | VTK point data attribute name | VTK point data attribute field/value used | Description |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `Deploy Structure` | `Adapt utility pole` | full | not yet computed | none | none | none | none | none | none |  |
-| `Deploy Structure` | `Upgrade feature` | full | not yet computed | none | none | none | none | none | none |  |
-| `Decay` | `Buffer feature` | full | `Buffer` | `treeDF_{year}.csv` | `rewilded` | `node-rewilded`, `footprint-depaved` | `*_urban_features_with_indicators.vtk` | `scenario_rewilded` | `node-rewilded`, `footprint-depaved`, `rewilded` |  |
-| `Decay` | `Brace feature` | partial | `Brace` | `treeDF_{year}.csv` | `rewilded` | `exoskeleton` | `*_urban_features_with_indicators.vtk` | `scenario_rewilded` | `exoskeleton` |  |
-| `Recruit` | `Buffer feature` | full | not yet computed | none | none | none | none | none | none |  |
-| `Recruit` | `Rewild ground` | full | not yet computed | none | none | none | none | none | none |  |
-| `Colonise` | `Rewild ground` | full | `Connect (full)` | none | none | none | `*_urban_features_with_indicators.vtk` | `scenario_outputs` | `node-rewilded`, `rewilded` |  |
-| `Colonise` | `Enrich envelope` | full | `Connect (full)` | none | none | none | `*_urban_features_with_indicators.vtk` | `scenario_outputs` | `greenRoof` |  |
-| `Colonise` | `Rewild ground` | partial in current code | `Connect (partial)` | none | none | none | `*_urban_features_with_indicators.vtk` | `scenario_outputs` | `footprint-depaved` |  |
-| `Colonise` | `Roughen envelope` | partial | `Connect (partial)` | none | none | none | `*_urban_features_with_indicators.vtk` | `scenario_outputs` | `brownRoof`, `livingFacade` |  |
-| `Release Control` | `Buffer feature` | full | `Eliminate pruning` | none | none | none | `*_urban_features_with_indicators.vtk` | `search_bioavailable`, `forest_control` | `arboreal`; `reserve-tree`, `improved-tree` |  |
-| `Release Control` | `Brace feature` | partial | `Reduce pruning` | none | none | none | `*_urban_features_with_indicators.vtk` | `search_bioavailable`, `forest_control` | `arboreal`; `park-tree` |  |
+| Intervention | Core response |
+| --- | --- |
+| `Buffer-Feature` | full support around a retained feature |
+| `Brace-Feature` | partial support that retains the feature in place |
+| `Rewild-Ground` | larger-scale ground depaving and unmanaged habitat patch |
+| `Adapt-Utility-Pole` | artificial canopy feature at a utility pole |
+| `Upgrade-Feature` | hybrid canopy upgrade on an existing feature |
+| `Enrich-Envelope` | richer rooftop habitat loading |
+| `Roughen-Envelope` | traversable but lighter roof or facade roughening |
+
+`2.3-INFO-3.1. Refactor Statistics Exports`
+Script:
+- `final/a_info_proposal_interventions.py` with `--export-refactor-statistics`
+Inputs:
+- per-run proposal/intervention measurements generated from the same inputs used by `2.3-INFO-2` and `2.3-INFO-3`
+Description of processing:
+- Writes per-site raw proposal/intervention long tables.
+- Rebuilds aggregate comparison and highlight tables from those raw files.
+Outputs:
+- `_statistics-refactored/raw/{site}/proposals.csv`
+- `_statistics-refactored/raw/{site}/interventions.csv`
+- `_statistics-refactored/comparison/proposals.csv`
+- `_statistics-refactored/comparison/interventions.csv`
+- `_statistics-refactored/highlights/proposals.csv`
+- `_statistics-refactored/highlights/interventions.csv`
+Chain note:
+- Reporting layer only; does not define proposal/intervention logic.
+- `raw/{site}` is the source of truth.
+- `comparison/` and `highlights/` are rebuilt from raw.
+- See [2-3-INFO-2-proposal-and-intervention-technical-specifications.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-2-proposal-and-intervention-technical-specifications.md) for the technical detail.
 
 `2.3-INFO-4. Implementation`
 Script:
@@ -396,79 +415,16 @@ Outputs:
 Chain note:
 - This is the support-action layer used to describe implementation.
 - The action-count logic is code-defined in `a_info_gather_capabilities.py` through `SUPPORT_ACTIONS`, `CONTROL_LEVELS`, `URBAN_ELEMENTS`, and `REWILDING_TYPES`.
-
-Implementation logic types:
-
-| Logic type | Source field | What it measures | Values written into `action_counts.csv` |
-| --- | --- | --- | --- |
-| `control_level` | `forest_control` | how much indicator-supporting canopy sits under each management level | `high`, `medium`, `low` |
-| `urban_element` | `search_urban_elements` | how much indicator-supporting space sits on each urban surface or conversion type | `open space`, `green roof`, `brown roof`, `facade`, `roadway`, `busy roadway`, `existing conversion`, `other street potential`, `parking`, `none` |
-| `rewilding_status` | `scenario_rewilded` | how much indicator-supporting tree space sits in each rewilding state | `footprint-depaved`, `exoskeleton`, `node-rewilded`, `none` |
-| `artificial_structures_deployed` | `forest_size` | how much bird-supporting outcome is provided by artificial structures | `artificial` |
-| `artificial` | `forest_precolonial` | how much indicator-supporting outcome is provided by installed non-precolonial elements | `installed` |
-
-Capability-to-implementation mapping:
-
-| Indicator outcome | Main implementation logic | Extra implementation counts |
-| --- | --- | --- |
-| `Bird.self.peeling` | `control_level` | `artificial_structures_deployed`, `artificial` |
-| `Bird.others.perch` | `control_level` | `artificial_structures_deployed` |
-| `Bird.generations.hollow` | `control_level` | `artificial_structures_deployed`, `artificial` |
-| `Lizard.self.grass` | `urban_element` | none |
-| `Lizard.self.dead` | `control_level` | none |
-| `Lizard.self.epiphyte` | `control_level` | `artificial` |
-| `Lizard.others.notpaved` | `urban_element` | none |
-| `Lizard.generations.nurse-log` | `urban_element` | none |
-| `Lizard.generations.fallen-tree` | `urban_element` | none |
-| `Tree.self.senescent` | `rewilding_status` | none |
-| `Tree.others.notpaved` | `urban_element` | none |
-| `Tree.generations.grassland` | `urban_element` | none |
+Related docs:
+- [2-3-INFO-4-implementation-action-counts-info.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-4-implementation-action-counts-info.md)
 
 #### Graph Outputs
 
 Section note:
 - These scripts sit downstream of the assessment tables.
 - `2.3-INFO-1` is the main upstream source, because the graph scripts read `indicator_counts.csv` rather than VTKs.
-
-`2.3-GRAPH-1. Stream graphs`
-Script:
-- `final/a_info_graphs.py`
-Inputs:
-- `data/revised/final/output/csv/{site}_{voxel_size}_indicator_counts.csv`
-Description of processing:
-- Reads the indicator counts, smooths the scenario trajectories against baseline, and writes stacked stream graphs for the indicator outcomes over time.
-Outputs:
-- `data/revised/final/output/plots/stream_graph_*.html`
-- `data/revised/final/output/plots/stream_graph_*.png`
-Chain note:
-- This is the active graph script still kept in `final/`.
-
-`2.3-GRAPH-2. Performance bubbles`
-Script:
-- `final/SS/a_info_performance_bubbles.py`
-Inputs:
-- preferred `data/revised/final/output/csv/all_sites_{voxel_size}_indicator_counts.csv`
-- fallback `data/revised/final/output/csv/{site}_{voxel_size}_indicator_counts.csv`
-Description of processing:
-- Reads the indicator counts, compares positive against trending through time, and writes bubble charts sized by positive performance and positioned by relative performance.
-Outputs:
-- `data/revised/final/output/plots/performance_bubbles_*.html`
-- `data/revised/final/output/plots/performance_bubbles_*.png`
-Chain note:
-- Moved to `final/SS/` because it is not currently part of the core active workflow.
-
-`2.3-GRAPH-3. Legacy capability plots`
-Script:
-- `final/SS/a_info_capability_plots.R`
-Inputs:
-- `*_capabilities_by_timestep.csv`
-Description of processing:
-- Reads an older wide capability table format and writes simple persona and capability line plots.
-Outputs:
-- `plots/*_all_capabilities.png`
-- `plots/*_{persona}_capabilities.png`
-Chain note:
-- Moved to `final/SS/` because it depends on an older input pattern that is not part of the current active chain.
+Related docs:
+- [2-3-INFO-5-graph-outputs.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/pathway_tracking/2-3-INFO-5-graph-outputs.md)
 
 ### 2.4. Envelope Branch
 

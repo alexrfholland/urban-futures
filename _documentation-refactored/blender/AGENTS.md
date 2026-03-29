@@ -1,8 +1,5 @@
 # Blender Agent Guide
 
-Refactor copy:
-- [`_documentation-refactored/blender/AGENTS.md`](../../_documentation-refactored/blender/AGENTS.md)
-
 ## 0. Refactor Status
 
 We are currently doing a limited compatibility-first refactor of the Blender-facing data endpoints.
@@ -11,13 +8,13 @@ We are currently doing a limited compatibility-first refactor of the Blender-fac
 - Current target: move the canonical Blender bundle to `_data-refactored/...` while preserving the legacy `data/...` tree during transition.
 - Current helper names: `refactored_data_read_path(...)` and `refactored_data_write_path(...)`.
 - Planned refactor areas: `_documentation-refactored/`, `_data-refactored/`, `_code-refactored/`.
-- Current hook map: [`_documentation-refactored/blender/blender_output_hooks.md`](../../_documentation-refactored/blender/blender_output_hooks.md)
+- Current hook map: [`_documentation-refactored/blender/blender_output_hooks.md`](./blender_output_hooks.md)
 
 ## 1. Project Context
 
 This folder covers Blender scene building, rendering, and EXR/compositor handoff for the broader PyVista simulation project. It supports the Futures journal project. The manuscript is here:
 
-- [`final/assesment/manuscript.md`](../assesment/manuscript.md)
+- [`final/assesment/manuscript.md`](../../assesment/manuscript.md)
 
 Pathway naming follows the manuscript:
 
@@ -38,12 +35,12 @@ Each site also has a separate baseline state.
 Pipeline:
 
 1. Upstream scripts produce the state inputs: per-state VTKs, one `nodeDF` CSV per state, shared site buildings/road data, habitat-feature PLY libraries, and baseline variants; see section 2.
-2. For each site, the Blender scene imports the buildings and road PLYs as point clouds and runs [`final/_blender/2026/b2026_world_cubes.py`](./2026/b2026_world_cubes.py) to build renderable voxel cubes; see sections 2.3, 4, and 5.
-3. For each state, [`final/_blender/2026/b2026_instancer.py`](./2026/b2026_instancer.py) reads the `nodeDF` CSV, imports the required habitat-feature PLYs, and builds the state collections at the CSV locations. In the city scene these are `Year_city_180_positive`, `Year_city_180_positive_priority`, and `Year_city_180_trending`; see sections 2.1, 2.2, 3.3, and 5.
-4. After instancing, run [`final/_blender/2026/b2026_clipbox_setup.py`](./2026/b2026_clipbox_setup.py), then [`final/_blender/2026/b2026_camera_clipboxes.py`](./2026/b2026_camera_clipboxes.py). Do not rely on the instancer auto-run flags; see sections 4 and 5.
+2. For each site, the Blender scene imports the buildings and road PLYs as point clouds and runs [`final/_blender/2026/b2026_world_cubes.py`](../2026/b2026_world_cubes.py) to build renderable voxel cubes; see sections 2.3, 4, and 5.
+3. For each state, [`final/_blender/2026/b2026_instancer.py`](../2026/b2026_instancer.py) reads the `nodeDF` CSV, imports the required habitat-feature PLYs, and builds the state collections at the CSV locations. In the city scene these are `Year_city_180_positive`, `Year_city_180_positive_priority`, and `Year_city_180_trending`; see sections 2.1, 2.2, 3.3, and 5.
+4. After instancing, run [`final/_blender/2026/b2026_clipbox_setup.py`](../2026/b2026_clipbox_setup.py), then [`final/_blender/2026/b2026_camera_clipboxes.py`](../2026/b2026_camera_clipboxes.py). Do not rely on the instancer auto-run flags; see sections 4 and 5.
 5. Heavy Blender scenes render multilayer EXRs by view layer, and lightweight compositor scenes consume those EXRs to produce final images; see sections 4 and 5.
 
-TODO: baseline scene generation does not follow the standard city instancer contract exactly. [`final/_blender/2026/b2026_build_city_baseline.py`](./2026/b2026_build_city_baseline.py) overrides the instancer state and builds a reduced collection set. Document that baseline-specific path separately.
+TODO: baseline scene generation does not follow the standard city instancer contract exactly. [`final/_blender/2026/b2026_build_city_baseline.py`](../2026/b2026_build_city_baseline.py) overrides the instancer state and builds a reduced collection set. Document that baseline-specific path separately.
 
 ## 2. Inputs
 
@@ -51,7 +48,7 @@ TODO: baseline scene generation does not follow the standard city instancer cont
 
 State generator:
 
-- [`final/a_scenario_generateVTKs.py`](../a_scenario_generateVTKs.py)
+- [`final/a_scenario_generateVTKs.py`](../../a_scenario_generateVTKs.py)
 
 Per state:
 
@@ -93,7 +90,7 @@ Current site-level `nodeType` patterns are:
 
 Baseline generator:
 
-- [`final/a_scenario_get_baselines.py`](../a_scenario_get_baselines.py)
+- [`final/a_scenario_get_baselines.py`](../../a_scenario_get_baselines.py)
 
 Outputs include:
 
@@ -106,7 +103,7 @@ Outputs include:
 
 PLY export:
 
-- [`final/_blender/a_vtk_to_ply.py`](./a_vtk_to_ply.py)
+- [`final/_blender/a_vtk_to_ply.py`](../a_vtk_to_ply.py)
 
 For tree and pole templates, the filename identity is:
 
@@ -147,7 +144,7 @@ Base world point clouds:
 
 Extractor:
 
-- [`final/_blender/b_extract_scene.py`](./b_extract_scene.py)
+- [`final/_blender/b_extract_scene.py`](../b_extract_scene.py)
 
 It reads:
 
@@ -165,7 +162,7 @@ Envelope models are the per-state design modifications: green roofs, living faca
 
 Envelope generator:
 
-- [`final/_blender/b_generate_rewilded_envelopes.py`](./b_generate_rewilded_envelopes.py)
+- [`final/_blender/b_generate_rewilded_envelopes.py`](../b_generate_rewilded_envelopes.py)
 
 It reads:
 
@@ -184,7 +181,7 @@ Envelope PLY attributes:
 
 Also:
 
-- [`final/_blender/b_generate_rewilded_ground.py`](./b_generate_rewilded_ground.py)
+- [`final/_blender/b_generate_rewilded_ground.py`](../b_generate_rewilded_ground.py)
 
 It writes:
 
@@ -233,11 +230,11 @@ Use this city hierarchy:
 - `City_Camera_Archive`
   - archived / alternate cameras
 - `Year_city_180_positive`
-  - generated by [`final/_blender/2026/b2026_instancer.py`](./2026/b2026_instancer.py); main positive arboreal distribution
+  - generated by [`final/_blender/2026/b2026_instancer.py`](../2026/b2026_instancer.py); main positive arboreal distribution
 - `Year_city_180_positive_priority`
-  - generated by [`final/_blender/2026/b2026_instancer.py`](./2026/b2026_instancer.py); positive priority subset
+  - generated by [`final/_blender/2026/b2026_instancer.py`](../2026/b2026_instancer.py); positive priority subset
 - `Year_city_180_trending`
-  - generated by [`final/_blender/2026/b2026_instancer.py`](./2026/b2026_instancer.py); trending arboreal distribution
+  - generated by [`final/_blender/2026/b2026_instancer.py`](../2026/b2026_instancer.py); trending arboreal distribution
 - `city_envelope`
   - positive envelope geometry
 - `Envelope_trending`
@@ -249,13 +246,13 @@ Scene update order:
 
 1. choose the target state: `site + scenario + year`
 2. open the working heavy-scene blend
-3. if the base world changed, refresh the base world PLYs and rerun [`final/_blender/2026/b2026_world_cubes.py`](./2026/b2026_world_cubes.py)
-4. if the state VTK changed and the world objects need state-linked attributes such as `sim_Turns`, rerun [`final/_blender/2026/b2026_transfer_vtk_sim_layers.py`](./2026/b2026_transfer_vtk_sim_layers.py)
-5. rerun [`final/_blender/2026/b2026_instancer.py`](./2026/b2026_instancer.py) on the state `nodeDF`
-6. after every instancer run, rerun [`final/_blender/2026/b2026_clipbox_setup.py`](./2026/b2026_clipbox_setup.py); do not rely on the instancer auto-run flags
-7. then rerun [`final/_blender/2026/b2026_camera_clipboxes.py`](./2026/b2026_camera_clipboxes.py)
+3. if the base world changed, refresh the base world PLYs and rerun [`final/_blender/2026/b2026_world_cubes.py`](../2026/b2026_world_cubes.py)
+4. if the state VTK changed and the world objects need state-linked attributes such as `sim_Turns`, rerun [`final/_blender/2026/b2026_transfer_vtk_sim_layers.py`](../2026/b2026_transfer_vtk_sim_layers.py)
+5. rerun [`final/_blender/2026/b2026_instancer.py`](../2026/b2026_instancer.py) on the state `nodeDF`
+6. after every instancer run, rerun [`final/_blender/2026/b2026_clipbox_setup.py`](../2026/b2026_clipbox_setup.py); do not rely on the instancer auto-run flags
+7. then rerun [`final/_blender/2026/b2026_camera_clipboxes.py`](../2026/b2026_camera_clipboxes.py)
 8. if the material or AOV setup is missing in that blend, rerun the relevant setup scripts from section 5
-9. if the EXR output branches are missing or stale, rerun [`final/_blender/2026/b2026_setup_view_layer_exr_outputs.py`](./2026/b2026_setup_view_layer_exr_outputs.py)
+9. if the EXR output branches are missing or stale, rerun [`final/_blender/2026/b2026_setup_view_layer_exr_outputs.py`](../2026/b2026_setup_view_layer_exr_outputs.py)
 10. render multilayer EXRs from the heavy scene
 11. open or build the lightweight EXR compositor scene and produce the final images
 
@@ -276,21 +273,21 @@ These are the active production blends. They are not yet the final reusable temp
 
 Scene generation:
 
-- [`final/_blender/2026/b2026_instancer.py`](./2026/b2026_instancer.py)
-- [`final/_blender/2026/b2026_world_cubes.py`](./2026/b2026_world_cubes.py)
-- [`final/_blender/2026/b2026_build_city_baseline.py`](./2026/b2026_build_city_baseline.py)
+- [`final/_blender/2026/b2026_instancer.py`](../2026/b2026_instancer.py)
+- [`final/_blender/2026/b2026_world_cubes.py`](../2026/b2026_world_cubes.py)
+- [`final/_blender/2026/b2026_build_city_baseline.py`](../2026/b2026_build_city_baseline.py)
 
 Clipping and camera sync:
 
-- [`final/_blender/2026/b2026_clipbox_setup.py`](./2026/b2026_clipbox_setup.py)
-- [`final/_blender/2026/b2026_camera_clipboxes.py`](./2026/b2026_camera_clipboxes.py)
+- [`final/_blender/2026/b2026_clipbox_setup.py`](../2026/b2026_clipbox_setup.py)
+- [`final/_blender/2026/b2026_camera_clipboxes.py`](../2026/b2026_camera_clipboxes.py)
 
 Materials and AOV support:
 
-- [`final/_blender/2026/MINIMAL_RESOURCES.py`](./2026/MINIMAL_RESOURCES.py)
-- [`final/_blender/2026/b2026_patch_resource_binary_aovs.py`](./2026/b2026_patch_resource_binary_aovs.py)
-- [`final/_blender/2026/b2026_city_envelope_aov_setup.py`](./2026/b2026_city_envelope_aov_setup.py)
-- [`final/_blender/2026/b2026_transfer_vtk_sim_layers.py`](./2026/b2026_transfer_vtk_sim_layers.py)
+- [`final/_blender/2026/MINIMAL_RESOURCES.py`](../2026/MINIMAL_RESOURCES.py)
+- [`final/_blender/2026/b2026_patch_resource_binary_aovs.py`](../2026/b2026_patch_resource_binary_aovs.py)
+- [`final/_blender/2026/b2026_city_envelope_aov_setup.py`](../2026/b2026_city_envelope_aov_setup.py)
+- [`final/_blender/2026/b2026_transfer_vtk_sim_layers.py`](../2026/b2026_transfer_vtk_sim_layers.py)
 
 `b2026_transfer_vtk_sim_layers.py`:
 
@@ -306,13 +303,13 @@ Materials and AOV support:
 
 EXR outputs and compositor builders:
 
-- [`final/_blender/2026/b2026_setup_view_layer_exr_outputs.py`](./2026/b2026_setup_view_layer_exr_outputs.py)
-- [`final/_blender/2026/b2026_build_city_exr_compositor.py`](./2026/b2026_build_city_exr_compositor.py)
-- [`code/blender/2026/edge_detection_lab/build_city_exr_compositor_lightweight.py`](../../code/blender/2026/edge_detection_lab/build_city_exr_compositor_lightweight.py)
+- [`final/_blender/2026/b2026_setup_view_layer_exr_outputs.py`](../2026/b2026_setup_view_layer_exr_outputs.py)
+- [`final/_blender/2026/b2026_build_city_exr_compositor.py`](../2026/b2026_build_city_exr_compositor.py)
+- [`code/blender/2026/edge_detection_lab/build_city_exr_compositor_lightweight.py`](../../../code/blender/2026/edge_detection_lab/build_city_exr_compositor_lightweight.py)
 
 Baseline terrain conversion:
 
-- [`final/_blender/2026/b2026_export_vtk_points_to_ascii_ply.py`](./2026/b2026_export_vtk_points_to_ascii_ply.py)
+- [`final/_blender/2026/b2026_export_vtk_points_to_ascii_ply.py`](../2026/b2026_export_vtk_points_to_ascii_ply.py)
 
 ### 5.3. Embedded Text Blocks
 
@@ -327,17 +324,17 @@ Embedded names that matter operationally:
 
 ### 5.4. Further Info
 
-- [`_documentation-refactored/DATA_PIPELINE_SCRIPT_SUMMARIES.md`](../../_documentation-refactored/DATA_PIPELINE_SCRIPT_SUMMARIES.md)
+- [`_documentation-refactored/DATA_PIPELINE_SCRIPT_SUMMARIES.md`](../DATA_PIPELINE_SCRIPT_SUMMARIES.md)
   - maps the Blender-facing inputs back through the upstream data pipeline, step by step, so you can see where each file comes from and where the branches diverge.
 
 ### 5.5. Reference Docs
 
 For detailed enums, attribute inventories, and current notes:
 
-- [`final/_blender/TEMPLATE_BLEND.md`](./TEMPLATE_BLEND.md)
-- [`final/_blender/paraview-to-blender-info.md`](./paraview-to-blender-info.md)
-- [`final/_blender/2026/KEY_SCRIPTS.md`](./2026/KEY_SCRIPTS.md)
-- [`final/_blender/2026/pyvista-attributes-to-blender-info.md`](./2026/pyvista-attributes-to-blender-info.md)
+- [`final/_blender/TEMPLATE_BLEND.md`](../TEMPLATE_BLEND.md)
+- [`final/_blender/paraview-to-blender-info.md`](../paraview-to-blender-info.md)
+- [`final/_blender/2026/KEY_SCRIPTS.md`](../2026/KEY_SCRIPTS.md)
+- [`final/_blender/2026/pyvista-attributes-to-blender-info.md`](../2026/pyvista-attributes-to-blender-info.md)
 
 ### 5.6. TODO
 

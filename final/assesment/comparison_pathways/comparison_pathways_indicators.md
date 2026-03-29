@@ -28,11 +28,11 @@ For readability, reported percentages below 0.1% are shown as 0.1%.
 
 #### 1.1 Acquire Resources. Moderate divergence (3.28x, 65.2% vs 19.9%).
 
-Peeling bark depends on support for `Decay` and `Release Control` proposals, which allow bark-bearing branch substrates to form. Human-led more often rejects these proposals by removing ageing trees and pruning more tightly, therefore leaving fewer bark-bearing branches and eliminating opportunities for such branches to form.
+Peeling bark depends on support for `Decay` and `Release-Control` proposals, which allow bark-bearing branch substrates to form. Human-led more often rejects these proposals by removing ageing trees and pruning more tightly, therefore leaving fewer bark-bearing branches and eliminating opportunities for such branches to form.
 
 #### 1.2 Communicate. Minimal divergence (1.48x, 61.0% vs 41.1%).
 
-Perchable branches form in younger and more managed trees. The many trees on site and in the adjacent parkland mean that perchable branches still form even where communities reject `Release Control` and `Decay` proposals, so divergence between pathways remains minimal.
+Perchable branches form in younger and more managed trees. The many trees on site and in the adjacent parkland mean that perchable branches still form even where communities reject `Release-Control` and `Decay` proposals, so divergence between pathways remains minimal.
 
 #### 1.3 Reproduce. Large divergence (11.27x, 92.5% vs 8.2%).
 
@@ -42,7 +42,7 @@ Hollows depend on support for `Decay` proposals, which allow senescent trees and
 
 #### 2.1 Acquire Resources. Large divergence (8.06x, 72.9% vs 9.0%).
 
-Ground cover, dead branches and epiphytes depend on full support for `Decay` and `Release Control` through `Buffer`, rather than partial support through `Brace`, and on `Colonise` proposals being supported through `Rewild ground`. Human-led more often rejects or constrains these proposals, so unmanaged ground and canopy debris remain scarce.
+Ground cover, dead branches and epiphytes depend on full support for `Decay` and `Release-Control` through `Buffer-Feature`, rather than partial support through `Brace-Feature`, and on `Colonise` proposals being supported through `Rewild-Ground`. Human-led more often rejects or constrains these proposals, so unmanaged ground and canopy debris remain scarce.
 
 #### 2.2 Communicate. Minimal divergence (1.59x, 81.7% vs 51.4%).
 
@@ -50,49 +50,49 @@ Traversable open ground depends less on proposal support because the adjacent pa
 
 #### 2.3 Reproduce. Large divergence (439.14x, 27.5% vs 0.1%).
 
-Nurse logs and fallen trees depend on full support for `Decay` through `Buffer`, which allows ageing trees to collapse onto the ground. Human-led rarely changes existing ground conditions, more often rejects `Decay` or constrains it through `Brace`, and clears debris, so fallen-tree refuges rarely form.
+Nurse logs and fallen trees depend on full support for `Decay` through `Buffer-Feature`, which allows ageing trees to collapse onto the ground. Human-led rarely changes existing ground conditions, more often rejects `Decay` or constrains it through `Brace-Feature`, and clears debris, so fallen-tree refuges rarely form.
 
 ### 3. Parade / Tree
 
 #### 3.1 Acquire Resources. Large divergence (555.00x, 55.5% vs 0.1%).
 
-Senescent biovolume diverges because the nonhuman-led pathway supports `Decay` through `Buffer`, keeping ageing elms in place. Human-led rejects `Decay` and replaces these trees, so no senescent volume persists.
+Senescent biovolume diverges because the nonhuman-led pathway supports `Decay` through `Buffer-Feature`, keeping ageing elms in place. Human-led rejects `Decay` and replaces these trees, so no senescent volume persists.
 
 #### 3.2 Communicate. Minimal divergence (1.83x, 81.3% vs 44.4%).
 
-Open soil near canopy diverges only slightly because the nonhuman-led pathway gives more support to `Decay` and `Release Control` through `Buffer`, but adjacent parkland already leaves some canopy-ground overlap in both pathways.
+Open soil near canopy diverges only slightly because the nonhuman-led pathway gives more support to `Decay` and `Release-Control` through `Buffer-Feature`, but adjacent parkland already leaves some canopy-ground overlap in both pathways.
 
 #### 3.3 Reproduce. Large divergence (710.56x, 59.6% vs 0.1%).
 
-Ground conditions suitable for sapling recruitment depend on full support for `Recruit` proposals through `Buffer` and `Rewild ground`, which create habitat islands and unmanaged ground near canopy where saplings can grow. Human-led rarely supports these proposals, so recruitment space remains near zero.
+Ground conditions suitable for sapling recruitment depend on full support for `Recruit` proposals through `Buffer-Feature` and `Rewild-Ground`, which create habitat islands and unmanaged ground near canopy where saplings can grow. Human-led rarely supports these proposals, so recruitment space remains near zero.
 
 ### 4. Street / Bird
 
 #### 4.1 Acquire Resources. Large divergence (5.22x, 33.9% vs 6.5%).
 
-Because many trees on the site are young, peeling bark depends on `Deploy Structure` proposals being supported through `Adapt utility pole`, which adds artificial bark-bearing canopy, and on `Release Control` proposals that allow retained canopy to keep bark-bearing branches. Human-led rejects most of these proposals, so peeling bark remains limited.
+Because many trees on the site are young, peeling bark depends on `Deploy-Structure` proposals being supported through `Adapt-Utility-Pole`, which adds artificial bark-bearing canopy, and on `Release-Control` proposals that allow retained canopy to keep bark-bearing branches. Human-led rejects most of these proposals, so peeling bark remains limited.
 
 #### 4.2 Communicate. Moderate divergence (2.39x, 37.9% vs 15.8%).
 
-Because many trees on the site are young, perchable canopy depends on `Deploy Structure` proposals being supported through `Adapt utility pole`, which adds artificial canopies, and on `Release Control` proposals that retain more branches. Human-led still retains some perchable branches, so the gap remains moderate.
+Because many trees on the site are young, perchable canopy depends on `Deploy-Structure` proposals being supported through `Adapt-Utility-Pole`, which adds artificial canopies, and on `Release-Control` proposals that retain more branches. Human-led still retains some perchable branches, so the gap remains moderate.
 
 #### 4.3 Reproduce. Large divergence (5.84x, 43.1% vs 7.4%).
 
-Because many trees on the site are young, hollows depend on `Deploy Structure` proposals being supported through `Adapt utility pole`, which adds artificial hollows, and on `Decay` proposals that retain senescent canopy features long enough for hollows to accumulate. Human-led provides only a small remnant of these conditions, so hollow counts stay low.
+Because many trees on the site are young, hollows depend on `Deploy-Structure` proposals being supported through `Adapt-Utility-Pole`, which adds artificial hollows, and on `Decay` proposals that retain senescent canopy features long enough for hollows to accumulate. Human-led provides only a small remnant of these conditions, so hollow counts stay low.
 
 ### 5. Street / Lizard
 
 #### 5.1 Acquire Resources. Large divergence (14.28x, 88.2% vs 6.2%).
 
-Ground cover, dead branches and epiphytes depend on `Colonise` proposals being supported through `Rewild ground` and `Enrich envelope`, which create unmanaged grasslands and richer roof habitat, and on fuller support for `Decay` and `Release Control` through `Buffer`, which retains deadwood. Human-led rejects most of these proposals, so these resources remain scarce.
+Ground cover, dead branches and epiphytes depend on `Colonise` proposals being supported through `Rewild-Ground` and `Enrich-Envelope`, which create unmanaged grasslands and richer roof habitat, and on fuller support for `Decay` and `Release-Control` through `Buffer-Feature`, which retains deadwood. Human-led rejects most of these proposals, so these resources remain scarce.
 
 #### 5.2 Communicate. Moderate divergence (3.64x, 153.0% vs 42.1%).
 
-Traversable unpaved surface depends on `Colonise` proposals being supported through `Roughen envelope`, which makes roofs and walls traversable, and through `Enrich envelope` and `Rewild ground`, which expand non-paved surfaces across roofs and ground. Some existing open space means the human-led pathway still retains open ground at street level, so the gap remains moderate.
+Traversable unpaved surface depends on `Colonise` proposals being supported through `Roughen-Envelope`, which makes roofs and walls traversable, and through `Enrich-Envelope` and `Rewild-Ground`, which expand non-paved surfaces across roofs and ground. Some existing open space means the human-led pathway still retains open ground at street level, so the gap remains moderate.
 
 #### 5.3 Reproduce. Large divergence (15.00x, 11.4% vs 0.8%).
 
-Nurse logs and fallen trees depend on full support for `Decay` through `Buffer`, which creates habitat islands where ageing trees can fall and decompose in place. `Colonise` proposals also extend these refuges across converted edges. Human-led clears most of these refuges.
+Nurse logs and fallen trees depend on full support for `Decay` through `Buffer-Feature`, which creates habitat islands where ageing trees can fall and decompose in place. `Colonise` proposals also extend these refuges across converted edges. Human-led clears most of these refuges.
 
 ### 6. Street / Tree
 
@@ -102,21 +102,21 @@ Senescent biovolume depends on `Decay` proposals being supported strongly enough
 
 #### 6.2 Communicate. Moderate divergence (3.61x, 62.5% vs 17.3%).
 
-Soil conditions suitable for fungal connections depend on open ground existing beneath and under canopy features. `Release Control` and `Recruit` proposals support these conditions through `Buffer` and `Rewild ground`, which depave ground and keep it open near retained canopy. Existing open space means some of these conditions remain in the human-led pathway.
+Soil conditions suitable for fungal connections depend on open ground existing beneath and under canopy features. `Release-Control` and `Recruit` proposals support these conditions through `Buffer-Feature` and `Rewild-Ground`, which depave ground and keep it open near retained canopy. Existing open space means some of these conditions remain in the human-led pathway.
 
 #### 6.3 Reproduce. Large divergence (12.60x, 44.0% vs 3.5%).
 
-Soil conditions suitable for saplings depend on full support for `Recruit` proposals through `Buffer` and `Rewild ground`, which create unmanaged grassland near canopy. Human-led rarely supports these proposals, so recruitment space remains limited.
+Soil conditions suitable for saplings depend on full support for `Recruit` proposals through `Buffer-Feature` and `Rewild-Ground`, which create unmanaged grassland near canopy. Human-led rarely supports these proposals, so recruitment space remains limited.
 
 ### 7. City / Bird
 
 #### 7.1 Acquire Resources. Moderate divergence (2.11x, 34.5% vs 16.4%).
 
-Peeling bark depends on support for `Release Control` and `Decay` proposals, which allow bark-bearing branches to form in retained canopy. In City, `Colonise` supported through `Enrich envelope` can also add bark-bearing deadwood on rooftops. Human-led still retains some bark-bearing branches, so the divergence remains moderate.
+Peeling bark depends on support for `Release-Control` and `Decay` proposals, which allow bark-bearing branches to form in retained canopy. In City, `Colonise` supported through `Enrich-Envelope` can also add bark-bearing deadwood on rooftops. Human-led still retains some bark-bearing branches, so the divergence remains moderate.
 
 #### 7.2 Communicate. Minimal divergence (1.47x, 38.7% vs 26.3%).
 
-Perchable canopy depends less on proposal support because younger and more managed trees still provide these branches, and the city retains many trees even where communities reject `Release Control`. Human-led therefore keeps a substantial share of this indicator.
+Perchable canopy depends less on proposal support because younger and more managed trees still provide these branches, and the city retains many trees even where communities reject `Release-Control`. Human-led therefore keeps a substantial share of this indicator.
 
 #### 7.3 Reproduce. Moderate divergence (2.71x, 54.5% vs 20.1%).
 
@@ -126,15 +126,15 @@ Hollows depend on `Decay` proposals being supported strongly enough to retain ol
 
 #### 8.1 Acquire Resources. Moderate divergence (4.95x, 97.9% vs 19.8%).
 
-Ground cover, dead branches and epiphytes depend on `Colonise` proposals being fully supported through `Enrich envelope` and `Rewild ground`, which activate roofs and ground by installing plants, shrublands, and large translocated fallen trees. Human-led enables some of these conditions, but at much smaller extent.
+Ground cover, dead branches and epiphytes depend on `Colonise` proposals being fully supported through `Enrich-Envelope` and `Rewild-Ground`, which activate roofs and ground by installing plants, shrublands, and large translocated fallen trees. Human-led enables some of these conditions, but at much smaller extent.
 
 #### 8.2 Communicate. Large divergence (6.72x, 165.0% vs 24.5%).
 
-Traversable non-paved surface depends on strong support for `Colonise` proposals not only being fully supported through `Enrich envelope` and `Rewild ground` interventions, but also partial support through `Roughen envelope`, which make less suitable roofs and walls traversable. The city site has many such buildings that can still be upgraded in this way. Because ground-level open soil remains limited under the human-led pathway, the divergence of this indicator is much greater at City than at other sites.
+Traversable non-paved surface depends on strong support for `Colonise` proposals not only being fully supported through `Enrich-Envelope` and `Rewild-Ground` interventions, but also partial support through `Roughen-Envelope`, which make less suitable roofs and walls traversable. The city site has many such buildings that can still be upgraded in this way. Because ground-level open soil remains limited under the human-led pathway, the divergence of this indicator is much greater at City than at other sites.
 
 #### 8.3 Reproduce. Large divergence (5.01x, 27.2% vs 5.4%).
 
-Nurse logs and fallen trees depend on `Colonise` proposals being supported through `Enrich envelope`, which adds large translocated fallen trees and refuges on rooftops and connected surfaces. Human-led provides fewer of these features, so refuge space remains limited.
+Nurse logs and fallen trees depend on `Colonise` proposals being supported through `Enrich-Envelope`, which adds large translocated fallen trees and refuges on rooftops and connected surfaces. Human-led provides fewer of these features, so refuge space remains limited.
 
 ### 9. City / Tree
 
@@ -144,8 +144,8 @@ Senescent biovolume depends on `Decay` proposals being supported strongly enough
 
 #### 9.2 Communicate. Moderate divergence (4.10x, 45.1% vs 11.0%).
 
-Soil that can develop fungal connections depends on `Colonise` proposals being supported through `Rewild ground`, which closes roads or depaves ground near retained canopy features, and on `Decay`, which retains those canopy features in place. The divergence is moderate because the nonhuman-led pathway converts roadspace but retains all buildings, so converted roofs and facades do not contribute to fungal connections in this ground-only metric.
+Soil that can develop fungal connections depends on `Colonise` proposals being supported through `Rewild-Ground`, which closes roads or depaves ground near retained canopy features, and on `Decay`, which retains those canopy features in place. The divergence is moderate because the nonhuman-led pathway converts roadspace but retains all buildings, so converted roofs and facades do not contribute to fungal connections in this ground-only metric.
 
 #### 9.3 Reproduce. Large divergence (6.43x, 51.7% vs 8.0%).
 
-Recruitment space depends on `Recruit` proposals being supported through `Rewild ground` and local `Buffer` interventions, which leave vegetated ground unmanaged near canopy. Human-led rarely maintains this condition, so recruitment space remains much lower.
+Recruitment space depends on `Recruit` proposals being supported through `Rewild-Ground` and local `Buffer-Feature` interventions, which leave vegetated ground unmanaged near canopy. Human-led rarely maintains this condition, so recruitment space remains much lower.

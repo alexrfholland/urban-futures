@@ -12,6 +12,15 @@ from pathlib import Path
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import (
+    hook_log_ply_library_dir,
+    hook_state_nodedf_path,
+    hook_tree_ply_library_dir,
+)
+
 
 def print(*args, **kwargs):
     kwargs.setdefault("flush", True)
@@ -71,16 +80,17 @@ RESOURCE_BINARY_ATTRIBUTE_NAMES = (
     'resource_other',
 )
 # Paths
-PLY_FOLDER = '/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/treeMeshesPly'
-LOG_FOLDER = '/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/logMeshesPly'
-BASE_PATH = f'/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/{SITE}'
+NODE_DF_VOXEL_SIZE = 1
+PLY_FOLDER = str(hook_tree_ply_library_dir())
+LOG_FOLDER = str(hook_log_ply_library_dir())
+BASE_PATH = str(hook_state_nodedf_path(SITE, SCENARIO, YEAR, NODE_DF_VOXEL_SIZE).parent)
 
 #if SITE == 'trimmed-parade':
 #    BASE_PATH = f'/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/{SITE}/initial'
 
 
-CSV_FILENAME = f'{SITE}_{SCENARIO}_1_nodeDF_{YEAR}.csv'
-CSV_FILEPATH = os.path.join(BASE_PATH, CSV_FILENAME)
+CSV_FILENAME = hook_state_nodedf_path(SITE, SCENARIO, YEAR, NODE_DF_VOXEL_SIZE).name
+CSV_FILEPATH = str(hook_state_nodedf_path(SITE, SCENARIO, YEAR, NODE_DF_VOXEL_SIZE))
 
 print(f'CSV_FILEPATH IS: {CSV_FILEPATH}')
 
@@ -96,16 +106,16 @@ def infer_site_from_scene_name(scene_name):
 
 
 def get_csv_filename_for_scenario(scenario_name):
-    return f'{SITE}_{scenario_name}_1_nodeDF_{YEAR}.csv'
+    return hook_state_nodedf_path(SITE, scenario_name, YEAR, NODE_DF_VOXEL_SIZE).name
 
 
 def get_csv_filepath_for_scenario(scenario_name):
-    return os.path.join(BASE_PATH, get_csv_filename_for_scenario(scenario_name))
+    return str(hook_state_nodedf_path(SITE, scenario_name, YEAR, NODE_DF_VOXEL_SIZE))
 
 
 def refresh_site_paths():
     global BASE_PATH, CSV_FILENAME, CSV_FILEPATH
-    BASE_PATH = f'/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/{SITE}'
+    BASE_PATH = str(hook_state_nodedf_path(SITE, SCENARIO, YEAR, NODE_DF_VOXEL_SIZE).parent)
     CSV_FILENAME = get_csv_filename_for_scenario(SCENARIO)
     CSV_FILEPATH = get_csv_filepath_for_scenario(SCENARIO)
 

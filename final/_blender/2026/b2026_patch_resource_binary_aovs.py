@@ -4,9 +4,13 @@ import sys
 import bpy
 
 
-REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import hook_tree_ply_library_dir
+
 DEFAULT_BLEND_PATH = REPO_ROOT / "data/blender/2026/2026 futures heroes5.blend"
-TREE_PLY_FOLDER = REPO_ROOT / "data/revised/final/treeMeshesPly"
+TREE_PLY_FOLDER = hook_tree_ply_library_dir()
 
 TARGET_SCENES = ("city",)
 PRIMARY_VIEW_LAYER = "pathway_state"

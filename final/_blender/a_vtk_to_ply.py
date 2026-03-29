@@ -10,6 +10,10 @@ import glob
 from pathlib import Path
 import pandas as pd
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import hook_log_ply_library_dir, hook_tree_ply_library_dir
 
 
 resource_cols = [
@@ -447,6 +451,7 @@ if __name__ == "__main__":
         print('processing trees')
         input_folder = "data/revised/final/treeMeshes"
         output_folder = "data/revised/final/treeMeshesPly"
+        refactored_output_folder = hook_tree_ply_library_dir()
         
         # Create output folder if it doesn't exist
         os.makedirs(output_folder, exist_ok=True)
@@ -472,6 +477,7 @@ if __name__ == "__main__":
             try:
                 mesh = pv.read(vtk_file)
                 export_polydata_to_ply(mesh, output_path)
+                export_polydata_to_ply(mesh, str(refactored_output_folder / f"{base_name}.ply"))
             except Exception as e:
                 print(f"Error processing {vtk_file}: {str(e)}")
 
@@ -479,6 +485,7 @@ if __name__ == "__main__":
         print('processing logs')
         input_folder = "data/revised/final/logMeshes"
         output_folder = "data/revised/final/logMeshesPly"
+        refactored_output_folder = hook_log_ply_library_dir()
 
         # Create output folder if it doesn't exist
         os.makedirs(output_folder, exist_ok=True)
@@ -508,6 +515,11 @@ if __name__ == "__main__":
                 mesh.point_data['resource'] = np.asarray(mesh.point_data['int_resource'], dtype=np.float32)
                 
                 export_polydata_to_ply(mesh, output_path, attributesToTransfer=['resource'])
+                export_polydata_to_ply(
+                    mesh,
+                    str(refactored_output_folder / f"{base_name}.ply"),
+                    attributesToTransfer=['resource'],
+                )
             except Exception as e:
                 print(f"Error processing {vtk_file}: {str(e)}")
     elif user_input == 4:
@@ -517,6 +529,7 @@ if __name__ == "__main__":
         base_dir = Path('data/revised')
         input_folder = base_dir / 'final/treeMeshes'
         output_folder = base_dir / 'final/treeMeshesPly'  # Updated to match other sections
+        refactored_output_folder = hook_tree_ply_library_dir()
         
         justEditsDF = pd.read_pickle(base_dir / 'trees/just_edits_templateDF.pkl')
 
@@ -547,6 +560,7 @@ if __name__ == "__main__":
                 
                 mesh = pv.read(str(vtk_file))  # pyvista needs string paths
                 export_polydata_to_ply(mesh, str(output_path))
+                export_polydata_to_ply(mesh, str(refactored_output_folder / f"{base_name}.ply"))
             except Exception as e:
                 print(f"Error processing {vtk_file}: {str(e)}")
 
@@ -556,6 +570,7 @@ if __name__ == "__main__":
         base_dir = Path('data/revised')
         input_folder = base_dir / 'final/treeMeshes'
         output_folder = base_dir / 'final/treeMeshesPly'  # Updated to match other sections
+        refactored_output_folder = hook_tree_ply_library_dir()
         
         # Load the full templates dataframe
         templatesDF = pd.read_pickle(base_dir / 'trees/edited_combined_templateDF.pkl')
@@ -593,6 +608,7 @@ if __name__ == "__main__":
                 
                 mesh = pv.read(str(vtk_file))  # pyvista needs string paths
                 export_polydata_to_ply(mesh, str(output_path))
+                export_polydata_to_ply(mesh, str(refactored_output_folder / f"{base_name}.ply"))
             except Exception as e:
                 print(f"Error processing {vtk_file}: {str(e)}")
 

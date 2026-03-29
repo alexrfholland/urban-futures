@@ -1,0 +1,16 @@
+highlight_type,site,year,proposal_id,proposal_label,measure,metric_column,positive_value,trending_value,delta_trending_minus_positive,trending_pct_of_positive,positive_multiple_of_trending
+positive_dominates,uni,10,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,43436,0,-43436,0.0,
+positive_dominates,uni,10,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,61,0,-61,0.0,
+positive_dominates,uni,30,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,42045,0,-42045,0.0,
+positive_dominates,uni,30,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,61,0,-61,0.0,
+positive_dominates,uni,60,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,59656,0,-59656,0.0,
+positive_dominates,uni,60,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+positive_dominates,uni,90,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,59052,0,-59052,0.0,
+positive_dominates,uni,90,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+positive_dominates,uni,120,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,55873,0,-55873,0.0,
+positive_dominates,uni,120,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+positive_dominates,uni,150,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,54157,0,-54157,0.0,
+positive_dominates,uni,150,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+positive_dominates,uni,180,deploy_structure,Deploy-Structure,artificial canopy voxels,opportunity_voxel_count,55586,0,-55586,0.0,
+positive_dominates,uni,180,deploy_structure,Deploy-Structure,utility poles,opportunity_tree_count,90,0,-90,0.0,
+positive_dominates,trimmed-parade,30,colonise,Colonise,colonisable surface voxels,opportunity_voxel_count,37878,22,-37856,0.058081,1721.727273

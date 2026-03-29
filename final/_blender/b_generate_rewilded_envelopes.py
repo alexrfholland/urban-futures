@@ -27,12 +27,60 @@ VOXEL_SIZE = 1
 YEARS = [10, 30, 60, 180]
 OUTPUT_SUBDIR = 'ply'
 REQUIRED_ATTRS = ['scenario_bioEnvelope', 'sim_Turns', 'sim_averageResistance']
+WRITE_LEGACY_OUTPUTS = True
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def format_voxel_size(voxel_size: float | int) -> str:
+    numeric = float(voxel_size)
+    if numeric.is_integer():
+        return str(int(numeric))
+    return str(voxel_size)
+
+
+def hook_state_vtk_latest_path(site: str, scenario: str, year: int, voxel_size: int) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return REPO_ROOT / "_data-refactored" / "final-hooks" / "vtks" / site / f"{site}_{scenario}_{voxel}_yr{year}_state_with_indicators.vtk"
+
+
+def hook_bioenvelope_ply_path(site: str, scenario: str, year: int, voxel_size: int) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    path = REPO_ROOT / "_data-refactored" / "final-hooks" / "bioenvelopes" / site / f"{site}_{scenario}_{voxel}_envelope_scenarioYR{year}.ply"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def legacy_world_reference_vtk_path(site: str, kind: str) -> Path:
+    suffix_map = {
+        "site": f"{site}-siteVoxels-masked.vtk",
+        "road": f"{site}-roadVoxels-coloured.vtk",
+    }
+    if kind not in suffix_map:
+        raise ValueError(f"Unknown world reference kind: {kind}")
+    return REPO_ROOT / "data" / "revised" / "final" / suffix_map[kind]
+
+
+def resolve_scenario_vtk_path(site: str, scenario: str, year: int, voxel_size: int) -> Path:
+    vtk_path = hook_state_vtk_latest_path(site, scenario, year, voxel_size)
+    if vtk_path.exists():
+        return vtk_path
+
+    voxel = format_voxel_size(voxel_size)
+    legacy_path = Path("data/revised/final/output") / f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features_with_indicators.vtk"
+    if legacy_path.exists():
+        return legacy_path
+
+    raise FileNotFoundError(f"No assessed state VTK found for site={site}, scenario={scenario}, year={year}")
+
+
+def legacy_envelope_output_dir(site: str) -> Path:
+    return Path(f"data/revised/final/{site}") / OUTPUT_SUBDIR
 
 
 def load_reference_data(site):
     print(f"Loading site and road voxels for {site}...")
-    site_voxels = pv.read(f'data/revised/{site}-siteVoxels-masked.vtk')
-    road_voxels = pv.read(f'data/revised/{site}-roadVoxels-coloured.vtk')
+    site_voxels = pv.read(legacy_world_reference_vtk_path(site, 'site'))
+    road_voxels = pv.read(legacy_world_reference_vtk_path(site, 'road'))
 
     site_points = site_voxels.points
     road_points = road_voxels.points
@@ -250,15 +298,15 @@ def main():
     voxel_size = VOXEL_SIZE
     years = YEARS
 
-    file_path = Path(f'data/revised/final/{site}')
-    output_dir = file_path / OUTPUT_SUBDIR
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = legacy_envelope_output_dir(site)
+    if WRITE_LEGACY_OUTPUTS:
+        output_dir.mkdir(parents=True, exist_ok=True)
 
     tree, combined_points, combined_normals = load_reference_data(site)
 
     for scenario in scenarios:
         for year in years:
-            vtk_path = file_path / f'{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk'
+            vtk_path = resolve_scenario_vtk_path(site, scenario, year, voxel_size)
             print(f'loading polydata from {vtk_path}')
             voxel_polydata = pv.read(vtk_path)
 
@@ -279,15 +327,23 @@ def main():
             if 'sim_averageResistance' in shell_points.point_data:
                 attributes.append('sim_averageResistance')
 
-            output_base = output_dir / f'{site}_{scenario}_{voxel_size}_envelope_scenarioYR{year}'
+            refactored_output_path = hook_bioenvelope_ply_path(site, scenario, year, voxel_size)
             a_vtk_to_ply.export_polydata_points_to_ply(
                 shell_points,
-                str(output_base.with_suffix('.ply')),
+                str(refactored_output_path),
                 attributesToTransfer=attributes,
             )
-            surface_mesh.save(str(output_base.with_suffix('.vtk')))
-            print(f"Saved envelope shell points to {output_base.with_suffix('.ply')}")
-            print(f"Saved envelope surface mesh to {output_base.with_suffix('.vtk')}")
+            print(f"Saved refactored envelope shell points to {refactored_output_path}")
+            if WRITE_LEGACY_OUTPUTS:
+                output_base = output_dir / f'{site}_{scenario}_{voxel_size}_envelope_scenarioYR{year}'
+                a_vtk_to_ply.export_polydata_points_to_ply(
+                    shell_points,
+                    str(output_base.with_suffix('.ply')),
+                    attributesToTransfer=attributes,
+                )
+                surface_mesh.save(str(output_base.with_suffix('.vtk')))
+                print(f"Saved legacy envelope shell points to {output_base.with_suffix('.ply')}")
+                print(f"Saved legacy envelope surface mesh to {output_base.with_suffix('.vtk')}")
 
 
 if __name__ == "__main__":
