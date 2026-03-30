@@ -344,3 +344,4 @@ For detailed enums, attribute inventories, and current notes:
 - define what stays in the model Blender compositor and what moves to the lightweight compositor
 - create an `AGENTS.md` for the edge-detection lab work and the compositor workflow
 - move the edge-detection scripts out of `data` so they can be tracked in git
+- consider renaming `Release-Control -> Brace-Feature` to `Reduce-Pruning` in stats/graph outputs, because the current measure is `park-tree` arboreal voxels rather than structural bracing

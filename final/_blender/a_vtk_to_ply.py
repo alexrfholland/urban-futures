@@ -37,6 +37,22 @@ resource_int_to_binary = {
 }
 
 
+def _sanitize_attribute_key(key):
+    return key.replace(' ', '_')
+
+
+def _rename_mesh_attribute_keys(mesh):
+    working_mesh = mesh.copy()
+    for data_dict in [working_mesh.point_data, working_mesh.cell_data]:
+        for old_key in list(data_dict.keys()):
+            new_key = _sanitize_attribute_key(old_key)
+            if new_key == old_key:
+                continue
+            data_dict[new_key] = data_dict.pop(old_key)
+            print(f"Renamed attribute '{old_key}' to '{new_key}'")
+    return working_mesh
+
+
 def ensure_fallen_size_resource_flag(mesh, filename):
     """
     Fallen-size tree templates should behave like whole fallen-log assets for the
@@ -66,11 +82,7 @@ def determine_attributes(mesh, attributesToTransfer):
         The list of attribute keys to transfer.
     """
     # First, rename any attributes containing spaces
-    for old_key in list(mesh.point_data.keys()):
-        if ' ' in old_key:
-            new_key = old_key.replace(' ', '_')
-            mesh.point_data[new_key] = mesh.point_data.pop(old_key)
-            print(f"Renamed attribute '{old_key}' to '{new_key}'")
+    mesh = _rename_mesh_attribute_keys(mesh)
 
     if attributesToTransfer is None:
         keys = list(mesh.point_data.keys())
@@ -79,6 +91,7 @@ def determine_attributes(mesh, attributesToTransfer):
         # Validate the requested attributes exist
         valid_keys = []
         for key in attributesToTransfer:
+            key = _sanitize_attribute_key(key)
             if key in mesh.point_data:
                 valid_keys.append(key)
             else:
@@ -272,14 +285,16 @@ def export_polydata_to_ply(mesh, filename, attributesToTransfer=None):
         if np.issubdtype(resource_array.dtype, np.str_) or np.issubdtype(resource_array.dtype, np.object_):
             mesh = map_columns_mesh(mesh)
     mesh, _ = ensure_resource_binary_columns(mesh)
+    mesh = _rename_mesh_attribute_keys(mesh)
         
     # Default attributes to look for
     default_attributes = ['int_resource', 'isSenescent', 'isTerminal', 'cluster_id']
-    default_attributes.extend(resource_cols)
+    default_attributes.extend(_sanitize_attribute_key(attr) for attr in resource_cols)
     if attributesToTransfer is None:
         attributesToTransfer = default_attributes
     else:
-        attributesToTransfer.extend(resource_cols) # make unique incase repeating
+        attributesToTransfer = [_sanitize_attribute_key(attr) for attr in attributesToTransfer]
+        attributesToTransfer.extend(_sanitize_attribute_key(attr) for attr in resource_cols)
         attributesToTransfer = list(set(attributesToTransfer))
 
     # Check which attributes actually exist in the mesh

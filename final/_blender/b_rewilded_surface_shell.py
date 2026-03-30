@@ -29,23 +29,38 @@ def extract_isosurface_from_points(
     spacing: tuple[float, float, float] = SURFACE_VOXEL_SPACING,
     isovalue: float = 0.5,
     extra_point_data: dict | None = None,
+    preserve_source_lattice: bool = False,
 ) -> pv.PolyData | None:
     if polydata is None or polydata.n_points == 0:
         return None
 
     spacing_array = np.asarray(spacing, dtype=float)
     points = np.asarray(polydata.points, dtype=float)
-    mins = np.floor(points.min(axis=0) / spacing_array) * spacing_array
-    maxs = np.ceil(points.max(axis=0) / spacing_array) * spacing_array
-    dims = np.maximum(((maxs - mins) / spacing_array).astype(int) + 2, 2)
+
+    if preserve_source_lattice:
+        mins = points.min(axis=0)
+        maxs = points.max(axis=0)
+        dims = np.maximum(((maxs - mins) / spacing_array).astype(int) + 1, 2)
+    else:
+        mins = np.floor(points.min(axis=0) / spacing_array) * spacing_array
+        maxs = np.ceil(points.max(axis=0) / spacing_array) * spacing_array
+        dims = np.maximum(((maxs - mins) / spacing_array).astype(int) + 2, 2)
 
     grid = pv.ImageData(dimensions=tuple(int(dim) for dim in dims), spacing=tuple(spacing_array), origin=tuple(mins))
-    scalars = np.zeros(grid.n_points, dtype=np.uint8)
+    if preserve_source_lattice:
+        scalars = np.zeros(grid.n_points, dtype=float)
+        occupied_value = 2.0
+    else:
+        scalars = np.zeros(grid.n_points, dtype=np.uint8)
+        occupied_value = 1
 
     ijk = np.floor((points - mins) / spacing_array).astype(int)
-    ijk = np.clip(ijk, 0, np.asarray(dims) - 1)
-    flat_indices = np.ravel_multi_index(ijk.T, dims)
-    scalars[flat_indices] = 1
+    valid_ijk_mask = np.all((ijk >= 0) & (ijk < np.asarray(dims)), axis=1)
+    if not np.any(valid_ijk_mask):
+        return None
+
+    flat_indices = np.ravel_multi_index(ijk[valid_ijk_mask].T, dims)
+    scalars[flat_indices] = occupied_value
 
     grid.point_data["values"] = scalars
     isosurface = grid.contour(
@@ -54,7 +69,9 @@ def extract_isosurface_from_points(
         method="flying_edges",
         compute_normals=True,
     )
-    surface = isosurface.extract_surface().triangulate().clean()
+    surface = isosurface.extract_surface()
+    if not preserve_source_lattice:
+        surface = surface.triangulate().clean()
 
     if surface.n_points == 0:
         return None

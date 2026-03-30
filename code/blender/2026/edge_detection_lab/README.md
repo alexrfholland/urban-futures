@@ -36,6 +36,64 @@ Combined output-suite compositor:
   - `MistOutlines`
   - `DepthOutliner`
 
+Final template status:
+- `data/blender/2026/edge_detection_lab/edge_lab_final_template.blend` is the current human-facing compositor file.
+- It has two scenes:
+  - `Current`
+  - `Legacy`
+- `Current` now contains one merged compositor scene with framed branches for:
+  - AO
+  - normals
+  - resources
+  - depth outliner
+  - mist outlines
+  - shading
+  - base outputs
+  - bioenvelopes
+- `Legacy` keeps the classic lightweight compositor as reference.
+- The current execution split is now:
+  - `Current` for AO, normals, resources, depth outliner, shading, base outputs, and bioenvelopes
+  - the final-template mist runner now also writes the canonical mist PNGs from EXRs, using the validated `kirschsizes` mist workflow on a temporary scratch scene during the final-template run
+- The remaining cleanup is to decide whether the saved mist branch inside `Current` should be made canonical, or kept as a reference while the scratch-scene mist adapter remains the trusted path.
+
+Verified now:
+- `edge_lab_final_template.blend`, scene `Current`, works for:
+  - AO
+  - normals
+  - resources
+  - depth outliner
+  - shading
+  - base outputs
+  - bioenvelopes
+- the `Current` AO, normals, resources, and depth-outliner PNGs now match the older combined-suite outputs pixel-for-pixel on the latest city EXRs
+- the final-template mist runner now writes mist outlines from EXRs and those PNGs match the older combined-suite outputs pixel-for-pixel on the latest city EXRs
+- the current bioenvelope colours in `Current` now match the legacy palette outputs exactly
+
+Still to do:
+- decide whether to rebuild the saved mist branch inside `Current` so it matches the validated mist runner exactly
+- tidy `Current` once that mist-branch decision is settled
+
+Latest files:
+- human-facing compositor:
+  - `data/blender/2026/edge_detection_lab/edge_lab_final_template.blend`
+- old validated multi-scene runner blend:
+  - `data/blender/2026/edge_detection_lab/edge_lab_output_suite_combined.blend`
+- final-template driver:
+  - `code/blender/2026/edge_detection_lab/run_edge_lab_final_template.py`
+  - now renders `AO`, `normals`, `resources`, `depth outliner`, `mist outlines`, `shading`, `base`, and `bioenvelopes` in the final-template workflow
+- current-suite driver:
+  - `code/blender/2026/edge_detection_lab/run_edge_lab_combined_compositor.py`
+  - still useful for legacy comparison
+- current render-only cutover script for `Current` core families:
+  - `code/blender/2026/edge_detection_lab/render_edge_lab_current_core_outputs.py`
+- current mist adapter:
+  - `code/blender/2026/edge_detection_lab/render_edge_lab_current_mist.py`
+  - runs the validated `kirschsizes` mist workflow from EXRs on a temporary scratch scene
+- latest validated current-template outputs:
+  - `data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_city_20260329`
+- latest validated combined-suite outputs:
+  - `data/blender/2026/edge_detection_lab/outputs/edge_lab_output_suite_city_20260329`
+
 What the scaffold does:
 - creates a dedicated scene named `edge_detection_lab`
 - sets the render size to `3840 x 2160`
@@ -83,10 +141,42 @@ Key passes we generate now:
 - shading
   - `pathway_shading.png`
   - `priority_shading.png`
+  - `existing_condition_shading.png`
   - these come from the existing compositor group `_AO SHADING.001`
   - `_AO SHADING.001` takes `AO`, `Normal`, and `Alpha`
   - inside the group: `AO -> Denoise`, `Normal -> same Denoise`, then `Color Ramp -> Overlay -> Set Alpha`
   - the final shading PNGs have the pathway / priority visible-arboreal masks applied
+- base
+  - `base_rgb.png`
+  - `base_outlines.png`
+  - `base_sim-turns.png`
+  - `base_sim-nodes.png`
+  - `base_sim-turns_ripple-effect.png`
+- bioenvelopes
+  - `base_bioenvelope_full-image.png`
+  - `base_bioenvelope_exoskeleton.png`
+  - `base_bioenvelope_brownroof.png`
+  - `base_bioenvelope_otherground.png`
+  - `base_bioenvelope_rewilded.png`
+  - `base_bioenvelope_footprintdepaved.png`
+  - `base_bioenvelope_livingfacade.png`
+  - `base_bioenvelope_greenroof.png`
+  - `bioenvelope_full-image.png`
+  - `bioenvelope_exoskeleton.png`
+  - `bioenvelope_brownroof.png`
+  - `bioenvelope_otherground.png`
+  - `bioenvelope_rewilded.png`
+  - `bioenvelope_footprintdepaved.png`
+  - `bioenvelope_livingfacade.png`
+  - `bioenvelope_greenroof.png`
+  - `trending_bioenvelope_full-image.png`
+  - `trending_bioenvelope_exoskeleton.png`
+  - `trending_bioenvelope_brownroof.png`
+  - `trending_bioenvelope_otherground.png`
+  - `trending_bioenvelope_rewilded.png`
+  - `trending_bioenvelope_footprintdepaved.png`
+  - `trending_bioenvelope_livingfacade.png`
+  - `trending_bioenvelope_greenroof.png`
 - mist-based arboreal outlines
   - `pathway_mist_kirsch_thin.png`
   - `pathway_mist_kirsch_fine.png`
@@ -181,6 +271,17 @@ Typical current output bundles:
 - `shading/`
   - masked pathway shading
   - masked priority shading
+  - masked existing-condition shading
+- `base/`
+  - base beauty
+  - base outlines
+  - normalized `sim_Turns`
+  - normalized `sim_nodes`
+  - ripple-effect `sim_Turns`
+- `bioenvelope/`
+  - coloured base-world bioenvelope layers
+  - coloured direct envelope EXR layers
+  - coloured trending bioenvelope layers
 - `outlines_mist/`
   - mist-derived Kirsch outline sizes for arboreals
 - `depth_outliner/`

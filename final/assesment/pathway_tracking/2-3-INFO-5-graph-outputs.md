@@ -41,7 +41,38 @@ Outputs:
 - `data/revised/final/output/plots/performance_bubbles_*.html`
 - `data/revised/final/output/plots/performance_bubbles_*.png`
 
-## 2.3-GRAPH-3 Legacy Capability Plots
+## 2.3-GRAPH-3 Companion Pathway Tracking Mini Streams
+
+Script:
+
+- `final/a_info_pathway_tracking_graphs.py`
+
+Inputs:
+
+- `_statistics-refactored/raw/{site}/interventions.csv`
+
+Description of processing:
+
+- Reads the raw intervention tables, selects a single canonical measure per intervention stream, and writes centered mini stream graphs for each proposal.
+- Writes both `absolute` and `relative` variants.
+- `absolute` uses raw intervention values.
+- `relative` scales each proposal to its own peak total within the current scope.
+- Writes both `combined` graphs and `per-proposal` graphs.
+- Writes both `full-height` and `half-height` variants.
+- The x axis uses the assessment years `0, 10, 30, 60, 90, 120, 150, 180`.
+
+Outputs:
+
+- `_statistics-refactored/plots/pathway_tracking/mini_streams/absolute/combined/full-height/{scope}.png`
+- `_statistics-refactored/plots/pathway_tracking/mini_streams/absolute/combined/half-height/{scope}.png`
+- `_statistics-refactored/plots/pathway_tracking/mini_streams/absolute/per-proposal/full-height/{proposal}_{scope}.png`
+- `_statistics-refactored/plots/pathway_tracking/mini_streams/absolute/per-proposal/half-height/{proposal}_{scope}.png`
+- `_statistics-refactored/plots/pathway_tracking/mini_streams/relative/combined/full-height/{scope}.png`
+- `_statistics-refactored/plots/pathway_tracking/mini_streams/relative/combined/half-height/{scope}.png`
+- `_statistics-refactored/plots/pathway_tracking/mini_streams/relative/per-proposal/full-height/{proposal}_{scope}.png`
+- `_statistics-refactored/plots/pathway_tracking/mini_streams/relative/per-proposal/half-height/{proposal}_{scope}.png`
+
+## 2.3-GRAPH-4 Legacy Capability Plots
 
 Script:
 

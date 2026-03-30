@@ -49,6 +49,9 @@ Canonical script:
 Current status:
 
 - active
+- now present in `edge_lab_final_template.blend`, scene `Current`
+- now rendered directly from `Current`
+- current-vs-combined validation on the latest city EXRs is pixel-identical
 
 Legacy / special-case adapters:
 
@@ -73,6 +76,9 @@ Canonical script:
 Current status:
 
 - active
+- now present in `edge_lab_final_template.blend`, scene `Current`
+- now rendered directly from `Current`
+- current-vs-combined validation on the latest city EXRs is pixel-identical
 
 Legacy / special-case adapters:
 
@@ -97,6 +103,9 @@ Canonical script:
 Current status:
 
 - active
+- now present in `edge_lab_final_template.blend`, scene `Current`
+- now rendered directly from `Current`
+- current-vs-combined validation on the latest city EXRs is pixel-identical
 
 Secondary but still useful:
 
@@ -113,6 +122,7 @@ Required products:
 
 - `pathway_shading.png`
 - `priority_shading.png`
+- `existing_condition_shading.png`
 
 Canonical workflow:
 
@@ -130,8 +140,10 @@ Dependencies:
 
 Current status:
 
-- active, but still coupled to the lightweight compositor graph rather than a
-  self-contained edge-lab builder
+- active
+- now present in `edge_lab_final_template.blend`, scene `Current`
+- now rendered directly from `Current`
+- current-vs-combined validation on the latest city EXRs is pixel-identical
 
 Legacy / special-case adapters:
 
@@ -159,6 +171,10 @@ Canonical script:
 Current status:
 
 - active
+- now rendered in the final-template workflow from EXRs
+- current-vs-combined validation on the latest city EXRs is pixel-identical
+- the trusted path is [render_edge_lab_current_mist.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/render_edge_lab_current_mist.py), which runs the validated `kirschsizes` mist workflow on a temporary scratch scene during the final-template run
+- the saved mist branch inside `edge_lab_final_template.blend`, scene `Current`, is not yet the trusted source of truth
 
 Legacy / exploratory variants:
 
@@ -203,6 +219,7 @@ Consolidated now:
 - canonical EXR filename contract
 - canonical output-family map
 - combined output-suite blend builder
+- final template blend with `Current` and `Legacy`
 
 Current combined blend:
 
@@ -220,33 +237,94 @@ The combined blend keeps one scene per output family:
 - `MistOutlines`
 - `DepthOutliner`
 
+Current final-template blend:
+
+- [edge_lab_final_template.blend](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/edge_lab_final_template.blend)
+
+Current final-template scenes:
+
+- `Current`
+- `Legacy`
+
+What `Current` already contains:
+
+- AO
+- normals
+- resources
+- depth outliner
+- mist outlines
+- shading
+- base outputs
+- bioenvelopes
+
+What is already rendered from `Current`:
+
+- AO
+- normals
+- resources
+- depth outliner
+- mist outlines
+- shading
+- base outputs
+- bioenvelopes
+
+What has been verified:
+
+- `edge_lab_final_template.blend` plus the final-template runners writes working AO, normals, resources, depth outliner, mist, shading, base, and bioenvelope outputs
+- the `Current` AO, normals, resources, and depth-outliner PNGs are pixel-identical to the older combined-suite outputs on the latest city EXRs
+- the final-template mist PNGs are pixel-identical to the older combined-suite mist outputs on the latest city EXRs
+- the `Current` bioenvelope full-image outputs now match the old lightweight compositor outputs exactly
+
 Not yet consolidated:
 
-- the classic lightweight compositor branches that still sit outside the output suite
-- one single-scene compositor graph for all output families
+- one trusted saved-scene mist branch inside `Current`
 
-Classic lightweight compositor branches not yet moved into the combined suite:
+Legacy lightweight compositor content still kept for reference:
 
 - final composite image outputs
-- base image outputs
-- shading branches
 - classic outline branches
-- bioenvelope exports
 - world/base layer palette branches
 - trending resource exports
+
+Already moved into `Current`:
+
+- shading branches
+- base image outputs
+- bioenvelope exports
+
+Latest working files:
+
+- human-facing compositor:
+  - [edge_lab_final_template.blend](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/edge_lab_final_template.blend)
+- older validated execution blend:
+  - [edge_lab_output_suite_combined.blend](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/edge_lab_output_suite_combined.blend)
+- final-template driver:
+  - [run_edge_lab_final_template.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/run_edge_lab_final_template.py)
+- final-template mist adapter:
+  - [render_edge_lab_current_mist.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/render_edge_lab_current_mist.py)
+- current render-only cutover script for the non-mist families:
+  - [render_edge_lab_current_core_outputs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/render_edge_lab_current_core_outputs.py)
+- older validated runner:
+  - [run_edge_lab_combined_compositor.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/run_edge_lab_combined_compositor.py)
+- latest validated final-template output root:
+  - [edge_lab_final_template_city_20260329](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_city_20260329)
+- latest validated combined-suite output root:
+  - [edge_lab_output_suite_city_20260329](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/outputs/edge_lab_output_suite_city_20260329)
 
 ## 4. Near-Term Implementation Target
 
 The next canonical orchestration layer should do this:
 
-1. attach a chosen EXR set to the lightweight compositor template
-2. run resource fills
-3. run AO
-4. run normals
-5. run shading
-6. run mist outlines
-7. run depth outliners
-8. write one dated output bundle with stable subfolders
+1. attach a chosen EXR set to `edge_lab_final_template.blend`
+2. render AO from `Current`
+3. render normals from `Current`
+4. render resource fills from `Current`
+5. render shading from `Current`
+6. render mist outlines in the final-template workflow from EXRs
+7. render depth outliners from `Current`
+8. render base outputs from `Current`
+9. render bioenvelopes from `Current`
+10. write one dated output bundle with stable subfolders
 
 That orchestration layer should treat:
 

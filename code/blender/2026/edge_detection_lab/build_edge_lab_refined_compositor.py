@@ -217,8 +217,10 @@ def clone_scene_into_suite(
     for src_link in source_scene.node_tree.links:
         src_from = node_map[src_link.from_node]
         src_to = node_map[src_link.to_node]
-        from_socket = src_from.outputs[src_link.from_socket.name]
-        to_socket = src_to.inputs[src_link.to_socket.name]
+        from_index = list(src_link.from_node.outputs).index(src_link.from_socket)
+        to_index = list(src_link.to_node.inputs).index(src_link.to_socket)
+        from_socket = src_from.outputs[from_index]
+        to_socket = src_to.inputs[to_index]
         target_tree.links.new(from_socket, to_socket)
 
 

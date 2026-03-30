@@ -171,13 +171,18 @@ def rename_output(rendered_path: Path) -> Path:
     return final_path
 
 
+def render_scene(scene: bpy.types.Scene, *, write_still: bool = False) -> None:
+    bpy.context.window.scene = scene
+    bpy.ops.render.render(write_still=write_still, scene=scene.name)
+
+
 def render_socket_to_png(scene: bpy.types.Scene, node_tree: bpy.types.NodeTree, image_socket, output_path: Path) -> None:
     composite = node_tree.nodes["Composite"]
     viewer = node_tree.nodes["Viewer"]
     ensure_link(node_tree, image_socket, composite.inputs[0])
     ensure_link(node_tree, image_socket, viewer.inputs[0])
     scene.render.filepath = str(output_path)
-    bpy.ops.render.render(write_still=True)
+    render_scene(scene, write_still=True)
     log(f"Wrote {output_path}")
 
 
@@ -322,18 +327,24 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
     viewer = new_node(node_tree, "CompositorNodeViewer", "Viewer", "Viewer", (1120.0, -60.0))
     composite.parent = pathway_frame
     viewer.parent = pathway_frame
+    combined = new_node(
+        node_tree,
+        "CompositorNodeAlphaOver",
+        "Combined Final Outliner",
+        "Combined Final Outliner",
+        (860.0, 140.0),
+    )
+    combined.parent = pathway_frame
+    combined.premul = 1.0
+    ensure_link(node_tree, node_tree.nodes["pathway_edge_masked"].outputs["Image"], combined.inputs[1])
+    ensure_link(node_tree, node_tree.nodes["priority_edge_masked"].outputs["Image"], combined.inputs[2])
+    ensure_link(node_tree, combined.outputs["Image"], composite.inputs[0])
+    ensure_link(node_tree, combined.outputs["Image"], viewer.inputs[0])
     return rendered_paths
 
 
-def main() -> None:
-    scene = bpy.context.scene
-    rendered_paths = build_scene(scene)
-    try:
-        bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
-        log(f"Saved {BLEND_PATH}")
-    except RuntimeError as exc:
-        log(f"Skipping blend save: {exc}")
-    bpy.ops.render.render(write_still=False)
+def finalize_render(scene: bpy.types.Scene, rendered_paths: list[Path]) -> None:
+    render_scene(scene, write_still=False)
     for path in rendered_paths:
         rename_output(path)
     node_tree = scene.node_tree
@@ -349,6 +360,17 @@ def main() -> None:
         node_tree.nodes["priority_edge_masked"].outputs["Image"],
         OUTPUT_DIR / "priority_depth_outliner.png",
     )
+
+
+def main() -> None:
+    scene = bpy.context.scene
+    rendered_paths = build_scene(scene)
+    try:
+        bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
+        log(f"Saved {BLEND_PATH}")
+    except RuntimeError as exc:
+        log(f"Skipping blend save: {exc}")
+    finalize_render(scene, rendered_paths)
 
 
 if __name__ == "__main__":

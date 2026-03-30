@@ -27,6 +27,8 @@ VOXEL_SIZE = 1
 YEARS = [10, 30, 60, 180]
 OUTPUT_SUBDIR = 'ply'
 REQUIRED_ATTRS = ['scenario_bioEnvelope', 'sim_Turns', 'sim_averageResistance']
+FAST_LEGACY_SURFACE_EXPORT = True
+FAST_LEGACY_SURFACE_SPACING = (1.0, 1.0, 1.0)
 WRITE_LEGACY_OUTPUTS = True
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -102,22 +104,31 @@ def load_reference_data(site):
 
 def generate_normals(voxel_polydata: pv.PolyData, tree: cKDTree, combined_normals: np.ndarray):
     print("Generating reference normals for envelope points...")
-    distances, indices = tree.query(voxel_polydata.points, k=100, distance_upper_bound=1.0)
+    distances, indices = tree.query(
+        voxel_polydata.points,
+        k=100,
+        distance_upper_bound=1.0,
+        workers=-1,
+    )
     valid_mask = distances < np.inf
     normals = np.zeros((voxel_polydata.n_points, 3), dtype=float)
     valid_points = valid_mask.any(axis=1)
 
     if np.any(valid_points):
-        averaged = np.array(
-            [
-                np.mean(combined_normals[indices[idx][valid_mask[idx]]], axis=0)
-                for idx in np.where(valid_points)[0]
-            ]
-        )
-        magnitudes = np.linalg.norm(averaged, axis=1)
+        safe_indices = indices.copy()
+        safe_indices[~valid_mask] = 0
+        neighbor_normals = combined_normals[safe_indices]
+        neighbor_normals[~valid_mask] = 0.0
+
+        counts = valid_mask.sum(axis=1, keepdims=True)
+        averaged = neighbor_normals.sum(axis=1)
+        averaged[valid_points] /= counts[valid_points]
+
+        magnitudes = np.linalg.norm(averaged[valid_points], axis=1)
         non_zero = magnitudes > 0
-        averaged[non_zero] /= magnitudes[non_zero][:, np.newaxis]
-        normals[valid_points] = averaged
+        averaged_valid = averaged[valid_points]
+        averaged_valid[non_zero] /= magnitudes[non_zero][:, np.newaxis]
+        normals[valid_points] = averaged_valid
 
     normals[~valid_points] = [0, 0, 1]
     voxel_polydata.point_data['normals'] = normals
@@ -166,6 +177,7 @@ def _select_valid_bioenvelope_points(voxel_polydata: pv.PolyData) -> pv.PolyData
 def _build_envelope_surface(valid_polydata: pv.PolyData) -> pv.PolyData | None:
     processed_surfaces = []
     explicit_keys = select_explicit_export_keys(valid_polydata.point_data.keys()) + ['surface_category']
+    surface_spacing = FAST_LEGACY_SURFACE_SPACING if FAST_LEGACY_SURFACE_EXPORT else SURFACE_VOXEL_SPACING
 
     for bioenv in np.unique(valid_polydata.point_data['scenario_bioEnvelope']):
         points_subset = valid_polydata.extract_points(valid_polydata.point_data['scenario_bioEnvelope'] == bioenv)
@@ -188,11 +200,12 @@ def _build_envelope_surface(valid_polydata: pv.PolyData) -> pv.PolyData | None:
 
             surface = extract_isosurface_from_points(
                 category_points,
-                spacing=SURFACE_VOXEL_SPACING,
+                spacing=surface_spacing,
                 extra_point_data={
                     'scenario_bioEnvelope': bioenv,
                     'surface_category': surface_category,
                 },
+                preserve_source_lattice=FAST_LEGACY_SURFACE_EXPORT,
             )
             if surface is None or surface.n_points == 0:
                 continue
@@ -248,21 +261,25 @@ def generate_rewilded_envelopes(
     if surface_mesh is None or surface_mesh.n_points == 0:
         return None, None
 
-    shell_points = surface_mesh_to_voxel_shell(
-        surface_mesh,
-        voxel_size=SURFACE_VOXEL_SIZE,
-        shell_distance=SHELL_DISTANCE,
-    )
-    if shell_points is None or shell_points.n_points == 0:
-        return surface_mesh, None
+    if FAST_LEGACY_SURFACE_EXPORT:
+        shell_points = _backfill_missing_attrs(surface_mesh.copy(), valid_polydata, REQUIRED_ATTRS)
+    else:
+        shell_points = surface_mesh_to_voxel_shell(
+            surface_mesh,
+            voxel_size=SURFACE_VOXEL_SIZE,
+            shell_distance=SHELL_DISTANCE,
+        )
+        if shell_points is None or shell_points.n_points == 0:
+            return surface_mesh, None
 
-    shell_points = transfer_point_data_nearest(
-        surface_mesh,
-        shell_points,
-        numeric_only=True,
-        explicit_keys=REQUIRED_ATTRS,
-    )
-    shell_points = _backfill_missing_attrs(shell_points, valid_polydata, REQUIRED_ATTRS)
+        shell_points = transfer_point_data_nearest(
+            surface_mesh,
+            shell_points,
+            numeric_only=True,
+            explicit_keys=REQUIRED_ATTRS,
+        )
+        shell_points = _backfill_missing_attrs(shell_points, valid_polydata, REQUIRED_ATTRS)
+
     return surface_mesh, shell_points
 
 

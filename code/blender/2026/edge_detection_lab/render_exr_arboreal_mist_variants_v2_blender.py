@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import time
 
 import bpy
 
@@ -532,6 +533,26 @@ def rename_output(rendered_path: Path) -> Path:
     return final_path
 
 
+def resolve_existing_render_path(path: Path) -> Path:
+    if path.exists():
+        return path
+    numbered = path.with_name(path.stem + "_0001" + path.suffix)
+    if numbered.exists():
+        return numbered
+    for _ in range(20):
+        if path.exists():
+            return path
+        if numbered.exists():
+            return numbered
+        time.sleep(0.1)
+    return path
+
+
+def render_scene(scene: bpy.types.Scene, *, write_still: bool = False) -> None:
+    bpy.context.window.scene = scene
+    bpy.ops.render.render(write_still=write_still, scene=scene.name)
+
+
 def configure_scene(scene: bpy.types.Scene) -> None:
     scene.use_nodes = True
     scene.render.resolution_x = RENDER_WIDTH
@@ -734,7 +755,8 @@ def build_prep_stage(scene: bpy.types.Scene) -> dict[str, tuple[Path, Path]]:
     final_paths: dict[str, tuple[Path, Path]] = {}
 
     for scene_name, exr_node, alpha_socket, y in scene_specs:
-        scene_dir = ensure_dir((PREP_ROOT if RENDER_MODE == "edges_only" else OUTPUT_ROOT) / scene_name)
+        prep_mode = RENDER_MODE in {"edges_only", "prep_only_static"}
+        scene_dir = ensure_dir((PREP_ROOT if prep_mode else OUTPUT_ROOT) / scene_name)
         visible = set_alpha_node(
             node_tree,
             exr_node.outputs["Image"],
@@ -787,10 +809,7 @@ def build_prep_stage(scene: bpy.types.Scene) -> dict[str, tuple[Path, Path]]:
     ensure_link(node_tree, pathway.outputs["Image"], composite.inputs[0])
     parent_nodes(output_frame, composite)
 
-    BLEND_PATH.parent.mkdir(parents=True, exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
-    log(f"Saved {BLEND_PATH}")
-    bpy.ops.render.render(write_still=False)
+    render_scene(scene, write_still=False)
 
     for scene_name, paths in final_paths.items():
         final_paths[scene_name] = (rename_output(paths[0]), rename_output(paths[1]))
@@ -955,8 +974,315 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
     }
 
 
-def main() -> None:
-    scene = bpy.context.scene
+def build_static_variant_branch(
+    node_tree: bpy.types.NodeTree,
+    scene_name: str,
+    spec: dict,
+    visible_socket,
+    mist_visible_socket,
+    base_x: float,
+    base_y: float,
+    output_dir: Path,
+):
+    variant_name = f"{scene_name}_{spec['name']}"
+    variant_frame = frame_node(
+        node_tree,
+        f"Frame {variant_name}",
+        variant_name,
+        (base_x - 120.0, base_y + 220.0),
+        (0.18, 0.14, 0.18),
+    )
+    signal_frame = frame_node(
+        node_tree,
+        f"Frame {variant_name} Signal",
+        f"{variant_name} signal",
+        (base_x + 120.0, base_y + 220.0),
+        (0.18, 0.16, 0.10),
+    )
+    width_frame = frame_node(
+        node_tree,
+        f"Frame {variant_name} Width",
+        f"{variant_name} width",
+        (base_x + 1160.0, base_y + 220.0),
+        (0.18, 0.14, 0.18),
+    )
+    output_frame = frame_node(
+        node_tree,
+        f"Frame {variant_name} Output",
+        f"{variant_name} output",
+        (base_x + 2440.0, base_y + 220.0),
+        (0.12, 0.20, 0.14),
+    )
+
+    mist_bw = rgb_to_bw_node(
+        node_tree,
+        mist_visible_socket,
+        f"{variant_name}_mist_bw",
+        f"{variant_name}_mist_bw",
+        (base_x, base_y),
+    )
+    mist_rgba = separate_rgba_node(
+        node_tree,
+        mist_visible_socket,
+        f"{variant_name}_mist_rgba",
+        f"{variant_name}_mist_rgba",
+        (base_x, base_y - 220.0),
+    )
+    parent_nodes(variant_frame, mist_bw, mist_rgba)
+
+    filter_input = mist_bw.outputs["Val"]
+    filter_input_x = base_x + 260.0
+    if "local_blur_pixels" in spec and "local_floor" in spec:
+        filter_input = local_ratio_normalize(
+            node_tree,
+            mist_bw.outputs["Val"],
+            variant_name,
+            spec["local_blur_pixels"],
+            spec["local_floor"],
+            base_y,
+        )
+        filter_input_x = base_x + 1020.0
+
+    edge_filter = filter_node(
+        node_tree,
+        filter_input,
+        f"{variant_name}_filter",
+        f"{variant_name}_filter",
+        (filter_input_x, base_y),
+        spec["filter_type"],
+    )
+    edge_normalized = normalize_node(
+        node_tree,
+        edge_filter.outputs[0],
+        f"{variant_name}_normalized",
+        f"{variant_name}_normalized",
+        (filter_input_x + 240.0, base_y),
+    )
+    parent_nodes(signal_frame, edge_filter, edge_normalized)
+
+    edge_signal = edge_normalized.outputs[0]
+    if "edge_local_blur_pixels" in spec and "edge_local_floor" in spec:
+        edge_signal = local_ratio_normalize(
+            node_tree,
+            edge_normalized.outputs[0],
+            f"{variant_name}_edge",
+            spec["edge_local_blur_pixels"],
+            spec["edge_local_floor"],
+            base_y,
+        )
+
+    if "screen_gain_bottom" in spec:
+        gain_image = vertical_gain_image(
+            f"{variant_name}_vertical_gain",
+            spec["screen_gain_bottom"],
+            spec["screen_gain_power"],
+        )
+        gain = datablock_image_node(
+            node_tree,
+            gain_image,
+            f"{variant_name}_vertical_gain",
+            f"{variant_name}_vertical_gain",
+            (filter_input_x + 480.0, base_y - 260.0),
+        )
+        gain_rgba = separate_rgba_node(
+            node_tree,
+            gain.outputs["Image"],
+            f"{variant_name}_gain_rgba",
+            f"{variant_name}_gain_rgba",
+            (filter_input_x + 720.0, base_y - 260.0),
+        )
+        edge_lifted = math_node(
+            node_tree,
+            "MULTIPLY",
+            f"{variant_name}_screen_lift",
+            f"{variant_name}_screen_lift",
+            (filter_input_x + 720.0, base_y),
+            clamp=False,
+        )
+        ensure_link(node_tree, edge_signal, edge_lifted.inputs[0])
+        ensure_link(node_tree, gain_rgba.outputs["R"], edge_lifted.inputs[1])
+        edge_screen_normalized = normalize_node(
+            node_tree,
+            edge_lifted.outputs["Value"],
+            f"{variant_name}_screen_lift_normalized",
+            f"{variant_name}_screen_lift_normalized",
+            (filter_input_x + 960.0, base_y),
+        )
+        edge_signal = edge_screen_normalized.outputs[0]
+        parent_nodes(signal_frame, gain, gain_rgba, edge_lifted, edge_screen_normalized)
+
+    edge_alpha = build_edge_width(
+        node_tree,
+        edge_signal,
+        mist_rgba.outputs["A"],
+        variant_name,
+        spec,
+        base_y,
+    )
+
+    edge_image = solid_color_image(
+        node_tree,
+        visible_socket,
+        f"{variant_name}_edge_rgb",
+        f"{variant_name}_edge_rgb",
+        (base_x + 2280.0, base_y - 180.0),
+        EDGE_COLOR_LINEAR,
+    )
+    edge_rgb_node = node_tree.nodes[f"{variant_name}_edge_rgb"]
+    edge_rgb_rgb_node = node_tree.nodes[f"{variant_name}_edge_rgb_rgb"]
+    edge_rgba = set_alpha_node(
+        node_tree,
+        edge_image,
+        edge_alpha,
+        f"{variant_name}_edge_rgba",
+        f"{variant_name}_edge_rgba",
+        (base_x + 2520.0, base_y),
+    )
+    parent_nodes(output_frame, edge_rgb_node, edge_rgb_rgb_node, edge_rgba)
+
+    for node_name in (
+        f"{variant_name}_presence",
+        f"{variant_name}_strong",
+        f"{variant_name}_core",
+        f"{variant_name}_wide",
+        f"{variant_name}_combined",
+        f"{variant_name}_soften",
+        f"{variant_name}_masked",
+    ):
+        node = node_tree.nodes.get(node_name)
+        if node is not None:
+            node.parent = width_frame
+
+    edge_only_rendered = file_output_node(
+        node_tree,
+        edge_rgba.outputs["Image"],
+        output_dir,
+        f"Output {variant_name} Edge",
+        f"Output {variant_name} Edge",
+        (base_x + 2760.0, base_y),
+        variant_name,
+    )
+    node_tree.nodes[f"Output {variant_name} Edge"].parent = output_frame
+    return edge_only_rendered, edge_rgba.outputs["Image"]
+
+
+def build_scene(scene: bpy.types.Scene) -> list[Path]:
+    original_render_mode = RENDER_MODE
+    original_prep_root = PREP_ROOT
+    prep_cache_root = OUTPUT_ROOT / "_prep_cache"
+    prep_scene = bpy.data.scenes.new(f"{scene.name}__PrepScratch")
+    try:
+        globals()["RENDER_MODE"] = "prep_only_static"
+        globals()["PREP_ROOT"] = prep_cache_root
+        prepared = build_prep_stage(prep_scene)
+    finally:
+        globals()["RENDER_MODE"] = original_render_mode
+        globals()["PREP_ROOT"] = original_prep_root
+        if prep_scene.name in bpy.data.scenes:
+            bpy.data.scenes.remove(prep_scene)
+
+    configure_scene(scene)
+    node_tree = scene.node_tree
+    clear_node_tree(node_tree)
+    ensure_dir(OUTPUT_ROOT)
+
+    input_frame = frame_node(node_tree, "Frame Static Prep Inputs", "Prep PNG Inputs", (-3600.0, 1180.0), (0.16, 0.16, 0.16))
+    header_frame = frame_node(node_tree, "Frame Static Header", "Mist Kirsch Sizes", (-420.0, 1460.0), (0.18, 0.14, 0.20))
+
+    header = new_node(
+        node_tree,
+        "NodeFrame",
+        "Frame Static Note",
+        "Outputs: pathway / priority / trending (optional)",
+        (-260.0, 1380.0),
+        color=(0.16, 0.16, 0.16),
+    )
+    header.label_size = 20
+    header.use_custom_color = True
+    header.color = (0.16, 0.16, 0.16)
+    header.shrink = False
+    header.parent = header_frame
+
+    rendered_paths: list[Path] = []
+    composite_sockets = []
+    variant_offsets = {
+        "mist_kirsch_thin": -1600.0,
+        "mist_kirsch_fine": 0.0,
+        "mist_kirsch_extra_thin": 1600.0,
+    }
+    scene_y = {
+        "pathway": 760.0,
+        "priority": 20.0,
+        "trending": -720.0,
+    }
+
+    for scene_name, (visible_path, mist_visible_path) in prepared.items():
+        visible_path = resolve_existing_render_path(visible_path)
+        mist_visible_path = resolve_existing_render_path(mist_visible_path)
+        y = scene_y.get(scene_name, 0.0)
+        visible_png = image_node(
+            node_tree,
+            visible_path,
+            f"{scene_name}_visible_png",
+            f"{scene_name}_visible_png",
+            (-3440.0, y + 80.0),
+        )
+        mist_visible_png = image_node(
+            node_tree,
+            mist_visible_path,
+            f"{scene_name}_mist_visible_png",
+            f"{scene_name}_mist_visible_png",
+            (-3440.0, y - 160.0),
+        )
+        parent_nodes(input_frame, visible_png, mist_visible_png)
+
+        for spec in KIRSCHSIZE_VARIANTS:
+            base_x = variant_offsets[spec["name"]]
+            rendered_path, composite_socket = build_static_variant_branch(
+                    node_tree,
+                    scene_name,
+                    spec,
+                    visible_png.outputs["Image"],
+                    mist_visible_png.outputs["Image"],
+                    base_x,
+                    y,
+                    OUTPUT_ROOT,
+                )
+            rendered_paths.append(rendered_path)
+            composite_sockets.append(composite_socket)
+
+    composite = new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (3180.0, 1120.0))
+    viewer = new_node(node_tree, "CompositorNodeViewer", "Viewer", "Viewer", (3180.0, 920.0))
+    parent_nodes(header_frame, composite, viewer)
+    if composite_sockets:
+        transparent = rgb_node(
+            node_tree,
+            "static_mist_composite_base",
+            "static_mist_composite_base",
+            (2100.0, 1180.0),
+            (0.0, 0.0, 0.0, 0.0),
+        )
+        parent_nodes(header_frame, transparent)
+        running_socket = transparent.outputs[0]
+        x = 2340.0
+        for idx, edge_socket in enumerate(composite_sockets):
+            mix = alpha_over_node(
+                node_tree,
+                f"static_mist_composite_{idx}",
+                f"static_mist_composite_{idx}",
+                (x, 1180.0),
+                running_socket,
+                edge_socket,
+            )
+            parent_nodes(header_frame, mix)
+            running_socket = mix.outputs["Image"]
+            x += 220.0
+        ensure_link(node_tree, running_socket, composite.inputs[0])
+        ensure_link(node_tree, running_socket, viewer.inputs[0])
+    return rendered_paths
+
+
+def run_output_workflow(scene: bpy.types.Scene) -> None:
     prepared = build_prep_stage(scene)
 
     if RENDER_MODE == "edges_only":
@@ -1009,6 +1335,14 @@ def main() -> None:
     summary_path = OUTPUT_ROOT / "summary.json"
     summary_path.write_text(json.dumps(summary, indent=2))
     log(f"Wrote {summary_path}")
+
+
+def main() -> None:
+    scene = bpy.context.scene
+    run_output_workflow(scene)
+    BLEND_PATH.parent.mkdir(parents=True, exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
+    log(f"Saved {BLEND_PATH}")
 
 
 if __name__ == "__main__":

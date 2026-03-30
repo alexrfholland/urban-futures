@@ -20,10 +20,11 @@ CITY_POINT_OBJECT_PREFIXES = (
 PARADE_GROUND_OBJECT_PREFIXES = (
     "trimmed-parade_180_rewilded",
     "trimmed-parade_positive_1_envelope_scenarioYR",
+    "trimmed-parade_trending_1_envelope_scenarioYR",
 )
 CITY_GROUND_OBJECT_PREFIXES = (
-    "city_1_envelope_scenarioYR",
-    "city_1_envelopes_scenarioYR",
+    "city_positive_1_envelope_scenarioYR",
+    "city_trending_1_envelope_scenarioYR",
 )
 PARADE_TREE_OBJECT_PREFIXES = ("TreePositions_trimmed-parade_", "LogPositions_trimmed-parade_")
 CITY_TREE_OBJECT_PREFIXES = ("TreePositions_city_", "LogPositions_city_")

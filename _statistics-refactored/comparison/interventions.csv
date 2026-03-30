@@ -1,4 +1,5 @@
 site,year,proposal_id,proposal_label,intervention,support,measure,metric_column,positive_value,trending_value,delta_trending_minus_positive,trending_pct_of_positive,positive_multiple_of_trending
+city,0,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 city,0,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 city,0,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,21598.0,920.0,-20678.0,4.259654,23.476087
 city,0,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -118,6 +119,7 @@ city,180,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,support
 city,180,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,39415.0,5636.0,-33779.0,14.299125,6.993435
 city,180,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,6150.0,12135.0,5985.0,197.317073,0.506799
 city,180,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,229338.0,47884.0,-181454.0,20.879226,4.78945
+trimmed-parade,0,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 trimmed-parade,0,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 trimmed-parade,0,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,12689.0,17.0,-12672.0,0.133974,746.411765
 trimmed-parade,0,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -132,6 +134,7 @@ trimmed-parade,0,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels
 trimmed-parade,0,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,15.0,37.0,22.0,246.666667,0.405405
 trimmed-parade,0,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,654.0,139285.0,138631.0,21297.400612,0.004695
 trimmed-parade,0,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,19597.0,0.0,-19597.0,0.0,
+trimmed-parade,10,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 trimmed-parade,10,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 trimmed-parade,10,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,8901.0,21.0,-8880.0,0.235929,423.857143
 trimmed-parade,10,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -146,6 +149,7 @@ trimmed-parade,10,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxel
 trimmed-parade,10,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,18.0,37.0,19.0,205.555556,0.486486
 trimmed-parade,10,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,7082.0,146653.0,139571.0,2070.785089,0.048291
 trimmed-parade,10,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,21319.0,0.0,-21319.0,0.0,
+trimmed-parade,30,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 trimmed-parade,30,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 trimmed-parade,30,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,37878.0,22.0,-37856.0,0.058081,1721.727273
 trimmed-parade,30,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -160,6 +164,7 @@ trimmed-parade,30,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxel
 trimmed-parade,30,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,31300.0,37.0,-31263.0,0.118211,845.945946
 trimmed-parade,30,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,170756.0,167918.0,-2838.0,98.337979,1.016901
 trimmed-parade,30,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,96289.0,0.0,-96289.0,0.0,
+trimmed-parade,60,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 trimmed-parade,60,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 trimmed-parade,60,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,44163.0,31.0,-44132.0,0.070195,1424.612903
 trimmed-parade,60,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -174,6 +179,7 @@ trimmed-parade,60,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxel
 trimmed-parade,60,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,42036.0,37.0,-41999.0,0.08802,1136.108108
 trimmed-parade,60,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,127192.0,144899.0,17707.0,113.921473,0.877798
 trimmed-parade,60,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,188725.0,1700.0,-187025.0,0.900782,111.014706
+trimmed-parade,90,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 trimmed-parade,90,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 trimmed-parade,90,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,44723.0,36.0,-44687.0,0.080495,1242.305556
 trimmed-parade,90,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -188,6 +194,7 @@ trimmed-parade,90,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxel
 trimmed-parade,90,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,38217.0,37.0,-38180.0,0.096816,1032.891892
 trimmed-parade,90,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,24316.0,58138.0,33822.0,239.093601,0.418246
 trimmed-parade,90,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,317273.0,0.0,-317273.0,0.0,
+trimmed-parade,120,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 trimmed-parade,120,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 trimmed-parade,120,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,46403.0,36.0,-46367.0,0.077581,1288.972222
 trimmed-parade,120,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -202,6 +209,7 @@ trimmed-parade,120,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxe
 trimmed-parade,120,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,40157.0,37.0,-40120.0,0.092138,1085.324324
 trimmed-parade,120,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,12875.0,121568.0,108693.0,944.217476,0.105908
 trimmed-parade,120,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,351796.0,0.0,-351796.0,0.0,
+trimmed-parade,150,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 trimmed-parade,150,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 trimmed-parade,150,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47367.0,32.0,-47335.0,0.067558,1480.21875
 trimmed-parade,150,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -216,6 +224,7 @@ trimmed-parade,150,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxe
 trimmed-parade,150,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,42463.0,37.0,-42426.0,0.087135,1147.648649
 trimmed-parade,150,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,12211.0,185375.0,173164.0,1518.098436,0.065872
 trimmed-parade,150,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,452422.0,0.0,-452422.0,0.0,
+trimmed-parade,180,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 trimmed-parade,180,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 trimmed-parade,180,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,48750.0,33.0,-48717.0,0.067692,1477.272727
 trimmed-parade,180,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -230,6 +239,7 @@ trimmed-parade,180,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxe
 trimmed-parade,180,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,43552.0,37.0,-43515.0,0.084956,1177.081081
 trimmed-parade,180,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,17795.0,191004.0,173209.0,1073.357685,0.093166
 trimmed-parade,180,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,407604.0,0.0,-407604.0,0.0,
+uni,0,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 uni,0,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,0.0,0.0,0.0,,
 uni,0,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,6025.0,126.0,-5899.0,2.091286,47.81746
 uni,0,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,0.0,0.0,0.0,,
@@ -244,6 +254,7 @@ uni,0,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported_
 uni,0,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,35.0,42.0,7.0,120.0,0.833333
 uni,0,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
 uni,0,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,6106.0,582.0,-5524.0,9.531608,10.491409
+uni,10,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 uni,10,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,7451.0,0.0,-7451.0,0.0,
 uni,10,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,8888.0,621.0,-8267.0,6.986949,14.312399
 uni,10,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,26920.0,0.0,-26920.0,0.0,
@@ -258,6 +269,7 @@ uni,10,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported
 uni,10,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,8345.0,587.0,-7758.0,7.034152,14.216354
 uni,10,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
 uni,10,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,49270.0,833.0,-48437.0,1.690684,59.147659
+uni,30,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 uni,30,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,20110.0,0.0,-20110.0,0.0,
 uni,30,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,16527.0,1362.0,-15165.0,8.24106,12.134361
 uni,30,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,52214.0,0.0,-52214.0,0.0,
@@ -272,6 +284,7 @@ uni,30,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported
 uni,30,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,16289.0,1301.0,-14988.0,7.986985,12.520369
 uni,30,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,2734.0,960.0,-1774.0,35.113387,2.847917
 uni,30,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,85073.0,2480.0,-82593.0,2.915143,34.303629
+uni,60,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 uni,60,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,31445.0,0.0,-31445.0,0.0,
 uni,60,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47601.0,2543.0,-45058.0,5.342325,18.718443
 uni,60,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,79873.0,0.0,-79873.0,0.0,
@@ -286,6 +299,7 @@ uni,60,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported
 uni,60,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,52398.0,2464.0,-49934.0,4.70247,21.265422
 uni,60,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
 uni,60,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,135972.0,4415.0,-131557.0,3.246992,30.797735
+uni,90,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 uni,90,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,31295.0,0.0,-31295.0,0.0,
 uni,90,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47307.0,3040.0,-44267.0,6.42611,15.561513
 uni,90,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,79649.0,0.0,-79649.0,0.0,
@@ -300,6 +314,7 @@ uni,90,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supported
 uni,90,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,52496.0,2937.0,-49559.0,5.594712,17.874021
 uni,90,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
 uni,90,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,179037.0,10851.0,-168186.0,6.060758,16.499585
+uni,120,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 uni,120,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,31272.0,0.0,-31272.0,0.0,
 uni,120,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47352.0,3694.0,-43658.0,7.801149,12.818625
 uni,120,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,78819.0,0.0,-78819.0,0.0,
@@ -314,6 +329,7 @@ uni,120,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supporte
 uni,120,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,52717.0,3684.0,-49033.0,6.988258,14.309718
 uni,120,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
 uni,120,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,208715.0,13354.0,-195361.0,6.398199,15.629399
+uni,150,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 uni,150,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,38917.0,0.0,-38917.0,0.0,
 uni,150,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47113.0,4132.0,-42981.0,8.770403,11.401985
 uni,150,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,105059.0,0.0,-105059.0,0.0,
@@ -328,6 +344,7 @@ uni,150,recruit,Recruit,Buffer-Feature,partial,recruit grassland voxels,supporte
 uni,150,recruit,Recruit,Rewild-Ground,full,recruit grassland voxels,supported_voxel_count,53473.0,4209.0,-49264.0,7.871262,12.704443
 uni,150,release_control,Release-Control,Brace-Feature,partial,arboreal voxels,supported_voxel_count,0.0,0.0,0.0,,
 uni,150,release_control,Release-Control,Buffer-Feature,full,arboreal voxels,supported_voxel_count,227472.0,15428.0,-212044.0,6.782373,14.744102
+uni,180,colonise,Colonise,Enrich-Envelope,full,enabled rooftop logs,supported_tree_count,,,,,
 uni,180,colonise,Colonise,Enrich-Envelope,full,green roof voxels,supported_voxel_count,38757.0,0.0,-38757.0,0.0,
 uni,180,colonise,Colonise,Rewild-Ground,mixed,rewilded ground voxels,supported_voxel_count,47614.0,4732.0,-42882.0,9.938253,10.06213
 uni,180,colonise,Colonise,Roughen-Envelope,partial,roughened envelope voxels,supported_voxel_count,104661.0,0.0,-104661.0,0.0,

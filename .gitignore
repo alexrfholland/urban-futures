@@ -7,6 +7,7 @@ packages/
 src/compute.client/python_client/compute_rhino3d.egg-info/
 src/compute.client/python_client/dist/
 *.pyc
+__pycache__/
 .aws
 venv
 .env
@@ -51,6 +52,8 @@ RhinoCompute.cs
 .vscode/
 data/
 data-refactored/
+_data-refactored/
+_statistics-refactored/plots/
 outputs/
 util/
 pathwalker_3d_results/

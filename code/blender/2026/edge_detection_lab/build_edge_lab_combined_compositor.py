@@ -10,7 +10,7 @@ import bpy
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
 CODE_ROOT = REPO_ROOT / "code" / "blender" / "2026" / "edge_detection_lab"
 DATA_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab"
-DEFAULT_OUTPUT_ROOT = DATA_ROOT / "outputs" / "edge_lab_output_suite_baseline_20260329"
+DEFAULT_OUTPUT_ROOT = DATA_ROOT / "outputs" / "edge_lab_output_suite_city_20260329"
 
 
 def env_path(name: str, default: Path) -> Path:
@@ -32,13 +32,12 @@ OUTPUT_BLEND_PATH = env_path(
 OUTPUT_ROOT = env_path("EDGE_LAB_OUTPUT_ROOT", DEFAULT_OUTPUT_ROOT)
 EXR_ROOT = env_path(
     "EDGE_LAB_EXR_ROOT",
-    REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6_baseline-city",
+    REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6-city",
 )
 PATHWAY_EXR = env_path("EDGE_LAB_PATHWAY_EXR", preferred_exr(EXR_ROOT, "pathway_state.exr", "city-pathway_state.exr"))
 PRIORITY_EXR = env_path("EDGE_LAB_PRIORITY_EXR", preferred_exr(EXR_ROOT, "priority.exr", "city-city_priority.exr"))
 EXISTING_EXR = env_path("EDGE_LAB_EXISTING_EXR", preferred_exr(EXR_ROOT, "existing_condition.exr", "city-existing_condition.exr"))
 TRENDING_EXR = env_path("EDGE_LAB_TRENDING_EXR", preferred_exr(EXR_ROOT, "trending_state.exr", "city-trending_state.exr"))
-MIST_SOURCE_BLEND = env_path("EDGE_LAB_MIST_SOURCE_BLEND", OUTPUT_ROOT / "blends" / "outlines_mist.blend")
 
 
 SCENE_BUILDERS = (
@@ -46,6 +45,7 @@ SCENE_BUILDERS = (
     ("Normals", CODE_ROOT / "render_exr_normals_v2_blender.py", OUTPUT_ROOT / "normals"),
     ("Resources", CODE_ROOT / "render_exr_arboreal_resource_fills_v1_blender.py", OUTPUT_ROOT / "resources"),
     ("DepthOutliner", CODE_ROOT / "render_exr_arboreal_depth_outliner_baseline_blender.py", OUTPUT_ROOT / "depth_outliner"),
+    ("MistOutlines", CODE_ROOT / "render_exr_arboreal_mist_variants_v2_blender.py", OUTPUT_ROOT / "outlines_mist"),
 )
 
 
@@ -96,6 +96,8 @@ def normalize_scene_color_management(scene: bpy.types.Scene) -> None:
 
 def configure_module(module, scene_output_dir: Path) -> None:
     module.OUTPUT_DIR = scene_output_dir
+    if hasattr(module, "OUTPUT_ROOT"):
+        module.OUTPUT_ROOT = scene_output_dir
     module.BLEND_PATH = OUTPUT_BLEND_PATH
     if hasattr(module, "EXR_ROOT"):
         module.EXR_ROOT = EXR_ROOT
@@ -107,37 +109,23 @@ def configure_module(module, scene_output_dir: Path) -> None:
         module.EXISTING_EXR = EXISTING_EXR
     if hasattr(module, "TRENDING_EXR"):
         module.TRENDING_EXR = TRENDING_EXR
+    if hasattr(module, "RENDER_WIDTH") and hasattr(module, "RENDER_HEIGHT") and hasattr(module, "detect_resolution_from_exr"):
+        try:
+            module.RENDER_WIDTH, module.RENDER_HEIGHT = module.detect_resolution_from_exr(module.PATHWAY_EXR)
+        except Exception:
+            pass
 
 
 def build_scene_from_module(scene_name: str, module_path: Path, scene_output_dir: Path) -> None:
     module = load_module(module_path)
     scene = create_scene(scene_name)
+    bpy.context.window.scene = scene
     configure_module(module, scene_output_dir)
     module.build_scene(scene)
     normalize_scene_color_management(scene)
     scene["edge_lab_builder"] = module_path.name
     scene["edge_lab_output_dir"] = str(scene_output_dir)
     log(f"Built {scene_name} from {module_path.name}")
-
-
-def append_mist_scene() -> None:
-    if not MIST_SOURCE_BLEND.exists():
-        scene = create_scene("MistOutlines")
-        scene["edge_lab_builder"] = "pending_mist_refactor"
-        log("Created placeholder MistOutlines scene; source blend not found.")
-        return
-    with bpy.data.libraries.load(str(MIST_SOURCE_BLEND), link=False) as (data_from, data_to):
-        if "Scene" not in data_from.scenes:
-            raise ValueError(f"'Scene' not found in {MIST_SOURCE_BLEND}")
-        data_to.scenes = ["Scene"]
-    appended_scene = data_to.scenes[0]
-    if appended_scene is None:
-        raise RuntimeError(f"Failed to append scene from {MIST_SOURCE_BLEND}")
-    appended_scene.name = "MistOutlines"
-    normalize_scene_color_management(appended_scene)
-    appended_scene["edge_lab_builder"] = "mist_source_blend"
-    appended_scene["edge_lab_output_dir"] = str(OUTPUT_ROOT / "outlines_mist")
-    log(f"Appended MistOutlines from {MIST_SOURCE_BLEND}")
 
 
 def order_scenes(scene_names: list[str]) -> None:
@@ -165,9 +153,6 @@ def main() -> None:
     for scene_name, module_path, scene_output_dir in SCENE_BUILDERS:
         build_scene_from_module(scene_name, module_path, scene_output_dir)
         built_names.append(scene_name)
-
-    append_mist_scene()
-    built_names.append("MistOutlines")
 
     for scene in list(bpy.data.scenes):
         if scene.name not in set(built_names + ["Scratch"]):

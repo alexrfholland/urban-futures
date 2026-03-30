@@ -1279,16 +1279,19 @@ def build_comparison_table(
             "positive_multiple_of_trending",
         ])
 
-    pivot = raw_df.pivot_table(
-        index=key_columns,
-        columns="scenario",
-        values="value",
-        aggfunc="first",
-    ).reset_index()
-    if "positive" not in pivot.columns:
-        pivot["positive"] = pd.NA
-    if "trending" not in pivot.columns:
-        pivot["trending"] = pd.NA
+    comparison = raw_df[key_columns].drop_duplicates().reset_index(drop=True)
+    positive_values = (
+        raw_df[raw_df["scenario"] == "positive"][key_columns + ["value"]]
+        .drop_duplicates(subset=key_columns, keep="first")
+        .rename(columns={"value": "positive_value"})
+    )
+    trending_values = (
+        raw_df[raw_df["scenario"] == "trending"][key_columns + ["value"]]
+        .drop_duplicates(subset=key_columns, keep="first")
+        .rename(columns={"value": "trending_value"})
+    )
+    comparison = comparison.merge(positive_values, on=key_columns, how="left")
+    comparison = comparison.merge(trending_values, on=key_columns, how="left")
 
     def pct_of_positive(row):
         positive = row["positive_value"]
@@ -1304,7 +1307,6 @@ def build_comparison_table(
             return pd.NA
         return round(float(positive) / float(trending), 6)
 
-    comparison = pivot.rename(columns={"positive": "positive_value", "trending": "trending_value"})
     comparison["delta_trending_minus_positive"] = comparison["trending_value"] - comparison["positive_value"]
     comparison["trending_pct_of_positive"] = comparison.apply(pct_of_positive, axis=1)
     comparison["positive_multiple_of_trending"] = comparison.apply(positive_multiple, axis=1)
