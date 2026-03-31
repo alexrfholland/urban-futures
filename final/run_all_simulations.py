@@ -90,6 +90,7 @@ def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, ena
             site, scenario, year, voxel_size, subsetDS.copy(deep=True),
             treeDF_scenario, logDF_scenario, poleDF_scenario, enable_visualization,
             return_polydata=True,
+            save_raw_vtk=False,
         )
 
         vtk_file, state_polydata = vtk_result

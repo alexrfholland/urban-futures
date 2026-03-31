@@ -18,6 +18,17 @@ import os
 # Set a random seed for reproducibility
 random.seed(42)
 
+_TEMPLATE_CACHE: dict[tuple[str, float], tuple[pd.DataFrame, Path]] = {}
+
+
+def _resource_debug_enabled() -> bool:
+    return os.environ.get("RESOURCE_DISTRIBUTOR_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _resource_debug(*args, **kwargs):
+    if _resource_debug_enabled():
+        print(*args, **kwargs)
+
 
 # Assume tree_templates is already loaded in RAM as a dictionary
 # processedDF is the dataframe containing tree instances (e.g., x, y, z values to translate)
@@ -484,20 +495,20 @@ def query_tree_template(df, precolonial, size, control, tree_id, rng):
         size = 'snag'
 
     # 1. Try to find an exact match
-    result = df.loc[(df['precolonial'] == precolonial) & 
-                    (df['size'] == size) & 
-                    (df['control'] == control) & 
+    result = df.loc[(df['precolonial'] == precolonial) &
+                    (df['size'] == size) &
+                    (df['control'] == control) &
                     (df['tree_id'] == tree_id)]
-    
+
     if not result.empty:
         print(f"Exact match found: {(precolonial, size, control, tree_id)}")
         return result.iloc[0]['template']
 
     # 2. Try to find a match with the first three columns, pick any tree_id if no match found
-    result = df.loc[(df['precolonial'] == precolonial) & 
-                    (df['size'] == size) & 
+    result = df.loc[(df['precolonial'] == precolonial) &
+                    (df['size'] == size) &
                     (df['control'] == control)]
-    
+
     if not result.empty:
         print(f"Falling back to control and picking random tree_id for: {(precolonial, size, control)}")
         chosen_template = result.sample(1, random_state=rng.integers(1e9)).iloc[0]['template']
@@ -505,9 +516,9 @@ def query_tree_template(df, precolonial, size, control, tree_id, rng):
         return chosen_template
 
     # 3. Try to match by just `precolonial` and `size`, and randomly pick control and tree_id
-    result = df.loc[(df['precolonial'] == precolonial) & 
+    result = df.loc[(df['precolonial'] == precolonial) &
                     (df['size'] == size)]
-    
+
     if not result.empty:
         print(f"Falling back to size and picking random control and tree_id for: {(precolonial, size)}")
         chosen_template = result.sample(1, random_state=rng.integers(1e9)).iloc[0]['template']
@@ -600,9 +611,15 @@ def _load_full_template_table(template_dir: Path) -> tuple[pd.DataFrame, Path]:
 
 def _load_tree_templates(voxel_size: float | int) -> tuple[pd.DataFrame, Path]:
     template_dir = _template_root()
+    cache_key = (str(template_dir.resolve()), float(voxel_size))
+    if cache_key in _TEMPLATE_CACHE:
+        return _TEMPLATE_CACHE[cache_key]
+
     voxel_prefix = f"{voxel_size:g}"
     if float(voxel_size) == 0:
-        return _load_full_template_table(template_dir)
+        loaded = _load_full_template_table(template_dir)
+        _TEMPLATE_CACHE[cache_key] = loaded
+        return loaded
 
     voxel_candidates = [
         template_dir / f"{voxel_prefix}_combined_voxel_templateDF.pkl",
@@ -610,7 +627,9 @@ def _load_tree_templates(voxel_size: float | int) -> tuple[pd.DataFrame, Path]:
     ]
     for path in voxel_candidates:
         if path.exists():
-            return pd.read_pickle(path), path
+            loaded = (pd.read_pickle(path), path)
+            _TEMPLATE_CACHE[cache_key] = loaded
+            return loaded
 
     raise FileNotFoundError(
         f"Could not find voxel template table for voxel_size={voxel_size} in {template_dir}. "
@@ -625,15 +644,12 @@ def process_all_trees(locationDF, voxel_size=0.5):
 
     tree_templates_df, input_path = _load_tree_templates(voxel_size)
     print(f"Loaded tree templates from {input_path}")
-    
-    # Debug the loaded DataFrame
-    print("DataFrame columns:", tree_templates_df.columns)
-    print("DataFrame info:", tree_templates_df.info())
-    print("First row:", tree_templates_df.iloc[0])
-    
-    # Get the first template
-    first_template = tree_templates_df.iloc[0]['template']
-    print(f'Template df is {first_template.head()}')
+    _resource_debug("DataFrame columns:", tree_templates_df.columns)
+    if _resource_debug_enabled():
+        _resource_debug("DataFrame info:", tree_templates_df.info())
+        _resource_debug("First row:", tree_templates_df.iloc[0])
+        first_template = tree_templates_df.iloc[0]['template']
+        _resource_debug(f'Template df is {first_template.head()}')
 
     # Enforce Python native types and strip potential hidden characters
     locationDF['precolonial'] = locationDF['precolonial'].astype(bool)  # Convert to Python bool

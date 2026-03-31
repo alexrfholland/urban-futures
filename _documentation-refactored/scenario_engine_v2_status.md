@@ -1005,9 +1005,12 @@ Comparison artifacts for the promoted candidate:
 
 Current next step:
 
-- implement the performance pass:
+- safe optimization pass implemented:
   - add `save_raw_vtk=False`
   - cache the template pickle once per run
-  - replace per-tree dataframe filtering with prebuilt lookup dicts
-  - replace `dask_df.iterrows()` with a cheaper iteration path
   - reduce xarray debug / validation in production mode
+- optimization caveat:
+  - exact rerun equality from the saved year-state CSVs is currently blocked by pre-existing nondeterministic tree-template fallback sampling in the Dask resource distributor
+  - the more aggressive lookup/iteration rewrite was not kept because it changed exported VTK contents
+- next optimization prerequisite:
+  - make fallback template selection deterministic before changing the tree-distribution hot path further

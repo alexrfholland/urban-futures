@@ -22,6 +22,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _voxel_validation_enabled() -> bool:
+    return os.environ.get("VOXELISER_VALIDATE", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _voxel_debug_enabled() -> bool:
+    return os.environ.get("VOXELISER_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 
 
 # ================================
@@ -65,10 +73,11 @@ def print_bounds(ds, df):
         df['z'].min(), df['z'].max()
     )
 
-    print(f"Dataset (xarray) bounds: xmin={ds_bounds[0]}, xmax={ds_bounds[1]}, "
-          f"ymin={ds_bounds[2]}, ymax={ds_bounds[3]}, zmin={ds_bounds[4]}, zmax={ds_bounds[5]}")
-    print(f"Resource DataFrame bounds: xmin={df_bounds[0]}, xmax={df_bounds[1]}, "
-          f"ymin={df_bounds[2]}, ymax={df_bounds[3]}, zmin={df_bounds[4]}, zmax={df_bounds[5]}")
+    if _voxel_debug_enabled():
+        print(f"Dataset (xarray) bounds: xmin={ds_bounds[0]}, xmax={ds_bounds[1]}, "
+              f"ymin={ds_bounds[2]}, ymax={ds_bounds[3]}, zmin={ds_bounds[4]}, zmax={ds_bounds[5]}")
+        print(f"Resource DataFrame bounds: xmin={df_bounds[0]}, xmax={df_bounds[1]}, "
+              f"ymin={df_bounds[2]}, ymax={df_bounds[3]}, zmin={df_bounds[4]}, zmax={df_bounds[5]}")
 
 def polydata_to_flat_dict(point_data, prefix):
     """
@@ -945,17 +954,19 @@ def integrate_resources_into_xarray(ds, treeLocationsDF, templateResolution = 0.
         treeLocationsDF['nodeType'] = 'tree'
         treeLocationsDF, treeResource_df = a_resource_distributor_dataframes.process_all_trees(treeLocationsDF, voxel_size=templateResolution)
 
-        #check if any columns starting with stat_
-        if any(col.startswith('stat_') for col in treeResource_df.columns):
-            logger.info(f"Columns starting with stat_: {treeResource_df.columns[treeResource_df.columns.str.startswith('stat_')]}")
-        else:
-            logger.info("No columns starting with stat_")
+        if _voxel_debug_enabled():
+            if any(col.startswith('stat_') for col in treeResource_df.columns):
+                logger.info(f"Columns starting with stat_: {treeResource_df.columns[treeResource_df.columns.str.startswith('stat_')]}")
+            else:
+                logger.info("No columns starting with stat_")
 
 
 
-        print('rotating resource structures...')
+        if _voxel_debug_enabled():
+            print('rotating resource structures...')
         treeLocationsDF, treeResource_df = a_rotate_resource_structures.process_rotations(treeLocationsDF, treeResource_df, valid_points)
-        print(f'resource_df columns are {treeResource_df.columns}')
+        if _voxel_debug_enabled():
+            print(f'resource_df columns are {treeResource_df.columns}')
         treeLocationsDF['nodeType'] = 'tree'
         treeResource_df['nodeType'] = 'tree'
 
@@ -966,7 +977,8 @@ def integrate_resources_into_xarray(ds, treeLocationsDF, templateResolution = 0.
         location_DF = treeLocationsDF
 
         if poleLocationsDF is not None and len(poleLocationsDF) > 0:
-            print('processing poles')
+            if _voxel_debug_enabled():
+                print('processing poles')
             poleLocationsDF['nodeType'] = 'pole'
             poleLocationsDF, poleResourceDF = a_resource_distributor_dataframes.process_all_trees(poleLocationsDF, templateResolution)
             poleLocationsDF, poleResourceDF = a_rotate_resource_structures.process_rotations(poleLocationsDF, poleResourceDF, valid_points)
@@ -974,8 +986,9 @@ def integrate_resources_into_xarray(ds, treeLocationsDF, templateResolution = 0.
             poleLocationsDF['nodeTypeInt'] = 2
             poleResourceDF['nodeTypeInt'] = 2
 
-            print(f'poleResourceDF columns are {poleResourceDF.columns}')
-            print('poles')
+            if _voxel_debug_enabled():
+                print(f'poleResourceDF columns are {poleResourceDF.columns}')
+                print('poles')
 
 
         if logLocationsDF is not None and len(logLocationsDF) > 0:
@@ -1014,40 +1027,38 @@ def integrate_resources_into_xarray(ds, treeLocationsDF, templateResolution = 0.
         # Integrate resource DataFrame into voxel Dataset
         ds, voxelised_resource_df = integrate_resource_df_into_voxels(ds, resource_DF, voxel_size=voxel_size)
 
-        print('Integration complete!')
+        if _voxel_debug_enabled():
+            print('Integration complete!')
 
         # Restore the original attributes (bounds, voxel_size)
         ds.attrs.update(original_attrs)
 
-        # Inspect the merged Dataset
-        logger.info(f"Merged Dataset variables: {list(ds.data_vars.keys())}")
-        logger.info(f"Merged Dataset dimensions: {ds.dims}")
+        if _voxel_validation_enabled():
+            logger.info(f"Merged Dataset variables: {list(ds.data_vars.keys())}")
+            logger.info(f"Merged Dataset dimensions: {ds.dims}")
 
-        # Ensure that all variables have the same length as 'voxel' dimension
-        num_voxels = len(ds['voxel'])
-        for var in ds.data_vars:
-            var_length = ds[var].sizes['voxel']
-            if var_length != num_voxels:
-                logger.error(f"Variable '{var}' has length {var_length}, expected {num_voxels}.")
-            else:
-                logger.info(f"Variable '{var}' has correct length {var_length}.")
+            num_voxels = len(ds['voxel'])
+            for var in ds.data_vars:
+                var_length = ds[var].sizes['voxel']
+                if var_length != num_voxels:
+                    logger.error(f"Variable '{var}' has length {var_length}, expected {num_voxels}.")
+                else:
+                    logger.info(f"Variable '{var}' has correct length {var_length}.")
 
-        # Validate uniqueness of voxel indices
-        check_unique_voxel_indices(ds)
+            check_unique_voxel_indices(ds)
 
         # Identify 'resource_' prefixed columns ending with '_count'
         resource_prefix = 'resource_'
         resource_count_vars = [var for var in ds.data_vars if var.startswith(resource_prefix) and var.endswith('_count')]
 
         # Validate resource counts
-        validate_resource_counts(ds, voxelised_resource_df, resource_count_vars)
+        if _voxel_validation_enabled():
+            validate_resource_counts(ds, voxelised_resource_df, resource_count_vars)
+            validate_integrated_dataset(ds, voxelised_resource_df, resource_count_vars)
 
-        # Final validation
-        validate_integrated_dataset(ds, voxelised_resource_df, resource_count_vars)
-
-        print(f'ds attributes are {ds.attrs}')  # Should display bounds and voxel_size before saving
-
-        print(f'value counts of nodeType in location_DF: {location_DF["nodeType"].value_counts()}')
+        if _voxel_debug_enabled():
+            print(f'ds attributes are {ds.attrs}')
+            print(f'value counts of nodeType in location_DF: {location_DF["nodeType"].value_counts()}')
 
         return ds, location_DF
 

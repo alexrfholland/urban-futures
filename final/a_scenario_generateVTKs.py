@@ -687,6 +687,7 @@ def generate_vtk(
     poleDF=None,
     enable_visualization=False,
     return_polydata=False,
+    save_raw_vtk=False,
 ):
     """
     Generates a VTK file for a given site, scenario, and year.
@@ -808,10 +809,11 @@ def generate_vtk(
     polydata = a_helper_functions.convert_xarray_into_polydata(ds)
     polydata = process_polydata(polydata)
     
-    # Save polydata
-    vtk_file = scenario_state_vtk_path(site, scenario, year, voxel_size)
-    polydata.save(vtk_file)
-    print(f'Saved VTK file to {vtk_file}')
+    vtk_file = None
+    if save_raw_vtk:
+        vtk_file = scenario_state_vtk_path(site, scenario, year, voxel_size)
+        polydata.save(vtk_file)
+        print(f'Saved VTK file to {vtk_file}')
 
     #--------------------------------------------------------------------------
     # STEP 6: OPTIONAL VISUALIZATION
@@ -825,8 +827,8 @@ def generate_vtk(
         plot_scenario_rewilded(polydata, treeDF, year, site)
     
     if return_polydata:
-        return str(vtk_file), polydata
-    return str(vtk_file)
+        return (str(vtk_file) if vtk_file is not None else None), polydata
+    return str(vtk_file) if vtk_file is not None else None
 
 def load_scenario_dataframes(site, scenario, year, voxel_size):
     """
