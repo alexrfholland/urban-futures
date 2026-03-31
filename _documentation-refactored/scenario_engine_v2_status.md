@@ -609,6 +609,21 @@ Interpretation:
 - that propagates into nurse-log / fallen-tree and some ground-linked tree indicators
 - the old snag geometry choice is comparatively less important to the pathway table than the fallen swap
 
+Refreshed status:
+
+- the refreshed `template-edits` run is now complete on top of the fixed v2 engine
+- raw scenario VTKs and `urban_features` VTKs are complete for all sites, both scenarios, and years `0, 10, 30, 60, 90, 120, 150, 180`
+- augmented `state_with_indicators` VTKs are complete for all sites:
+  - `17` per site = baseline + `positive`/`trending` across the `8` target years
+- refreshed render sequences are complete under:
+  - [_data-refactored/v2engine_outputs-template-edits/validation/renders](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs-template-edits/validation/renders)
+  - `classic`
+  - `merged`
+  - `proposal-hybrid`
+  - `51` PNGs per view
+- refreshed indicator CSVs are complete under:
+  - [data/revised/final-v2-template-edits/output/csv](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2-template-edits/output/csv)
+
 ## Outstanding Tasks
 
 ### 1. Complete Full Validation Refresh
@@ -728,7 +743,66 @@ The likely next decision is whether the canonical combined-template build should
 - the old-geometry updated snag
 - or an explicit runtime switch
 
-### 7. Investigate Ground / Envelope Divergence
+### 7. Baseline Variants Are Now First-Class Outputs
+
+Baseline regeneration no longer needs manual env juggling.
+
+Use:
+
+- [final/a_scenario_baseline_variants.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_baseline_variants.py)
+
+Purpose:
+
+- generate baseline-only iterations against a chosen template library
+- keep each iteration on disk under a named folder
+- make it easy to compare baseline effects before promoting a template variant
+
+Output pattern:
+
+- scenario root:
+  - `data/revised/baseline-variants/<variant-name>/baselines/...`
+- engine root:
+  - `_data-refactored/baseline-variants/<variant-name>/...`
+
+Each baseline iteration writes:
+
+- baseline trees CSV
+- baseline resources VTK
+- baseline terrain VTK
+- baseline combined VTK
+- baseline `urban_features` VTK
+- `variant_metadata.json`
+
+Current live use:
+
+- the template-edits candidate now also has regenerated template-edits baselines on file under:
+  - [data/revised/baseline-variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/baseline-variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old)
+- those baseline assets were then copied into:
+  - [data/revised/final-v2-template-edits/baselines](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2-template-edits/baselines)
+- the older reused canonical baselines were preserved in:
+  - [data/revised/final-v2-template-edits/baselines/SS_20260331_135725_pre_template_variant_baselines](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2-template-edits/baselines/SS_20260331_135725_pre_template_variant_baselines)
+- per-site indicator CSVs were then refreshed against those new baseline counts with:
+  - [final/refresh_indicator_csvs_from_baseline.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/refresh_indicator_csvs_from_baseline.py)
+- refreshed comparison outputs now live at:
+  - [comparison_pathways_indicators_template_edits_fallens-nonpre-direct_snags-elm-snags-old.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_indicators_template_edits_fallens-nonpre-direct_snags-elm-snags-old.md)
+  - [comparison_pathways_v2_vs_template_edits_fallens-nonpre-direct_snags-elm-snags-old.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_v2_vs_template_edits_fallens-nonpre-direct_snags-elm-snags-old.md)
+
+Example:
+
+```bash
+.venv/bin/python final/a_scenario_baseline_variants.py \
+  --variant-name template-edits__fallens-nonpre-direct__snags-elm-snags-old \
+  --template-root _data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old/trees \
+  --sites all
+```
+
+### 8. Reclassify Colonise Translocated Logs
+
+TODO:
+
+- change translocated logs under `Colonise` so their `size == 'fallen'`
+
+### 9. Investigate Ground / Envelope Divergence
 
 This issue is now narrowed to a specific VTK writeback bug, and the first fix pass is implemented.
 
@@ -757,6 +831,45 @@ Pre-fix evidence:
 
 - `uni` trending:
   - v1 `search_bioavailable == low-vegetation`: `6,325`
+
+### 10. Add Stable Persistent Tree Identity Across Years
+
+Current issue:
+
+- `structureID` is not a persistent tree identity in the exported v2 CSVs
+- it is reassigned from scratch at every saved year in:
+  - [engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L880)
+  - [engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L928)
+- new recruits are also created with temporary:
+  - `tree_number = -1`
+  - `NodeID = -1`
+  - `debugNodeID = -1`
+  - in [engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L609)
+
+What this breaks:
+
+- simple year-to-year tracking of whether a specific fallen tree really disappeared
+- persistence auditing for:
+  - `fallen`
+  - `snag`
+  - replacement trees
+  - recruited trees
+
+Observed consequence:
+
+- some IDs that drop out of the fallen set appear in later years under different sizes
+- so `structureID` currently cannot be used as proof of object persistence or deletion
+
+TODO:
+
+- add a stable persistent tree UUID that is preserved across years
+- preserve it through:
+  - aging
+  - senescence transitions
+  - snag/fallen transitions
+  - replacement
+  - recruitment
+- then validate fallen disappearance using that UUID instead of exported `structureID`
   - v2 `search_bioavailable == low-vegetation`: `480,872`
   - v2 recruit rows with `NodeID = -1` and `rewilded in {node-rewilded, footprint-depaved}`: `3`
 - `city` trending:
@@ -820,3 +933,81 @@ Current status:
 - canonical v2 validation refactored outputs now live in [_data-refactored/v2engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs)
 - all three sites now have `17` `state_with_indicators` VTKs each in the canonical v2 validation root: baseline plus `positive` and `trending` for `0, 10, 30, 60, 90, 120, 150, 180`
 - proposal preview sequences now exist for all three sites, both scenarios, and all year states under [_data-refactored/v2engine_outputs/validation/renders/proposal](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs/validation/renders/proposal)
+
+### 11. Stable Structure IDs and Decayed Phase
+
+Implemented:
+
+- `structureID` is now the stable persistent structure identity across years for:
+  - trees
+  - replacement trees
+  - recruited trees
+  - baseline trees
+  - logs
+  - poles
+- helper module:
+  - [_code-refactored/refactor_code/scenario/structure_ids.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/structure_ids.py)
+- v2 engine integration:
+  - [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py)
+
+Verification:
+
+- duplicate `structureID` count within a saved year: `0`
+- fallen removal can now be checked cleanly by stable `structureID`
+- trimmed-parade positive check:
+  - `90 -> 120`: `4` fallen IDs disappear entirely
+  - `120 -> 150`: `14` fallen IDs disappear entirely
+  - `150 -> 180`: `22` fallen IDs disappear entirely
+- `dropped_but_still_present_other_size = 0`
+
+Implemented new deadwood end phase:
+
+- `fallen` persists for `50-150` years, then becomes `decayed`
+- `decayed` persists for `50-100` years, then is removed
+- the new size is now wired through:
+  - sim core
+  - template variants
+  - baselines
+  - VTK outputs
+  - capability indicators
+  - preview colors
+  - Blender import size mapping
+
+Template source for `decayed`:
+
+- based on the old small fallen geometry
+- generated by the tree-variant builder as:
+  - `template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen`
+
+Canonical v2 now includes:
+
+- the template edits:
+  - `fallens_use = nonpre-direct`
+  - `snags_use = elm-snags-old`
+- the `NodeID = -1` ground-mapping fix
+- the in-memory `urban_features` handoff
+- stable persistent `structureID`
+- the `decayed` lifecycle phase
+
+Canonical roots after promotion:
+
+- scenario outputs:
+  - [data/revised/final-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2)
+- refactored outputs:
+  - [_data-refactored/v2engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs)
+
+Comparison artifacts for the promoted candidate:
+
+- [comparison_pathways_indicators_template_edits_decayed.csv](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_indicators_template_edits_decayed.csv)
+- [comparison_pathways_indicators_template_edits_decayed.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_indicators_template_edits_decayed.md)
+- [comparison_pathways_v2_vs_template_edits_decayed.csv](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_v2_vs_template_edits_decayed.csv)
+- [comparison_pathways_v2_vs_template_edits_decayed.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_v2_vs_template_edits_decayed.md)
+
+Current next step:
+
+- implement the performance pass:
+  - add `save_raw_vtk=False`
+  - cache the template pickle once per run
+  - replace per-tree dataframe filtering with prebuilt lookup dicts
+  - replace `dask_df.iterrows()` with a cheaper iteration path
+  - reduce xarray debug / validation in production mode

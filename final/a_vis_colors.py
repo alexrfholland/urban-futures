@@ -23,7 +23,8 @@ def get_lifecycle_colors():
         "large": (249, 159, 118),       # Salmon/orange
         "senescing": (235, 155, 197),   # Pink
         "snag": (252, 227, 88),         # Yellow
-        "fallen": (130, 203, 185),       # Teal/mint
+        "fallen": (130, 203, 185),      # Teal/mint
+        "decayed": (95, 134, 126),      # Darker decayed deadwood
         "artificial": (255, 0, 0)        # Red
     }
 
@@ -145,7 +146,8 @@ def get_lifecycle_display_names():
         "large": "Large Tree",
         "senescing": "Senescing Tree",
         "snag": "Snag", 
-        "fallen": "Fallen Log"
+        "fallen": "Fallen Log",
+        "decayed": "Decayed Log",
     }
 
 def get_bioenvelope_display_names():
@@ -245,7 +247,8 @@ def map_numeric_to_lifecycle_indices(numeric_data):
     result[(numeric_data >= 20) & (numeric_data < 30)] = lifecycle_to_int.get('large', 0)
     result[(numeric_data >= 30) & (numeric_data < 40)] = lifecycle_to_int.get('senescing', 0)
     result[(numeric_data >= 40) & (numeric_data < 50)] = lifecycle_to_int.get('snag', 0)
-    result[(numeric_data >= 50)] = lifecycle_to_int.get('fallen', 0)
+    result[(numeric_data >= 50) & (numeric_data < 60)] = lifecycle_to_int.get('fallen', 0)
+    result[(numeric_data >= 60)] = lifecycle_to_int.get('decayed', 0)
     
     return result
 

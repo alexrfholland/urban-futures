@@ -20,6 +20,7 @@ from refactor_code.paths import (
     scenario_baseline_terrain_vtk_path,
     scenario_baseline_trees_csv_path,
 )
+from refactor_code.scenario.structure_ids import assign_baseline_tree_structure_ids
 
 
 #f"data/revised/final/{site}-roadVoxels-coloured.vtk"
@@ -156,6 +157,14 @@ def calculate_useful_life_expectancy(df):
         np.random.seed(44)
         df.loc[fallen_mask, 'age'] = np.random.uniform(500, 600, num_fallen)
         print(f"Set ages for {num_fallen} fallen trees (500-600 years)")
+
+    # Set ages for decayed trees
+    decayed_mask = df['size'] == 'decayed'
+    num_decayed = decayed_mask.sum()
+    if num_decayed > 0:
+        np.random.seed(45)
+        df.loc[decayed_mask, 'age'] = np.random.uniform(600, 700, num_decayed)
+        print(f"Set ages for {num_decayed} decayed trees (600-700 years)")
     
     # Calculate useful life expectancy
     df['useful_life_expectancy'] = 600 - df['age']
@@ -436,17 +445,22 @@ def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/base
     fallen = senescing_trees.copy()
     fallen['size'] = 'fallen'
 
+    # Create decayed trees
+    decayed = senescing_trees.copy()
+    decayed['size'] = 'decayed'
+
     # Add snags and fallen trees to original dataframe
     baseline_tree_df = pd.concat([
         baseline_tree_df,  # Keep all original trees including senescing
         snags,            # Add snag variants
-        fallen            # Add fallen variants
+        fallen,           # Add fallen variants
+        decayed           # Add decayed variants
     ], ignore_index=True)
 
     #add 'tree_number', 'Node_ID', 'structure_id', which are all just the index
     baseline_tree_df['tree_number'] = baseline_tree_df.index
     baseline_tree_df['NodeID'] = baseline_tree_df.index
-    baseline_tree_df['structureID'] = baseline_tree_df.index
+    baseline_tree_df['structureID'] = np.nan
 
     #initialsie ['rotateZ'] as a random rotation between 0 and 360 use a seed
     np.random.seed(42)
@@ -469,6 +483,7 @@ def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/base
 
     print('\nAssigning tree positions...')
     baseline_tree_df = getPositions(baseline_tree_df, terrain_df)
+    baseline_tree_df = assign_baseline_tree_structure_ids(baseline_tree_df, site=site)
 
     print('\nCalculating useful life expectancy...')
     baseline_tree_df = calculate_useful_life_expectancy(baseline_tree_df)

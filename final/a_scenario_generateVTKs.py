@@ -426,8 +426,8 @@ def finalDSprocessing(ds):
     # Initialize with a copy of the fallen log resource
     ds['updatedResource_groundDeadBranches'] = ds['resource_fallen log'].copy()
     
-    # Get mask for 'forest_size' == 'fallen'
-    mask_fallen = ds['forest_size'] == 'fallen'
+    # Get mask for ground deadwood phases
+    mask_fallen = (ds['forest_size'] == 'fallen') | (ds['forest_size'] == 'decayed')
     
     # Update 'updatedResource_groundDeadBranches' for fallen trees
     ds['updatedResource_groundDeadBranches'].loc[mask_fallen] = (
@@ -628,7 +628,7 @@ def plot_scenario_rewilded(polydata, treeDF, years_passed, site):
 
 def label_trees(df, plotter):
     # Prepare points and labels from the filtered subset
-    TARGET_SIZES_FOR_LABELS = ['large', 'senescing', 'snag', 'fallen']
+    TARGET_SIZES_FOR_LABELS = ['large', 'senescing', 'snag', 'fallen', 'decayed']
     label_df = df[df['size'].isin(TARGET_SIZES_FOR_LABELS)]
     label_points = label_df[['x', 'y', 'z']].values
     label_points[:,2] = label_points[:,2] + 10  # Give some elevation to the labels so they are easier to see

@@ -39,7 +39,8 @@ def convert_size(value):
         'large': 2,
         'senescing': 3,
         'snag': 4,
-        'fallen': 5
+        'fallen': 5,
+        'decayed': 6,
     }
     # Vectorized mapping using pandas
     return pd.Series(value).str.lower().map(size_map).fillna(-1)

@@ -84,7 +84,7 @@ def format_voxel_size(voxel_size):
 # │ Lizard.self.epiphyte            │ stat_epiphyte > 0                                             │
 # │ Lizard.others.notpaved          │ ground_not_paved                                              │
 # │ Lizard.generations.nurse-log    │ stat_fallen log > 0                                           │
-# │ Lizard.generations.fallen-tree  │ forest_size == fallen                                         │
+# │ Lizard.generations.fallen-tree  │ forest_size in fallen|decayed                                 │
 # ├─────────────────────────────────┼───────────────────────────────────────────────────────────────┤
 # │ Tree.self.senescent             │ forest_size == senescing                                      │
 # │ Tree.others.notpaved            │ ground_not_paved + within 50m canopy + ground_only            │
@@ -160,7 +160,7 @@ INDICATORS = [
         'persona': 'Lizard',
         'capability': 'generations',
         'label': 'Fallen tree volume',
-        'query': 'forest_size == fallen',
+        'query': 'forest_size in fallen|decayed',
     },
     
     # ----- TREE CAPABILITIES -----
@@ -540,6 +540,15 @@ def evaluate_query(polydata, query):
             return np.zeros(n_points, dtype=bool)
         return polydata.point_data[field] == value
     
+    # Query: 'field in value1|value2|...'
+    if ' in ' in query:
+        field, values = query.split(' in ', 1)
+        field = field.strip()
+        if field not in polydata.point_data:
+            return np.zeros(n_points, dtype=bool)
+        value_list = [value.strip() for value in values.split('|') if value.strip()]
+        return np.isin(_normalize_str_array(polydata.point_data[field]), [value.lower() for value in value_list])
+
     # Query: 'ground_not_paved'
     if query == 'ground_not_paved':
         ground = get_ground_mask(polydata)

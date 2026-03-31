@@ -23,6 +23,13 @@ from refactor_code.paths import (  # noqa: E402
     scenario_pole_df_path,
     scenario_tree_df_path,
 )
+from refactor_code.scenario.structure_ids import (  # noqa: E402
+    assign_log_structure_ids,
+    assign_pole_structure_ids,
+    assign_tree_structure_ids,
+    collect_structure_ids,
+    replacement_structure_ids,
+)
 
 
 MAX_RECRUIT_PULSE_YEARS = 30
@@ -31,7 +38,8 @@ LOW_CONTROL_STATE = "low-control"
 REDUCE_PRUNING_TO_PARK_YEARS = 20
 ELIMINATE_PRUNING_TO_PARK_YEARS = 20
 ELIMINATE_PRUNING_TO_LOW_YEARS = 40
-FALLEN_REMOVE_RANGE_YEARS = (60, 150)
+FALLEN_TO_DECAY_RANGE_YEARS = (50, 150)
+DECAYED_REMOVE_RANGE_YEARS = (50, 100)
 PRUNING_TARGET_ORDER = {
     "standard-pruning": 0,
     "reduce-pruning": 1,
@@ -81,7 +89,7 @@ def _legacy_control_to_years(control_value: str) -> int:
 
 
 def _export_control_value(realized_control: str, size_value: str) -> str:
-    if size_value in {"senescing", "snag", "fallen"}:
+    if size_value in {"senescing", "snag", "fallen", "decayed"}:
         return "improved-tree"
     if realized_control == LOW_CONTROL_STATE:
         return "reserve-tree"
@@ -110,6 +118,8 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
 
     if "useful_life_expectency" in df.columns and "useful_life_expectancy" not in df.columns:
         df.rename(columns={"useful_life_expectency": "useful_life_expectancy"}, inplace=True)
+    if "fallen_remove_after_years" in df.columns and "fallen_decay_after_years" not in df.columns:
+        df.rename(columns={"fallen_remove_after_years": "fallen_decay_after_years"}, inplace=True)
 
     for column, default in {
         "rewilded": "paved",
@@ -133,7 +143,10 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         "lifecycle_decision": None,
         "lifecycle_state": None,
         "fallen_since_year": np.nan,
-        "fallen_remove_after_years": np.nan,
+        "fallen_decay_after_years": np.nan,
+        "decayed_since_year": np.nan,
+        "decayed_remove_after_years": np.nan,
+        "structureID": np.nan,
     }.items():
         if column not in df.columns:
             df[column] = default
@@ -184,7 +197,7 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     if df["lifecycle_state"].isna().any():
         missing = df["lifecycle_state"].isna()
         state = np.where(
-            df["size"].isin(["senescing", "snag", "fallen"]),
+            df["size"].isin(["senescing", "snag", "fallen", "decayed"]),
             df["size"],
             "standing",
         )
@@ -210,7 +223,9 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     df["pruning_target_years"] = pd.to_numeric(df["pruning_target_years"], errors="coerce").fillna(0.0)
     df["recruit_year"] = pd.to_numeric(df["recruit_year"], errors="coerce")
     df["fallen_since_year"] = pd.to_numeric(df["fallen_since_year"], errors="coerce")
-    df["fallen_remove_after_years"] = pd.to_numeric(df["fallen_remove_after_years"], errors="coerce")
+    df["fallen_decay_after_years"] = pd.to_numeric(df["fallen_decay_after_years"], errors="coerce")
+    df["decayed_since_year"] = pd.to_numeric(df["decayed_since_year"], errors="coerce")
+    df["decayed_remove_after_years"] = pd.to_numeric(df["decayed_remove_after_years"], errors="coerce")
 
     return df
 
@@ -298,7 +313,7 @@ def apply_senescence_states(df: pd.DataFrame, params: dict, seed: int = 42) -> p
 
     age_in_place_mask = (
         df["lifecycle_decision"].eq("age-in-place")
-        | df["size"].isin(["senescing", "snag", "fallen"])
+        | df["size"].isin(["senescing", "snag", "fallen", "decayed"])
     )
 
     new_senescing_mask = age_in_place_mask & df["size"].isin(["small", "medium", "large"])
@@ -328,7 +343,7 @@ def apply_senescence_states(df: pd.DataFrame, params: dict, seed: int = 42) -> p
     df.loc[collapse_mask, "size"] = "fallen"
 
     state_values = np.where(
-        df["size"].isin(["senescing", "snag", "fallen"]),
+        df["size"].isin(["senescing", "snag", "fallen", "decayed"]),
         df["size"],
         "standing",
     )
@@ -357,6 +372,15 @@ def handle_replace_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         labels=["small", "medium", "large"],
     ).astype(str)
     df.loc[replace_mask, "lifecycle_state"] = "standing"
+    used_ids = collect_structure_ids(df.loc[~replace_mask])
+    df.loc[replace_mask, "structureID"] = replacement_structure_ids(
+        df,
+        replace_mask,
+        site=params["site"],
+        scenario=params["scenario"],
+        absolute_year=int(params["absolute_year"]),
+        used_ids=used_ids,
+    )
     return df
 
 
@@ -466,7 +490,7 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         _realized_control_from_years(target, years)
         for target, years in zip(df["pruning_target"], df["autonomy_years"], strict=False)
     ]
-    senescent_mask = df["size"].isin(["senescing", "snag", "fallen"])
+    senescent_mask = df["size"].isin(["senescing", "snag", "fallen", "decayed"])
     df.loc[senescent_mask, "control_realized"] = LOW_CONTROL_STATE
     df["control"] = [
         _export_control_value(realized, size)
@@ -482,26 +506,75 @@ def update_fallen_tracking(df: pd.DataFrame, site: str, scenario: str, current_y
     if newly_fallen_mask.any():
         df.loc[newly_fallen_mask, "fallen_since_year"] = current_year
 
-        remove_years = []
+        decay_years = []
         for index, row in df.loc[newly_fallen_mask].iterrows():
-            identity = row.get("NodeID", row.get("tree_number", index))
+            identity = row.get("structureID", row.get("NodeID", row.get("tree_number", index)))
+            decay_years.append(
+                _seeded_years(
+                    site,
+                    scenario,
+                    identity,
+                    current_year,
+                    "fallen-to-decayed",
+                    minimum=FALLEN_TO_DECAY_RANGE_YEARS[0],
+                    maximum=FALLEN_TO_DECAY_RANGE_YEARS[1],
+                )
+            )
+        df.loc[newly_fallen_mask, "fallen_decay_after_years"] = decay_years
+
+    decayed_transition_mask = (
+        fallen_mask
+        & df["fallen_since_year"].notna()
+        & df["fallen_decay_after_years"].notna()
+        & ((current_year - df["fallen_since_year"]) >= df["fallen_decay_after_years"])
+    )
+    if decayed_transition_mask.any():
+        df.loc[decayed_transition_mask, "size"] = "decayed"
+        df.loc[decayed_transition_mask, "lifecycle_state"] = "decayed"
+        df.loc[decayed_transition_mask, "decayed_since_year"] = current_year
+
+        remove_years = []
+        for index, row in df.loc[decayed_transition_mask].iterrows():
+            identity = row.get("structureID", row.get("NodeID", row.get("tree_number", index)))
             remove_years.append(
                 _seeded_years(
                     site,
                     scenario,
                     identity,
                     current_year,
-                    minimum=FALLEN_REMOVE_RANGE_YEARS[0],
-                    maximum=FALLEN_REMOVE_RANGE_YEARS[1],
+                    "decayed-remove",
+                    minimum=DECAYED_REMOVE_RANGE_YEARS[0],
+                    maximum=DECAYED_REMOVE_RANGE_YEARS[1],
                 )
             )
-        df.loc[newly_fallen_mask, "fallen_remove_after_years"] = remove_years
+        df.loc[decayed_transition_mask, "decayed_remove_after_years"] = remove_years
+
+    decayed_mask = df["size"].eq("decayed")
+    newly_decayed_mask = decayed_mask & df["decayed_since_year"].isna()
+    if newly_decayed_mask.any():
+        df.loc[newly_decayed_mask, "decayed_since_year"] = current_year
+
+        remove_years = []
+        for index, row in df.loc[newly_decayed_mask].iterrows():
+            identity = row.get("structureID", row.get("NodeID", row.get("tree_number", index)))
+            remove_years.append(
+                _seeded_years(
+                    site,
+                    scenario,
+                    identity,
+                    current_year,
+                    "decayed-remove",
+                    minimum=DECAYED_REMOVE_RANGE_YEARS[0],
+                    maximum=DECAYED_REMOVE_RANGE_YEARS[1],
+                )
+            )
+        df.loc[newly_decayed_mask, "decayed_remove_after_years"] = remove_years
 
     removable_mask = (
-        fallen_mask
-        & df["fallen_since_year"].notna()
-        & df["fallen_remove_after_years"].notna()
-        & ((current_year - df["fallen_since_year"]) >= df["fallen_remove_after_years"])
+        decayed_mask
+        & df["decayed_since_year"].notna()
+        & df["decayed_remove_after_years"].notna()
+        & ((current_year - df["decayed_since_year"]) >= df["decayed_remove_after_years"])
     )
     if removable_mask.any():
         df = df.loc[~removable_mask].copy()
@@ -630,7 +703,9 @@ def _make_new_tree_record(
             "lifecycle_decision": "stable",
             "lifecycle_state": "standing",
             "fallen_since_year": np.nan,
-            "fallen_remove_after_years": np.nan,
+            "fallen_decay_after_years": np.nan,
+            "decayed_since_year": np.nan,
+            "decayed_remove_after_years": np.nan,
         }
     )
     return record
@@ -839,6 +914,9 @@ def _run_single_pulse(
     df = age_trees(df, params)
     df = determine_lifecycle_decisions(df, params)
     df = apply_senescence_states(df, params)
+    params = dict(params)
+    params["site"] = site
+    params["scenario"] = scenario
     df = handle_replace_trees(df, params)
     df = assign_decay_support(df, params)
     df = apply_release_control(df, params)
@@ -877,15 +955,10 @@ def _year_zero_state(
     log_df = assign_logs(log_df, params)
     pole_df = assign_poles(pole_df, params)
 
-    tree_df["structureID"] = np.arange(len(tree_df))
-    offset = len(tree_df)
-    if log_df is not None and not log_df.empty:
-        log_df = log_df.copy()
-        log_df["structureID"] = np.arange(offset, offset + len(log_df))
-        offset += len(log_df)
-    if pole_df is not None and not pole_df.empty:
-        pole_df = pole_df.copy()
-        pole_df["structureID"] = np.arange(offset, offset + len(pole_df))
+    used_ids: set[int] = set()
+    tree_df = assign_tree_structure_ids(tree_df, site=site, scenario=scenario, used_ids=used_ids)
+    log_df = assign_log_structure_ids(log_df, site=site, used_ids=used_ids)
+    pole_df = assign_pole_structure_ids(pole_df, site=site, used_ids=used_ids)
 
     output_tree_path = scenario_tree_df_path(site, scenario, year, voxel_size, output_mode)
     tree_df.to_csv(output_tree_path, index=False)
@@ -925,16 +998,10 @@ def run_timestep(
     pole_df = assign_poles(pole_df, final_params)
 
     tree_state = _refresh_schema(tree_state)
-    tree_state["structureID"] = np.arange(len(tree_state))
-
-    offset = len(tree_state)
-    if log_df is not None and not log_df.empty:
-        log_df = log_df.copy()
-        log_df["structureID"] = np.arange(offset, offset + len(log_df))
-        offset += len(log_df)
-    if pole_df is not None and not pole_df.empty:
-        pole_df = pole_df.copy()
-        pole_df["structureID"] = np.arange(offset, offset + len(pole_df))
+    used_ids: set[int] = set()
+    tree_state = assign_tree_structure_ids(tree_state, site=site, scenario=scenario, used_ids=used_ids)
+    log_df = assign_log_structure_ids(log_df, site=site, used_ids=used_ids)
+    pole_df = assign_pole_structure_ids(pole_df, site=site, used_ids=used_ids)
 
     if write_outputs:
         tree_state.to_csv(scenario_tree_df_path(site, scenario, year, voxel_size, output_mode), index=False)

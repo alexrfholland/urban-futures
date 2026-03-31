@@ -257,11 +257,11 @@ def create_bioavailablity_layer(scenario_vtk):
         else:  # Numeric types
             bioavailable_mask |= ~np.isnan(forest_size)
         
-        # Add points where forest_size is 'fallen'
+        # Add points where forest_size is ground deadwood
         if forest_size.dtype.kind == 'U' or forest_size.dtype.kind == 'S':  # String types
-            fallen_mask = (forest_size == 'fallen')
-            bioavailable_mask |= fallen_mask
-            low_vegetation_mask |= fallen_mask
+            deadwood_mask = np.isin(forest_size, ['fallen', 'decayed'])
+            bioavailable_mask |= deadwood_mask
+            low_vegetation_mask |= deadwood_mask
     
     # Check for fallen logs
     if 'resource_fallen log' in scenario_vtk.point_data:
@@ -512,8 +512,12 @@ def process_baseline_polydata(baseline_vtk, site, voxel_size=1, save_path=None):
 
         if forest_size.dtype.kind == 'U' or forest_size.dtype.kind == 'S':
             arboreal_mask = (forest_size != 'nan') & (forest_size != 'none')
+            deadwood_mask = np.isin(forest_size, ['fallen', 'decayed'])
+            arboreal_mask = arboreal_mask & ~deadwood_mask
             search_bioavailable[arboreal_mask] = 'arboreal'
             print(f"  Set {np.sum(arboreal_mask):,} points to 'arboreal' based on forest_size")
+            search_bioavailable[deadwood_mask] = 'low-vegetation'
+            print(f"  Set {np.sum(deadwood_mask):,} deadwood points to 'low-vegetation' based on forest_size")
         else:
             if np.issubdtype(forest_size.dtype, np.floating):
                 arboreal_mask = ~np.isnan(forest_size)

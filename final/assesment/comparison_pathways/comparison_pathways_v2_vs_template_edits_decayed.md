@@ -1,0 +1,29 @@
+# V2 vs Template-Edits-Decayed
+
+- Parade / Bird / Acquire Resources: canonical 5.88x peeling bark volume (46.4% vs 7.9%); candidate 4.79x peeling bark volume (41.3% vs 8.6%).
+- Parade / Bird / Communicate: canonical 1.39x perchable canopy volume (27.2% vs 19.6%); candidate 1.13x perchable canopy volume (23.7% vs 21.0%).
+- Parade / Bird / Reproduce: canonical 104.44x hollow count (52.5% vs 0.5%); candidate 123.67x hollow count (52.7% vs 0.4%).
+- Parade / Lizard / Acquire Resources: canonical 18.81x combined ground-cover/dead branch/epiphyte indicators (54.9% vs 2.9%); candidate 32.95x combined ground-cover/dead branch/epiphyte indicators (89.1% vs 2.7%).
+- Parade / Lizard / Communicate: canonical 1.43x non-paved surface area (73.6% vs 51.4%); candidate 2.65x non-paved surface area (103.2% vs 38.9%).
+- Parade / Lizard / Reproduce: canonical ∞x combined nurse-log/fallen-tree indicators (15.1% vs 0.0%); candidate ∞x combined nurse-log/fallen-tree indicators (66.7% vs 0.0%).
+- Parade / Tree / Acquire Resources: canonical ∞x senescent biovolume (94.9% vs 0.0%); candidate ∞x senescent biovolume (85.8% vs 0.0%).
+- Parade / Tree / Communicate: canonical 1.67x soil near canopy features (73.5% vs 43.9%); candidate 3.07x soil near canopy features (102.9% vs 33.5%).
+- Parade / Tree / Reproduce: canonical 2204.86x grassland-for-recruitment indicator (50.3% vs 0.0%); candidate 5018.73x grassland-for-recruitment indicator (86.7% vs 0.0%).
+- Street / Bird / Acquire Resources: canonical 11.78x peeling bark volume (34.8% vs 3.0%); candidate 9.07x peeling bark volume (32.2% vs 3.5%).
+- Street / Bird / Communicate: canonical 3.33x perchable canopy volume (35.9% vs 10.8%); candidate 2.87x perchable canopy volume (32.9% vs 11.4%).
+- Street / Bird / Reproduce: canonical 12.20x hollow count (45.0% vs 3.7%); candidate 13.56x hollow count (57.2% vs 4.2%).
+- Street / Lizard / Acquire Resources: canonical 21.04x combined ground-cover/dead branch/epiphyte indicators (86.7% vs 4.1%); candidate 16.69x combined ground-cover/dead branch/epiphyte indicators (82.8% vs 5.0%).
+- Street / Lizard / Communicate: canonical 3.60x non-paved surface area (150.5% vs 41.8%); candidate 3.84x non-paved surface area (127.7% vs 33.2%).
+- Street / Lizard / Reproduce: canonical 17.39x combined nurse-log/fallen-tree indicators (8.3% vs 0.5%); candidate 12.90x combined nurse-log/fallen-tree indicators (21.4% vs 1.7%).
+- Street / Tree / Acquire Resources: canonical ∞x senescent biovolume (26.5% vs 0.0%); candidate 26.52x senescent biovolume (27.7% vs 1.0%).
+- Street / Tree / Communicate: canonical 3.68x soil near canopy features (60.2% vs 16.3%); candidate 4.24x soil near canopy features (57.9% vs 13.6%).
+- Street / Tree / Reproduce: canonical 12.50x grassland-for-recruitment indicator (41.6% vs 3.3%); candidate 12.05x grassland-for-recruitment indicator (43.8% vs 3.6%).
+- City / Bird / Acquire Resources: canonical 8.79x peeling bark volume (23.2% vs 2.6%); candidate 8.30x peeling bark volume (22.5% vs 2.7%).
+- City / Bird / Communicate: canonical 3.81x perchable canopy volume (22.2% vs 5.8%); candidate 3.56x perchable canopy volume (21.8% vs 6.1%).
+- City / Bird / Reproduce: canonical 10.41x hollow count (29.7% vs 2.8%); candidate 8.45x hollow count (31.2% vs 3.7%).
+- City / Lizard / Acquire Resources: canonical 8.27x combined ground-cover/dead branch/epiphyte indicators (86.3% vs 10.4%); candidate 6.42x combined ground-cover/dead branch/epiphyte indicators (101.2% vs 15.8%).
+- City / Lizard / Communicate: canonical 6.87x non-paved surface area (159.5% vs 23.2%); candidate 6.07x non-paved surface area (149.0% vs 24.5%).
+- City / Lizard / Reproduce: canonical 5.37x combined nurse-log/fallen-tree indicators (19.3% vs 3.6%); candidate 4.40x combined nurse-log/fallen-tree indicators (48.7% vs 11.1%).
+- City / Tree / Acquire Resources: canonical 57.73x senescent biovolume (25.7% vs 0.4%); candidate 65.65x senescent biovolume (29.5% vs 0.5%).
+- City / Tree / Communicate: canonical 4.08x soil near canopy features (39.8% vs 9.8%); candidate 4.08x soil near canopy features (56.3% vs 13.8%).
+- City / Tree / Reproduce: canonical 7.10x grassland-for-recruitment indicator (46.0% vs 6.5%); candidate 5.28x grassland-for-recruitment indicator (61.3% vs 11.6%).

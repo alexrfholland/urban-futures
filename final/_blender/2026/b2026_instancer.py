@@ -66,7 +66,7 @@ FALLEN_LOG_INT_RESOURCE = 6
 AUTO_RUN_CLIPBOX_SETUP = False
 AUTO_RUN_CAMERA_CLIPBOXES = False
 FOCUS_NEW_POINT_CLOUD_OBJECT = False
-PRIORITY_TREE_SIZES = ('senescing', 'snag', 'fallen')
+PRIORITY_TREE_SIZES = ('senescing', 'snag', 'fallen', 'decayed')
 SCRIPT_DIRECTORY_FALLBACK = Path(
     '/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/_blender/2026'
 )
@@ -537,6 +537,7 @@ def convert_size(value):
         'senescing': 4,
         'snag': 5,
         'fallen': 6,
+        'decayed': 7,
     }
     return pd.Series(value).str.lower().map(size_map).fillna(-1)
 

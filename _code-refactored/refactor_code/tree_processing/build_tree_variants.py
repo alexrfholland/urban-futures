@@ -45,6 +45,8 @@ FALLEN_MODE_LABELS = {
     "nonpre-geometry-pre-attrs": "Use non-precolonial fallen geometry with precolonial attributes",
 }
 
+DECAYED_MODE_LABEL = "Use the smaller eucalyptus fallen templates as the decayed phase"
+
 SNAG_MODE_LABELS = {
     "elm-models-new": "Use the newer elm-derived snag models",
     "elm-snags-old": "Use the older snag models with weaker resource mapping",
@@ -224,6 +226,51 @@ def build_snag_variant_rows(snags: dict[int, pd.DataFrame], snags_use: str) -> p
     return rows_df
 
 
+def build_decayed_variant_rows(
+    canonical_combined_templates: pd.DataFrame,
+    eucalyptus_df: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict]:
+    canonical_pre_fallen = canonical_combined_templates[
+        (canonical_combined_templates["size"] == "fallen") & (canonical_combined_templates["precolonial"] == True)
+    ].copy()
+    canonical_pre_fallen["size"] = "decayed"
+
+    tree_id_mapping = combined_voxelise_dfs.create_treeid_mapping(eucalyptus_df, target_sizes=["fallen"])
+    duplicated_false_rows = []
+    duplication_records = []
+
+    for _, row in canonical_pre_fallen.iterrows():
+        donor_tree_id = tree_id_mapping.get(int(row["tree_id"]))
+        if donor_tree_id is None:
+            continue
+
+        duplicated_row = row.copy()
+        duplicated_row["precolonial"] = False
+        duplicated_row["tree_id"] = int(donor_tree_id)
+        duplicated_false_rows.append(duplicated_row)
+        duplication_records.append(
+            {
+                "precolonial_tree_id": int(row["tree_id"]),
+                "duplicated_non_precolonial_tree_id": int(donor_tree_id),
+                "template_points": int(len(row["template"])),
+            }
+        )
+
+    decayed_rows = pd.concat([canonical_pre_fallen, pd.DataFrame(duplicated_false_rows)], ignore_index=True)
+    decayed_rows = decayed_rows.sort_values(["precolonial", "tree_id"]).reset_index(drop=True)
+
+    metadata = {
+        "decayed_use_label": DECAYED_MODE_LABEL,
+        "source": "canonical-small-fallen-templates",
+        "source_rows": int(len(canonical_pre_fallen)),
+        "duplication_mapping": duplication_records,
+        "row_count": int(len(decayed_rows)),
+        "precolonial_true_rows": int(decayed_rows["precolonial"].eq(True).sum()),
+        "precolonial_false_rows": int(decayed_rows["precolonial"].eq(False).sum()),
+    }
+    return decayed_rows, metadata
+
+
 def build_variant_templates(config: VariantConfig) -> tuple[pd.DataFrame, dict]:
     canonical_combined_templates = pd.read_pickle(TREE_DATA_ROOT / "combined_templateDF.pkl")
     normalized_snags_use = normalize_snags_use(config.snags_use)
@@ -287,6 +334,16 @@ def build_variant_templates(config: VariantConfig) -> tuple[pd.DataFrame, dict]:
         "available_regenerated_tree_ids": sorted(int(tree_id) for tree_id in regenerated_snags.keys()),
         "available_updated_tree_ids": sorted(int(tree_id) for tree_id in updated_snags.keys()),
     }
+
+    decayed_rows, decayed_metadata = build_decayed_variant_rows(
+        canonical_combined_templates=canonical_combined_templates,
+        eucalyptus_df=eucalyptus_df,
+    )
+    variant_templates = variant_templates[variant_templates["size"] != "decayed"].copy()
+    variant_templates = pd.concat([variant_templates, decayed_rows], ignore_index=True)
+    variant_templates = variant_templates.sort_values(["precolonial", "size", "control", "tree_id"]).reset_index(drop=True)
+    aa_tree_helper_functions.check_for_duplicates(variant_templates)
+    metadata["decayed_variant"] = decayed_metadata
     return variant_templates, metadata
 
 
@@ -329,7 +386,13 @@ def save_variant_tables(
         snag_summary["template_points"] = snag_rows["template"].apply(len).values
         snag_summary.to_csv(trees_dir / "snag_rows_summary.csv", index=False)
 
-    affected_rows = variant_templates[variant_templates["size"].isin(["fallen", "snag"])].copy()
+    decayed_rows = variant_templates[variant_templates["size"] == "decayed"].copy()
+    if not decayed_rows.empty:
+        decayed_summary = decayed_rows[["precolonial", "size", "control", "tree_id"]].copy()
+        decayed_summary["template_points"] = decayed_rows["template"].apply(len).values
+        decayed_summary.to_csv(trees_dir / "decayed_rows_summary.csv", index=False)
+
+    affected_rows = variant_templates[variant_templates["size"].isin(["fallen", "snag", "decayed"])].copy()
     template_edits_path = trees_dir / "template-edits.pkl"
     affected_rows.to_pickle(template_edits_path)
     if not affected_rows.empty:
@@ -348,7 +411,7 @@ def build_variant_meshes(variant_templates: pd.DataFrame, variant_name: str) -> 
     mesh_output_dir = VARIANT_ROOT / variant_name / "final" / "treeMeshes"
     mesh_output_dir.mkdir(parents=True, exist_ok=True)
 
-    target_rows = variant_templates[variant_templates["size"].isin(["fallen", "snag"])].copy()
+    target_rows = variant_templates[variant_templates["size"].isin(["fallen", "snag", "decayed"])].copy()
     created_paths: list[Path] = []
     for _, row in target_rows.iterrows():
         combine_resource_treeMeshGenerator.process_template_row(row, mesh_output_dir)

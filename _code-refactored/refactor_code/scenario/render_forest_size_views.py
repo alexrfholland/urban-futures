@@ -27,6 +27,7 @@ FOREST_SIZE_RGBA = {
     "senescing": (235, 155, 197, 255),
     "snag": (252, 227, 88, 255),
     "fallen": (130, 203, 185, 255),
+    "decayed": (95, 134, 126, 255),
     "artificial": (255, 0, 0, 255),
 }
 BIOENVELOPE_RGBA = {
@@ -195,7 +196,7 @@ def proposal_hybrid_rgba(mesh: pv.PolyData) -> np.ndarray:
         rgba[labels == label] = np.asarray(color, dtype=np.uint8)
 
     forest_size = _normalize_str_array(mesh["forest_size"])
-    for lifecycle_label in ["senescing", "snag", "fallen"]:
+    for lifecycle_label in ["senescing", "snag", "fallen", "decayed"]:
         rgba[forest_size == lifecycle_label] = np.asarray(FOREST_SIZE_RGBA[lifecycle_label], dtype=np.uint8)
 
     return rgba
@@ -219,6 +220,7 @@ def view_entries(view_name: str) -> list[tuple[str, tuple[int, int, int, int]]]:
             ("senescing", FOREST_SIZE_RGBA["senescing"]),
             ("snag", FOREST_SIZE_RGBA["snag"]),
             ("fallen", FOREST_SIZE_RGBA["fallen"]),
+            ("decayed", FOREST_SIZE_RGBA["decayed"]),
             ("artificial", FOREST_SIZE_RGBA["artificial"]),
         ]
         return ordered
@@ -238,6 +240,7 @@ def view_entries(view_name: str) -> list[tuple[str, tuple[int, int, int, int]]]:
             ("senescing", FOREST_SIZE_RGBA["senescing"]),
             ("snag", FOREST_SIZE_RGBA["snag"]),
             ("fallen", FOREST_SIZE_RGBA["fallen"]),
+            ("decayed", FOREST_SIZE_RGBA["decayed"]),
             ("artificial", FOREST_SIZE_RGBA["artificial"]),
         ]
         return ordered
@@ -247,6 +250,7 @@ def view_entries(view_name: str) -> list[tuple[str, tuple[int, int, int, int]]]:
             ("senescing", FOREST_SIZE_RGBA["senescing"]),
             ("snag", FOREST_SIZE_RGBA["snag"]),
             ("fallen", FOREST_SIZE_RGBA["fallen"]),
+            ("decayed", FOREST_SIZE_RGBA["decayed"]),
             ("decay buffer", PROPOSAL_HYBRID_RGBA["decay_buffer-feature"]),
             ("decay brace", PROPOSAL_HYBRID_RGBA["decay_brace-feature"]),
             ("recruit rewild", PROPOSAL_HYBRID_RGBA["recruit_rewild-ground"]),
