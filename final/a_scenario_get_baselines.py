@@ -4,13 +4,22 @@ import numpy as np
 import pyvista as pv
 import a_helper_functions, a_resource_distributor_dataframes
 import os
+import shutil
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
-from refactor_code.paths import hook_baseline_terrain_vtk_path, hook_baseline_trees_csv_path
+from refactor_code.paths import (
+    engine_output_baseline_terrain_vtk_path,
+    engine_output_baseline_trees_csv_path,
+    scenario_baseline_combined_vtk_path,
+    scenario_baseline_urban_features_vtk_path,
+    scenario_baseline_resources_vtk_path,
+    scenario_baseline_terrain_vtk_path,
+    scenario_baseline_trees_csv_path,
+)
 
 
 #f"data/revised/final/{site}-roadVoxels-coloured.vtk"
@@ -257,11 +266,68 @@ def combine_polydata(resourcePoly, terrainPoly):
     for key in combinedPoly.point_data.keys():
         print(f"  - {key}")
     
-    combinedPoly.plot(scalars='resource_fallen log', render_points_as_spheres=True)
-    
     return combinedPoly
 
-def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/baselines'):
+
+def _copy_if_exists(source_path: Path, target_path: Path, overwrite: bool = False) -> bool:
+    if not source_path.exists():
+        return False
+    if target_path.exists() and not overwrite:
+        return True
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source_path, target_path)
+    return True
+
+
+def sync_existing_baseline(
+    site: str,
+    voxel_size: float | int = 1,
+    source_mode: str = "canonical",
+    target_mode: str = "validation",
+    overwrite: bool = False,
+):
+    """Copy existing canonical baseline assets into the target output roots."""
+    source_combined = scenario_baseline_combined_vtk_path(site, voxel_size, source_mode)
+    target_combined = scenario_baseline_combined_vtk_path(site, voxel_size, target_mode)
+
+    pairs = [
+        (
+            scenario_baseline_resources_vtk_path(site, voxel_size, source_mode),
+            scenario_baseline_resources_vtk_path(site, voxel_size, target_mode),
+        ),
+        (
+            scenario_baseline_trees_csv_path(site, source_mode),
+            scenario_baseline_trees_csv_path(site, target_mode),
+        ),
+        (
+            scenario_baseline_terrain_vtk_path(site, voxel_size, source_mode),
+            scenario_baseline_terrain_vtk_path(site, voxel_size, target_mode),
+        ),
+        (source_combined, target_combined),
+        (
+            source_combined.with_name(source_combined.name.replace(".vtk", "_urban_features.vtk")),
+            target_combined.with_name(target_combined.name.replace(".vtk", "_urban_features.vtk")),
+        ),
+        (
+            engine_output_baseline_trees_csv_path(site, output_mode=source_mode),
+            engine_output_baseline_trees_csv_path(site, output_mode=target_mode),
+        ),
+        (
+            engine_output_baseline_terrain_vtk_path(site, voxel_size, output_mode=source_mode),
+            engine_output_baseline_terrain_vtk_path(site, voxel_size, output_mode=target_mode),
+        ),
+    ]
+
+    copied_any = False
+    for source_path, target_path in pairs:
+        copied_any = _copy_if_exists(source_path, target_path, overwrite=overwrite) or copied_any
+
+    if copied_any and target_combined.exists():
+        return target_combined
+    return None
+
+
+def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/baselines', visualize=False):
     """
     Generate baseline trees and resources for a site.
     
@@ -435,10 +501,10 @@ def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/base
     os.makedirs(output_folder, exist_ok=True)
 
     # Define output paths
-    resource_vtk_path = f'{output_folder}/{site}_baseline_resources_{voxel_size}.vtk'
-    trees_csv_path = f'{output_folder}/{site}_baseline_trees.csv'
-    terrain_vtk_path = f'{output_folder}/{site}_baseline_terrain_{voxel_size}.vtk'
-    combined_vtk_path = f'{output_folder}/{site}_baseline_combined_{voxel_size}.vtk'
+    resource_vtk_path = scenario_baseline_resources_vtk_path(site, voxel_size)
+    trees_csv_path = scenario_baseline_trees_csv_path(site)
+    terrain_vtk_path = scenario_baseline_terrain_vtk_path(site, voxel_size)
+    combined_vtk_path = scenario_baseline_combined_vtk_path(site, voxel_size)
 
     # Create combined polydata
     print('Creating combined polydata...')
@@ -451,19 +517,34 @@ def generate_baseline(site, voxel_size=1, output_folder='data/revised/final/base
     print(f'Saving baseline trees to {trees_csv_path}')
     baseline_tree_df.to_csv(trees_csv_path, index=False)
 
-    refactored_trees_csv_path = hook_baseline_trees_csv_path(site)
+    refactored_trees_csv_path = engine_output_baseline_trees_csv_path(site)
     baseline_tree_df.to_csv(refactored_trees_csv_path, index=False)
     print(f'Saved refactored baseline trees to {refactored_trees_csv_path}')
     
     print(f'Saving terrain polydata to {terrain_vtk_path}')
     terrain_polydata.save(terrain_vtk_path)
 
-    refactored_terrain_vtk_path = hook_baseline_terrain_vtk_path(site, voxel_size)
+    refactored_terrain_vtk_path = engine_output_baseline_terrain_vtk_path(site, voxel_size)
     terrain_polydata.save(refactored_terrain_vtk_path)
     print(f'Saved refactored baseline terrain VTK to {refactored_terrain_vtk_path}')
     
     print(f'Saving combined polydata to {combined_vtk_path}')
     combinedPoly.save(combined_vtk_path)
+
+    # Build the baseline urban-features VTK directly from the in-memory combined state
+    # so the pipeline does not have to save and reload the same VTK immediately after.
+    import a_scenario_urban_elements_count
+
+    baseline_urban_features_path = scenario_baseline_urban_features_vtk_path(site, voxel_size)
+    a_scenario_urban_elements_count.process_baseline_polydata(
+        combinedPoly.copy(deep=True),
+        site=site,
+        voxel_size=voxel_size,
+        save_path=baseline_urban_features_path,
+    )
+
+    if visualize:
+        combinedPoly.plot(scalars='resource_fallen log', render_points_as_spheres=True)
     
     return trees_csv_path, resource_vtk_path, terrain_vtk_path, combined_vtk_path
 

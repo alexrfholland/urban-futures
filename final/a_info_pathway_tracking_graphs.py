@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import shutil
+import sys
 
 import numpy as np
 import pandas as pd
@@ -35,14 +36,9 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 SCRIPT_DIR = Path(__file__).parent
 REPO_DIR = SCRIPT_DIR.parent
-RAW_DIR = REPO_DIR / "_statistics-refactored" / "raw"
-DEFAULT_OUTPUT_DIR = (
-    REPO_DIR
-    / "_statistics-refactored"
-    / "plots"
-    / "pathway_tracking"
-    / "proposal-intervention-streamgraphs"
-)
+sys.path.insert(0, str(REPO_DIR / "_code-refactored"))
+
+from refactor_code.paths import normalize_output_mode, refactor_statistics_root
 
 PAGE_WIDTH_PT = 45 * 12 + 4.252
 PAGE_MARGIN_PT = 3 * 12 + 2.608
@@ -74,7 +70,7 @@ STREAM_ORDER_BY_PROPOSAL = {
     "Decay": ["Buffer-Feature", "Brace-Feature"],
     "Recruit": ["Buffer-Feature", "Rewild-Ground"],
     "Colonise": ["Rewild-Ground", "Enrich-Envelope", "Roughen-Envelope"],
-    "Release-Control": ["Buffer-Feature", "Brace-Feature"],
+    "Release-Control": ["Eliminate-Pruning", "Reduce-Pruning"],
 }
 
 CANONICAL_MEASURE_PRIORITY = {
@@ -109,10 +105,10 @@ CANONICAL_MEASURE_PRIORITY = {
     ("Colonise", "Roughen-Envelope", "partial"): [
         "roughened envelope voxels",
     ],
-    ("Release-Control", "Buffer-Feature", "full"): [
+    ("Release-Control", "Eliminate-Pruning", "full"): [
         "arboreal voxels",
     ],
-    ("Release-Control", "Brace-Feature", "partial"): [
+    ("Release-Control", "Reduce-Pruning", "partial"): [
         "arboreal voxels",
     ],
 }
@@ -122,6 +118,8 @@ STREAM_COLORS = {
     "Upgrade-Feature": "#7c5ba6",
     "Buffer-Feature": "#d97a3a",
     "Brace-Feature": "#c0a02d",
+    "Eliminate-Pruning": "#d97a3a",
+    "Reduce-Pruning": "#c0a02d",
     "Rewild-Ground": "#4f8b57",
     "Enrich-Envelope": "#8a63d2",
     "Roughen-Envelope": "#8e6b52",
@@ -152,18 +150,27 @@ def slugify(value: str) -> str:
     )
 
 
-def discover_sites() -> list[str]:
-    sites = [path.parent.name for path in sorted(RAW_DIR.glob("*/interventions.csv"))]
+def raw_dir(output_mode: str | None = None) -> Path:
+    return refactor_statistics_root(output_mode) / "raw"
+
+
+def default_output_dir(output_mode: str | None = None) -> Path:
+    return refactor_statistics_root(output_mode) / "plots" / "pathway_tracking" / "proposal-intervention-streamgraphs"
+
+
+def discover_sites(output_mode: str | None = None) -> list[str]:
+    sites = [path.parent.name for path in sorted(raw_dir(output_mode).glob("*/interventions.csv"))]
     ordered = [site for site in ["trimmed-parade", "city", "uni"] if site in sites]
     ordered.extend([site for site in sites if site not in ordered])
     return ordered
 
 
-def load_raw_interventions(sites: list[str] | None = None) -> pd.DataFrame:
+def load_raw_interventions(sites: list[str] | None = None, output_mode: str | None = None) -> pd.DataFrame:
+    current_raw_dir = raw_dir(output_mode)
     if sites:
-        paths = [RAW_DIR / site / "interventions.csv" for site in sites]
+        paths = [current_raw_dir / site / "interventions.csv" for site in sites]
     else:
-        paths = sorted(RAW_DIR.glob("*/interventions.csv"))
+        paths = sorted(current_raw_dir.glob("*/interventions.csv"))
 
     frames = []
     for path in paths:
@@ -174,7 +181,7 @@ def load_raw_interventions(sites: list[str] | None = None) -> pd.DataFrame:
         frames.append(frame)
 
     if not frames:
-        raise FileNotFoundError(f"No raw intervention tables found under {RAW_DIR}")
+        raise FileNotFoundError(f"No raw intervention tables found under {current_raw_dir}")
 
     df = pd.concat(frames, ignore_index=True)
     df = df.copy()
@@ -1003,14 +1010,22 @@ def generate_outputs(
 
 
 def parse_args() -> argparse.Namespace:
+    default_mode = normalize_output_mode(None)
     parser = argparse.ArgumentParser(
         description="Generate proposal mini stream graphs from raw intervention statistics."
+    )
+    parser.add_argument(
+        "--output-mode",
+        type=str,
+        default=default_mode,
+        choices=["canonical", "validation"],
+        help="Statistics root to read from and write into.",
     )
     parser.add_argument(
         "--sites",
         type=str,
         default=None,
-        help="Comma-separated site list. Default: all sites in _statistics-refactored/raw.",
+        help="Comma-separated site list. Default: all sites in the selected stats raw directory.",
     )
     parser.add_argument(
         "--proposals",
@@ -1021,7 +1036,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=str,
-        default=str(DEFAULT_OUTPUT_DIR),
+        default=None,
         help="Directory for generated PNG files.",
     )
     return parser.parse_args()
@@ -1029,14 +1044,15 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    output_mode = normalize_output_mode(args.output_mode)
 
-    available_sites = discover_sites()
+    available_sites = discover_sites(output_mode)
     sites = normalize_site_filter(available_sites, args.sites)
     if not sites:
         raise ValueError("No sites available after applying the requested site filter.")
 
-    raw_df = load_raw_interventions(sites)
-    output_dir = Path(args.output_dir)
+    raw_df = load_raw_interventions(sites, output_mode)
+    output_dir = Path(args.output_dir) if args.output_dir else default_output_dir(output_mode)
     if output_dir.exists():
         shutil.rmtree(output_dir)
 

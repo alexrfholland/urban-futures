@@ -8,6 +8,16 @@ import a_helper_functions
 from scipy.spatial import cKDTree
 import time
 from functools import lru_cache
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import (
+    scenario_baseline_urban_features_vtk_path,
+    scenario_urban_features_vtk_path,
+)
 
 # Configuration variables that will be overridden by the manager
 SITES = ['trimmed-parade']
@@ -20,6 +30,41 @@ SPECIFIC_FILES = []  # Will be populated by the manager
 # Global cache for site data
 _site_data_cache = {}  # Cache for site VTK, points and KDTree by site name
 _visualization_enabled = True  # Flag to toggle visualization
+
+
+def ensure_site_data_cached(site, voxel_size):
+    """Load and cache site context once so scenario VTK enrichment can stay in-memory."""
+    if not site:
+        return None
+
+    if site in _site_data_cache:
+        return _site_data_cache[site]
+
+    print(f"\nPreparing site data for {site} (one-time operation)...")
+    site_start_time = time.time()
+    ds = load_xarray(site, voxel_size)
+    if ds is None:
+        print(f"Warning: Could not load xarray for site {site}")
+        return None
+
+    site_vtk = a_helper_functions.convert_xarray_into_polydata(ds)
+    site_vtk = preprocess_site_vtk(site_vtk)
+
+    site_points = np.vstack([
+        site_vtk.points[:, 0],
+        site_vtk.points[:, 1],
+        site_vtk.points[:, 2]
+    ]).T
+
+    tree = cKDTree(site_points)
+    cache_entry = {
+        'site_vtk': site_vtk,
+        'site_points': site_points,
+        'tree': tree
+    }
+    _site_data_cache[site] = cache_entry
+    print(f"Site data preparation completed in {time.time() - site_start_time:.2f}s")
+    return cache_entry
 
 def load_xarray(site, voxel_size):
     """Load xarray dataset for the site"""
@@ -453,12 +498,105 @@ def add_search_variables_to_scenario(scenario_vtk):
     
     return scenario_vtk
 
-def process_baseline(site, voxel_size):
+
+def process_baseline_polydata(baseline_vtk, site, voxel_size=1, save_path=None):
+    """Add urban-feature layers to an in-memory baseline polydata and optionally save it."""
+    print(f"\nProcessing in-memory baseline for site {site}...")
+
+    print("Adding search variables to baseline...")
+
+    search_bioavailable = np.full(baseline_vtk.n_points, 'none', dtype='<U20')
+
+    if 'forest_size' in baseline_vtk.point_data:
+        forest_size = baseline_vtk.point_data['forest_size']
+
+        if forest_size.dtype.kind == 'U' or forest_size.dtype.kind == 'S':
+            arboreal_mask = (forest_size != 'nan') & (forest_size != 'none')
+            search_bioavailable[arboreal_mask] = 'arboreal'
+            print(f"  Set {np.sum(arboreal_mask):,} points to 'arboreal' based on forest_size")
+        else:
+            if np.issubdtype(forest_size.dtype, np.floating):
+                arboreal_mask = ~np.isnan(forest_size)
+            else:
+                arboreal_mask = np.ones(len(forest_size), dtype=bool)
+            search_bioavailable[arboreal_mask] = 'arboreal'
+            print(f"  Set {np.sum(arboreal_mask):,} points to 'arboreal' based on forest_size")
+
+    low_veg_mask = search_bioavailable == 'none'
+    search_bioavailable[low_veg_mask] = 'low-vegetation'
+    print(f"  Set {np.sum(low_veg_mask):,} remaining points to 'low-vegetation'")
+
+    baseline_vtk.point_data['search_bioavailable'] = search_bioavailable
+    print(f"  Added search_bioavailable with {np.sum(search_bioavailable == 'arboreal'):,} 'arboreal' and {np.sum(search_bioavailable == 'low-vegetation'):,} 'low-vegetation' points")
+
+    search_design_action = np.full(baseline_vtk.n_points, 'rewilded', dtype='<U20')
+    baseline_vtk.point_data['search_design_action'] = search_design_action
+    print("  Added search_design_action with all points set to 'rewilded'")
+
+    search_urban_elements = np.full(baseline_vtk.n_points, 'none', dtype='<U20')
+    baseline_vtk.point_data['search_urban_elements'] = search_urban_elements
+    print("  Added search_urban_elements with all points set to 'none'")
+
+    forest_control = np.full(baseline_vtk.n_points, 'reserve-tree', dtype='<U20')
+    baseline_vtk.point_data['forest_control'] = forest_control
+    print("  Added forest_control with all points set to 'reserve-tree'")
+
+    if save_path is not None:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        baseline_vtk.save(str(save_path))
+        print(f"Saved updated baseline to {save_path}")
+
+    return baseline_vtk
+
+
+def process_scenario_polydata(
+    scenario_vtk,
+    site,
+    voxel_size,
+    scenario=None,
+    year=None,
+    save_path=None,
+    enable_visualization=None,
+):
+    """Add urban-feature layers to an in-memory scenario polydata and optionally save it."""
+    cache_entry = ensure_site_data_cached(site, voxel_size)
+
+    if cache_entry is not None:
+        transfer_start = time.time()
+        scenario_vtk = transfer_site_features_to_scenario(
+            scenario_vtk,
+            site=site,
+            site_vtk=cache_entry['site_vtk'],
+            tree=cache_entry['tree'],
+        )
+        print(f"Feature transfer completed in {time.time() - transfer_start:.2f}s")
+    else:
+        print("Processing without site context")
+
+    search_start = time.time()
+    updated_vtk = add_search_variables_to_scenario(scenario_vtk)
+    print(f"Search variables added in {time.time() - search_start:.2f}s")
+
+    if save_path is not None:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        updated_vtk.save(str(save_path))
+        print(f"Saved to: {save_path.name}")
+
+    should_visualize = _visualization_enabled if enable_visualization is None else enable_visualization
+    if should_visualize and site and scenario and year is not None and voxel_size:
+        visualize_search_variables(updated_vtk, site, scenario, year, voxel_size)
+
+    return updated_vtk
+
+def process_baseline(site, voxel_size, baseline_path=None):
     """Process baseline VTK file to add search variables"""
     print(f"\nProcessing baseline for site {site}...")
     
-    # First check in the standardized baselines folder
-    baseline_path = f'data/revised/final/baselines/{site}_baseline_combined_{voxel_size}.vtk'
+    if baseline_path is None:
+        # First check in the standardized baselines folder
+        baseline_path = f'data/revised/final/baselines/{site}_baseline_combined_{voxel_size}.vtk'
         
     if not os.path.exists(baseline_path):
         print(f"Error: Baseline file not found for {site} in either location")
@@ -466,61 +604,14 @@ def process_baseline(site, voxel_size):
     
     print(f"Loading baseline file from: {baseline_path}")
     baseline_vtk = pv.read(baseline_path)
-    
-    # Initialize search variables
-    print("Adding search variables to baseline...")
-    
-    # 1. Initialize search_bioavailable based on forest_size
-    search_bioavailable = np.full(baseline_vtk.n_points, 'none', dtype='<U20')
-    
-    # Set to 'arboreal' where forest_size is not 'nan'
-    if 'forest_size' in baseline_vtk.point_data:
-        forest_size = baseline_vtk.point_data['forest_size']
-        
-        if forest_size.dtype.kind == 'U' or forest_size.dtype.kind == 'S':  # String types
-            arboreal_mask = (forest_size != 'nan') & (forest_size != 'none')
-            search_bioavailable[arboreal_mask] = 'arboreal'
-            print(f"  Set {np.sum(arboreal_mask):,} points to 'arboreal' based on forest_size")
-        else:  # Numeric types
-            # Use np.isnan directly instead of treating it as a function
-            if np.issubdtype(forest_size.dtype, np.floating):
-                arboreal_mask = ~np.isnan(forest_size)
-            else:
-                arboreal_mask = np.ones(len(forest_size), dtype=bool)
-            search_bioavailable[arboreal_mask] = 'arboreal'
-            print(f"  Set {np.sum(arboreal_mask):,} points to 'arboreal' based on forest_size")
-    
-    # Set remaining points to 'low-vegetation' (renamed from 'traversable')
-    low_veg_mask = search_bioavailable == 'none'
-    search_bioavailable[low_veg_mask] = 'low-vegetation'
-    print(f"  Set {np.sum(low_veg_mask):,} remaining points to 'low-vegetation'")
-    
-    baseline_vtk.point_data['search_bioavailable'] = search_bioavailable
-    print(f"  Added search_bioavailable with {np.sum(search_bioavailable == 'arboreal'):,} 'arboreal' and {np.sum(search_bioavailable == 'low-vegetation'):,} 'low-vegetation' points")
-    
-    # 2. Initialize search_design_action as 'rewilded'
-    search_design_action = np.full(baseline_vtk.n_points, 'rewilded', dtype='<U20')
-    baseline_vtk.point_data['search_design_action'] = search_design_action
-    print(f"  Added search_design_action with all points set to 'rewilded'")
-    
-    # 3. Initialize search_urban_elements as 'none'
-    search_urban_elements = np.full(baseline_vtk.n_points, 'none', dtype='<U20')
-    baseline_vtk.point_data['search_urban_elements'] = search_urban_elements
-    print(f"  Added search_urban_elements with all points set to 'none'")
-    
-    # 4. Initialize forest_control with 'reserve-tree' for all points
-    forest_control = np.full(baseline_vtk.n_points, 'reserve-tree', dtype='<U20')
-    baseline_vtk.point_data['forest_control'] = forest_control
-    print(f"  Added forest_control with all points set to 'reserve-tree'")
-    
-    # Save updated baseline - save to the same folder as the input file
-    output_folder = os.path.dirname(baseline_path)
-    filename = os.path.basename(baseline_path)
-    updated_baseline_path = os.path.join(output_folder, filename.replace('.vtk', '_urban_features.vtk'))
-    baseline_vtk.save(updated_baseline_path)
-    print(f"Saved updated baseline to {updated_baseline_path}")
-    
-    return baseline_vtk
+
+    updated_baseline_path = scenario_baseline_urban_features_vtk_path(site, voxel_size)
+    return process_baseline_polydata(
+        baseline_vtk,
+        site=site,
+        voxel_size=voxel_size,
+        save_path=updated_baseline_path,
+    )
 
 def visualize_search_variables(scenario_vtk, site, scenario, year, voxel_size, output_dir='data/revised/final/visualizations'):
     """
@@ -639,35 +730,7 @@ def process_scenario_vtks(site, scenario, years, voxel_size):
     
     print(f"\n===== Processing Urban Elements for {site} - {scenario} =====")
     
-    # Load site data and prepare KDTree only once per site
-    if site not in _site_data_cache:
-        print(f"\nPreparing site data for {site} (one-time operation)...")
-        site_start_time = time.time()
-        ds = load_xarray(site, voxel_size)
-        if ds is not None:
-            # Convert xarray to polydata for site context
-            site_vtk = a_helper_functions.convert_xarray_into_polydata(ds)
-            site_vtk = preprocess_site_vtk(site_vtk)
-            
-            # Build KDTree from site points (do this once)
-            site_points = np.vstack([
-                site_vtk.points[:, 0],
-                site_vtk.points[:, 1],
-                site_vtk.points[:, 2]
-            ]).T
-            
-            # Create KDTree
-            tree = cKDTree(site_points)
-            
-            # Cache the site data
-            _site_data_cache[site] = {
-                'site_vtk': site_vtk,
-                'site_points': site_points,
-                'tree': tree
-            }
-            print(f"Site data preparation completed in {time.time() - site_start_time:.2f}s")
-        else:
-            print(f"Warning: Could not load xarray for site {site}")
+    ensure_site_data_cached(site, voxel_size)
     
     # Process each year
     for year in years:
@@ -743,35 +806,8 @@ def run_from_manager(site=None, scenario=None, years=None, voxel_size=None, spec
             vtk_files_to_process.append(vtk_file)
         print(f"\nProcessing {len(vtk_files_to_process)} VTK files for {site} - {scenario}")
     
-    # Load site data and prepare KDTree only once per site
-    if site and not site in _site_data_cache and not 'baseline' in ''.join(vtk_files_to_process):
-        print(f"\nPreparing site data for {site} (one-time operation)...")
-        site_start_time = time.time()
-        ds = load_xarray(site, voxel_size)
-        if ds is not None:
-            # Convert xarray to polydata for site context
-            site_vtk = a_helper_functions.convert_xarray_into_polydata(ds)
-            site_vtk = preprocess_site_vtk(site_vtk)
-            
-            # Build KDTree from site points (do this once)
-            site_points = np.vstack([
-                site_vtk.points[:, 0],
-                site_vtk.points[:, 1],
-                site_vtk.points[:, 2]
-            ]).T
-            
-            # Create KDTree
-            tree = cKDTree(site_points)
-            
-            # Cache the site data
-            _site_data_cache[site] = {
-                'site_vtk': site_vtk,
-                'site_points': site_points,
-                'tree': tree
-            }
-            print(f"Site data preparation completed in {time.time() - site_start_time:.2f}s")
-        else:
-            print(f"Warning: Could not load xarray for site {site}")
+    if site and 'baseline' not in ''.join(vtk_files_to_process):
+        ensure_site_data_cached(site, voxel_size)
     
     # Process each VTK file
     for vtk_file in vtk_files_to_process:
@@ -830,7 +866,12 @@ def process_single_file(vtk_file_path, site=None, voxel_size=None, scenario=None
             if site:
                 print(f"Processing as baseline for site: {site}")
                 baseline_start = time.time()
-                updated_vtk = process_baseline(site, voxel_size)
+                updated_vtk = process_baseline_polydata(
+                    scenario_vtk,
+                    site=site,
+                    voxel_size=voxel_size,
+                    save_path=scenario_baseline_urban_features_vtk_path(site, voxel_size),
+                )
                 print(f"Baseline processing completed in {time.time() - baseline_start:.2f}s")
                 
                 # Generate visualization for baseline
@@ -842,87 +883,15 @@ def process_single_file(vtk_file_path, site=None, voxel_size=None, scenario=None
                 print("Cannot process baseline without site information")
                 return None
         
-        # For regular scenario files
-        # Check if we already have cached site data
-        if site in _site_data_cache:
-            site_data = _site_data_cache[site]
-            site_vtk = site_data['site_vtk']
-            tree = site_data['tree']
-            
-            # Use cached site data for feature transfer
-            transfer_start = time.time()
-            scenario_vtk = transfer_site_features_to_scenario(
-                scenario_vtk, site=site, site_vtk=site_vtk, tree=tree
-            )
-            print(f"Feature transfer with cached data completed in {time.time() - transfer_start:.2f}s")
-            
-            # Add search variables
-            search_start = time.time()
-            updated_vtk = add_search_variables_to_scenario(scenario_vtk)
-            print(f"Search variables added in {time.time() - search_start:.2f}s")
-        else:
-            # Need to load xarray for site context if not cached
-            print("Site data not cached, loading from scratch...")
-            ds = None
-            if site and voxel_size:
-                load_start = time.time()
-                ds = load_xarray(site, voxel_size)
-                if ds is None:
-                    print(f"Warning: Could not load xarray for site {site}")
-                else:
-                    print(f"Xarray loaded in {time.time() - load_start:.2f}s")
-            
-            # Process the scenario VTK with freshly loaded site data
-            if ds is not None:
-                # Convert xarray to polydata for site context
-                site_start = time.time()
-                site_vtk = a_helper_functions.convert_xarray_into_polydata(ds)
-                site_vtk = preprocess_site_vtk(site_vtk)
-                
-                # Build site points array for KDTree
-                site_points = np.vstack([
-                    site_vtk.points[:, 0],
-                    site_vtk.points[:, 1],
-                    site_vtk.points[:, 2]
-                ]).T
-                
-                # Create KDTree
-                tree = cKDTree(site_points)
-                print(f"Site VTK and KDTree prepared in {time.time() - site_start:.2f}s")
-                
-                # Cache the site data for future use
-                _site_data_cache[site] = {
-                    'site_vtk': site_vtk,
-                    'site_points': site_points,
-                    'tree': tree
-                }
-                
-                # Transfer site features to scenario
-                transfer_start = time.time()
-                scenario_vtk = transfer_site_features_to_scenario(
-                    scenario_vtk, site=site, site_vtk=site_vtk, tree=tree
-                )
-                print(f"Feature transfer completed in {time.time() - transfer_start:.2f}s")
-                
-                # Add search variables
-                search_start = time.time()
-                updated_vtk = add_search_variables_to_scenario(scenario_vtk)
-                print(f"Search variables added in {time.time() - search_start:.2f}s")
-            else:
-                # Process without site context
-                search_start = time.time()
-                updated_vtk = add_search_variables_to_scenario(scenario_vtk)
-                print(f"Processed without site context in {time.time() - search_start:.2f}s")
-        
-        # Save updated VTK with "_urban_features" suffix
-        save_start = time.time()
-        output_path = vtk_file_path.replace('.vtk', '_urban_features.vtk')
-        updated_vtk.save(output_path)
-        print(f"Saved to: {os.path.basename(output_path)} in {time.time() - save_start:.2f}s")
-        
-        # Generate visualization
-        if site and scenario and year is not None and voxel_size and _visualization_enabled:
-            visualize_search_variables(updated_vtk, site, scenario, year, voxel_size)
+        updated_vtk = process_scenario_polydata(
+            scenario_vtk,
+            site=site,
+            voxel_size=voxel_size,
+            scenario=scenario,
+            year=year,
+            save_path=vtk_file_path.replace('.vtk', '_urban_features.vtk'),
+            enable_visualization=_visualization_enabled,
+        )
         
         total_time = time.time() - start_time
         print(f"Total processing time: {total_time:.2f}s")

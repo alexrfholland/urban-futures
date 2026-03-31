@@ -26,15 +26,23 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
 import a_scenario_params
-from refactor_code.paths import hook_baseline_state_vtk_path, hook_state_vtk_latest_path
+from refactor_code.paths import (
+    engine_output_baseline_state_vtk_path,
+    engine_output_state_vtk_path,
+    normalize_output_mode,
+    scenario_baseline_combined_vtk_path,
+    scenario_output_root,
+)
 
-# Base path relative to this script's location (works from any directory)
 SCRIPT_DIR = Path(__file__).parent
-DATA_DIR = SCRIPT_DIR.parent / 'data' / 'revised' / 'final'
-OUTPUT_DIR = DATA_DIR / 'output'
 
 # Default timesteps (can include sub-timesteps)
 DEFAULT_YEARS = a_scenario_params.generate_timesteps(interval=None)  # [0, 10, 30, 60, 180]
+
+
+def format_voxel_size(voxel_size):
+    numeric = float(voxel_size)
+    return str(int(numeric)) if numeric.is_integer() else str(voxel_size)
 
 
 # =============================================================================
@@ -238,6 +246,22 @@ URBAN_ELEMENTS = [
 
 # Rewilding status types
 REWILDING_TYPES = ['footprint-depaved', 'exoskeleton', 'node-rewilded', 'none']
+PROPOSAL_LABEL_DTYPE = "<U64"
+COLONISE_PROPOSAL_VALUES = {
+    "brownroof",
+    "greenroof",
+    "livingfacade",
+    "footprint-depaved",
+    "node-rewilded",
+    "otherground",
+    "rewilded",
+}
+COLONISE_REWILD_VALUES = {"node-rewilded", "footprint-depaved", "rewilded"}
+COLONISE_ENRICH_VALUES = {"greenroof"}
+COLONISE_ROUGHEN_VALUES = {"brownroof", "livingfacade"}
+DECAY_BUFFER_VALUES = {"node-rewilded", "footprint-depaved"}
+RECRUIT_BUFFER_VALUES = {"node-rewilded", "footprint-depaved"}
+RECRUIT_REWILD_VALUES = {"otherground", "rewilded"}
 
 
 # =============================================================================
@@ -325,6 +349,160 @@ def get_building_mask(polydata):
     
     # If search_urban_elements doesn't exist, return all False (no buildings detected)
     return np.zeros(polydata.n_points, dtype=bool)
+
+
+def _normalize_str_array(values):
+    return np.char.lower(np.asarray(values).astype(str))
+
+
+def _coerce_bool_array(values):
+    array = np.asarray(values)
+    if array.dtype == bool:
+        return array
+    if np.issubdtype(array.dtype, np.number):
+        numeric = np.nan_to_num(array.astype(float), nan=0.0)
+        return numeric != 0
+
+    normalized = _normalize_str_array(array)
+    truthy = {"true", "1", "yes", "y", "t"}
+    return np.isin(normalized, list(truthy))
+
+
+def _empty_proposal_labels(size):
+    return np.full(size, "none", dtype=PROPOSAL_LABEL_DTYPE)
+
+
+def _assign_proposal_labels(labels, opportunity_mask, intervention_masks, proposal_name):
+    labels[opportunity_mask] = f"{proposal_name}-other"
+    for intervention_name, mask in intervention_masks:
+        labels[mask] = f"{proposal_name}_{intervention_name}"
+    return labels
+
+
+def add_proposal_point_data(polydata):
+    """Add manuscript proposal/intervention categorical layers to the augmented VTK."""
+    n_points = polydata.n_points
+    required_arrays = {
+        "scenario_rewilded",
+        "scenario_bioEnvelope",
+        "scenario_outputs",
+        "search_bioavailable",
+        "forest_control",
+        "forest_size",
+        "forest_precolonial",
+        "indicator_Bird_self_peeling",
+        "indicator_Tree_generations_grassland",
+    }
+    missing_arrays = sorted(array for array in required_arrays if array not in polydata.point_data)
+    if missing_arrays:
+        print(f"Skipping proposal point-data derivation; missing arrays: {missing_arrays}")
+        for proposal_name in [
+            "proposal_decay",
+            "proposal_recruit",
+            "proposal_release_control",
+            "proposal_colonise",
+            "proposal_deploy_structure",
+        ]:
+            polydata.point_data[proposal_name] = _empty_proposal_labels(n_points)
+        return polydata
+
+    scenario_rewilded_lower = _normalize_str_array(polydata.point_data["scenario_rewilded"])
+    scenario_bio_envelope_lower = _normalize_str_array(polydata.point_data["scenario_bioEnvelope"])
+    scenario_outputs_lower = _normalize_str_array(polydata.point_data["scenario_outputs"])
+    search_bioavailable_lower = _normalize_str_array(polydata.point_data["search_bioavailable"])
+    forest_control_lower = _normalize_str_array(polydata.point_data["forest_control"])
+    forest_size_lower = _normalize_str_array(polydata.point_data["forest_size"])
+
+    forest_precolonial = _coerce_bool_array(polydata.point_data["forest_precolonial"])
+    recruit_indicator = _coerce_bool_array(polydata.point_data["indicator_Tree_generations_grassland"])
+    peeling_indicator = _coerce_bool_array(polydata.point_data["indicator_Bird_self_peeling"])
+
+    recruit_opportunity = get_points_within_distance(
+        polydata,
+        get_distance_reference_mask(polydata, "canopy-feature"),
+        20.0,
+    ) & (~get_building_mask(polydata))
+
+    proposal_decay = _assign_proposal_labels(
+        _empty_proposal_labels(n_points),
+        np.isin(
+            scenario_rewilded_lower,
+            ["exoskeleton", "footprint-depaved", "node-rewilded", "rewilded"],
+        ),
+        [
+            ("buffer-feature", np.isin(scenario_bio_envelope_lower, list(DECAY_BUFFER_VALUES))),
+            ("brace-feature", scenario_bio_envelope_lower == "exoskeleton"),
+        ],
+        "decay",
+    )
+
+    proposal_recruit = _assign_proposal_labels(
+        _empty_proposal_labels(n_points),
+        recruit_opportunity,
+        [
+            (
+                "buffer-feature",
+                recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_BUFFER_VALUES)),
+            ),
+            (
+                "rewild-ground",
+                recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_REWILD_VALUES)),
+            ),
+        ],
+        "recruit",
+    )
+
+    release_opportunity = search_bioavailable_lower == "arboreal"
+    proposal_release_control = _assign_proposal_labels(
+        _empty_proposal_labels(n_points),
+        release_opportunity,
+        [
+            (
+                "eliminate-pruning",
+                release_opportunity
+                & np.isin(
+                    forest_control_lower,
+                    ["reserve-tree", "reserve tree", "improved-tree", "improved tree"],
+                ),
+            ),
+            (
+                "reduce-pruning",
+                release_opportunity & np.isin(forest_control_lower, ["park-tree", "park tree"]),
+            ),
+        ],
+        "release-control",
+    )
+
+    colonise_opportunity = np.isin(scenario_outputs_lower, list(COLONISE_PROPOSAL_VALUES))
+    proposal_colonise = _assign_proposal_labels(
+        _empty_proposal_labels(n_points),
+        colonise_opportunity,
+        [
+            ("rewild-ground", colonise_opportunity & np.isin(scenario_outputs_lower, list(COLONISE_REWILD_VALUES))),
+            ("enrich-envelope", colonise_opportunity & np.isin(scenario_outputs_lower, list(COLONISE_ENRICH_VALUES))),
+            ("roughen-envelope", colonise_opportunity & np.isin(scenario_outputs_lower, list(COLONISE_ROUGHEN_VALUES))),
+        ],
+        "colonise",
+    )
+
+    upgrade_mask = (~forest_precolonial) & peeling_indicator
+    adapt_mask = (forest_size_lower == "artificial") & (~forest_precolonial) & (~upgrade_mask)
+    proposal_deploy_structure = _assign_proposal_labels(
+        _empty_proposal_labels(n_points),
+        upgrade_mask | adapt_mask,
+        [
+            ("upgrade-feature", upgrade_mask),
+            ("adapt-utility-pole", adapt_mask),
+        ],
+        "deploy-structure",
+    )
+
+    polydata.point_data["proposal_decay"] = proposal_decay
+    polydata.point_data["proposal_recruit"] = proposal_recruit
+    polydata.point_data["proposal_release_control"] = proposal_release_control
+    polydata.point_data["proposal_colonise"] = proposal_colonise
+    polydata.point_data["proposal_deploy_structure"] = proposal_deploy_structure
+    return polydata
 
 
 # =============================================================================
@@ -553,25 +731,30 @@ def gather_all_support_actions(polydata):
 # SECTION 6: FILE PROCESSING
 # =============================================================================
 
-def get_vtk_path(site, scenario, year, voxel_size=1):
+def get_vtk_path(site, scenario, year, voxel_size=1, output_mode=None):
     """Construct path to scenario VTK file."""
+    data_dir = scenario_output_root(output_mode)
+    voxel = format_voxel_size(voxel_size)
+
     # Handle baseline specially
     if scenario == 'baseline':
-        baseline_path = DATA_DIR / 'baselines' / f'{site}_baseline_combined_{voxel_size}_urban_features.vtk'
+        baseline_path = scenario_baseline_combined_vtk_path(site, voxel_size, output_mode).with_name(
+            f'{site}_baseline_combined_{voxel}_urban_features.vtk'
+        )
         if baseline_path.exists():
             return baseline_path
         raise FileNotFoundError(f"No baseline VTK found for {site}")
     
-    base = DATA_DIR / site
+    base = data_dir / site
     
     # Try urban_features version first
-    vtk_name = f"{site}_{scenario}_{voxel_size}_scenarioYR{year}_urban_features.vtk"
+    vtk_name = f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features.vtk"
     vtk_path = base / vtk_name
     if vtk_path.exists():
         return vtk_path
     
     # Try alternative naming
-    vtk_name = f"{site}_{voxel_size}_{scenario}_scenarioYR{year}_urban_features.vtk"
+    vtk_name = f"{site}_{voxel}_{scenario}_scenarioYR{year}_urban_features.vtk"
     vtk_path = base / vtk_name
     if vtk_path.exists():
         return vtk_path
@@ -579,7 +762,7 @@ def get_vtk_path(site, scenario, year, voxel_size=1):
     raise FileNotFoundError(f"No VTK found for {site}/{scenario}/year{year}")
 
 
-def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True):
+def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True, output_mode=None):
     """
     Process a single VTK file: apply indicators and gather counts.
     
@@ -598,7 +781,8 @@ def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True):
     
     # Apply indicators
     polydata, results = apply_indicators(polydata)
-    
+    polydata = add_proposal_point_data(polydata)
+
     # Build indicator counts records
     indicator_counts = []
     for indicator in INDICATORS:
@@ -627,19 +811,27 @@ def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True):
         })
         action_counts.append(record)
     
-    # Save VTK with indicators to refactored final-hooks state path
+    # Save VTK with indicators to the configured engine-output state path
     if save_vtk:
         if scenario == 'baseline':
-            output_path = hook_baseline_state_vtk_path(site, voxel_size)
+            output_path = engine_output_baseline_state_vtk_path(site, voxel_size, output_mode)
         else:
-            output_path = hook_state_vtk_latest_path(site, scenario, year, voxel_size)
+            output_path = engine_output_state_vtk_path(site, scenario, year, voxel_size, output_mode)
         polydata.save(str(output_path))
         print(f"\nSaved: {output_path}")
     
     return indicator_counts, action_counts, polydata
 
 
-def process_site(site, scenarios=None, years=None, voxel_size=1, save_vtk=True, include_baseline=True):
+def process_site(
+    site,
+    scenarios=None,
+    years=None,
+    voxel_size=1,
+    save_vtk=True,
+    include_baseline=True,
+    output_mode=None,
+):
     """
     Process all VTK files for a site, including baseline.
     
@@ -666,9 +858,9 @@ def process_site(site, scenarios=None, years=None, voxel_size=1, save_vtk=True, 
     # Process baseline first (scenario='baseline', year=-180)
     if include_baseline:
         try:
-            vtk_path = get_vtk_path(site, 'baseline', -180, voxel_size)
+            vtk_path = get_vtk_path(site, 'baseline', -180, voxel_size, output_mode)
             ind_counts, act_counts, _ = process_vtk(
-                vtk_path, site, 'baseline', -180, voxel_size, save_vtk
+                vtk_path, site, 'baseline', -180, voxel_size, save_vtk, output_mode
             )
             all_indicator_counts.extend(ind_counts)
             all_action_counts.extend(act_counts)
@@ -683,9 +875,9 @@ def process_site(site, scenarios=None, years=None, voxel_size=1, save_vtk=True, 
     for scenario in scenarios:
         for year in years:
             try:
-                vtk_path = get_vtk_path(site, scenario, year, voxel_size)
+                vtk_path = get_vtk_path(site, scenario, year, voxel_size, output_mode)
                 ind_counts, act_counts, _ = process_vtk(
-                    vtk_path, site, scenario, year, voxel_size, save_vtk
+                    vtk_path, site, scenario, year, voxel_size, save_vtk, output_mode
                 )
                 all_indicator_counts.extend(ind_counts)
                 all_action_counts.extend(act_counts)
@@ -729,6 +921,13 @@ def main():
     parser.add_argument('--voxel-size', type=float, default=1)
     parser.add_argument('--no-save', action='store_true',
                         help='Do not save VTK files')
+    parser.add_argument(
+        '--output-mode',
+        type=str,
+        default=None,
+        choices=['canonical', 'validation'],
+        help='Output root mode for reading scenario files and writing engine outputs.',
+    )
     
     args = parser.parse_args()
     
@@ -743,12 +942,19 @@ def main():
     else:
         years = None  # Uses DEFAULT_YEARS
     
+    output_mode = normalize_output_mode(args.output_mode)
+
     indicator_df, action_df = process_site(
-        args.site, scenarios, years, args.voxel_size, save_vtk=not args.no_save
+        args.site,
+        scenarios,
+        years,
+        args.voxel_size,
+        save_vtk=not args.no_save,
+        output_mode=output_mode,
     )
     
     # Save CSVs to csv subfolder
-    csv_dir = OUTPUT_DIR / 'csv'
+    csv_dir = scenario_output_root(output_mode) / 'output' / 'csv'
     csv_dir.mkdir(parents=True, exist_ok=True)
     
     if not indicator_df.empty:

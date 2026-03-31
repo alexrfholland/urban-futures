@@ -54,6 +54,7 @@ data/
 data-refactored/
 _data-refactored/
 _statistics-refactored/plots/
+_statistics-refactored-v2*/
 outputs/
 util/
 pathwalker_3d_results/

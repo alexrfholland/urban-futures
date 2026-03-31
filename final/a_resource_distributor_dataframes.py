@@ -12,6 +12,7 @@ import pandas as pd
 import random
 import numpy as np
 from pathlib import Path
+import os
 
 
 # Set a random seed for reproducibility
@@ -537,29 +538,93 @@ def process_single_tree(row, tree_templates_df, rng):
     # Use the retrieved template and apply it in your logic
     return initialise_and_translate_tree(template, row)
 
+
+def _template_root() -> Path:
+    override = os.environ.get("TREE_TEMPLATE_ROOT")
+    if override:
+        return Path(override)
+    return Path("data/revised/trees")
+
+
+def _apply_template_edits(
+    canonical_templates: pd.DataFrame,
+    template_edits: pd.DataFrame,
+) -> pd.DataFrame:
+    key_cols = ["precolonial", "size", "control", "tree_id"]
+    canonical = canonical_templates.copy()
+    edits = template_edits.copy()
+
+    for col in ("precolonial",):
+        if col in canonical.columns:
+            canonical[col] = canonical[col].astype(bool)
+        if col in edits.columns:
+            edits[col] = edits[col].astype(bool)
+    for col in ("size", "control"):
+        if col in canonical.columns:
+            canonical[col] = canonical[col].astype(str).str.strip()
+        if col in edits.columns:
+            edits[col] = edits[col].astype(str).str.strip()
+    if "tree_id" in canonical.columns:
+        canonical["tree_id"] = canonical["tree_id"].astype(int)
+    if "tree_id" in edits.columns:
+        edits["tree_id"] = edits["tree_id"].astype(int)
+
+    edit_keys = set(tuple(row[col] for col in key_cols) for _, row in edits[key_cols].iterrows())
+    keep_mask = canonical[key_cols].apply(lambda row: tuple(row[col] for col in key_cols) not in edit_keys, axis=1)
+    merged = pd.concat([canonical[keep_mask], edits], ignore_index=True)
+    merged = merged.sort_values(key_cols).reset_index(drop=True)
+    return merged
+
+
+def _load_full_template_table(template_dir: Path) -> tuple[pd.DataFrame, Path]:
+    combined_candidates = [
+        template_dir / "edited_combined_templateDF.pkl",
+        template_dir / "combined_templateDF.pkl",
+    ]
+    for path in combined_candidates:
+        if path.exists():
+            return pd.read_pickle(path), path
+
+    template_edits_path = template_dir / "template-edits.pkl"
+    if template_edits_path.exists():
+        canonical_path = Path("data/revised/trees/combined_templateDF.pkl")
+        canonical_templates = pd.read_pickle(canonical_path)
+        template_edits = pd.read_pickle(template_edits_path)
+        return _apply_template_edits(canonical_templates, template_edits), template_edits_path
+
+    raise FileNotFoundError(
+        f"Could not find combined templates in {template_dir}. "
+        "Expected edited_combined_templateDF.pkl, combined_templateDF.pkl, or template-edits.pkl."
+    )
+
+
+def _load_tree_templates(voxel_size: float | int) -> tuple[pd.DataFrame, Path]:
+    template_dir = _template_root()
+    voxel_prefix = f"{voxel_size:g}"
+    if float(voxel_size) == 0:
+        return _load_full_template_table(template_dir)
+
+    voxel_candidates = [
+        template_dir / f"{voxel_prefix}_combined_voxel_templateDF.pkl",
+        template_dir / f"combined_voxelSize_{voxel_prefix}_templateDF.pkl",
+    ]
+    for path in voxel_candidates:
+        if path.exists():
+            return pd.read_pickle(path), path
+
+    raise FileNotFoundError(
+        f"Could not find voxel template table for voxel_size={voxel_size} in {template_dir}. "
+        f"Tried: {[str(path.name) for path in voxel_candidates]}"
+    )
+
 def process_all_trees(locationDF, voxel_size=0.5):
     """
     Process all trees with the fallback logic in parallel using Dask.
     """
     print(f'Loading tree templates of voxel size {voxel_size}')
-    
-    # File paths
-    templateDir = Path('data/revised/trees') 
-    
-    # New combined template paths
-    combined_voxelised_name = f'{voxel_size}_combined_voxel_templateDF.pkl'
-    combined_original_name = 'edited_combined_templateDF.pkl'
 
-    # Load the appropriate template based on voxel size
-    if voxel_size == 0:
-        print(f'Loading original combined tree templates')
-        input_path = templateDir / combined_original_name
-        tree_templates_df = pd.read_pickle(input_path)
-        print(f'Loaded combined tree templates from {input_path}')
-    else:
-        input_path = templateDir / combined_voxelised_name
-        tree_templates_df = pd.read_pickle(input_path)
-        print(f'Loaded voxel size {voxel_size} combined tree templates from {input_path}')
+    tree_templates_df, input_path = _load_tree_templates(voxel_size)
+    print(f"Loaded tree templates from {input_path}")
     
     # Debug the loaded DataFrame
     print("DataFrame columns:", tree_templates_df.columns)
@@ -598,8 +663,6 @@ def process_all_trees(locationDF, voxel_size=0.5):
     # Combine the results into a single DataFrame, excluding None results
     resourceDF = pd.concat([res for res in results if res is not None])
     return locationDF, resourceDF
-
-import os
 
 def convertToPoly(resourceDF):
     
@@ -776,5 +839,3 @@ if __name__ == "__main__":
 
 
     print(f'processing complete')
-
-

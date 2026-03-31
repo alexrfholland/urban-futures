@@ -11,16 +11,199 @@ import numpy as np
 import pyvista as pv
 import sys
 from pathlib import Path
+from scipy.spatial import cKDTree
 import a_helper_functions
 import a_voxeliser
 import a_scenario_params  # Import the centralized parameters module
-# Import the assign_rewilded_status function directly
-from a_scenario_runscenario import calculate_rewilded_status
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
-from refactor_code.paths import hook_state_nodedf_path
+from refactor_code.paths import (
+    engine_output_nodedf_path,
+    scenario_log_df_path,
+    scenario_node_df_path,
+    scenario_state_vtk_path,
+    scenario_tree_df_path,
+    scenario_pole_df_path,
+)
+from refactor_code.scenario.engine_v2 import calculate_rewilded_status
+
+VTK_PROPOSAL_LABEL_DTYPE = "<U64"
+BUILDING_URBAN_VALUES = {"facade", "green roof", "brown roof"}
+COLONISE_PROPOSAL_VALUES = {
+    "brownroof",
+    "greenroof",
+    "livingfacade",
+    "footprint-depaved",
+    "node-rewilded",
+    "otherground",
+    "rewilded",
+}
+COLONISE_REWILD_VALUES = {"node-rewilded", "footprint-depaved", "rewilded"}
+COLONISE_ENRICH_VALUES = {"greenroof"}
+COLONISE_ROUGHEN_VALUES = {"brownroof", "livingfacade"}
+DECAY_BUFFER_VALUES = {"node-rewilded", "footprint-depaved"}
+RECRUIT_BUFFER_VALUES = {"node-rewilded", "footprint-depaved"}
+RECRUIT_REWILD_VALUES = {"otherground", "rewilded"}
+RECRUIT_DISTANCE_M = 20.0
+
+
+def _normalize_str_array(values):
+    return np.char.lower(np.asarray(values).astype(str))
+
+
+def _empty_proposal_labels(size):
+    return np.full(size, "none", dtype=VTK_PROPOSAL_LABEL_DTYPE)
+
+
+def _assign_proposal_labels(labels, opportunity_mask, intervention_masks, proposal_name):
+    labels[opportunity_mask] = f"{proposal_name}-other"
+    for intervention_name, mask in intervention_masks:
+        labels[mask] = f"{proposal_name}_{intervention_name}"
+    return labels
+
+
+def _points_within_distance(points, source_mask, distance_m):
+    if points.size == 0 or not np.any(source_mask):
+        return np.zeros(len(points), dtype=bool)
+    tree = cKDTree(points[source_mask])
+    distances, _ = tree.query(points, k=1, distance_upper_bound=distance_m)
+    return np.isfinite(distances)
+
+
+def _build_building_mask(search_urban_elements):
+    search_urban_elements_lower = _normalize_str_array(search_urban_elements)
+    return np.isin(search_urban_elements_lower, list(BUILDING_URBAN_VALUES))
+
+
+def create_proposal_point_data(ds):
+    required_vars = {
+        "forest_control",
+        "forest_precolonial",
+        "forest_size",
+        "scenario_bioEnvelope",
+        "scenario_outputs",
+        "scenario_rewilded",
+        "search_bioavailable",
+        "search_urban_elements",
+        "indicator_Bird_self_peeling",
+        "indicator_Tree_generations_grassland",
+    }
+    missing_vars = sorted(var for var in required_vars if var not in ds.variables)
+    if missing_vars:
+        print(f"Skipping proposal point-data creation; missing arrays: {missing_vars}")
+        return ds
+
+    voxel_count = ds.sizes["voxel"]
+    scenario_rewilded_lower = _normalize_str_array(ds["scenario_rewilded"].values)
+    scenario_bio_envelope_lower = _normalize_str_array(ds["scenario_bioEnvelope"].values)
+    scenario_outputs_lower = _normalize_str_array(ds["scenario_outputs"].values)
+    forest_control_lower = _normalize_str_array(ds["forest_control"].values)
+    forest_size_lower = _normalize_str_array(ds["forest_size"].values)
+    search_bioavailable_lower = _normalize_str_array(ds["search_bioavailable"].values)
+    search_urban_elements = ds["search_urban_elements"].values
+    forest_precolonial = np.asarray(ds["forest_precolonial"].values, dtype=bool)
+    peeling_indicator = np.asarray(ds["indicator_Bird_self_peeling"].values, dtype=bool)
+    recruit_indicator = np.asarray(ds["indicator_Tree_generations_grassland"].values, dtype=bool)
+
+    points = np.vstack(
+        (
+            ds["centroid_x"].values,
+            ds["centroid_y"].values,
+            ds["centroid_z"].values,
+        )
+    ).T
+
+    canopy_feature_mask = ~np.isin(forest_size_lower, ["", "nan", "none"])
+    if "stat_fallen log" in ds.variables:
+        fallen_log = np.asarray(ds["stat_fallen log"].values)
+        if np.issubdtype(fallen_log.dtype, np.number):
+            canopy_feature_mask |= fallen_log > 0
+    recruit_opportunity = _points_within_distance(points, canopy_feature_mask, RECRUIT_DISTANCE_M) & (
+        ~_build_building_mask(search_urban_elements)
+    )
+
+    proposal_decay = _assign_proposal_labels(
+        _empty_proposal_labels(voxel_count),
+        np.isin(
+            scenario_rewilded_lower,
+            ["exoskeleton", "footprint-depaved", "node-rewilded", "rewilded"],
+        ),
+        [
+            ("buffer-feature", np.isin(scenario_bio_envelope_lower, list(DECAY_BUFFER_VALUES))),
+            ("brace-feature", scenario_bio_envelope_lower == "exoskeleton"),
+        ],
+        "decay",
+    )
+
+    proposal_recruit = _assign_proposal_labels(
+        _empty_proposal_labels(voxel_count),
+        recruit_opportunity,
+        [
+            (
+                "buffer-feature",
+                recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_BUFFER_VALUES)),
+            ),
+            (
+                "rewild-ground",
+                recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_REWILD_VALUES)),
+            ),
+        ],
+        "recruit",
+    )
+
+    release_opportunity = search_bioavailable_lower == "arboreal"
+    proposal_release_control = _assign_proposal_labels(
+        _empty_proposal_labels(voxel_count),
+        release_opportunity,
+        [
+            (
+                "eliminate-pruning",
+                release_opportunity
+                & np.isin(
+                    forest_control_lower,
+                    ["reserve-tree", "reserve tree", "improved-tree", "improved tree"],
+                ),
+            ),
+            (
+                "reduce-pruning",
+                release_opportunity & np.isin(forest_control_lower, ["park-tree", "park tree"]),
+            ),
+        ],
+        "release-control",
+    )
+
+    colonise_opportunity = np.isin(scenario_outputs_lower, list(COLONISE_PROPOSAL_VALUES))
+    proposal_colonise = _assign_proposal_labels(
+        _empty_proposal_labels(voxel_count),
+        colonise_opportunity,
+        [
+            ("rewild-ground", colonise_opportunity & np.isin(scenario_outputs_lower, list(COLONISE_REWILD_VALUES))),
+            ("enrich-envelope", colonise_opportunity & np.isin(scenario_outputs_lower, list(COLONISE_ENRICH_VALUES))),
+            ("roughen-envelope", colonise_opportunity & np.isin(scenario_outputs_lower, list(COLONISE_ROUGHEN_VALUES))),
+        ],
+        "colonise",
+    )
+
+    upgrade_mask = (~forest_precolonial) & peeling_indicator
+    adapt_mask = (forest_size_lower == "artificial") & (~forest_precolonial) & (~upgrade_mask)
+    proposal_deploy_structure = _assign_proposal_labels(
+        _empty_proposal_labels(voxel_count),
+        upgrade_mask | adapt_mask,
+        [
+            ("upgrade-feature", upgrade_mask),
+            ("adapt-utility-pole", adapt_mask),
+        ],
+        "deploy-structure",
+    )
+
+    ds["proposal_decay"] = xr.DataArray(proposal_decay, dims="voxel")
+    ds["proposal_recruit"] = xr.DataArray(proposal_recruit, dims="voxel")
+    ds["proposal_release_control"] = xr.DataArray(proposal_release_control, dims="voxel")
+    ds["proposal_colonise"] = xr.DataArray(proposal_colonise, dims="voxel")
+    ds["proposal_deploy_structure"] = xr.DataArray(proposal_deploy_structure, dims="voxel")
+    return ds
 
 
 #==============================================================================
@@ -67,18 +250,42 @@ def create_rewilded_variable(ds, df):
     # STEP 4: UPDATE SCENARIO_REWILDED BASED ON NODE MATCHING
     # Match voxels to nodes and update their rewilding status
     #--------------------------------------------------------------------------
+    skipped_invalid_node_ids = 0
     for idx, row in df.iterrows():
-        if row['rewilded'] in ['exoskeleton', 'footprint-depaved']:
-            # Match using 'node_CanopyID'
-            mask = (canopy_id == row['NodeID'])
-        elif row['rewilded'] == 'node-rewilded':
-            # Match using 'sim_Nodes'
-            mask = (sim_nodes == row['NodeID'])
-        else:
+        rewilded_value = row['rewilded']
+        if rewilded_value not in ['exoskeleton', 'footprint-depaved', 'node-rewilded']:
             continue
-        
+
+        raw_node_id = row.get('NodeID', np.nan)
+        if pd.isna(raw_node_id):
+            skipped_invalid_node_ids += 1
+            continue
+
+        try:
+            node_id = int(float(raw_node_id))
+        except (TypeError, ValueError):
+            skipped_invalid_node_ids += 1
+            continue
+
+        # Rewild-ground recruits currently carry NodeID = -1.
+        # Never map those placeholder ids back onto voxel node arrays, because
+        # the background voxel fields also use -1 and that floods whole scenes.
+        if node_id < 0:
+            skipped_invalid_node_ids += 1
+            continue
+
+        if rewilded_value in ['exoskeleton', 'footprint-depaved']:
+            # Match using 'node_CanopyID'
+            mask = (canopy_id == node_id)
+        else:
+            # Match using 'sim_Nodes'
+            mask = (sim_nodes == node_id)
+
         # Update 'scenario_rewilded' for matching voxels
-        ds['scenario_rewilded'].values[mask] = row['rewilded']
+        ds['scenario_rewilded'].values[mask] = rewilded_value
+
+    if skipped_invalid_node_ids:
+        print(f"Skipped {skipped_invalid_node_ids} rewilded rows with invalid NodeID values")
 
     #--------------------------------------------------------------------------
     # STEP 5: ASSIGN NON-NODE BASED REWILDING STATUS
@@ -469,7 +676,18 @@ def print_simulation_statistics(df, year, site):
 #==============================================================================
 # MAIN PROCESSING FUNCTIONS
 #==============================================================================
-def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleDF=None, enable_visualization=False):
+def generate_vtk(
+    site,
+    scenario,
+    year,
+    voxel_size,
+    ds,
+    treeDF,
+    logDF=None,
+    poleDF=None,
+    enable_visualization=False,
+    return_polydata=False,
+):
     """
     Generates a VTK file for a given site, scenario, and year.
     
@@ -487,13 +705,14 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     Returns:
     xarray.Dataset: Updated dataset
     """
+    ds = ds.copy(deep=True)
+
     # Get scenario parameters with interpolation for sub-timesteps
     params = a_scenario_params.get_params_for_year(site, scenario, year)
-    
-    # Output file path
-    output_path = f'data/revised/final/{site}'
-    os.makedirs(output_path, exist_ok=True)
-    
+    params["absolute_year"] = year
+    params["previous_year"] = max(0, year - 30)
+    params["step_years"] = max(0, params["absolute_year"] - params["previous_year"])
+
     print(f'Generating VTK for {site}, {scenario}, year {year}')
     
     #--------------------------------------------------------------------------
@@ -567,13 +786,14 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     # - ds['scenario_outputs']: Combined categorical variable for visualization
     #--------------------------------------------------------------------------
     ds = finalDSprocessing(ds)
+    ds = create_proposal_point_data(ds)
 
     # Save combinedDF_scenario to csv
     print(f'Saving {year} combinedDF_scenario to csv')
-    legacy_node_df_path = f'{output_path}/{site}_{scenario}_{voxel_size}_nodeDF_{year}.csv'
+    legacy_node_df_path = scenario_node_df_path(site, scenario, year, voxel_size)
     combinedDF_scenario.to_csv(legacy_node_df_path, index=False)
 
-    refactored_node_df_path = hook_state_nodedf_path(site, scenario, year, voxel_size)
+    refactored_node_df_path = engine_output_nodedf_path(site, scenario, year, voxel_size)
     combinedDF_scenario.to_csv(refactored_node_df_path, index=False)
     print(f'Saved refactored nodeDF to {refactored_node_df_path}')
     
@@ -589,7 +809,7 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     polydata = process_polydata(polydata)
     
     # Save polydata
-    vtk_file = f'{output_path}/{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk'
+    vtk_file = scenario_state_vtk_path(site, scenario, year, voxel_size)
     polydata.save(vtk_file)
     print(f'Saved VTK file to {vtk_file}')
 
@@ -604,7 +824,9 @@ def generate_vtk(site, scenario, year, voxel_size, ds, treeDF, logDF=None, poleD
     if enable_visualization:
         plot_scenario_rewilded(polydata, treeDF, year, site)
     
-    return ds
+    if return_polydata:
+        return str(vtk_file), polydata
+    return str(vtk_file)
 
 def load_scenario_dataframes(site, scenario, year, voxel_size):
     """
@@ -619,10 +841,8 @@ def load_scenario_dataframes(site, scenario, year, voxel_size):
     Returns:
     tuple: (treeDF, logDF, poleDF) - Loaded dataframes
     """
-    filepath = f'data/revised/final/{site}'
-    
     # Load tree dataframe
-    tree_file = f'{filepath}/{site}_{scenario}_{voxel_size}_treeDF_{year}.csv'
+    tree_file = scenario_tree_df_path(site, scenario, year, voxel_size)
     if os.path.exists(tree_file):
         treeDF = pd.read_csv(tree_file)
         print(f'Loaded tree dataframe from {tree_file}')
@@ -631,7 +851,7 @@ def load_scenario_dataframes(site, scenario, year, voxel_size):
         return None, None, None
     
     # Load log dataframe
-    log_file = f'{filepath}/{site}_{scenario}_{voxel_size}_logDF_{year}.csv'
+    log_file = scenario_log_df_path(site, scenario, year, voxel_size)
     if os.path.exists(log_file):
         logDF = pd.read_csv(log_file)
         print(f'Loaded log dataframe from {log_file}')
@@ -640,7 +860,7 @@ def load_scenario_dataframes(site, scenario, year, voxel_size):
         print(f'Log dataframe file not found: {log_file}')
     
     # Load pole dataframe
-    pole_file = f'{filepath}/{site}_{scenario}_{voxel_size}_poleDF_{year}.csv'
+    pole_file = scenario_pole_df_path(site, scenario, year, voxel_size)
     if os.path.exists(pole_file):
         poleDF = pd.read_csv(pole_file)
         print(f'Loaded pole dataframe from {pole_file}')

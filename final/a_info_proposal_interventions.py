@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 import numpy as np
@@ -23,12 +24,22 @@ import pandas as pd
 import pyvista as pv
 from scipy.spatial import cKDTree
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import (
+    engine_output_state_vtk_path,
+    normalize_output_mode,
+    refactor_statistics_root,
+    scenario_log_df_path,
+    scenario_output_root,
+    scenario_pole_df_path,
+    scenario_tree_df_path,
+)
+
 
 SITES = ["trimmed-parade", "city", "uni"]
 DEFAULT_SCENARIOS = ["positive", "trending"]
-OUTPUT_DIR = Path("data/revised/final/output/csv")
-DATA_DIR = Path("data/revised/final")
-INDICATOR_VTK_DIR = DATA_DIR / "output"
 SITE_REPORT_LABELS = {
     "trimmed-parade": "PARADE",
     "uni": "STREET",
@@ -36,9 +47,6 @@ SITE_REPORT_LABELS = {
 }
 SITE_REPORT_ORDER = ["trimmed-parade", "uni", "city"]
 DEFAULT_TABLE_YEARS = [0, 10, 30, 60, 90, 120, 150, 180]
-REPO_ROOT = Path(__file__).resolve().parents[1]
-REFACTORED_STATISTICS_ROOT = REPO_ROOT / "_statistics-refactored"
-
 RECRUIT_DISTANCE_M = 20.0
 BUILDING_URBAN_VALUES = {"facade", "green roof", "brown roof"}
 
@@ -89,8 +97,8 @@ INTERVENTION_SUPPORT_LEVELS = {
     ("colonise", "Rewild-Ground"): "mixed",
     ("colonise", "Enrich-Envelope"): "full",
     ("colonise", "Roughen-Envelope"): "partial",
-    ("release_control", "Buffer-Feature"): "full",
-    ("release_control", "Brace-Feature"): "partial",
+    ("release_control", "Eliminate-Pruning"): "full",
+    ("release_control", "Reduce-Pruning"): "partial",
 }
 
 INTERVENTION_COUNT_EXPORTS = {
@@ -125,10 +133,10 @@ INTERVENTION_COUNT_EXPORTS = {
     ("colonise", "Roughen-Envelope"): [
         ("supported_voxel_count", "roughened envelope voxels"),
     ],
-    ("release_control", "Buffer-Feature"): [
+    ("release_control", "Eliminate-Pruning"): [
         ("supported_voxel_count", "arboreal voxels"),
     ],
-    ("release_control", "Brace-Feature"): [
+    ("release_control", "Reduce-Pruning"): [
         ("supported_voxel_count", "arboreal voxels"),
     ],
 }
@@ -180,6 +188,10 @@ INTERVENTION_ALIASES = {
     "enrich-envelope": "Enrich-Envelope",
     "roughen envelope": "Roughen-Envelope",
     "roughen-envelope": "Roughen-Envelope",
+    "reduce pruning": "Reduce-Pruning",
+    "reduce-pruning": "Reduce-Pruning",
+    "eliminate pruning": "Eliminate-Pruning",
+    "eliminate-pruning": "Eliminate-Pruning",
 }
 
 OPPORTUNITY_COLUMNS = [
@@ -287,9 +299,9 @@ REQUIRED_VTK_ARRAYS = [
 #
 # Release-Control opportunity:
 #   vtk.search_bioavailable == 'arboreal'
-# Release-Control Buffer-Feature:
+# Release-Control Eliminate-Pruning:
 #   vtk.forest_control in {'reserve-tree','improved-tree'}
-# Release-Control Brace-Feature:
+# Release-Control Reduce-Pruning:
 #   vtk.forest_control == 'park-tree'
 # -----------------------------------------------------------------------------
 
@@ -335,6 +347,14 @@ def format_voxel_size(voxel_size: float) -> str:
     if float(voxel_size).is_integer():
         return str(int(voxel_size))
     return str(voxel_size)
+
+
+def get_output_dir(output_mode: str | None) -> Path:
+    return scenario_output_root(output_mode) / "output" / "csv"
+
+
+def get_indicator_output_dir(output_mode: str | None) -> Path:
+    return scenario_output_root(output_mode) / "output"
 
 
 def normalize_scalar(value) -> str:
@@ -433,12 +453,13 @@ def intervention_row(
     status="computed",
     notes="",
 ):
+    resolved_support_level = support_level or INTERVENTION_SUPPORT_LEVELS.get((proposal_id, support_label), "")
     return {
         "site": site,
         "scenario": scenario,
         "year": year,
         "proposal_id": proposal_id,
-        "support_level": support_level,
+        "support_level": resolved_support_level,
         "support_label": support_label,
         "status": status,
         "supported_tree_count": supported_tree_count,
@@ -451,20 +472,19 @@ def intervention_row(
     }
 
 
-def get_tree_path(site: str, scenario: str, year: int, voxel_size: float) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return DATA_DIR / site / f"{site}_{scenario}_{voxel}_treeDF_{year}.csv"
+def get_tree_path(site: str, scenario: str, year: int, voxel_size: float, output_mode: str | None) -> Path:
+    return scenario_tree_df_path(site, scenario, year, voxel_size, output_mode)
 
 
-def get_vtk_path(site: str, scenario: str, year: int, voxel_size: float) -> Path:
+def get_vtk_path(site: str, scenario: str, year: int, voxel_size: float, output_mode: str | None) -> Path:
     voxel = format_voxel_size(voxel_size)
-    site_base = DATA_DIR / site
-    output_base = INDICATOR_VTK_DIR
+    site_base = scenario_output_root(output_mode) / site
+    output_base = get_indicator_output_dir(output_mode)
     candidates = [
-        # Prefer latest indicator-enriched output VTKs.
+        engine_output_state_vtk_path(site, scenario, year, voxel_size, output_mode),
+        # Backward compatibility fallbacks.
         output_base / f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features_with_indicators.vtk",
         site_base / f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features_with_indicators.vtk",
-        # Backward compatibility fallbacks.
         output_base / f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features.vtk",
         site_base / f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features.vtk",
         site_base / f"{site}_{voxel}_{scenario}_scenarioYR{year}_urban_features.vtk",
@@ -475,19 +495,17 @@ def get_vtk_path(site: str, scenario: str, year: int, voxel_size: float) -> Path
     return candidates[0]
 
 
-def get_pole_path(site: str, scenario: str, year: int, voxel_size: float) -> Path:
+def get_pole_path(site: str, scenario: str, year: int, voxel_size: float, output_mode: str | None) -> Path:
+    return scenario_pole_df_path(site, scenario, year, voxel_size, output_mode)
+
+
+def get_log_path(site: str, scenario: str, year: int, voxel_size: float, output_mode: str | None) -> Path:
+    return scenario_log_df_path(site, scenario, year, voxel_size, output_mode)
+
+
+def discover_scenarios(site: str, voxel_size: float, output_mode: str | None) -> list[str]:
     voxel = format_voxel_size(voxel_size)
-    return DATA_DIR / site / f"{site}_{scenario}_{voxel}_poleDF_{year}.csv"
-
-
-def get_log_path(site: str, scenario: str, year: int, voxel_size: float) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return DATA_DIR / site / f"{site}_{scenario}_{voxel}_logDF_{year}.csv"
-
-
-def discover_scenarios(site: str, voxel_size: float) -> list[str]:
-    voxel = format_voxel_size(voxel_size)
-    base = DATA_DIR / site
+    base = scenario_output_root(output_mode) / site
     if not base.exists():
         return []
     pattern = re.compile(rf"^{re.escape(site)}_(.+)_{re.escape(voxel)}_treeDF_(\d+)\.csv$")
@@ -499,9 +517,9 @@ def discover_scenarios(site: str, voxel_size: float) -> list[str]:
     return sorted(scenarios)
 
 
-def discover_years(site: str, scenario: str, voxel_size: float) -> list[int]:
+def discover_years(site: str, scenario: str, voxel_size: float, output_mode: str | None) -> list[int]:
     voxel = format_voxel_size(voxel_size)
-    base = DATA_DIR / site
+    base = scenario_output_root(output_mode) / site
     if not base.exists():
         return []
     pattern = re.compile(
@@ -544,13 +562,14 @@ def compute_metrics_for_combo(
     proposal_filter: str | None,
     intervention_filter: str | None,
     include_stubs: bool,
+    output_mode: str | None,
 ):
     opportunity_rows = []
     intervention_rows = []
     qc_rows = []
 
-    tree_path = get_tree_path(site, scenario, year, voxel_size)
-    vtk_path = get_vtk_path(site, scenario, year, voxel_size)
+    tree_path = get_tree_path(site, scenario, year, voxel_size, output_mode)
+    vtk_path = get_vtk_path(site, scenario, year, voxel_size, output_mode)
 
     missing_paths = [str(p) for p in [tree_path, vtk_path] if not p.exists()]
     if missing_paths:
@@ -607,8 +626,8 @@ def compute_metrics_for_combo(
         qc_row(site, scenario, year, "required_vtk_arrays_present", True, "ok", "All required VTK arrays present.")
     )
 
-    pole_path = get_pole_path(site, scenario, year, voxel_size)
-    log_path = get_log_path(site, scenario, year, voxel_size)
+    pole_path = get_pole_path(site, scenario, year, voxel_size, output_mode)
+    log_path = get_log_path(site, scenario, year, voxel_size, output_mode)
     pole_df = pd.read_csv(pole_path) if pole_path.exists() else pd.DataFrame()
     log_df = pd.read_csv(log_path) if log_path.exists() else pd.DataFrame()
 
@@ -857,7 +876,7 @@ def compute_metrics_for_combo(
             )
         )
 
-        if should_include_intervention("Buffer-Feature", intervention_filter):
+        if should_include_intervention("Eliminate-Pruning", intervention_filter):
             voxel_mask = release_voxel_opp & np.isin(
                 forest_control_lower, ["reserve-tree", "reserve tree", "improved-tree", "improved tree"]
             )
@@ -868,17 +887,17 @@ def compute_metrics_for_combo(
                     year,
                     "release_control",
                     "",
-                    "Buffer-Feature",
+                    "Eliminate-Pruning",
                     pd.NA,
                     int(np.sum(voxel_mask)),
                     release_tree_count,
                     release_voxel_count,
                     status="computed",
-                    notes="Assumes pruning withdrawn from canopy.",
+                    notes="Assumes pruning is fully withdrawn from canopy.",
                 )
             )
 
-        if should_include_intervention("Brace-Feature", intervention_filter):
+        if should_include_intervention("Reduce-Pruning", intervention_filter):
             voxel_mask = release_voxel_opp & np.isin(forest_control_lower, ["park-tree", "park tree"])
             intervention_rows.append(
                 intervention_row(
@@ -887,13 +906,13 @@ def compute_metrics_for_combo(
                     year,
                     "release_control",
                     "",
-                    "Brace-Feature",
+                    "Reduce-Pruning",
                     pd.NA,
                     int(np.sum(voxel_mask)),
                     release_tree_count,
                     release_voxel_count,
                     status="computed",
-                    notes="Assumes intermediate pruning withdrawn from canopy.",
+                    notes="Assumes pruning is reduced but not eliminated.",
                 )
             )
 
@@ -1037,8 +1056,9 @@ def process_site(
     proposal_filter: str | None,
     intervention_filter: str | None,
     include_stubs: bool,
+    output_mode: str | None,
 ):
-    scenarios = [scenario] if scenario else discover_scenarios(site, voxel_size)
+    scenarios = [scenario] if scenario else discover_scenarios(site, voxel_size, output_mode)
     if not scenarios:
         scenarios = DEFAULT_SCENARIOS
 
@@ -1047,7 +1067,7 @@ def process_site(
     site_qc_rows = []
 
     for current_scenario in scenarios:
-        years = [year] if year is not None else discover_years(site, current_scenario, voxel_size)
+        years = [year] if year is not None else discover_years(site, current_scenario, voxel_size, output_mode)
         if not years and year is not None:
             years = [year]
         for current_year in years:
@@ -1059,6 +1079,7 @@ def process_site(
                 proposal_filter=proposal_filter,
                 intervention_filter=intervention_filter,
                 include_stubs=include_stubs,
+                output_mode=output_mode,
             )
             site_opportunity_rows.extend(opp_rows)
             site_intervention_rows.extend(int_rows)
@@ -1071,12 +1092,20 @@ def process_site(
     return opportunity_df, intervention_df, qc_df
 
 
-def save_site_outputs(site: str, voxel_size: float, opportunity_df: pd.DataFrame, intervention_df: pd.DataFrame, qc_df: pd.DataFrame):
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def save_site_outputs(
+    site: str,
+    voxel_size: float,
+    opportunity_df: pd.DataFrame,
+    intervention_df: pd.DataFrame,
+    qc_df: pd.DataFrame,
+    output_mode: str | None,
+):
+    output_dir = get_output_dir(output_mode)
+    output_dir.mkdir(parents=True, exist_ok=True)
     voxel = format_voxel_size(voxel_size)
-    opportunity_path = OUTPUT_DIR / f"{site}_{voxel}_proposal_opportunities.csv"
-    intervention_path = OUTPUT_DIR / f"{site}_{voxel}_proposal_interventions.csv"
-    qc_path = OUTPUT_DIR / f"{site}_{voxel}_proposal_qc.csv"
+    opportunity_path = output_dir / f"{site}_{voxel}_proposal_opportunities.csv"
+    intervention_path = output_dir / f"{site}_{voxel}_proposal_interventions.csv"
+    qc_path = output_dir / f"{site}_{voxel}_proposal_qc.csv"
 
     opportunity_df.to_csv(opportunity_path, index=False)
     intervention_df.to_csv(intervention_path, index=False)
@@ -1087,13 +1116,14 @@ def save_site_outputs(site: str, voxel_size: float, opportunity_df: pd.DataFrame
     print(f"Saved: {qc_path}")
 
 
-def combine_all_sites(voxel_size: float):
+def combine_all_sites(voxel_size: float, output_mode: str | None):
     voxel = format_voxel_size(voxel_size)
+    output_dir = get_output_dir(output_mode)
     all_opp = []
     all_int = []
     for site in SITES:
-        opp_path = OUTPUT_DIR / f"{site}_{voxel}_proposal_opportunities.csv"
-        int_path = OUTPUT_DIR / f"{site}_{voxel}_proposal_interventions.csv"
+        opp_path = output_dir / f"{site}_{voxel}_proposal_opportunities.csv"
+        int_path = output_dir / f"{site}_{voxel}_proposal_interventions.csv"
         if opp_path.exists():
             all_opp.append(pd.read_csv(opp_path))
         if int_path.exists():
@@ -1102,9 +1132,9 @@ def combine_all_sites(voxel_size: float):
     combined_opp = ensure_columns(pd.concat(all_opp, ignore_index=True), OPPORTUNITY_COLUMNS) if all_opp else ensure_columns(pd.DataFrame(), OPPORTUNITY_COLUMNS)
     combined_int = ensure_columns(pd.concat(all_int, ignore_index=True), INTERVENTION_COLUMNS) if all_int else ensure_columns(pd.DataFrame(), INTERVENTION_COLUMNS)
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    out_opp = OUTPUT_DIR / f"all_sites_{voxel}_proposal_opportunities.csv"
-    out_int = OUTPUT_DIR / f"all_sites_{voxel}_proposal_interventions.csv"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_opp = output_dir / f"all_sites_{voxel}_proposal_opportunities.csv"
+    out_int = output_dir / f"all_sites_{voxel}_proposal_interventions.csv"
     combined_opp.to_csv(out_opp, index=False)
     combined_int.to_csv(out_int, index=False)
     print(f"Saved: {out_opp}")
@@ -1117,6 +1147,7 @@ def build_refactor_raw_tables(
     scenarios: list[str],
     years: list[int],
     voxel_size: float,
+    output_mode: str | None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     proposal_rows: list[dict] = []
     intervention_rows: list[dict] = []
@@ -1132,6 +1163,7 @@ def build_refactor_raw_tables(
                     proposal_filter=None,
                     intervention_filter=None,
                     include_stubs=False,
+                    output_mode=output_mode,
                 )
                 for row in opportunity_rows:
                     for metric_column, measure in PROPOSAL_COUNT_EXPORTS.get(row["proposal_id"], []):
@@ -1200,20 +1232,20 @@ def build_refactor_raw_tables(
     return raw_proposals, raw_interventions
 
 
-def refactor_statistics_dir(*parts: str) -> Path:
-    path = REFACTORED_STATISTICS_ROOT
+def refactor_statistics_dir(*parts: str, output_mode: str | None = None) -> Path:
+    path = refactor_statistics_root(output_mode)
     for part in parts:
         path /= part
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
 
 
-def refactor_site_raw_path(site: str, kind: str) -> Path:
-    return refactor_statistics_dir("raw", site, f"{kind}.csv")
+def refactor_site_raw_path(site: str, kind: str, output_mode: str | None = None) -> Path:
+    return refactor_statistics_dir("raw", site, f"{kind}.csv", output_mode=output_mode)
 
 
-def refactor_aggregate_path(folder: str, kind: str) -> Path:
-    return refactor_statistics_dir(folder, f"{kind}.csv")
+def refactor_aggregate_path(folder: str, kind: str, output_mode: str | None = None) -> Path:
+    return refactor_statistics_dir(folder, f"{kind}.csv", output_mode=output_mode)
 
 
 def update_timestamp() -> str:
@@ -1256,8 +1288,8 @@ def replace_scope_rows(
     return ensure_columns(combined, output_columns)
 
 
-def collect_all_site_raw_tables(kind: str, columns: list[str]) -> pd.DataFrame:
-    raw_root = refactor_statistics_dir("raw")
+def collect_all_site_raw_tables(kind: str, columns: list[str], output_mode: str | None = None) -> pd.DataFrame:
+    raw_root = refactor_statistics_dir("raw", output_mode=output_mode)
     site_paths = sorted(raw_root.glob(f"*/{kind}.csv"))
     frames = [ensure_columns(pd.read_csv(path), columns) for path in site_paths if path.exists()]
     if not frames:
@@ -1359,6 +1391,7 @@ def save_refactor_statistics_exports(
     sites: list[str],
     scenarios: list[str],
     years: list[int],
+    output_mode: str | None = None,
 ):
     proposal_raw_columns = [
         "site",
@@ -1410,8 +1443,8 @@ def save_refactor_statistics_exports(
             intervention_raw_columns,
         )
 
-        proposals_raw_path = refactor_site_raw_path(site, "proposals")
-        interventions_raw_path = refactor_site_raw_path(site, "interventions")
+        proposals_raw_path = refactor_site_raw_path(site, "proposals", output_mode=output_mode)
+        interventions_raw_path = refactor_site_raw_path(site, "interventions", output_mode=output_mode)
 
         existing_site_proposals = read_csv_or_empty(proposals_raw_path, proposal_raw_columns)
         existing_site_interventions = read_csv_or_empty(interventions_raw_path, intervention_raw_columns)
@@ -1438,8 +1471,8 @@ def save_refactor_statistics_exports(
         print(f"Saved: {interventions_raw_path}")
 
     legacy_raw_paths = [
-        refactor_statistics_dir("raw", "proposals.csv"),
-        refactor_statistics_dir("raw", "interventions.csv"),
+        refactor_statistics_dir("raw", "proposals.csv", output_mode=output_mode),
+        refactor_statistics_dir("raw", "interventions.csv", output_mode=output_mode),
     ]
     for legacy_path in legacy_raw_paths:
         if legacy_path.exists():
@@ -1456,18 +1489,18 @@ def save_refactor_statistics_exports(
         "measure",
         "metric_column",
     ]
-    all_raw_proposals = collect_all_site_raw_tables("proposals", proposal_raw_columns)
-    all_raw_interventions = collect_all_site_raw_tables("interventions", intervention_raw_columns)
+    all_raw_proposals = collect_all_site_raw_tables("proposals", proposal_raw_columns, output_mode=output_mode)
+    all_raw_interventions = collect_all_site_raw_tables("interventions", intervention_raw_columns, output_mode=output_mode)
 
     proposal_comparisons = build_comparison_table(all_raw_proposals, proposal_keys)
     intervention_comparisons = build_comparison_table(all_raw_interventions, intervention_keys)
     proposal_highlights = build_highlights_table(proposal_comparisons, proposal_keys)
     intervention_highlights = build_highlights_table(intervention_comparisons, intervention_keys)
 
-    proposals_comparison_path = refactor_aggregate_path("comparison", "proposals")
-    interventions_comparison_path = refactor_aggregate_path("comparison", "interventions")
-    proposals_highlight_path = refactor_aggregate_path("highlights", "proposals")
-    interventions_highlight_path = refactor_aggregate_path("highlights", "interventions")
+    proposals_comparison_path = refactor_aggregate_path("comparison", "proposals", output_mode=output_mode)
+    interventions_comparison_path = refactor_aggregate_path("comparison", "interventions", output_mode=output_mode)
+    proposals_highlight_path = refactor_aggregate_path("highlights", "proposals", output_mode=output_mode)
+    interventions_highlight_path = refactor_aggregate_path("highlights", "interventions", output_mode=output_mode)
 
     proposal_comparisons.to_csv(proposals_comparison_path, index=False)
     intervention_comparisons.to_csv(interventions_comparison_path, index=False)
@@ -1480,8 +1513,14 @@ def save_refactor_statistics_exports(
     print(f"Saved: {interventions_highlight_path}")
 
 
-def compute_tree_only_decay_counts(site: str, scenario: str, year: int, voxel_size: float) -> dict:
-    tree_path = get_tree_path(site, scenario, year, voxel_size)
+def compute_tree_only_decay_counts(
+    site: str,
+    scenario: str,
+    year: int,
+    voxel_size: float,
+    output_mode: str | None,
+) -> dict:
+    tree_path = get_tree_path(site, scenario, year, voxel_size, output_mode)
     if not tree_path.exists():
         return {
             "site": site,
@@ -1540,12 +1579,13 @@ def build_tree_only_decay_df(
     scenarios: list[str],
     years: list[int],
     voxel_size: float,
+    output_mode: str | None,
 ) -> pd.DataFrame:
     rows = []
     for site in sites:
         for scenario in scenarios:
             for year in years:
-                rows.append(compute_tree_only_decay_counts(site, scenario, year, voxel_size))
+                rows.append(compute_tree_only_decay_counts(site, scenario, year, voxel_size, output_mode))
     columns = [
         "site",
         "scenario",
@@ -1698,8 +1738,9 @@ def generate_decay_comparison_tables(
     scenarios: list[str],
     years: list[int],
     voxel_size: float,
+    output_mode: str | None,
 ):
-    per_site_df = build_tree_only_decay_df(sites, scenarios, years, voxel_size)
+    per_site_df = build_tree_only_decay_df(sites, scenarios, years, voxel_size, output_mode)
     all_sites_df = aggregate_all_sites_tree_only(per_site_df, scenarios, years)
 
     sections: list[str] = []
@@ -1724,13 +1765,15 @@ def save_decay_comparison_outputs(
     per_site_df: pd.DataFrame,
     all_sites_df: pd.DataFrame,
     markdown: str,
+    output_mode: str | None,
 ):
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir = get_output_dir(output_mode)
+    output_dir.mkdir(parents=True, exist_ok=True)
     voxel = format_voxel_size(voxel_size)
 
-    by_site_path = OUTPUT_DIR / f"decay_tree_comparison_by_site_scenario_year_{voxel}.csv"
-    all_sites_path = OUTPUT_DIR / f"decay_tree_comparison_all_sites_scenario_year_{voxel}.csv"
-    markdown_path = OUTPUT_DIR / f"decay_tree_comparison_tables_{voxel}.md"
+    by_site_path = output_dir / f"decay_tree_comparison_by_site_scenario_year_{voxel}.csv"
+    all_sites_path = output_dir / f"decay_tree_comparison_all_sites_scenario_year_{voxel}.csv"
+    markdown_path = output_dir / f"decay_tree_comparison_tables_{voxel}.md"
 
     per_site_df.to_csv(by_site_path, index=False)
     all_sites_df.to_csv(all_sites_path, index=False)
@@ -1741,8 +1784,14 @@ def save_decay_comparison_outputs(
     print(f"Saved: {markdown_path}")
 
 
-def compute_release_control_voxel_counts(site: str, scenario: str, year: int, voxel_size: float) -> dict:
-    vtk_path = get_vtk_path(site, scenario, year, voxel_size)
+def compute_release_control_voxel_counts(
+    site: str,
+    scenario: str,
+    year: int,
+    voxel_size: float,
+    output_mode: str | None,
+) -> dict:
+    vtk_path = get_vtk_path(site, scenario, year, voxel_size, output_mode)
     if not vtk_path.exists():
         return {
             "site": site,
@@ -1808,12 +1857,13 @@ def build_release_control_voxel_df(
     scenarios: list[str],
     years: list[int],
     voxel_size: float,
+    output_mode: str | None,
 ) -> pd.DataFrame:
     rows = []
     for site in sites:
         for scenario in scenarios:
             for year in years:
-                rows.append(compute_release_control_voxel_counts(site, scenario, year, voxel_size))
+                rows.append(compute_release_control_voxel_counts(site, scenario, year, voxel_size, output_mode))
     columns = [
         "site",
         "scenario",
@@ -1943,8 +1993,9 @@ def generate_release_control_comparison_tables(
     scenarios: list[str],
     years: list[int],
     voxel_size: float,
+    output_mode: str | None,
 ):
-    per_site_df = build_release_control_voxel_df(sites, scenarios, years, voxel_size)
+    per_site_df = build_release_control_voxel_df(sites, scenarios, years, voxel_size, output_mode)
     all_sites_df = aggregate_all_sites_release_control_voxels(per_site_df, scenarios, years)
 
     sections: list[str] = []
@@ -1969,13 +2020,15 @@ def save_release_control_comparison_outputs(
     per_site_df: pd.DataFrame,
     all_sites_df: pd.DataFrame,
     markdown: str,
+    output_mode: str | None,
 ):
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir = get_output_dir(output_mode)
+    output_dir.mkdir(parents=True, exist_ok=True)
     voxel = format_voxel_size(voxel_size)
 
-    by_site_path = OUTPUT_DIR / f"release_control_voxel_comparison_by_site_scenario_year_{voxel}.csv"
-    all_sites_path = OUTPUT_DIR / f"release_control_voxel_comparison_all_sites_scenario_year_{voxel}.csv"
-    markdown_path = OUTPUT_DIR / f"release_control_voxel_comparison_tables_{voxel}.md"
+    by_site_path = output_dir / f"release_control_voxel_comparison_by_site_scenario_year_{voxel}.csv"
+    all_sites_path = output_dir / f"release_control_voxel_comparison_all_sites_scenario_year_{voxel}.csv"
+    markdown_path = output_dir / f"release_control_voxel_comparison_tables_{voxel}.md"
 
     per_site_df.to_csv(by_site_path, index=False)
     all_sites_df.to_csv(all_sites_path, index=False)
@@ -1986,8 +2039,14 @@ def save_release_control_comparison_outputs(
     print(f"Saved: {markdown_path}")
 
 
-def compute_connect_voxel_counts(site: str, scenario: str, year: int, voxel_size: float) -> dict:
-    vtk_path = get_vtk_path(site, scenario, year, voxel_size)
+def compute_connect_voxel_counts(
+    site: str,
+    scenario: str,
+    year: int,
+    voxel_size: float,
+    output_mode: str | None,
+) -> dict:
+    vtk_path = get_vtk_path(site, scenario, year, voxel_size, output_mode)
     if not vtk_path.exists():
         return {
             "site": site,
@@ -2044,12 +2103,13 @@ def build_connect_voxel_df(
     scenarios: list[str],
     years: list[int],
     voxel_size: float,
+    output_mode: str | None,
 ) -> pd.DataFrame:
     rows = []
     for site in sites:
         for scenario in scenarios:
             for year in years:
-                rows.append(compute_connect_voxel_counts(site, scenario, year, voxel_size))
+                rows.append(compute_connect_voxel_counts(site, scenario, year, voxel_size, output_mode))
     columns = [
         "site",
         "scenario",
@@ -2154,8 +2214,9 @@ def generate_connect_comparison_tables(
     scenarios: list[str],
     years: list[int],
     voxel_size: float,
+    output_mode: str | None,
 ):
-    per_site_df = build_connect_voxel_df(sites, scenarios, years, voxel_size)
+    per_site_df = build_connect_voxel_df(sites, scenarios, years, voxel_size, output_mode)
     all_sites_df = aggregate_all_sites_connect_voxels(per_site_df, scenarios, years)
 
     sections: list[str] = []
@@ -2180,13 +2241,15 @@ def save_connect_comparison_outputs(
     per_site_df: pd.DataFrame,
     all_sites_df: pd.DataFrame,
     markdown: str,
+    output_mode: str | None,
 ):
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir = get_output_dir(output_mode)
+    output_dir.mkdir(parents=True, exist_ok=True)
     voxel = format_voxel_size(voxel_size)
 
-    by_site_path = OUTPUT_DIR / f"connect_voxel_comparison_by_site_scenario_year_{voxel}.csv"
-    all_sites_path = OUTPUT_DIR / f"connect_voxel_comparison_all_sites_scenario_year_{voxel}.csv"
-    markdown_path = OUTPUT_DIR / f"connect_voxel_comparison_tables_{voxel}.md"
+    by_site_path = output_dir / f"connect_voxel_comparison_by_site_scenario_year_{voxel}.csv"
+    all_sites_path = output_dir / f"connect_voxel_comparison_all_sites_scenario_year_{voxel}.csv"
+    markdown_path = output_dir / f"connect_voxel_comparison_tables_{voxel}.md"
 
     per_site_df.to_csv(by_site_path, index=False)
     all_sites_df.to_csv(all_sites_path, index=False)
@@ -2207,6 +2270,13 @@ def main():
     parser.add_argument("--intervention", type=str, default=None, help="Intervention filter")
     parser.add_argument("--include-stubs", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--no-combine", action="store_true", help="Skip all-sites combine output")
+    parser.add_argument(
+        "--output-mode",
+        type=str,
+        default=None,
+        choices=["canonical", "validation"],
+        help="Scenario/engine output root mode for reads and CSV writes.",
+    )
     parser.add_argument(
         "--decay-comparison-tables",
         action="store_true",
@@ -2248,6 +2318,7 @@ def main():
     )
 
     args = parser.parse_args()
+    output_mode = normalize_output_mode(args.output_mode)
 
     if args.decay_comparison_tables:
         report_sites = SITE_REPORT_ORDER if args.site == "all" else [args.site]
@@ -2258,8 +2329,9 @@ def main():
             scenarios=scenarios,
             years=years,
             voxel_size=args.voxel_size,
+            output_mode=output_mode,
         )
-        save_decay_comparison_outputs(args.voxel_size, per_site_df, all_sites_df, markdown)
+        save_decay_comparison_outputs(args.voxel_size, per_site_df, all_sites_df, markdown, output_mode)
         print("\n" + markdown)
         return
 
@@ -2272,8 +2344,9 @@ def main():
             scenarios=scenarios,
             years=years,
             voxel_size=args.voxel_size,
+            output_mode=output_mode,
         )
-        save_release_control_comparison_outputs(args.voxel_size, per_site_df, all_sites_df, markdown)
+        save_release_control_comparison_outputs(args.voxel_size, per_site_df, all_sites_df, markdown, output_mode)
         print("\n" + markdown)
         return
 
@@ -2286,8 +2359,9 @@ def main():
             scenarios=scenarios,
             years=years,
             voxel_size=args.voxel_size,
+            output_mode=output_mode,
         )
-        save_connect_comparison_outputs(args.voxel_size, per_site_df, all_sites_df, markdown)
+        save_connect_comparison_outputs(args.voxel_size, per_site_df, all_sites_df, markdown, output_mode)
         print("\n" + markdown)
         return
 
@@ -2300,6 +2374,7 @@ def main():
             scenarios=scenarios,
             years=years,
             voxel_size=args.voxel_size,
+            output_mode=output_mode,
         )
         save_refactor_statistics_exports(
             raw_proposals,
@@ -2307,6 +2382,7 @@ def main():
             sites=report_sites,
             scenarios=scenarios,
             years=years,
+            output_mode=output_mode,
         )
         return
 
@@ -2325,14 +2401,15 @@ def main():
             proposal_filter=proposal_filter,
             intervention_filter=intervention_filter,
             include_stubs=args.include_stubs,
+            output_mode=output_mode,
         )
-        save_site_outputs(site, args.voxel_size, opportunity_df, intervention_df, qc_df)
+        save_site_outputs(site, args.voxel_size, opportunity_df, intervention_df, qc_df, output_mode)
         print(
             f"  Rows -> opportunities: {len(opportunity_df)}, interventions: {len(intervention_df)}, qc: {len(qc_df)}"
         )
 
     if not args.no_combine:
-        combine_all_sites(args.voxel_size)
+        combine_all_sites(args.voxel_size, output_mode)
 
 
 if __name__ == "__main__":

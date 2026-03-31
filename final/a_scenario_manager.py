@@ -1,5 +1,7 @@
 import os
 import importlib
+import sys
+from pathlib import Path
 
 # Import required modules
 import a_scenario_initialiseDS
@@ -9,7 +11,17 @@ import a_scenario_urban_elements_count
 import a_scenario_get_baselines
 import a_scenario_params
 
-# Note: a_scenario_generateVTKs now imports assign_rewilded_status directly from a_scenario_runscenario
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import (
+    scenario_baseline_combined_vtk_path,
+    scenario_baseline_dir,
+    scenario_log_df_path,
+    scenario_pole_df_path,
+    scenario_tree_df_path,
+    scenario_urban_features_vtk_path,
+)
 
 #==============================================================================
 # UTILITY FUNCTIONS
@@ -28,8 +40,6 @@ def check_data_files_exist(site, scenario, year, voxel_size):
     Returns:
     bool: True if all required files exist, False otherwise
     """
-    filepath = f'data/revised/final/{site}'
-    
     # Handle site-specific conditions first
     check_logs = True
     check_poles = True
@@ -45,21 +55,21 @@ def check_data_files_exist(site, scenario, year, voxel_size):
         check_poles = False
     
     # Check for the tree dataframe file
-    tree_file = f'{filepath}/{site}_{scenario}_{voxel_size}_treeDF_{year}.csv'
+    tree_file = scenario_tree_df_path(site, scenario, year, voxel_size)
     if not os.path.exists(tree_file):
         print(f"Tree dataframe file not found: {tree_file}")
         return False
     
     # Check for log file if needed
     if check_logs:
-        log_file = f'{filepath}/{site}_{scenario}_{voxel_size}_logDF_{year}.csv'
+        log_file = scenario_log_df_path(site, scenario, year, voxel_size)
         if not os.path.exists(log_file):
             print(f"Log dataframe file not found: {log_file}")
             return False
     
     # Check for pole file if needed
     if check_poles:
-        pole_file = f'{filepath}/{site}_{scenario}_{voxel_size}_poleDF_{year}.csv'
+        pole_file = scenario_pole_df_path(site, scenario, year, voxel_size)
         if not os.path.exists(pole_file):
             print(f"Pole dataframe file not found: {pole_file}")
             return False
@@ -118,6 +128,10 @@ def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, ena
     #--------------------------------------------------------------------------
     # STEP 2: PROCESS EACH YEAR
     #--------------------------------------------------------------------------
+    years = sorted(years)
+    current_tree_df = treeDF.copy()
+    previous_year = 0
+
     # Process each year
     for year in years:
         print(f"\n----- Processing year {year} -----\n")
@@ -129,7 +143,15 @@ def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, ena
         if not skip_scenario:
             print(f"Step 2.1: Running scenario simulation for year {year}")
             treeDF_scenario, logDF_scenario, poleDF_scenario = a_scenario_runscenario.run_scenario(
-                site, scenario, year, voxel_size, treeDF, subsetDS, logDF, poleDF
+                site,
+                scenario,
+                year,
+                voxel_size,
+                current_tree_df,
+                subsetDS,
+                logDF,
+                poleDF,
+                previous_year=previous_year,
             )
         else:
             # Check if scenario data files exist
@@ -143,21 +165,44 @@ def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, ena
                 print(f"Cannot skip scenario simulation for year {year} - required data files not found")
                 print(f"Running scenario simulation instead")
                 treeDF_scenario, logDF_scenario, poleDF_scenario = a_scenario_runscenario.run_scenario(
-                    site, scenario, year, voxel_size, treeDF, subsetDS, logDF, poleDF
+                    site,
+                    scenario,
+                    year,
+                    voxel_size,
+                    current_tree_df,
+                    subsetDS,
+                    logDF,
+                    poleDF,
+                    previous_year=previous_year,
                 )
         
         #----------------------------------------------------------------------
         # STEP 2.2: GENERATE VTKs
         #----------------------------------------------------------------------
         print(f"Step 2.2: Generating VTKs for year {year}")
-        vtk_file = a_scenario_generateVTKs.generate_vtk(
-            site, scenario, year, voxel_size, subsetDS, 
-            treeDF_scenario, logDF_scenario, poleDF_scenario, enable_visualization
+        vtk_result = a_scenario_generateVTKs.generate_vtk(
+            site, scenario, year, voxel_size, subsetDS.copy(deep=True),
+            treeDF_scenario, logDF_scenario, poleDF_scenario, enable_visualization,
+            return_polydata=True,
+        )
+
+        vtk_file, state_polydata = vtk_result
+        a_scenario_urban_elements_count.process_scenario_polydata(
+            state_polydata,
+            site=site,
+            voxel_size=voxel_size,
+            scenario=scenario,
+            year=year,
+            save_path=scenario_urban_features_vtk_path(site, scenario, year, voxel_size),
+            enable_visualization=enable_visualization,
         )
         
         # Track the VTK file path
         if vtk_file:
             generated_vtk_files.append(vtk_file)
+
+        current_tree_df = treeDF_scenario.copy()
+        previous_year = year
     
     return generated_vtk_files
 
@@ -173,15 +218,26 @@ def process_baseline(site, voxel_size=1,check=False):
     str: Path to the baseline resource VTK file
     """
     # Define output paths
-    output_folder = 'data/revised/final/baselines'
-    baseline_vtk_path = f'{output_folder}/{site}_baseline_combined_{voxel_size}.vtk'
+    output_folder = str(scenario_baseline_dir())
+    baseline_vtk_path = scenario_baseline_combined_vtk_path(site, voxel_size)
     
-    # Check if baseline file already exists in baselines folder
-    if check:
-        if os.path.exists(baseline_vtk_path):
-            print(f"\n===== Using existing baseline for {site} =====")
-            print(f"Found existing baseline file: {baseline_vtk_path}")
-            return baseline_vtk_path
+    # Check if baseline file already exists in validation baselines folder
+    if check and os.path.exists(baseline_vtk_path):
+        print(f"\n===== Using existing baseline for {site} =====")
+        print(f"Found existing baseline file: {baseline_vtk_path}")
+        return str(baseline_vtk_path)
+
+    synced_baseline = a_scenario_get_baselines.sync_existing_baseline(
+        site,
+        voxel_size=voxel_size,
+        source_mode="canonical",
+        target_mode="validation",
+        overwrite=False,
+    )
+    if synced_baseline is not None:
+        print(f"\n===== Reused canonical baseline for {site} =====")
+        print(f"Copied baseline assets into validation roots: {synced_baseline}")
+        return str(synced_baseline)
 
     
     # If no existing baseline found, generate a new one
@@ -195,7 +251,7 @@ def process_baseline(site, voxel_size=1,check=False):
     print(f"Baseline generation completed for {site}")
     print(f"Resource VTK: {combined_vtk}")
     
-    return combined_vtk
+    return str(combined_vtk)
 
 #==============================================================================
 # MAIN FUNCTION
@@ -308,70 +364,6 @@ def main():
         if baseline_vtk:
             baseline_vtk_files[site] = baseline_vtk
     
-    #--------------------------------------------------------------------------
-    # STEP 4: PROCESS URBAN ELEMENTS
-    #--------------------------------------------------------------------------
-    print("\n===== STEP 4: PROCESSING URBAN ELEMENTS =====")
-    # Process urban elements for all sites
-    for site in sites:
-        # Process baseline VTK first to ensure it's done before scenarios
-        if site in baseline_vtk_files and os.path.exists(baseline_vtk_files[site]):
-            print(f"\nProcessing urban elements for {site} baseline")
-            baseline_file = baseline_vtk_files[site]
-            print(f"Baseline file: {os.path.basename(baseline_file)}")
-            
-            # Process the urban elements for baseline
-            processed_baseline = a_scenario_urban_elements_count.run_from_manager(
-                site=site,
-                voxel_size=voxel_size,
-                specific_files=[baseline_file],
-                should_process_baseline=True,
-                enable_visualization=enable_visualization
-            )
-            
-            if processed_baseline:
-                print(f"Successfully processed baseline urban elements for {site}")
-            else:
-                print(f"Failed to process baseline urban elements for {site}")
-        
-        # Now process all scenarios together for this site to take advantage of caching
-        all_scenario_files = []
-        scenario_info = {}
-        
-        # First collect all VTK files for all scenarios
-        for scenario in scenarios:
-            print(f"\nCollecting files for {site} - {scenario}")
-            scenario_files = []
-            for year in years:
-                vtk_path = f'data/revised/final/{site}/{site}_{scenario}_{voxel_size}_scenarioYR{year}.vtk'
-                if os.path.exists(vtk_path):
-                    scenario_files.append(vtk_path)
-                    # Store scenario and year info for each file
-                    scenario_info[vtk_path] = {'scenario': scenario, 'year': year}
-                    print(f"Found VTK file: {os.path.basename(vtk_path)}")
-                else:
-                    print(f"Warning: VTK file not found: {os.path.basename(vtk_path)}")
-            
-            all_scenario_files.extend(scenario_files)
-        
-        # Process all scenarios for this site in one batch to use cached site data
-        if all_scenario_files:
-            print(f"\nProcessing all {len(all_scenario_files)} urban element files for {site}")
-            processed_files = a_scenario_urban_elements_count.run_from_manager(
-                site=site,
-                voxel_size=voxel_size,
-                specific_files=all_scenario_files,
-                should_process_baseline=False,
-                enable_visualization=enable_visualization
-            )
-            
-            if processed_files:
-                print(f"Successfully processed {len(processed_files)} urban element files for {site}")
-            else:
-                print(f"No urban element files were processed for {site}")
-        else:
-            print(f"No VTK files found for site {site}")
-
     print("\n===== All processing completed =====")
 
 #==============================================================================
