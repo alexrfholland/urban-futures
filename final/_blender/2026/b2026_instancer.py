@@ -88,7 +88,6 @@ BASE_PATH = str(hook_state_nodedf_path(SITE, SCENARIO, YEAR, NODE_DF_VOXEL_SIZE)
 #if SITE == 'trimmed-parade':
 #    BASE_PATH = f'/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/{SITE}/initial'
 
-
 CSV_FILENAME = hook_state_nodedf_path(SITE, SCENARIO, YEAR, NODE_DF_VOXEL_SIZE).name
 CSV_FILEPATH = str(hook_state_nodedf_path(SITE, SCENARIO, YEAR, NODE_DF_VOXEL_SIZE))
 
@@ -1641,6 +1640,9 @@ def run_scenario(scene, scenario_name):
     treeDF = df_filtered[df_filtered['nodeType'] == 'tree'].copy()
     poleDF = df_filtered[df_filtered['nodeType'] == 'pole'].copy()
     logDF = df_filtered[df_filtered['nodeType'] == 'log'].copy()
+    if len(logDF) > 0:
+        logDF.loc[:, 'size'] = 'fallen'
+        df_filtered.loc[df_filtered['nodeType'] == 'log', 'size'] = 'fallen'
 
     print(f"\nFound {len(treeDF)} trees, {len(poleDF)} poles, and {len(logDF)} logs to process")
 
