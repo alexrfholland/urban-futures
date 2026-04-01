@@ -25,6 +25,11 @@ EXISTING_EXR = env_path(
     "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-existing_condition.exr",
 )
 SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
+OUTPUT_FILTER = {
+    item.strip()
+    for item in os.environ.get("EDGE_LAB_OUTPUT_FILTER", "").split(",")
+    if item.strip()
+}
 
 
 def log(message: str) -> None:
@@ -85,6 +90,27 @@ def repath_exr_node(node: bpy.types.Node, filepath: Path) -> None:
     node.image.reload()
 
 
+def exr_image_socket(node: bpy.types.Node):
+    image = node.outputs.get("Image")
+    if image is not None and getattr(image, "enabled", True):
+        return image
+    combined = node.outputs.get("Combined")
+    if combined is not None and getattr(combined, "enabled", True):
+        return combined
+    if image is not None:
+        return image
+    raise ValueError(f"Node '{node.name}' has neither an enabled Image nor Combined output")
+
+
+def reconnect_group_input(node_tree: bpy.types.NodeTree, group_node: bpy.types.Node, input_name: str, socket) -> None:
+    input_socket = group_node.inputs.get(input_name)
+    if input_socket is None:
+        raise ValueError(f"Missing group input '{input_name}' on node '{group_node.name}'")
+    for link in list(input_socket.links):
+        node_tree.links.remove(link)
+    node_tree.links.new(socket, input_socket)
+
+
 def detect_resolution(exr_paths: list[Path], images: list[bpy.types.Image]) -> tuple[int, int]:
     for path in exr_paths:
         try:
@@ -113,16 +139,22 @@ def render_socket_to_png(
     output_path: Path,
 ) -> None:
     composite = require_node_by_type(node_tree, "CompositorNodeComposite")
-    viewer = require_node_by_type(node_tree, "CompositorNodeViewer")
     for link in list(composite.inputs[0].links):
         node_tree.links.remove(link)
-    for link in list(viewer.inputs[0].links):
-        node_tree.links.remove(link)
     node_tree.links.new(image_socket, composite.inputs[0])
-    node_tree.links.new(image_socket, viewer.inputs[0])
+
+    original_filepath = scene.render.filepath
     scene.render.filepath = str(output_path)
     bpy.ops.render.render(write_still=True, scene=scene.name)
+    scene.render.filepath = original_filepath
     log(f"Wrote {output_path}")
+
+
+def safe_save_mainfile(filepath: Path) -> None:
+    try:
+        bpy.ops.wm.save_as_mainfile(filepath=str(filepath))
+    except RuntimeError as exc:
+        log(f"Skipping save for {filepath}: {exc}")
 
 
 def main() -> None:
@@ -140,6 +172,8 @@ def main() -> None:
 
     existing = require_node(node_tree, "AO::EXR Existing")
     repath_exr_node(existing, EXISTING_EXR)
+    base_group = require_node(node_tree, "Current Base Outputs :: Group")
+    reconnect_group_input(node_tree, base_group, "Existing Image", exr_image_socket(existing))
 
     outputs = [
         ("base_rgb", OUTPUT_DIR / "base_rgb.png"),
@@ -147,7 +181,13 @@ def main() -> None:
         ("base_sim-turns", OUTPUT_DIR / "base_sim-turns.png"),
         ("base_sim-nodes", OUTPUT_DIR / "base_sim-nodes.png"),
         ("base_sim-turns_ripple-effect", OUTPUT_DIR / "base_sim-turns_ripple-effect.png"),
+        ("base_depth_windowed_balanced_refined", OUTPUT_DIR / "base_depth_windowed_balanced_refined.png"),
+        ("base_depth_windowed_internal_refined", OUTPUT_DIR / "base_depth_windowed_internal_refined.png"),
+        ("base_depth_windowed_internal_dense", OUTPUT_DIR / "base_depth_windowed_internal_dense.png"),
+        ("base_depth_windowed_balanced_dense", OUTPUT_DIR / "base_depth_windowed_balanced_dense.png"),
     ]
+    if OUTPUT_FILTER:
+        outputs = [(label, path) for label, path in outputs if label in OUTPUT_FILTER]
 
     for node in node_tree.nodes:
         if node.bl_idname == "CompositorNodeOutputFile":
@@ -166,13 +206,13 @@ def main() -> None:
     scene.frame_current = 1
     set_standard_view(scene)
 
-    bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
+    safe_save_mainfile(BLEND_PATH)
 
     for label, output_path in outputs:
         reroute = require_node_by_label(node_tree, label, "NodeReroute")
         render_socket_to_png(scene, node_tree, reroute.outputs[0], output_path)
 
-    bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
+    safe_save_mainfile(BLEND_PATH)
 
 
 if __name__ == "__main__":

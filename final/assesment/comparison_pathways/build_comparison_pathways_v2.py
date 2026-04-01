@@ -300,7 +300,7 @@ def write_outputs(
     summaries = build_cell_summaries(old_md_path, output_root)
 
     # CSV
-    with out_csv.open("w", newline="") as f:
+    with out_csv.open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(
             [
@@ -441,7 +441,7 @@ def write_outputs(
                 md_lines.append(CELL_EXPLANATIONS[(site_display, persona, capability)])
                 md_lines.append("")
 
-    out_md.write_text("\n".join(md_lines).rstrip() + "\n")
+    out_md.write_text("\n".join(md_lines).rstrip() + "\n", encoding="utf-8")
 
     # Delta markdown
     delta_lines = [
@@ -469,7 +469,7 @@ def write_outputs(
                 )
             delta_lines.append("")
 
-    out_delta_md.write_text("\n".join(delta_lines).rstrip() + "\n")
+    out_delta_md.write_text("\n".join(delta_lines).rstrip() + "\n", encoding="utf-8")
 
 
 def parse_args() -> argparse.Namespace:

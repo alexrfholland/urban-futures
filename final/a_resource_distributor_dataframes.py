@@ -11,6 +11,7 @@ import pyvista as pv
 import pandas as pd
 import random
 import numpy as np
+import hashlib
 from pathlib import Path
 import os
 
@@ -28,6 +29,26 @@ def _resource_debug_enabled() -> bool:
 def _resource_debug(*args, **kwargs):
     if _resource_debug_enabled():
         print(*args, **kwargs)
+
+
+def _stable_fallback_seed(row, fallback_stage):
+    parts = [fallback_stage]
+    for field in ("x", "y", "z", "structureID", "tree_number", "NodeID", "logNo", "precolonial", "size", "logSize", "control", "tree_id"):
+        value = row.get(field, "missing")
+        if pd.isna(value):
+            parts.append("nan")
+        elif field in {"x", "y", "z"}:
+            parts.append(f"{float(value):.6f}")
+        else:
+            parts.append(str(value))
+    digest = hashlib.sha256("::".join(parts).encode("utf-8")).hexdigest()
+    return int(digest[:16], 16)
+
+
+def _choose_deterministic_template(result, row, fallback_stage):
+    ordered = result.sort_values(["precolonial", "size", "control", "tree_id"]).reset_index(drop=True)
+    choice_index = _stable_fallback_seed(row, fallback_stage) % len(ordered)
+    return ordered.iloc[choice_index]
 
 
 # Assume tree_templates is already loaded in RAM as a dictionary
@@ -184,9 +205,6 @@ def preprocess_logLocationsDF(logLocationsDF, logLibraryDF, seed=42, voxel_size=
     Preprocesses the log locations DataFrame by assigning appropriate log models using Dask.
     If voxel_size is provided, voxelises the log library first.
     """
-    # Set random seed
-    np.random.seed(seed)
-    
     # Voxelise the log library if voxel_size is provided
     if voxel_size is not None:
         logLibraryDF = voxelise_log_library(logLibraryDF, voxel_size)
@@ -205,41 +223,39 @@ def preprocess_logLocationsDF(logLocationsDF, logLibraryDF, seed=42, voxel_size=
     for size, logs in size_to_logs.items():
         print(f"{size}: {logs}")
     
-    # Convert to Dask DataFrame
-    dask_df = dd.from_pandas(logLocationsDF, npartitions=10)
-    
-    # Function to select a log model based on size
-    def select_log_model(row_size):
-        matching_logs = size_to_logs.get(row_size, [])
+    all_logs = sorted(logInfo['logNo'].astype(int).tolist())
+
+    # Function to select a log model deterministically from stable row fields
+    def select_log_model(row):
+        row_size = row['logSize']
+        matching_logs = sorted(int(log_no) for log_no in size_to_logs.get(row_size, []))
         if matching_logs:
-            selected = np.random.choice(matching_logs)
+            selected = matching_logs[_stable_fallback_seed(row, f"log-size:{row_size}:{seed}") % len(matching_logs)]
             print(f"Assigned log size {row_size} to log number {selected}")
             return selected
-        print(f"Warning: No logs found matching size {row_size}, selecting random log")
-        random_log = np.random.choice(list(logInfo['logNo']))
-        print(f"Randomly selected log number {random_log}")
-        return random_log
-    
-    # Apply the function using Dask
-    dask_df['tree_id'] = dask_df['logSize'].map(select_log_model)
-    
+        print(f"Warning: No logs found matching size {row_size}, selecting deterministic fallback log")
+        selected = all_logs[_stable_fallback_seed(row, f"log-fallback:{seed}") % len(all_logs)]
+        print(f"Deterministically selected log number {selected}")
+        return selected
+
+    result_df = logLocationsDF.copy()
+    result_df['tree_id'] = result_df.apply(select_log_model, axis=1)
+
     # Rename columns to match tree resource DF
-    dask_df = dask_df.rename(columns={
+    result_df = result_df.rename(columns={
         'logNo': 'tree_number',
         'logSize': 'size'
     })
+    result_df['log_template_size'] = result_df['size']
+    result_df['size'] = 'fallen'
     
     # Initialize new columns with default values
-    dask_df['precolonial'] = False
-    dask_df['control'] = 'unassigned'
-    dask_df['diameter_breast_height'] = -1
-    dask_df['useful_life_expectancy'] = -1
-    dask_df['isNewTree'] = False
-    dask_df['nodeType'] = 'log'  # Mark as log for identification
-    
-    # Compute the result
-    with ProgressBar():
-        result_df = dask_df.compute()
+    result_df['precolonial'] = False
+    result_df['control'] = 'unassigned'
+    result_df['diameter_breast_height'] = -1
+    result_df['useful_life_expectancy'] = -1
+    result_df['isNewTree'] = False
+    result_df['nodeType'] = 'log'  # Mark as log for identification
     
     # Debug print
     print("\nDEBUG: Result DataFrame tree_id distribution:")
@@ -293,7 +309,7 @@ def process_single_log(row, log_templates):
     metadata_columns = [
         'tree_number', 'size', 'tree_id', 'precolonial', 'control',
         'diameter_breast_height', 'structureID', 'useful_life_expectancy',
-        'isNewTree', 'nodeType'
+        'isNewTree', 'nodeType', 'log_template_size'
     ]
     
     for col in metadata_columns:
@@ -483,11 +499,11 @@ def update_old_template(tree_templateDF):
     print('Finished updating template with resource columns')
     return tree_templateDF
 
-def query_tree_template(df, precolonial, size, control, tree_id, rng):
+def query_tree_template(df, row, precolonial, size, control, tree_id):
     """
     Attempts to query the tree template using fallbacks if necessary.
-    Logs when fallback steps are used. Uses an external random number generator (rng)
-    to ensure the same pattern across runs but different samples per call.
+    Fallbacks are tied to stable row position/identity fields so reruns resolve
+    to the same donor template independent of parallel execution order.
     """
     # 0. If size is 'artificial', search for 'snag' instead
     if size == 'artificial':
@@ -510,27 +526,27 @@ def query_tree_template(df, precolonial, size, control, tree_id, rng):
                     (df['control'] == control)]
 
     if not result.empty:
-        print(f"Falling back to control and picking random tree_id for: {(precolonial, size, control)}")
-        chosen_template = result.sample(1, random_state=rng.integers(1e9)).iloc[0]['template']
-        print(f"Found template with key: {result.sample(1, random_state=rng.integers(1e9)).iloc[0][['precolonial', 'size', 'control', 'tree_id']]}")
-        return chosen_template
+        print(f"Falling back to control and deterministically picking tree_id for: {(precolonial, size, control)}")
+        chosen_row = _choose_deterministic_template(result, row, "control-fallback")
+        print(f"Found template with key: {chosen_row[['precolonial', 'size', 'control', 'tree_id']]}")
+        return chosen_row['template']
 
     # 3. Try to match by just `precolonial` and `size`, and randomly pick control and tree_id
     result = df.loc[(df['precolonial'] == precolonial) &
                     (df['size'] == size)]
 
     if not result.empty:
-        print(f"Falling back to size and picking random control and tree_id for: {(precolonial, size)}")
-        chosen_template = result.sample(1, random_state=rng.integers(1e9)).iloc[0]['template']
-        print(f"Found template with key: {result.sample(1, random_state=rng.integers(1e9)).iloc[0][['precolonial', 'size', 'control', 'tree_id']]}")
-        return chosen_template
+        print(f"Falling back to size and deterministically picking control and tree_id for: {(precolonial, size)}")
+        chosen_row = _choose_deterministic_template(result, row, "size-fallback")
+        print(f"Found template with key: {chosen_row[['precolonial', 'size', 'control', 'tree_id']]}")
+        return chosen_row['template']
 
     # 4. If no match found at all
     print(f"######################ERROR######################")
     print(f"No match found for: {(precolonial, size, control, tree_id)}")
     return None
 
-def process_single_tree(row, tree_templates_df, rng):
+def process_single_tree(row, tree_templates_df):
     """
     Processes a single tree using fallbacks.
     """
@@ -540,7 +556,7 @@ def process_single_tree(row, tree_templates_df, rng):
     tree_id = int(row['tree_id'])
 
     # Query the DataFrame using the fallback logic
-    template = query_tree_template(tree_templates_df, precolonial, size, control, tree_id, rng)
+    template = query_tree_template(tree_templates_df, row, precolonial, size, control, tree_id)
 
     if template is None:
         print(f"No match found for: {(precolonial, size, control, tree_id)}")
@@ -660,13 +676,10 @@ def process_all_trees(locationDF, voxel_size=0.5):
     # Convert processedDF to a Dask DataFrame
     dask_df = dd.from_pandas(locationDF, npartitions=10)
 
-    # Initialize a random generator
-    rng = np.random.default_rng(seed=42)
-
     # Use TQDM to show progress during map_partitions
     delayed_results = []
     for _, row in tqdm(dask_df.iterrows(), total=len(locationDF)):
-        delayed_results.append(delayed(process_single_tree)(row, tree_templates_df, rng))
+        delayed_results.append(delayed(process_single_tree)(row, tree_templates_df))
 
     # Use Dask's ProgressBar
     with dask.diagnostics.ProgressBar():

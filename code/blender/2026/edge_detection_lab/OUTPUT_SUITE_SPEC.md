@@ -175,6 +175,11 @@ Current status:
 - current-vs-combined validation on the latest city EXRs is pixel-identical
 - the trusted path is [render_edge_lab_current_mist.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/render_edge_lab_current_mist.py), which runs the validated `kirschsizes` mist workflow on a temporary scratch scene during the final-template run
 - the saved mist branch inside `edge_lab_final_template.blend`, scene `Current`, is not yet the trusted source of truth
+- pause further mist tuning until regenerated EXRs with updated mist/world settings are available
+- when that retest happens, use these as the visual references:
+  - `pathway_mist_kirsch_extra_thin.png`
+  - `priority_mist_kirsch_fine.png`
+  - reference root: `data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_city_20260329/current/outlines_mist/`
 
 Legacy / exploratory variants:
 
@@ -291,6 +296,16 @@ Already moved into `Current`:
 - shading branches
 - base image outputs
 - bioenvelope exports
+
+Base-depth variant note:
+
+- older standalone base/world depth-window variants are still available for reference in [render_exr_base_lines_v4_tuned_blender.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/render_exr_base_lines_v4_tuned_blender.py)
+- useful historical outputs include `base_depth_windowed_balanced_refined`, `base_depth_windowed_internal_refined`, `base_depth_windowed_internal_dense`, and `base_depth_windowed_balanced_dense`
+- these four variants are now revived inside `Current` base outputs
+- they have been verified against the standalone tuned workflow for both:
+  - `data/blender/2026/2026 futures heroes6-city/city-existing_condition.exr`
+  - `data/blender/2026/edge_detection_lab/inputs/city_8k_network_20260330/city_existing_condition_8k.exr`
+- active render contract is `Standard` / `sRGB`; older `AgX`-authored reference PNGs should not be treated as the target colour contract
 
 Latest working files:
 

@@ -37,6 +37,11 @@ TRENDING_EXR = env_path(
     "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-trending_state.exr",
 )
 SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
+FAMILY_FILTER = {
+    item.strip().lower()
+    for item in os.environ.get("EDGE_LAB_FAMILIES", "").split(",")
+    if item.strip()
+}
 
 
 FAMILY_SPECS: tuple[dict[str, object], ...] = (
@@ -67,19 +72,25 @@ FAMILY_SPECS: tuple[dict[str, object], ...] = (
             "Resources::EXR Trending": TRENDING_EXR,
         },
     },
-    {
-        "name": "DepthOutliner",
-        "output_dir": "depth_outliner",
-        "images": {
-            "DepthOutliner::EXR Pathway": PATHWAY_EXR,
-            "DepthOutliner::EXR Priority": PRIORITY_EXR,
-        },
-    },
 )
 
 
 def log(message: str) -> None:
     print(f"[render_edge_lab_current_core_outputs] {message}")
+
+
+def selected_families() -> tuple[dict[str, object], ...]:
+    if not FAMILY_FILTER:
+        return FAMILY_SPECS
+    selected = []
+    for family in FAMILY_SPECS:
+        family_name = str(family["name"]).lower()
+        output_dir = str(family["output_dir"]).lower()
+        if family_name in FAMILY_FILTER or output_dir in FAMILY_FILTER:
+            selected.append(family)
+    if not selected:
+        raise ValueError(f"No families matched EDGE_LAB_FAMILIES={sorted(FAMILY_FILTER)}")
+    return tuple(selected)
 
 
 def require_node(node_tree: bpy.types.NodeTree, name: str) -> bpy.types.Node:
@@ -99,6 +110,37 @@ def require_output_nodes(node_tree: bpy.types.NodeTree, family_name: str) -> lis
     if not nodes:
         raise ValueError(f"Missing output nodes for family: {family_name}")
     return nodes
+
+
+def find_output_socket(node: bpy.types.Node, name: str):
+    for socket in node.outputs:
+        if socket.name == name:
+            return socket
+    return None
+
+
+def preferred_image_socket(node: bpy.types.Node):
+    image = find_output_socket(node, "Image")
+    if image is not None and getattr(image, "enabled", True):
+        return image
+    combined = find_output_socket(node, "Combined")
+    if combined is not None and getattr(combined, "enabled", True):
+        return combined
+    if image is not None:
+        return image
+    return None
+
+
+def reconnect_image_links(node_tree: bpy.types.NodeTree, node: bpy.types.Node) -> None:
+    image = find_output_socket(node, "Image")
+    preferred = preferred_image_socket(node)
+    if image is None or preferred is None or image == preferred:
+        return
+    targets = [link.to_socket for link in list(image.links)]
+    for link in list(image.links):
+        node_tree.links.remove(link)
+    for target in targets:
+        node_tree.links.new(preferred, target)
 
 
 def repath_image_node(node: bpy.types.Node, filepath: Path) -> None:
@@ -202,10 +244,11 @@ def main() -> None:
     node_tree = scene.node_tree
     image_paths: list[Path] = []
     images: list[bpy.types.Image] = []
-    for family in FAMILY_SPECS:
+    for family in selected_families():
         for node_name, filepath in family["images"].items():
             node = require_node(node_tree, node_name)
             repath_image_node(node, filepath)
+            reconnect_image_links(node_tree, node)
             image_paths.append(filepath)
             if node.image is not None:
                 images.append(node.image)
@@ -213,7 +256,7 @@ def main() -> None:
     configure_scene(scene, images, image_paths)
     mute_all_output_nodes(node_tree)
 
-    for family in FAMILY_SPECS:
+    for family in selected_families():
         family_name = str(family["name"])
         output_dir = OUTPUT_ROOT / str(family["output_dir"])
         output_nodes = require_output_nodes(node_tree, family_name)

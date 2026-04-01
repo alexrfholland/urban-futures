@@ -704,7 +704,13 @@ Expected benefit:
 
 ### 5. Decide Which Fallen Variant Should Become Active
 
-Current decision now exposed in code, but not yet promoted into the canonical tree pipeline:
+Status:
+
+- completed for the current canonical v2
+- canonical now uses:
+  - `fallens_use = nonpre-direct`
+
+Historic options kept on file:
 
 - keep canonical fallen rows
 - use `nonpre-direct`
@@ -728,7 +734,13 @@ Follow-up design cleanup:
 
 ### 6. Decide Which Non-Precolonial Snag Variant Should Become Active
 
-Current options are both buildable:
+Status:
+
+- completed for the current canonical v2
+- canonical now uses:
+  - `snags_use = elm-snags-old`
+
+Historic options remain buildable:
 
 - `snags_use = elm-models-new`
   - resources are mapped better
@@ -796,11 +808,21 @@ Example:
   --sites all
 ```
 
-### 8. Reclassify Colonise Translocated Logs
+### 8. Completed: Reclassify Colonise Translocated Logs
 
-TODO:
+Implemented in [a_resource_distributor_dataframes.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_resource_distributor_dataframes.py):
 
-- change translocated logs under `Colonise` so their `size == 'fallen'`
+- donor log-model selection still uses the original `logSize`
+- exported translocated log structures now carry `size == 'fallen'`
+- original donor class is preserved in `log_template_size` for debugging
+
+Still open:
+
+- review the `Lizard / Communicate` and `Tree / Communicate` wording:
+  - `non-paved surface area` / `soil near canopy features` is currently slightly misleading because deadwood classified as `low-vegetation` is counted as ground-like habitat
+  - decide whether to:
+    - rename the indicators to reflect ground-like deadwood habitat
+    - or tighten the query so deadwood is excluded from `ground_not_paved`
 
 ### 9. Investigate Ground / Envelope Divergence
 
@@ -832,9 +854,11 @@ Pre-fix evidence:
 - `uni` trending:
   - v1 `search_bioavailable == low-vegetation`: `6,325`
 
-### 10. Add Stable Persistent Tree Identity Across Years
+### 10. Completed: Stable Persistent Tree Identity Across Years
 
-Current issue:
+This item is complete and is retained here as a completed record, with the implemented state summarized again in Section 11 below.
+
+Original issue:
 
 - `structureID` is not a persistent tree identity in the exported v2 CSVs
 - it is reassigned from scratch at every saved year in:
@@ -860,16 +884,16 @@ Observed consequence:
 - some IDs that drop out of the fallen set appear in later years under different sizes
 - so `structureID` currently cannot be used as proof of object persistence or deletion
 
-TODO:
+Implemented:
 
-- add a stable persistent tree UUID that is preserved across years
-- preserve it through:
+- stable persistent `structureID`
+- preserved through:
   - aging
   - senescence transitions
   - snag/fallen transitions
   - replacement
   - recruitment
-- then validate fallen disappearance using that UUID instead of exported `structureID`
+- fallen disappearance validation now uses stable `structureID`
   - v2 `search_bioavailable == low-vegetation`: `480,872`
   - v2 recruit rows with `NodeID = -1` and `rewilded in {node-rewilded, footprint-depaved}`: `3`
 - `city` trending:
@@ -983,11 +1007,21 @@ Canonical v2 now includes:
 
 - the template edits:
   - `fallens_use = nonpre-direct`
+    - both elm and euc fallens use elm fallen models, because those models are much larger
   - `snags_use = elm-snags-old`
+    - elm snags use their old versions, because they look better as simplified voxels, even though their branch mapping is less accurate
 - the `NodeID = -1` ground-mapping fix
 - the in-memory `urban_features` handoff
 - stable persistent `structureID`
 - the `decayed` lifecycle phase
+
+Canonical definition:
+
+- when this note says `canonical`, it means the current accepted `final-v2` model setup and outputs
+- use the settings above as the canonical tree-template definition
+- canonical roots are:
+  - scenario outputs in [data/revised/final-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2)
+  - refactored outputs in [_data-refactored/v2engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs)
 
 Canonical roots after promotion:
 
@@ -1014,3 +1048,22 @@ Current next step:
   - the more aggressive lookup/iteration rewrite was not kept because it changed exported VTK contents
 - next optimization prerequisite:
   - make fallback template selection deterministic before changing the tree-distribution hot path further
+
+### 12. TODO Review
+
+Completed:
+
+- stable persistent `structureID`
+- fallen removal verification
+- `decayed` lifecycle phase
+- baseline regeneration with template-aware variants
+- all-sites canonical promotion to `final-v2`
+- safe export-path optimization pass
+
+Still open:
+
+- review whether `ground_not_paved` should keep counting deadwood as ground-like habitat
+- make fallback template selection deterministic before deeper tree-distributor optimization
+- then revisit:
+  - cached lookup / hot-path tree distribution optimization
+  - repeated KDTree/query caching in `a_info_gather_capabilities.py`

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import shutil
 from pathlib import Path
 
 import bpy
@@ -18,7 +19,7 @@ BLEND_PATH = env_path(
 )
 OUTPUT_DIR = env_path(
     "EDGE_LAB_OUTPUT_DIR",
-    str(REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "outputs" / "edge_lab_final_template_mist"),
+    str(REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "outputs" / "edge_lab_final_template_depth_outliner"),
 )
 PATHWAY_EXR = env_path(
     "EDGE_LAB_PATHWAY_EXR",
@@ -32,37 +33,21 @@ TRENDING_EXR = env_path(
     "EDGE_LAB_TRENDING_EXR",
     str(REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6-city" / "city-trending_state.exr"),
 )
-SCRATCH_SCENE_NAME = os.environ.get("EDGE_LAB_MIST_SCENE_NAME", "__CurrentMistScratch")
-MIST_VARIANT_PRESET = os.environ.get("EDGE_LAB_MIST_VARIANT_PRESET", "kirschsizes").strip().lower()
+SCRATCH_SCENE_NAME = os.environ.get("EDGE_LAB_DEPTH_SCENE_NAME", "__CurrentDepthOutlinerScratch")
 
 
 def log(message: str) -> None:
-    print(f"[render_edge_lab_current_mist] {message}")
+    print(f"[render_edge_lab_current_depth_outliner] {message}")
 
 
-def load_legacy_mist_module():
-    module_path = Path(__file__).with_name("render_exr_arboreal_mist_variants_v2_blender.py")
-    spec = importlib.util.spec_from_file_location("edge_lab_legacy_mist", module_path)
+def load_legacy_depth_module():
+    module_path = Path(__file__).with_name("render_exr_arboreal_depth_outliner_baseline_blender.py")
+    spec = importlib.util.spec_from_file_location("edge_lab_legacy_depth_outliner", module_path)
     if spec is None or spec.loader is None:
         raise ImportError(f"Could not load {module_path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
-def resolve_variant_specs(legacy, preset: str):
-    variants_by_preset = {
-        "screenlift": legacy.SCREENLIFT_VARIANTS,
-        "extrathin": legacy.EXTRATHIN_VARIANTS,
-        "kirschsizes": legacy.KIRSCHSIZE_VARIANTS,
-        "kirschremap": legacy.REMAP_VARIANTS,
-        "localratio": legacy.LOCALRATIO_VARIANTS,
-        "edgelocalratio": legacy.EDGELOCALRATIO_VARIANTS,
-    }
-    try:
-        return variants_by_preset[preset]
-    except KeyError as exc:
-        raise ValueError(f"Unsupported mist variant preset: {preset}") from exc
 
 
 def main() -> None:
@@ -75,28 +60,33 @@ def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.open_mainfile(filepath=str(BLEND_PATH))
 
-    legacy = load_legacy_mist_module()
-    legacy.OUTPUT_ROOT = OUTPUT_DIR
-    legacy.PREP_ROOT = OUTPUT_DIR / "_prep"
+    legacy = load_legacy_depth_module()
+    legacy.OUTPUT_DIR = OUTPUT_DIR
+    legacy.BLEND_PATH = BLEND_PATH
     legacy.PATHWAY_EXR = PATHWAY_EXR
     legacy.PRIORITY_EXR = PRIORITY_EXR
     legacy.TRENDING_EXR = TRENDING_EXR
-    legacy.VARIANT_PRESET = MIST_VARIANT_PRESET
-    legacy.VARIANT_SPECS = resolve_variant_specs(legacy, MIST_VARIANT_PRESET)
-    legacy.RENDER_MODE = "edges_only"
-    try:
-        legacy.RENDER_WIDTH, legacy.RENDER_HEIGHT = legacy.detect_resolution_from_exr(PATHWAY_EXR)
-    except Exception:
-        pass
 
     existing = bpy.data.scenes.get(SCRATCH_SCENE_NAME)
     if existing is not None:
         bpy.data.scenes.remove(existing)
     scratch = bpy.data.scenes.new(SCRATCH_SCENE_NAME)
-    log(f"Rendering mist outputs from EXRs into {OUTPUT_DIR} with preset {MIST_VARIANT_PRESET}")
-    legacy.run_output_workflow(scratch)
+    log(f"Rendering depth outliner outputs from EXRs into {OUTPUT_DIR}")
+    rendered_paths = legacy.build_scene(scratch)
+    bpy.context.window.scene = scratch
+    legacy.finalize_render(scratch, rendered_paths)
+    for duplicate in OUTPUT_DIR.glob("*_0001.png"):
+        duplicate.unlink()
+    for prep in OUTPUT_DIR.glob("*_depth_normalized_visible_arboreal.png"):
+        prep.unlink()
     if scratch.name in bpy.data.scenes:
         bpy.data.scenes.remove(scratch)
+
+    base_outlines = OUTPUT_DIR.parent / "base" / "base_outlines.png"
+    if base_outlines.exists():
+        destination = OUTPUT_DIR / "base_depth_outliner.png"
+        shutil.copy2(base_outlines, destination)
+        log(f"Copied {base_outlines} -> {destination}")
 
 
 if __name__ == "__main__":

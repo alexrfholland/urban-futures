@@ -48,6 +48,7 @@ OUTPUT_DIR = Path(os.environ.get("EDGE_LAB_OUTPUT_DIR", str(DEFAULT_OUTPUT_DIR))
 BLEND_PATH = Path(os.environ.get("EDGE_LAB_BLEND_PATH", str(DEFAULT_BLEND_PATH)))
 PATHWAY_EXR = Path(os.environ.get("EDGE_LAB_PATHWAY_EXR", str(preferred_exr_path("pathway_state"))))
 PRIORITY_EXR = Path(os.environ.get("EDGE_LAB_PRIORITY_EXR", str(preferred_exr_path("priority"))))
+TRENDING_EXR = Path(os.environ.get("EDGE_LAB_TRENDING_EXR", str(preferred_exr_path("trending_state"))))
 
 
 def log(message: str) -> None:
@@ -277,15 +278,18 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
 
     inputs_frame = frame_node(node_tree, "Frame Inputs", "EXR Inputs", (-1600.0, 600.0), (0.16, 0.16, 0.16))
     masks_frame = frame_node(node_tree, "Frame Masks", "Visible Arboreal Masks", (-1280.0, 500.0), (0.18, 0.18, 0.14))
-    pathway_frame = frame_node(node_tree, "Frame Pathway", "Pathway Depth Outliner", (-1080.0, 560.0), (0.16, 0.20, 0.16))
-    priority_frame = frame_node(node_tree, "Frame Priority", "Priority Depth Outliner", (-1080.0, 20.0), (0.16, 0.20, 0.16))
+    pathway_frame = frame_node(node_tree, "Frame Pathway", "Pathway Depth Outliner", (-1080.0, 760.0), (0.16, 0.20, 0.16))
+    priority_frame = frame_node(node_tree, "Frame Priority", "Priority Depth Outliner", (-1080.0, 220.0), (0.16, 0.20, 0.16))
+    trending_frame = frame_node(node_tree, "Frame Trending", "Trending Depth Outliner", (-1080.0, -320.0), (0.16, 0.20, 0.16))
 
-    pathway = image_node(node_tree, PATHWAY_EXR, "EXR Pathway", "EXR Pathway", (-1500.0, 420.0))
+    pathway = image_node(node_tree, PATHWAY_EXR, "EXR Pathway", "EXR Pathway", (-1500.0, 620.0))
     pathway.parent = inputs_frame
-    priority = image_node(node_tree, PRIORITY_EXR, "EXR Priority", "EXR Priority", (-1500.0, -120.0))
+    priority = image_node(node_tree, PRIORITY_EXR, "EXR Priority", "EXR Priority", (-1500.0, 80.0))
     priority.parent = inputs_frame
+    trending = image_node(node_tree, TRENDING_EXR, "EXR Trending", "EXR Trending", (-1500.0, -460.0))
+    trending.parent = inputs_frame
 
-    width, height = detect_resolution([PATHWAY_EXR, PRIORITY_EXR], [pathway.image, priority.image])
+    width, height = detect_resolution([PATHWAY_EXR, PRIORITY_EXR, TRENDING_EXR], [pathway.image, priority.image, trending.image])
     scene.render.resolution_x = width
     scene.render.resolution_y = height
     scene.render.resolution_percentage = 100
@@ -296,16 +300,25 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         TREE_ID,
         "mask_visible-arboreal_pathway",
         "mask_visible-arboreal_pathway",
-        (-1240.0, 300.0),
+        (-1240.0, 500.0),
     )
     mask_visible_pathway.parent = masks_frame
+    mask_visible_trending = id_mask_node(
+        node_tree,
+        trending.outputs["IndexOB"],
+        TREE_ID,
+        "mask_visible-arboreal_trending",
+        "mask_visible-arboreal_trending",
+        (-1240.0, -340.0),
+    )
+    mask_visible_trending.parent = masks_frame
     mask_all_priority = id_mask_node(
         node_tree,
         priority.outputs["IndexOB"],
         TREE_ID,
         "mask_all-arboreal_priority",
         "mask_all-arboreal_priority",
-        (-1240.0, -260.0),
+        (-1240.0, -60.0),
     )
     mask_all_priority.parent = masks_frame
     mask_visible_priority = math_node(
@@ -313,15 +326,16 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         "MULTIPLY",
         "mask_visible-arboreal_priority",
         "mask_visible-arboreal_priority",
-        (-1020.0, -120.0),
+        (-1020.0, 80.0),
     )
     mask_visible_priority.parent = masks_frame
     ensure_link(node_tree, mask_all_priority.outputs["Alpha"], mask_visible_priority.inputs[0])
     ensure_link(node_tree, mask_visible_pathway.outputs["Alpha"], mask_visible_priority.inputs[1])
 
     rendered_paths: list[Path] = []
-    rendered_paths.extend(build_outliner_branch(node_tree, pathway, mask_visible_pathway.outputs["Alpha"], "pathway", 420.0, pathway_frame))
-    rendered_paths.extend(build_outliner_branch(node_tree, priority, mask_visible_priority.outputs["Value"], "priority", -120.0, priority_frame))
+    rendered_paths.extend(build_outliner_branch(node_tree, pathway, mask_visible_pathway.outputs["Alpha"], "pathway", 620.0, pathway_frame))
+    rendered_paths.extend(build_outliner_branch(node_tree, priority, mask_visible_priority.outputs["Value"], "priority", 80.0, priority_frame))
+    rendered_paths.extend(build_outliner_branch(node_tree, trending, mask_visible_trending.outputs["Alpha"], "trending", -460.0, trending_frame))
 
     composite = new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (1120.0, 140.0))
     viewer = new_node(node_tree, "CompositorNodeViewer", "Viewer", "Viewer", (1120.0, -60.0))
@@ -338,6 +352,7 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
     combined.premul = 1.0
     ensure_link(node_tree, node_tree.nodes["pathway_edge_masked"].outputs["Image"], combined.inputs[1])
     ensure_link(node_tree, node_tree.nodes["priority_edge_masked"].outputs["Image"], combined.inputs[2])
+    ensure_link(node_tree, node_tree.nodes["trending_edge_masked"].outputs["Image"], combined.inputs[0])
     ensure_link(node_tree, combined.outputs["Image"], composite.inputs[0])
     ensure_link(node_tree, combined.outputs["Image"], viewer.inputs[0])
     return rendered_paths
@@ -359,6 +374,12 @@ def finalize_render(scene: bpy.types.Scene, rendered_paths: list[Path]) -> None:
         node_tree,
         node_tree.nodes["priority_edge_masked"].outputs["Image"],
         OUTPUT_DIR / "priority_depth_outliner.png",
+    )
+    render_socket_to_png(
+        scene,
+        node_tree,
+        node_tree.nodes["trending_edge_masked"].outputs["Image"],
+        OUTPUT_DIR / "trending_depth_outliner.png",
     )
 
 

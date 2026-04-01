@@ -150,6 +150,20 @@ def run_current_mist() -> None:
     )
 
 
+def run_current_depth_outliner() -> None:
+    depth_root = OUTPUT_ROOT / "current" / "depth_outliner"
+    run_blender_python(
+        CODE_ROOT / "render_edge_lab_current_depth_outliner.py",
+        {
+            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "EDGE_LAB_OUTPUT_DIR": str(depth_root),
+            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
+            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
+            "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
+        },
+    )
+
+
 def run_current_base() -> None:
     base_root = OUTPUT_ROOT / "current" / "base"
     run_blender_python(
@@ -159,6 +173,22 @@ def run_current_base() -> None:
             "EDGE_LAB_SCENE_NAME": "Current",
             "EDGE_LAB_OUTPUT_DIR": str(base_root),
             "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
+        },
+    )
+
+
+def run_current_sizes() -> None:
+    sizes_root = OUTPUT_ROOT / "current" / "sizes"
+    run_blender_python(
+        CODE_ROOT / "render_edge_lab_current_sizes.py",
+        {
+            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "EDGE_LAB_SCENE_NAME": "Current",
+            "EDGE_LAB_OUTPUT_DIR": str(sizes_root),
+            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
+            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
+            "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
+            "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
         },
     )
 
@@ -185,10 +215,12 @@ def main() -> None:
     OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
     build_template()
     run_current_outputs()
+    run_current_depth_outliner()
     run_current_mist()
     prune_current_outputs()
     run_current_shading()
     run_current_base()
+    run_current_sizes()
     run_current_bioenvelopes()
     run_legacy_shading()
     prune_shading_outputs()

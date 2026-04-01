@@ -1,16 +1,29 @@
 from __future__ import annotations
 
+import os
+import re
+import subprocess
 from pathlib import Path
 
 import bpy
 
 
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
-EXR_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6-city"
-OUTPUT_DIR = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "outputs" / "exr_city_blender_base_lines_v4_tuned"
-BLEND_PATH = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "exr_city_blender_base_lines_v4_tuned.blend"
+EXR_ROOT = Path(os.environ.get("EDGE_LAB_EXR_ROOT", str(REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6-city")))
+OUTPUT_DIR = Path(
+    os.environ.get(
+        "EDGE_LAB_OUTPUT_DIR",
+        str(REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "outputs" / "exr_city_blender_base_lines_v4_tuned"),
+    )
+)
+BLEND_PATH = Path(
+    os.environ.get(
+        "EDGE_LAB_BLEND_PATH",
+        str(REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab" / "exr_city_blender_base_lines_v4_tuned.blend"),
+    )
+)
 
-BASE_EXR = EXR_ROOT / "city-existing_condition.exr"
+BASE_EXR = Path(os.environ.get("EDGE_LAB_BASE_EXR", str(EXR_ROOT / "city-existing_condition.exr")))
 EDGE_COLOR_LINEAR = (0.015996, 0.006048822, 0.043735046, 1.0)
 GROUND_ID = 1
 BUILDING_ID = 2
@@ -219,10 +232,29 @@ def rename_output(rendered_path: Path) -> Path:
     return final_path
 
 
-def configure_scene(scene: bpy.types.Scene) -> None:
+def detect_resolution(path: Path, image: bpy.types.Image) -> tuple[int, int]:
+    try:
+        result = subprocess.run(
+            ["oiiotool", "--info", "-v", str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        match = re.search(r"(\d+)\s*x\s*(\d+)", result.stdout)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+    except Exception:
+        pass
+    width, height = image.size[:]
+    if width > 0 and height > 0:
+        return width, height
+    return 3840, 2160
+
+
+def configure_scene(scene: bpy.types.Scene, resolution: tuple[int, int] = (3840, 2160)) -> None:
     scene.use_nodes = True
-    scene.render.resolution_x = 3840
-    scene.render.resolution_y = 2160
+    scene.render.resolution_x = resolution[0]
+    scene.render.resolution_y = resolution[1]
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
@@ -233,9 +265,19 @@ def configure_scene(scene: bpy.types.Scene) -> None:
     scene.frame_end = 1
     scene.frame_current = 1
     try:
+        scene.display_settings.display_device = "sRGB"
+    except Exception:
+        pass
+    try:
+        scene.view_settings.view_transform = "Standard"
+    except Exception:
+        pass
+    try:
         scene.view_settings.look = "None"
     except Exception:
         pass
+    scene.view_settings.exposure = 0.0
+    scene.view_settings.gamma = 1.0
 
 
 def masked_scalar_to_image(node_tree: bpy.types.NodeTree, scalar_socket, mask_socket, name: str, label: str, location: tuple[float, float]):
@@ -389,13 +431,13 @@ def build_multiwindow_building_alpha(
 
 
 def build_scene(scene: bpy.types.Scene) -> list[Path]:
-    configure_scene(scene)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     node_tree = scene.node_tree
     clear_node_tree(node_tree)
 
     exr = image_node(node_tree, BASE_EXR, "EXR Existing Condition", "EXR Existing Condition", (-1800.0, 260.0))
+    configure_scene(scene, detect_resolution(BASE_EXR, exr.image))
     ground_mask = id_mask_node(node_tree, exr.outputs["IndexOB"], GROUND_ID, "mask_ground", "mask_ground", (-1500.0, 420.0))
     building_mask = id_mask_node(node_tree, exr.outputs["IndexOB"], BUILDING_ID, "mask_buildings", "mask_buildings", (-1500.0, 120.0))
     base_mask = math_node(node_tree, "MAXIMUM", "mask_base", "mask_base", (-1260.0, 260.0))

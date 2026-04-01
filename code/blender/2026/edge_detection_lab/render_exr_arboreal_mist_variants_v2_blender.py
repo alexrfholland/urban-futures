@@ -49,6 +49,8 @@ WORKFLOW_ID = os.environ.get(
         if VARIANT_PRESET == "extrathin"
         else "blender_exr_arboreal_mist_kirschsizes_v1"
         if VARIANT_PRESET == "kirschsizes"
+        else "blender_exr_arboreal_mist_kirschremap_v1"
+        if VARIANT_PRESET == "kirschremap"
         else "blender_exr_arboreal_mist_v3"
         if VARIANT_PRESET == "localratio"
         else "blender_exr_arboreal_mist_v4"
@@ -62,11 +64,21 @@ WORKFLOW_NOTES = os.environ.get(
     if VARIANT_PRESET == "extrathin"
     else "Exports only the Kirsch mist edge PNGs in three widths: thin, fine, and extra-thin."
     if VARIANT_PRESET == "kirschsizes"
+    else "Exports only the isolated remapped Kirsch mist edge PNGs as a separate experimental branch."
+    if VARIANT_PRESET == "kirschremap"
     else "Adds local mist normalization before edge detection, with one hybrid variant that also uses a mild bottom-weighted screen-space gain."
     if VARIANT_PRESET == "localratio"
     else "Adds local normalization to the filtered edge-response field before width shaping, with one mild hybrid screen-lift variant for comparison.",
 )
 PREP_ROOT = Path(os.environ.get("EDGE_LAB_PREP_OUTPUT_DIR", str(OUTPUT_ROOT / "_prep")))
+
+
+def exr_image_socket(node: bpy.types.Node) -> bpy.types.NodeSocket:
+    for socket_name in ("Image", "Combined"):
+        socket = node.outputs.get(socket_name)
+        if socket is not None:
+            return socket
+    raise KeyError(f'EXR node "{node.name}" has neither "Image" nor "Combined" output')
 
 
 def detect_resolution_from_exr(path: Path) -> tuple[int, int]:
@@ -184,6 +196,25 @@ KIRSCHSIZE_VARIANTS = (
         "blur_pixels": 1,
         "screen_gain_bottom": 1.34,
         "screen_gain_power": 1.7,
+    },
+)
+
+REMAP_VARIANTS = (
+    {
+        "name": "mist_kirsch_remapped",
+        "filter_type": "KIRSCH",
+        "edge_remap_low": 0.08,
+        "edge_remap_high": 0.55,
+        "presence_low": 0.10,
+        "presence_high": 0.28,
+        "strong_low": 0.24,
+        "strong_high": 0.42,
+        "core_distance": 0,
+        "wide_distance": 0,
+        "blur_pixels": 0,
+        "screen_gain_bottom": 1.12,
+        "screen_gain_power": 1.45,
+        "alpha_gain": 0.45,
     },
 )
 
@@ -307,6 +338,8 @@ elif VARIANT_PRESET == "extrathin":
     VARIANT_SPECS = EXTRATHIN_VARIANTS
 elif VARIANT_PRESET == "kirschsizes":
     VARIANT_SPECS = KIRSCHSIZE_VARIANTS
+elif VARIANT_PRESET == "kirschremap":
+    VARIANT_SPECS = REMAP_VARIANTS
 elif VARIANT_PRESET == "localratio":
     VARIANT_SPECS = LOCALRATIO_VARIANTS
 else:
@@ -486,6 +519,44 @@ def rgb_node(node_tree: bpy.types.NodeTree, name: str, label: str, location: tup
     node = new_node(node_tree, "CompositorNodeRGB", name, label, location, color=(0.18, 0.12, 0.20))
     node.outputs[0].default_value = rgba
     return node
+
+
+def value_node(node_tree: bpy.types.NodeTree, value: float, name: str, label: str, location: tuple[float, float]):
+    node = new_node(node_tree, "CompositorNodeValue", name, label, location, color=(0.18, 0.12, 0.20))
+    node.outputs[0].default_value = value
+    return node
+
+
+def remap_value_socket(
+    node_tree: bpy.types.NodeTree,
+    value_socket,
+    prefix: str,
+    location: tuple[float, float],
+    low: float,
+    high: float,
+):
+    subtract = math_node(
+        node_tree,
+        "SUBTRACT",
+        f"{prefix}_remap_subtract",
+        f"{prefix}_remap_subtract",
+        location,
+        clamp=False,
+    )
+    ensure_link(node_tree, value_socket, subtract.inputs[0])
+    subtract.inputs[1].default_value = low
+
+    divide = math_node(
+        node_tree,
+        "DIVIDE",
+        f"{prefix}_remap_divide",
+        f"{prefix}_remap_divide",
+        (location[0] + 240.0, location[1]),
+        clamp=True,
+    )
+    ensure_link(node_tree, subtract.outputs["Value"], divide.inputs[0])
+    divide.inputs[1].default_value = max(high - low, 1e-6)
+    return divide.outputs["Value"]
 
 
 def solid_color_image(node_tree: bpy.types.NodeTree, source_socket, name: str, label: str, location: tuple[float, float], rgba: tuple[float, float, float, float]):
@@ -691,7 +762,19 @@ def build_edge_width(node_tree: bpy.types.NodeTree, normalized_socket, mask_sock
     masked = math_node(node_tree, "MULTIPLY", f"{prefix}_masked", f"{prefix}_masked", (800.0, y))
     ensure_link(node_tree, soften.outputs[0], masked.inputs[0])
     ensure_link(node_tree, mask_socket, masked.inputs[1])
-    return masked.outputs["Value"]
+    if "alpha_gain" not in spec:
+        return masked.outputs["Value"]
+    gain = value_node(
+        node_tree,
+        spec["alpha_gain"],
+        f"{prefix}_alpha_gain",
+        f"{prefix}_alpha_gain",
+        (1040.0, y),
+    )
+    gained = math_node(node_tree, "MULTIPLY", f"{prefix}_alpha_scaled", f"{prefix}_alpha_scaled", (1280.0, y))
+    ensure_link(node_tree, masked.outputs["Value"], gained.inputs[0])
+    ensure_link(node_tree, gain.outputs[0], gained.inputs[1])
+    return gained.outputs["Value"]
 
 
 def build_prep_stage(scene: bpy.types.Scene) -> dict[str, tuple[Path, Path]]:
@@ -759,7 +842,7 @@ def build_prep_stage(scene: bpy.types.Scene) -> dict[str, tuple[Path, Path]]:
         scene_dir = ensure_dir((PREP_ROOT if prep_mode else OUTPUT_ROOT) / scene_name)
         visible = set_alpha_node(
             node_tree,
-            exr_node.outputs["Image"],
+            exr_image_socket(exr_node),
             alpha_socket,
             f"{scene_name}_visible_arboreal",
             f"{scene_name}_visible_arboreal",
@@ -806,7 +889,7 @@ def build_prep_stage(scene: bpy.types.Scene) -> dict[str, tuple[Path, Path]]:
         final_paths[scene_name] = (visible_path, mist_path)
 
     composite = new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (120.0, 240.0))
-    ensure_link(node_tree, pathway.outputs["Image"], composite.inputs[0])
+    ensure_link(node_tree, exr_image_socket(pathway), composite.inputs[0])
     parent_nodes(output_frame, composite)
 
     render_scene(scene, write_still=False)
@@ -835,6 +918,16 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
 
     filter_input = mist_bw.outputs["Val"]
     filter_input_x = -1060.0
+    if "input_remap_low" in spec and "input_remap_high" in spec:
+        filter_input = remap_value_socket(
+            node_tree,
+            filter_input,
+            f"{variant_name}_input",
+            (-1060.0, -300.0),
+            spec["input_remap_low"],
+            spec["input_remap_high"],
+        )
+        filter_input_x = -580.0
     if VARIANT_PRESET == "localratio":
         filter_input = local_ratio_normalize(
             node_tree,
@@ -864,6 +957,15 @@ def build_variant_stage(scene: bpy.types.Scene, scene_name: str, spec: dict, vis
     parent_nodes(signal_frame, edge_filter, edge_normalized)
 
     edge_signal = edge_normalized.outputs[0]
+    if "edge_remap_low" in spec and "edge_remap_high" in spec:
+        edge_signal = remap_value_socket(
+            node_tree,
+            edge_signal,
+            f"{variant_name}_edge",
+            (filter_input_x + 480.0, 120.0),
+            spec["edge_remap_low"],
+            spec["edge_remap_high"],
+        )
     if VARIANT_PRESET == "edgelocalratio":
         edge_signal = local_ratio_normalize(
             node_tree,
@@ -1032,6 +1134,16 @@ def build_static_variant_branch(
 
     filter_input = mist_bw.outputs["Val"]
     filter_input_x = base_x + 260.0
+    if "input_remap_low" in spec and "input_remap_high" in spec:
+        filter_input = remap_value_socket(
+            node_tree,
+            filter_input,
+            f"{variant_name}_input",
+            (base_x + 260.0, base_y - 280.0),
+            spec["input_remap_low"],
+            spec["input_remap_high"],
+        )
+        filter_input_x = base_x + 740.0
     if "local_blur_pixels" in spec and "local_floor" in spec:
         filter_input = local_ratio_normalize(
             node_tree,
@@ -1061,6 +1173,15 @@ def build_static_variant_branch(
     parent_nodes(signal_frame, edge_filter, edge_normalized)
 
     edge_signal = edge_normalized.outputs[0]
+    if "edge_remap_low" in spec and "edge_remap_high" in spec:
+        edge_signal = remap_value_socket(
+            node_tree,
+            edge_signal,
+            f"{variant_name}_edge",
+            (filter_input_x + 480.0, base_y + 220.0),
+            spec["edge_remap_low"],
+            spec["edge_remap_high"],
+        )
     if "edge_local_blur_pixels" in spec and "edge_local_floor" in spec:
         edge_signal = local_ratio_normalize(
             node_tree,
@@ -1209,6 +1330,7 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
         "mist_kirsch_thin": -1600.0,
         "mist_kirsch_fine": 0.0,
         "mist_kirsch_extra_thin": 1600.0,
+        "mist_kirsch_remapped": 3200.0,
     }
     scene_y = {
         "pathway": 760.0,

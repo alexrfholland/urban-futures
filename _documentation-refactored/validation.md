@@ -16,10 +16,9 @@ If the run root is ambiguous, stop and ask the supervising agent which run is au
 
 Current canonical v2 comparison files:
 
-- [comparison_pathways_indicators_nodeidfix.csv](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_indicators_nodeidfix.csv)
-- [comparison_pathways_indicators_nodeidfix.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_indicators_nodeidfix.md)
-- [comparison_pathways_nodeidfix_deltas.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_nodeidfix_deltas.md)
-- [comparison_pathways_nodeidfix_year180_divergences.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_nodeidfix_year180_divergences.md)
+- [comparison_pathways_indicators_v2.csv](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_indicators_v2.csv)
+- [comparison_pathways_indicators_v2.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_indicators_v2.md)
+- [comparison_pathways_v2_deltas.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/assesment/comparison_pathways/comparison_pathways_v2_deltas.md)
 
 Current canonical v2 engine-output root:
 
@@ -165,7 +164,7 @@ The markdown should preserve the existing style:
 
 This is the comparison between:
 
-- canonical v2: `comparison_pathways_indicators_nodeidfix.csv`
+- canonical v2: `comparison_pathways_indicators_v2.csv`
 - candidate run: `comparison_pathways_indicators_<run-name>.csv`
 
 Required outputs:

@@ -68,10 +68,18 @@ Verified now:
 - the `Current` AO, normals, resources, and depth-outliner PNGs now match the older combined-suite outputs pixel-for-pixel on the latest city EXRs
 - the final-template mist runner now writes mist outlines from EXRs and those PNGs match the older combined-suite outputs pixel-for-pixel on the latest city EXRs
 - the current bioenvelope colours in `Current` now match the legacy palette outputs exactly
+- the older base/world depth-window family is now wired into `Current` base outputs and follows the standalone tuned node flow for both:
+  - `data/blender/2026/2026 futures heroes6-city/city-existing_condition.exr`
+  - `data/blender/2026/edge_detection_lab/inputs/city_8k_network_20260330/city_existing_condition_8k.exr`
+  - current output contract is `Standard` / `sRGB`; do not treat older `AgX`-authored PNGs as the target colour contract
 
 Still to do:
 - decide whether to rebuild the saved mist branch inside `Current` so it matches the validated mist runner exactly
+- revisit mist once regenerated EXRs with updated mist/world settings are ready
+  - target references: `pathway_mist_kirsch_extra_thin.png` and `priority_mist_kirsch_fine.png`
+  - correct reference root: `data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_city_20260329/current/outlines_mist/`
 - tidy `Current` once that mist-branch decision is settled
+- decide whether the four `base_depth_windowed_*` variants should become part of the default PSD stack once the next composite round is approved
 
 Latest files:
 - human-facing compositor:
@@ -189,6 +197,11 @@ Key passes we generate now:
   - `priority_depth_outliner.png`
   - this matches the baseline compositor's `_OUTLINER.001` logic without the thicker focus-object overlay
   - core path is `Depth -> Normalize -> Kirsch -> hard threshold -> flat purple colour`, then masked back to visible arboreal alpha
+- base/world depth-window variants
+  - `base_depth_windowed_balanced_refined.png`
+  - `base_depth_windowed_internal_refined.png`
+  - `base_depth_windowed_internal_dense.png`
+  - `base_depth_windowed_balanced_dense.png`
 
 Current arboreal resource palette:
 - `hollow` = `#ce6dd9`
