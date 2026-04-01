@@ -34,14 +34,14 @@ Important detail:
 - Scenario orchestration: [final/a_scenario_manager.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_manager.py)
 - VTK generation: [final/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_generateVTKs.py)
 
-### Output Preservation
+### Output Roots
 
-- Canonical scenario outputs: [data/revised/final](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final)
-- Validation scenario outputs: [data/revised/final-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2)
-- Canonical refactored outputs: [_data-refactored/final-hooks](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/final-hooks)
-- Validation refactored outputs: [_data-refactored/v2engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs)
-- Canonical statistics: [_statistics-refactored](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored)
-- Validation statistics: [_statistics-refactored-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored-v2)
+- Legacy v1 scenario outputs: [data/revised/final](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final)
+- Current canonical v2 scenario outputs: [data/revised/final-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2)
+- Legacy v1 refactored outputs: [_data-refactored/final-hooks](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/final-hooks)
+- Current canonical v2 refactored outputs: [_data-refactored/v2engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs)
+- Legacy v1 statistics: [_statistics-refactored](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored)
+- Current canonical v2 statistics: [_statistics-refactored-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored-v2)
 
 The temporary `nodeidfix` and `inmemorycheck` roots have now been consolidated into the canonical v2 validation roots:
 
@@ -818,11 +818,8 @@ Implemented in [a_resource_distributor_dataframes.py](/Users/alexholland/Coding/
 
 Still open:
 
-- review the `Lizard / Communicate` and `Tree / Communicate` wording:
-  - `non-paved surface area` / `soil near canopy features` is currently slightly misleading because deadwood classified as `low-vegetation` is counted as ground-like habitat
-  - decide whether to:
-    - rename the indicators to reflect ground-like deadwood habitat
-    - or tighten the query so deadwood is excluded from `ground_not_paved`
+- issue: `Lizard / Communicate` and `Tree / Communicate` are very high relative to baseline because in [a_scenario_urban_elements_count.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_urban_elements_count.py), `fallen`, `decayed`, and some deadwood/log-related voxels are added into `low-vegetation`, and then in [a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_gather_capabilities.py), `Lizard.others.notpaved` and `Tree.others.notpaved` are built from that ground-like mask
+- fix: add more deadwood to baselines
 
 ### 9. Investigate Ground / Envelope Divergence
 

@@ -24,11 +24,19 @@ TODO: check if all the prebaked calculations have a `sim_Turns` component. consi
 
 ## Conventions
 
-`[rename: x]` marks the future renaming we want to apply to an existing term. After first mention, this note then refers to the term using the renamed term.
+Formatting convention:
+
+- existing term with rename: `existing-term` [rename: `new-term`]. This marks the future renaming we want to apply to an existing term. After first mention, this note then refers to the term using the renamed term.
+- new term: [add: `new-term`]. This marks a new term or field we want to introduce that does not yet exist in the current code. After first mention, this note then refers to the term directly without repeating `[add: ...]`.
+
+Field-scope convention:
+
+- node dataframes and feature-state tables use bare field terms, for example `under-node-treatment` or `proposal-recruit-decision`
+- possibility-space xarray fields and derived VTK fields use `ds['field_name']`, for example `ds['scenario_under-node-treatment']`
 
 V2 introduced parallel fields for some legacy fields in order to preserve compatibility with downstream code and outputs.
 
-Where a legacy field and a v2 field carry the same underlying state in different vocabularies, this note uses the convention:
+Where a legacy field and a v2 field carry the same underlying state in different vocabularies, this note names both explicitly. The legacy field keeps its existing label, and the v2 field is shown as the old stored field with its intended renamed term:
 
 - legacy: `field_name`
 - v2 of legacy `field_name`: `field_name` [rename: `term_name`]
@@ -69,6 +77,20 @@ Ramp starts define the start of the probability ramp for lifecycle transitions d
 
 `decayed` is not controlled by a probability ramp. It is triggered after a seeded persistence period.
 
+For trees that have already become `fallen`, the model seeds a persistence duration using:
+
+- `fallen_since_year`
+- `fallen_decay_after_years`
+
+When that seeded duration is reached, `fallen -> decayed`.
+
+After this, the model seeds a later removal duration using:
+
+- `decayed_since_year`
+- `decayed_remove_after_years`
+
+When that later duration is reached, the decayed tree is removed from the dataframe.
+
 Effort-thresholds are different. These control whether proposals are accepted or constrained.
 
 | effort-threshold | Proposal-Decay | Proposal-Release-Control | Proposal-Colonise | Proposal-Recruit | Proposal-Deploy-Structure |
@@ -76,13 +98,13 @@ Effort-thresholds are different. These control whether proposals are accepted or
 | `ageInPlaceThreshold` [rename: `minimal-tree-support-threshold`] | minimum effort needed to support a proposal-decay, and assigns the lowest-effort brace intervention: `exoskeleton` | not used | not used | not used | not used |
 | `plantThreshold` [rename: `moderate-tree-support-threshold`] | middle accepted effort, assigns the buffer intervention: `footprint-depaved` | lower-effort threshold used to assign `reduce-pruning` | not used directly in current engine logic | not used directly in current engine logic | not used |
 | `rewildThreshold` [rename: `maximum-tree-support-threshold`] | highest effort threshold, assigns the larger connected patch: `node-rewilded` | highest effort threshold used to assign `eliminate-pruning` | not used directly in current engine logic | not used directly in current engine logic | not used |
-| `sim_averageResistance` | not used | not used | used together with `sim_TurnsThreshold` to build `bioMask`, which enables `otherGround`, `livingFacade`, `greenRoof`, and `brownRoof`; also used together with `sim_TurnsThreshold` to enable logs | not used directly in current engine logic | used on poles as the resistance threshold for enabling artificial structures |
-| `sim_TurnsThreshold` | not used | not used | used together with `sim_averageResistance` to build `bioMask`, which enables `otherGround`, `livingFacade`, `greenRoof`, and `brownRoof`; also used together with `sim_averageResistance` to enable logs | used to keep only the earlier-reached portion of the simulated growth region | not used |
+| `sim_averageResistance` | not used | not used | used together with `sim_TurnsThreshold` to build `ds['bioMask']`, which enables `otherGround`, `livingFacade`, `greenRoof`, and `brownRoof`; also used together with `sim_TurnsThreshold` to enable logs | not used directly in current engine logic | used on poles as the resistance threshold for enabling artificial structures |
+| `sim_TurnsThreshold` | not used | not used | used together with `sim_averageResistance` to build `ds['bioMask']`, which enables `otherGround`, `livingFacade`, `greenRoof`, and `brownRoof`; also used together with `sim_averageResistance` to enable logs | used to keep only the earlier-reached portion of the simulated growth region | not used |
 
 For logs, `assign_logs(...)` enables a log only if it passes both:
 
-- `log_df["sim_averageResistance"] <= sim_averageResistance`
-- `log_df["sim_Turns"] <= sim_TurnsThreshold`
+- `sim_averageResistance <= sim_averageResistance`
+- `sim_Turns <= sim_TurnsThreshold`
 
 Note: translocated fallen logs in `log_df` may fit better under Proposal-Deploy-Structure than under the current colonise/log threshold grouping.
 
@@ -109,10 +131,10 @@ Path dependencies live in the feature-state tables:
 
 Preflight also prepares the node ID systems that link feature rows back into the possibility space.
 
-- `NodeID` links feature dataframes with the possibility-space xarray. It is a unique ID shared across `node_df[NodeID]` and `possibility-space_ds[analysis_nodeID]`, so the voxel containing the position of each feature is recorded in the possibility-space model. It is created in [a_create_resistance_grid.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_create_resistance_grid.py#L227) and copied into the dataframes in [a_create_resistance_grid.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_create_resistance_grid.py#L329).
-- `possibility-space_ds[node_CanopyID]` assigns under-canopy voxels a node: what tree does this canopy voxel belong to? Creation is in [a_create_resistance_grid.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_create_resistance_grid.py#L369).
-- `possibility-space_ds[sim_Nodes]` is the output of the growth simulation in [a_rewilding.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_rewilding.py#L365). In that simulation, every voxel with `analysis_nodeID != -1` starts a growth. Every voxel reached by a growth is labelled with its originating node ID. This allows assessment of the potential connected growth region from a node.
-- `possibility-space_ds[sim_Turns]` records how many turns the growth simulation took to reach each voxel, as a proxy for how difficult that voxel was to reach through resistance. `sim_TurnsThreshold` then lets the model keep only the earlier-reached portion of that simulated growth region. This is used mainly in proposal-recruit. It is written in [a_rewilding.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_rewilding.py#L403).
+- `NodeID` links feature dataframes with the possibility-space xarray. It is a unique ID shared across dataframe `NodeID` and `possibility-space_ds['analysis_nodeID']`, so the voxel containing the position of each feature is recorded in the possibility-space model. It is created in [a_create_resistance_grid.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_create_resistance_grid.py#L227) and copied into the dataframes in [a_create_resistance_grid.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_create_resistance_grid.py#L329).
+- `possibility-space_ds['node_CanopyID']` assigns under-canopy voxels a node: what tree does this canopy voxel belong to? Creation is in [a_create_resistance_grid.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_create_resistance_grid.py#L369).
+- `possibility-space_ds['sim_Nodes']` is the output of the growth simulation in [a_rewilding.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_rewilding.py#L365). In that simulation, every voxel with `analysis_nodeID != -1` starts a growth. Every voxel reached by a growth is labelled with its originating node ID. This allows assessment of the potential connected growth region from a node.
+- `possibility-space_ds['sim_Turns']` records how many turns the growth simulation took to reach each voxel, as a proxy for how difficult that voxel was to reach through resistance. `sim_TurnsThreshold` then lets the model keep only the earlier-reached portion of that simulated growth region. This is used mainly in proposal-recruit. It is written in [a_rewilding.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_rewilding.py#L403).
 
 ## Per State
 
@@ -151,7 +173,7 @@ Before proposals:
 
 - legacy: `action`
 - v2 of legacy `action`: `lifecycle_decision` [rename: `proposal-decay_decision`]
-- `rewilded` [rename: `under-node_treatment`]
+- `rewilded` [rename: `under-node-treatment`]
 - `decay_support` [rename: `decay_intervention`]
 
 1. `determine_lifecycle_decisions(...)` [rename: `determine_proposal-decay(...)`]
@@ -204,6 +226,19 @@ Before proposals:
    - `snagThreshold` [rename: `lifecycle_snag_ramp_start`]
    - `collapsedThreshold` [rename: `lifecycle_fallen_ramp_start`]
 
+   After a tree has become `fallen`, `update_fallen_tracking(...)` applies the later non-ramped transition:
+
+   - seed `fallen_since_year`
+   - seed `fallen_decay_after_years`
+   - when that threshold is reached: `size = decayed`
+
+   After this, the model seeds:
+
+   - `decayed_since_year`
+   - `decayed_remove_after_years`
+
+   When that later threshold is reached, the decayed tree is removed from the dataframe.
+
 3. `handle_replace_trees(...)` [rename: `apply_proposal-decay_rejected_changes(...)`]
 
    When `proposal-decay_decision = proposal-decay_rejected`
@@ -227,19 +262,19 @@ Before proposals:
 
    the model assigns a decay intervention by placing `CanopyResistance` into ordered effort bands:
 
-   - highest effort: `(-inf, maximum-tree-support-threshold]` -> `under-node_treatment = node-rewilded`
-   - middle effort: `(maximum-tree-support-threshold, moderate-tree-support-threshold]` -> `under-node_treatment = footprint-depaved`
-   - lowest accepted effort: `(moderate-tree-support-threshold, minimal-tree-support-threshold]` -> `under-node_treatment = exoskeleton`
+   - highest effort: `(-inf, maximum-tree-support-threshold]` -> `under-node-treatment = node-rewilded`
+   - middle effort: `(maximum-tree-support-threshold, moderate-tree-support-threshold]` -> `under-node-treatment = footprint-depaved`
+   - lowest accepted effort: `(moderate-tree-support-threshold, minimal-tree-support-threshold]` -> `under-node-treatment = exoskeleton`
    - above available effort: `(minimal-tree-support-threshold, inf)` -> `rewilded = None`
 
    This `None` band exists in the code structure, but should not occur for accepted proposal-decay rows.
 
    Then:
 
-   - `under-node_treatment = node-rewilded` -> `decay_intervention = buffer-feature`
-   - `under-node_treatment = footprint-depaved` -> `decay_intervention = buffer-feature`
-   - `under-node_treatment = exoskeleton` -> `decay_intervention = brace-feature`
-   - `under-node_treatment = None` -> `decay_intervention = none`
+   - `under-node-treatment = node-rewilded` -> `decay_intervention = buffer-feature`
+   - `under-node-treatment = footprint-depaved` -> `decay_intervention = buffer-feature`
+   - `under-node-treatment = exoskeleton` -> `decay_intervention = brace-feature`
+   - `under-node-treatment = None` -> `decay_intervention = none`
 
    When these are later linked to a polydata of the state:
 
@@ -273,7 +308,7 @@ Use `control_reached` for the v2 field and `control` for the exported legacy loo
 
 1. decide proposal-release-control acceptance or rejection in `apply_release_control(...)
 
-   Add field `proposal-release-control-decision`, default `not-assessed`.
+   Add field [add: `proposal-release-control-decision`], default `not-assessed`.
 
    For trees with `size in {small, medium, large}`:
 
@@ -298,8 +333,8 @@ Use `control_reached` for the v2 field and `control` for the exported legacy loo
 
    The model then assigns the related under-node treatment:
 
-   - `proposal-release-control_intervention = eliminate-pruning` -> `under-node_treatment = node-rewilded`
-   - `proposal-release-control_intervention = reduce-pruning` -> `under-node_treatment = footprint-depaved`
+   - `proposal-release-control_intervention = eliminate-pruning` -> `under-node-treatment = node-rewilded`
+   - `proposal-release-control_intervention = reduce-pruning` -> `under-node-treatment = footprint-depaved`
 
    If a tree already has a higher intervention, the model keeps the higher intervention rather than lowering it.
 
@@ -328,27 +363,31 @@ Use `control_reached` for the v2 field and `control` for the exported legacy loo
    - `low-control` becomes `reserve-tree`
    - senescing states are exported as `improved-tree`
 
+   `improved-tree` is a legacy export label for decaying/senescent tree sizes. It is not a separate realized control level. It comes from `size`, not from extra years or thresholds.
+
+   TODO: potentially consider including `improved-tree` as an intervention (for example: deploy 3d printed nests).
+
 
 
 #### Proposal-Colonise
 
 1. decides proposal-colonise acceptance or rejection
 
-- `colonise_support` [rename: `proposal-colonise-interventions`]
+- `colonise_support` [rename: `proposal-colonise_intervention`]
 
 1. decide proposal-colonise acceptance or rejection in `refresh_colonise_support(...)`
 
    NOTE: this step only classifies under-canopy changes as colonise support. Most of Proposal-Colonise is calculated later in the prebaked possibility-space calculations.
 
-   Add field `proposal-colonise-decision`, default `not-assessed`.
+   Add field [add: `proposal-colonise-decision`], default `not-assessed`.
 
    The model resets:
 
-   - `proposal-colonise-interventions = none`
+   - `proposal-colonise_intervention = none`
 
-   Then for rows where `under-node_treatment in {node-rewilded, footprint-depaved}`:
+   Then for rows where `under-node-treatment in {node-rewilded, footprint-depaved}`:
 
-   - `proposal-colonise-interventions = rewild-ground`
+   - `proposal-colonise_intervention = rewild-ground`
    - `proposal-colonise-decision = proposal-colonise_accepted`
 
    Otherwise:
@@ -361,7 +400,7 @@ Proposal-Recruit is a path-dependent habitat-feature calculation.
 
 1. decides proposal-recruit acceptance or rejection
 
-   Add field `proposal-recruit-decision`, but unlike the other proposals do not assign it in one first step. Assign it throughout the proposal-recruit logic, because proposal-recruit is determined through two recruit channels:
+   Add field [add: `proposal-recruit-decision`], but unlike the other proposals do not assign it in one first step. Assign it throughout the proposal-recruit logic, because proposal-recruit is determined through two recruit channels:
 
    - `buffer-feature` > recruits within tree-linked under-canopy regions defined by trees that previously met the `moderate-tree-support-threshold` or `maximum-tree-support-threshold`
    - `rewild-ground` > recruits within additional planting regions in the possibility space
@@ -370,10 +409,12 @@ Proposal-Recruit is a path-dependent habitat-feature calculation.
 
    Proposal-Recruit operates in 30-year recruitment cycles.
 
+   Add field [add: `proposal-recruit_intervention`].
+
    For `buffer-feature`, the model recruits first around trees that already have eligible under-canopy treatment:
 
-   - `under-node_treatment = footprint-depaved`
-   - `under-node_treatment = node-rewilded`
+   - `under-node-treatment = footprint-depaved`
+   - `under-node-treatment = node-rewilded`
 
    Assign these as:
 
@@ -382,9 +423,9 @@ Proposal-Recruit is a path-dependent habitat-feature calculation.
 
    It then checks the area attached to that treatment:
 
-   - if `under-node_treatment = footprint-depaved`
+   - if `under-node-treatment = footprint-depaved`
      - use `CanopyArea`
-   - if `under-node_treatment = node-rewilded`
+   - if `under-node-treatment = node-rewilded`
      - use `sim_NodesArea`
 
    Find the number of saplings recruited per 30-year recruitment cycle:
@@ -412,8 +453,8 @@ Proposal-Recruit is a path-dependent habitat-feature calculation.
 
    To do so, `calculate_rewilded_status(...)` makes a deep copy of `possibility-space_ds` as a temporary spatial layer and writes the temporary fields:
 
-   - `scenario_rewildingEnabled`
-   - `scenario_rewildingPlantings`
+   - `ds['scenario_rewildingEnabled']`
+   - `ds['scenario_rewildingPlantings']`
 
    It assigns these temporary fields from the possibility space by:
 
@@ -422,9 +463,9 @@ Proposal-Recruit is a path-dependent habitat-feature calculation.
 
    This writes:
 
-   - `scenario_rewildingEnabled`
+   - `ds['scenario_rewildingEnabled']`
 
-   It then defines `scenario_rewildingPlantings` by also excluding voxels within 5 m of existing tree positions.
+   It then defines `ds['scenario_rewildingPlantings']` by also excluding voxels within 5 m of existing tree positions.
 
    Group voxels under consideration for additional `proposal-recruit` into planting regions:
 
@@ -451,6 +492,11 @@ Proposal-Recruit is a path-dependent habitat-feature calculation.
 
 3. applies proposal-recruit changes
 
+   On recruited tree rows, add fields:
+
+   - [add: `recruit_intervention_type`]
+   - [add: `recruit_source_id`]
+
    For `buffer-feature`, the model recruits features:
 
    - adds new tree features to the table near the source tree
@@ -474,21 +520,120 @@ TODO
 
 After state calculations are complete, the model assigns dataframe states to the temporary xarray possibility space and generates the state VTK.
 
+The main xarray variables created or updated here are:
+
+- `ds['scenario_rewilded']` [rename: `ds['scenario_under-node-treatment']`]
+- `ds['scenario_bioEnvelope']`
+- `ds['bioMask']`
+- `ds['scenario_outputs']`
+
+Proposal arrays to add:
+
+- [add: `ds['proposal_decayV3']`]
+- [add: `ds['proposal_release_controlV3']`]
+- [add: `ds['proposal_coloniseV3']`]
+- [add: `ds['proposal_recruitV3']`]
+- [add: `ds['proposal_deploy_structureV3']`]
+
+Intervention arrays to add:
+
+- [add: `ds['proposal_decayV3_intervention']`]
+- [add: `ds['proposal_release_controlV3_intervention']`]
+- [add: `ds['proposal_coloniseV3_intervention']`]
+- [add: `ds['proposal_recruitV3_intervention']`]
+- [add: `ds['proposal_deploy_structureV3_intervention']`]
+
+These should be introduced as v3 proposal arrays, because they may differ slightly from the current proposal outputs as we rebase them on the actual simulation logic.
+
+TODO: after generation of pathways, we will check and merge these with the older proposal arrays so there is one source of truth.
+
+Note: the existing proposal arrays are currently defined in [a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_generateVTKs.py) and mirrored onto polydata in [a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_gather_capabilities.py). We will need to go through those definitions and create V3 versions that use our new proposal logic.
+
+Temporary xarray fields used during state calculation:
+
+- `ds['scenario_rewildingEnabled']`
+- `ds['scenario_rewildingPlantings']`
+
 ### Proposal-Colonise
+
+1. assigns dataframe under-canopy states to voxels in the temporary xarray possibility space
+
+   `create_rewilded_variable(...)` assigns dataframe `under-node-treatment` onto voxels as `ds['scenario_rewilded']` [rename: `ds['scenario_under-node-treatment']`].
+
+   - `exoskeleton` and `footprint-depaved` use `node_CanopyID == NodeID`
+   - `node-rewilded` uses `sim_Nodes == NodeID`
+
+2. assigns broader colonise envelope states in the temporary xarray possibility space
+
+   The model initialises `ds['scenario_bioEnvelope']` as a copy of `ds['scenario_rewilded']`.
+
+   Then `create_bioEnvelope_catagories(...)` builds `ds['bioMask']` from:
+
+   - `sim_Turns <= sim_TurnsThreshold`
+   - `sim_averageResistance <= sim_averageResistance`
+
+   It then assigns:
+
+   - `otherGround` where `ds['bioMask'] = True` and `ds['scenario_bioEnvelope'] = none`
+   - `livingFacade` where `site_building_element = facade` and `ds['bioMask'] = True`
+   - `greenRoof` where `envelope_roofType = green roof` and `ds['bioMask'] = True`
+   - `brownRoof` where `envelope_roofType = brown roof` and `ds['bioMask'] = True`
+
+3. assigns proposal-colonise labels in the VTK
+
+   The model builds `ds['scenario_outputs']` from the temporary xarray, then assigns:
+
+   - `ds['proposal_coloniseV3']`
+   - `ds['proposal_coloniseV3_intervention']`
+
+   `ds['proposal_coloniseV3']`
+
+   - `proposal-colonise_accepted` for voxels where `ds['scenario_outputs'] in {brownRoof, greenRoof, livingFacade, footprint-depaved, node-rewilded, otherGround, rewilded}`
+   - `proposal-colonise_rejected` otherwise
+
+   `ds['proposal_coloniseV3_intervention']`
+
+   - `rewild-ground` for `ds['scenario_outputs'] in {node-rewilded, footprint-depaved, rewilded}`
+   - `enrich-envelope` for `ds['scenario_outputs'] = greenRoof`
+   - `roughen-envelope` for `ds['scenario_outputs'] in {brownRoof, livingFacade}`
 
 ### Proposal-Recruit
 
-TODO
+1. assigns proposal-recruit labels in the VTK
 
-For `proposal-recruit`:
+   The current proposal arrays are based on `_assign_proposal_labels(...)` in `a_scenario_generateVTKs.py`, but we want V3 versions based on the updated simulation logic.
 
-- `proposal-recruit-decision`
-  - `proposal-recruit_accepted` for voxels in planting regions eligible for recruit in this pulse
-  - `proposal-recruit_rejected` for voxels in the broader enabled rewilding space that are not eligible planting voxels
-- `proposal-recruit_intervention`
-  - `rewild-ground` for voxels in planting regions that actually did recruit
-  - `none` otherwise
-- We also need to assign `proposal-recruit-decision` and `proposal-recruit_intervention` in the xarray / VTK for the tree-linked under-canopy recruit logic.
+   Assign:
+
+   - `ds['proposal_recruitV3']`
+   - `ds['proposal_recruitV3_intervention']`
+
+   `ds['proposal_recruitV3']`
+
+   - `proposal-recruit_accepted` for voxels in planting regions eligible for recruit in this pulse
+   - `proposal-recruit_rejected` for voxels in the broader enabled rewilding space that are not eligible planting voxels
+
+   `ds['proposal_recruitV3_intervention']`
+
+   - `rewild-ground` for voxels in planting regions that actually did recruit
+   - `none` otherwise
+
+   TODO: We also need to assign `proposal-recruitV3` and `proposal-recruitV3_intervention` in the xarray / VTK for the tree-linked under-canopy recruit logic.
+
+### All Other Proposal Logic
+
+For `proposal-decay`, `proposal-release-control`, and `proposal-deploy-structure`, the existing VTK proposal arrays are currently defined in `a_scenario_generateVTKs.py` and mirrored onto polydata in `a_info_gather_capabilities.py`.
+
+We should introduce:
+
+- `ds['proposal_decayV3']`
+- `ds['proposal_decayV3_intervention']`
+- `ds['proposal_release_controlV3']`
+- `ds['proposal_release_controlV3_intervention']`
+- `ds['proposal_deploy_structureV3']`
+- `ds['proposal_deploy_structureV3_intervention']`
+
+TODO: after generation of pathways, we will check and merge these with the older proposal arrays so there is one source of truth.
 
 #### Proposal-Deploy-Structure
 
@@ -506,8 +651,8 @@ For `proposal-recruit`:
 
    Add to the `log_df` and `pole_df` dataframes:
 
-   - `proposal-deploy-structure_decision`
-   - `proposal-deploy-structure_intervention`
+   - [add: `proposal-deploy-structure_decision`]
+   - [add: `proposal-deploy-structure_intervention`]
 
    For all enabled poles:
 
