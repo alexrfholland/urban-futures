@@ -6,6 +6,15 @@ from scipy.spatial import cKDTree
 import pyvista as pv
 import a_helper_functions
 
+LEAN_SUBSET_DROP_VARIABLES = {
+    'analysis_busyRoadway',
+    'analysis_Roadway',
+    'analysis_potentialNOCANOPY',
+    'node_CanopyResistance',
+    'analysis_nodeType',
+}
+
+
 def getDataSubest(ds):
     attributes = ['voxel_size', 'bounds']
     variables = [
@@ -31,13 +40,17 @@ def getDataSubest(ds):
         'envelope_roofType'
     ]
 
+    if not a_helper_functions.export_all_pointdata_variables():
+        variables = [name for name in variables if name not in LEAN_SUBSET_DROP_VARIABLES]
+
     subsetDS = a_helper_functions.create_subset_dataset(ds, variables, attributes)
 
     print(subsetDS.variables)
 
-    subsetDS['envelopeIsBrownRoof'] = xr.full_like(subsetDS['node_CanopyID'], -1)
-    brownRoofMask = subsetDS['envelope_roofType'] == 'brown roof'
-    subsetDS['envelopeIsBrownRoof'][brownRoofMask] = 1
+    if a_helper_functions.export_all_pointdata_variables():
+        subsetDS['envelopeIsBrownRoof'] = xr.full_like(subsetDS['node_CanopyID'], -1)
+        brownRoofMask = subsetDS['envelope_roofType'] == 'brown roof'
+        subsetDS['envelopeIsBrownRoof'][brownRoofMask] = 1
     print(subsetDS.attrs['bounds'])
 
     #poly = a_helper_functions.convert_xarray_into_polydata(subsetDS)
@@ -59,15 +72,13 @@ def further_xarray_processing(ds):
     Returns:
     ds (xarray.Dataset): Updated dataset with the new 'sim_nodeType' and 'sim_averageResistance' variables.
     """
-    # Create a mapping from 'analysis_nodeID' to 'analysis_nodeType'
-    node_type_mapping = dict(zip(ds['analysis_nodeID'].values, ds['analysis_nodeType'].values))
-
-    # Assign 'sim_nodeType' by mapping 'sim_Nodes' to the corresponding 'analysis_nodeType'
-    ds['sim_nodeType'] = xr.apply_ufunc(
-        lambda x: node_type_mapping.get(x, -1),  # Use -1 for unmapped nodes
-        ds['sim_Nodes'],
-        vectorize=True
-    )
+    if a_helper_functions.export_all_pointdata_variables():
+        node_type_mapping = dict(zip(ds['analysis_nodeID'].values, ds['analysis_nodeType'].values))
+        ds['sim_nodeType'] = xr.apply_ufunc(
+            lambda x: node_type_mapping.get(x, -1),
+            ds['sim_Nodes'],
+            vectorize=True
+        )
 
     # Print unique values of 'sim_Nodes'
     unique_sim_nodes = ds['sim_Nodes'].values

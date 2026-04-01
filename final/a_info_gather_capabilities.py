@@ -21,6 +21,7 @@ import pyvista as pv
 import sys
 from pathlib import Path
 from scipy.spatial import cKDTree
+import a_helper_functions
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
@@ -557,11 +558,6 @@ def ensure_v3_proposal_point_data(polydata):
         if "indicator_Tree_generations_grassland" in polydata.point_data
         else np.zeros(n_points, dtype=bool)
     )
-    recruit_enabled_mask = (
-        np.asarray(polydata.point_data["scenario_rewildingEnabled"]).astype(float) >= 0
-        if "scenario_rewildingEnabled" in polydata.point_data
-        else np.zeros(n_points, dtype=bool)
-    )
     recruit_planting_mask = (
         np.asarray(polydata.point_data["scenario_rewildingPlantings"]).astype(float) >= 0
         if "scenario_rewildingPlantings" in polydata.point_data
@@ -616,11 +612,12 @@ def ensure_v3_proposal_point_data(polydata):
         get_distance_reference_mask(polydata, "canopy-feature"),
         20.0,
     ) & (~get_building_mask(polydata))
-    proposal_recruit[recruit_enabled_mask & (~recruit_planting_mask)] = "proposal-recruit_rejected"
-    proposal_recruit[recruit_buffer_opportunity | recruit_planting_mask] = "proposal-recruit_accepted"
+    recruit_consideration_mask = recruit_buffer_opportunity | recruit_planting_mask
+    proposal_recruit[recruit_consideration_mask] = "proposal-recruit_rejected"
     recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_BUFFER_VALUES))] = "buffer-feature"
     recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_REWILD_VALUES))] = "rewild-ground"
-    proposal_recruit[recruit_intervention != "none"] = "proposal-recruit_accepted"
+    recruit_acceptance_mask = np.isin(recruit_intervention, ["buffer-feature", "rewild-ground"])
+    proposal_recruit[recruit_acceptance_mask] = "proposal-recruit_accepted"
 
     forest_deploy_mask = ~np.isin(forest_deploy_decision_lower, ["", "nan", "not-assessed"])
     proposal_deploy_structure[forest_deploy_mask] = forest_deploy_decision[forest_deploy_mask]
@@ -960,6 +957,12 @@ def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True, out
             'voxel_size': voxel_size
         })
         action_counts.append(record)
+
+    if not a_helper_functions.export_all_pointdata_variables():
+        polydata = a_helper_functions.drop_polydata_point_arrays_if_present(
+            polydata,
+            a_helper_functions.LEAN_EXPORT_POINTDATA_DROP_ARRAYS,
+        )
     
     # Save VTK with indicators to the configured engine-output state path
     if save_vtk:

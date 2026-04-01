@@ -300,7 +300,6 @@ Before proposals:
 - `pruning_target` [rename: `proposal-release-control_intervention`]
 - `pruning_target_years` [rename: `proposal-release-control_target_years`]
 - `autonomy_years` [rename: `proposal-release-control_years`]
-- `release_control_support` [rename: `proposal-release-control_support`]
 
 `pruning_target_years` is kept as stored bookkeeping for how long the current target has been active, but it is not used to derive `control_reached`.
 

@@ -1,4 +1,3 @@
-# NOTE: used to generate surfaces in v2 engine and older
 import sys
 from pathlib import Path
 
@@ -7,47 +6,27 @@ import pandas as pd
 import pyvista as pv
 from scipy.spatial import cKDTree
 
-sys.path.append(str(Path(__file__).parent))
-sys.path.append(str(Path(__file__).parent.parent))
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+sys.path.insert(0, str(REPO_ROOT / "final" / "_blender"))
 
 import a_vtk_to_ply
+
+from refactor_code.paths import (
+    format_voxel_size,
+    hook_bioenvelope_ply_path,
+    hook_state_vtk_latest_path,
+    legacy_world_reference_vtk_path,
+    scenario_site_dir,
+)
 
 
 SITE = "uni"
 SCENARIOS = ["positive", "trending"]
 VOXEL_SIZE = 1
 YEARS = [10, 30, 60, 180]
-WRITE_LEGACY_OUTPUTS = False
-REPO_ROOT = Path(__file__).resolve().parents[2]
-
-
-def format_voxel_size(voxel_size: float | int) -> str:
-    numeric = float(voxel_size)
-    if numeric.is_integer():
-        return str(int(numeric))
-    return str(voxel_size)
-
-
-def hook_state_vtk_latest_path(site: str, scenario: str, year: int, voxel_size: int) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return REPO_ROOT / "_data-refactored" / "final-hooks" / "vtks" / site / f"{site}_{scenario}_{voxel}_yr{year}_state_with_indicators.vtk"
-
-
-def hook_bioenvelope_ply_path(site: str, scenario: str, year: int, voxel_size: int) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    path = REPO_ROOT / "_data-refactored" / "final-hooks" / "bioenvelopes" / site / f"{site}_{scenario}_{voxel}_envelope_scenarioYR{year}.ply"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    return path
-
-
-def legacy_world_reference_vtk_path(site: str, kind: str) -> Path:
-    suffix_map = {
-        "site": f"{site}-siteVoxels-masked.vtk",
-        "road": f"{site}-roadVoxels-coloured.vtk",
-    }
-    if kind not in suffix_map:
-        raise ValueError(f"Unknown world reference kind: {kind}")
-    return REPO_ROOT / "data" / "revised" / "final" / suffix_map[kind]
+WRITE_LEGACY_OUTPUTS = True
 
 
 def resolve_scenario_vtk_path(site: str, scenario: str, year: int, voxel_size: int) -> Path:
@@ -64,7 +43,7 @@ def resolve_scenario_vtk_path(site: str, scenario: str, year: int, voxel_size: i
 
 
 def legacy_envelope_output_dir(site: str) -> Path:
-    path = REPO_ROOT / "data" / "revised" / "final" / site / "ply"
+    path = scenario_site_dir(site, output_mode="canonical") / "ply"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -128,7 +107,12 @@ def generate_normals(voxel_polydata: pv.PolyData, tree: cKDTree, combined_normal
     return voxel_polydata
 
 
-def extract_isosurface_from_polydata(polydata: pv.PolyData, spacing: tuple[float, float, float], bioenv: str, surface_cat: str) -> pv.PolyData | None:
+def extract_isosurface_from_polydata(
+    polydata: pv.PolyData,
+    spacing: tuple[float, float, float],
+    bioenv: str,
+    surface_cat: str,
+) -> pv.PolyData | None:
     category = f"{bioenv}-{surface_cat}"
     print(f"{category} polydata has {polydata.n_points} points")
 
@@ -208,7 +192,13 @@ def categorize_surface_by_normal(poly: pv.PolyData) -> pv.PolyData:
 
 
 def generate_rewilded_envelopes(voxel_polydata: pv.PolyData, site: str, tree: cKDTree, combined_normals: np.ndarray) -> pv.PolyData | None:
-    valid_mask = voxel_polydata.point_data["scenario_bioEnvelope"] != "none"
+    if "bioMask" in voxel_polydata.point_data:
+        valid_mask = voxel_polydata.point_data["bioMask"].astype(bool)
+        print(f"Using bioMask for envelope filtering: {valid_mask.sum()} points")
+    else:
+        valid_mask = voxel_polydata.point_data["scenario_bioEnvelope"] != "none"
+        print(f"Using scenario_bioEnvelope fallback mask: {valid_mask.sum()} points")
+
     valid_polydata = voxel_polydata.extract_points(valid_mask)
     print(f"Found {len(valid_polydata.points)} valid bioenvelope points")
     if valid_polydata.n_points == 0:

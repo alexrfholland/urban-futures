@@ -78,6 +78,13 @@ For v3 candidate runs:
 - persist that root into the run metadata
 - treat a missing template-root record as a validation failure
 
+Required run-config record for candidate runs:
+
+- `TREE_TEMPLATE_ROOT`
+- `REFACTOR_SCENARIO_OUTPUT_ROOT`
+- `REFACTOR_ENGINE_OUTPUT_ROOT`
+- `REFACTOR_STATISTICS_ROOT`
+
 Not acceptable for v3 candidate verification:
 
 - `data/revised/trees`
@@ -271,8 +278,7 @@ Important examples from the model note:
 - `control_realized` -> `control_reached`
 - `lifecycle_decision` -> `proposal-decay_decision`
 - `pruning_target` -> `proposal-release-control_intervention`
-- `release_control_support` -> `proposal-release-control_support`
-- `colonise_support` -> `proposal-colonise-interventions`
+- legacy support aliases should not survive as live v3 output fields once the direct `proposal-*intervention` fields are in place
 
 Reason:
 
@@ -389,8 +395,9 @@ Do not do this earlier.
 
 1. Run quick verification on a small targeted subset.
 2. Fix obvious logic/output issues.
-3. Run full verification across all sites and years.
-4. Only then decide whether `final-v3` becomes the new canonical root.
+3. Re-run the quick subset under the approved template root if the first quick run used the loader default or lacks run metadata.
+4. Run full verification across all sites and years.
+5. Only then decide whether `final-v3` becomes the new canonical root.
 
 ## Quick Verification
 

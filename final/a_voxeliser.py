@@ -949,7 +949,9 @@ def integrate_resources_into_xarray(ds, treeLocationsDF, templateResolution = 0.
         voxel_size = ds.attrs['voxel_size']
         original_attrs = ds.attrs.copy()
 
-        
+        if 'size' in treeLocationsDF.columns:
+            treeLocationsDF = treeLocationsDF.loc[treeLocationsDF['size'].astype(str) != 'gone'].copy()
+
         #process trees
         treeLocationsDF['nodeType'] = 'tree'
         treeLocationsDF, treeResource_df = a_resource_distributor_dataframes.process_all_trees(treeLocationsDF, voxel_size=templateResolution)

@@ -1,4 +1,3 @@
-# NON-WORKING for mesh bioenvelope workflows because it generates shell point clouds rather than mesh PLY surfaces.
 import math
 
 import numpy as np

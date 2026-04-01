@@ -289,11 +289,6 @@ def create_v3_proposal_point_data(ds):
 
     building_mask = np.isin(search_urban_elements_lower, list(BUILDING_URBAN_VALUES))
     recruit_buffer_opportunity = _points_within_distance(points, canopy_feature_mask, RECRUIT_DISTANCE_M) & (~building_mask)
-    recruit_enabled_mask = (
-        np.asarray(ds["scenario_rewildingEnabled"].values) >= 0
-        if "scenario_rewildingEnabled" in ds.variables
-        else np.zeros(voxel_count, dtype=bool)
-    )
     recruit_planting_mask = (
         np.asarray(ds["scenario_rewildingPlantings"].values) >= 0
         if "scenario_rewildingPlantings" in ds.variables
@@ -347,11 +342,12 @@ def create_v3_proposal_point_data(ds):
     colonise_intervention[np.isin(scenario_outputs_lower, list(COLONISE_ENRICH_VALUES))] = "enrich-envelope"
     colonise_intervention[np.isin(scenario_outputs_lower, list(COLONISE_ROUGHEN_VALUES))] = "roughen-envelope"
 
-    proposal_recruit[recruit_enabled_mask & (~recruit_planting_mask)] = "proposal-recruit_rejected"
-    proposal_recruit[recruit_buffer_opportunity | recruit_planting_mask] = "proposal-recruit_accepted"
+    recruit_consideration_mask = recruit_buffer_opportunity | recruit_planting_mask
+    proposal_recruit[recruit_consideration_mask] = "proposal-recruit_rejected"
     recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_BUFFER_VALUES))] = "buffer-feature"
     recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_REWILD_VALUES))] = "rewild-ground"
-    proposal_recruit[recruit_intervention != "none"] = "proposal-recruit_accepted"
+    recruit_acceptance_mask = np.isin(recruit_intervention, ["buffer-feature", "rewild-ground"])
+    proposal_recruit[recruit_acceptance_mask] = "proposal-recruit_accepted"
 
     forest_deploy_mask = ~np.isin(forest_deploy_decision_lower, ["", "nan", "not-assessed"])
     proposal_deploy_structure[forest_deploy_mask] = forest_deploy_decision[forest_deploy_mask]
@@ -980,6 +976,11 @@ def generate_vtk(
     # Convert to polydata and process
     polydata = a_helper_functions.convert_xarray_into_polydata(ds)
     polydata = process_polydata(polydata)
+    if not a_helper_functions.export_all_pointdata_variables():
+        polydata = a_helper_functions.drop_polydata_point_arrays_if_present(
+            polydata,
+            a_helper_functions.LEAN_EXPORT_POINTDATA_DROP_ARRAYS,
+        )
     
     vtk_file = None
     if save_raw_vtk:

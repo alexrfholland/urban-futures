@@ -582,6 +582,12 @@ def process_scenario_polydata(
     updated_vtk = add_search_variables_to_scenario(scenario_vtk)
     print(f"Search variables added in {time.time() - search_start:.2f}s")
 
+    if not a_helper_functions.export_all_pointdata_variables():
+        updated_vtk = a_helper_functions.drop_polydata_point_arrays_if_present(
+            updated_vtk,
+            a_helper_functions.LEAN_EXPORT_POINTDATA_DROP_ARRAYS,
+        )
+
     if save_path is not None:
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)

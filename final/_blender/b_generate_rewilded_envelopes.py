@@ -1,3 +1,5 @@
+# NOTE: used in v2 engine and older
+# NON-WORKING for mesh bioenvelopes because it exports vertex-only point-cloud PLYs instead of mesh PLY surfaces.
 import sys
 from pathlib import Path
 

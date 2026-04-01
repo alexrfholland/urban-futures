@@ -4,6 +4,75 @@ import pyvista as pv
 import numpy as np
 import pandas as pd
 
+EXPORT_ALL_POINTDATA_VARIABLES_ENV = "EXPORT_ALL_POINTDATA_VARIABLES"
+
+LEAN_EXPORT_POINTDATA_DROP_ARRAYS = [
+    "voxel_I",
+    "voxel_J",
+    "voxel_K",
+    "site_building_element",
+    "isTerrainUnderBuilding",
+    "envelope_roofType",
+    "analysis_busyRoadway",
+    "analysis_Roadway",
+    "analysis_potentialNOCANOPY",
+    "analysis_combined_resistance",
+    "analysis_combined_resistanceNOCANOPY",
+    "analysis_nodeType",
+    "analysis_nodeID",
+    "node_CanopyID",
+    "node_CanopyResistance",
+    "envelopeIsBrownRoof",
+    "sim_nodeType",
+    "nodeType",
+    "forest_resource",
+    "forest_tree_id",
+    "forest_diameter_breast_height",
+    "forest_tree_number",
+    "forest_NodeID",
+    "forest_structureID",
+    "forest_useful_life_expectancy",
+    "forest_isNewTree",
+    "forest_rotateZ",
+    "nodeTypeInt",
+    "updatedResource_elevatedDeadBranches",
+    "updatedResource_groundDeadBranches",
+    "maskforTrees",
+    "FEATURES-site_building_element",
+    "FEATURES-site_canopy_isCanopy",
+    "FEATURES-road_terrainInfo_roadCorridors_str_type",
+    "FEATURES-road_roadInfo_type",
+    "FEATURES-road_terrainInfo_forest",
+    "FEATURES-road_terrainInfo_isOpenSpace",
+    "FEATURES-road_terrainInfo_isParkingMedian3mBuffer",
+    "FEATURES-road_terrainInfo_isLittleStreet",
+    "FEATURES-road_terrainInfo_isParking",
+    "FEATURES-road_canopy_isCanopy",
+    "FEATURES-envelope_roofType",
+    "FEATURES-analysis_busyRoadway",
+    "FEATURES-analysis_Roadway",
+    "FEATURES-analysis_Canopies",
+]
+
+
+def export_all_pointdata_variables():
+    value = os.environ.get(EXPORT_ALL_POINTDATA_VARIABLES_ENV, "false").strip().lower()
+    return value in {"1", "true", "yes", "y", "on"}
+
+
+def drop_xarray_vars_if_present(ds, variables_to_drop):
+    present = [name for name in variables_to_drop if name in ds.variables]
+    if not present:
+        return ds
+    return ds.drop_vars(present)
+
+
+def drop_polydata_point_arrays_if_present(polydata, arrays_to_drop):
+    for name in arrays_to_drop:
+        if name in polydata.point_data:
+            del polydata.point_data[name]
+    return polydata
+
 def update_xarray_with_subset(xarray_dataset, subset_xarray):
     print(f"Updating xarray dataset with subset data...")
     for var in subset_xarray.data_vars:
