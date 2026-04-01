@@ -74,12 +74,34 @@ PROPOSAL_HYBRID_RGBA = {
     "deploy-structure_adapt-utility-pole": (204, 83, 83, 255),
     "deploy-structure_upgrade-feature": (229, 145, 120, 255),
 }
+PROPOSAL_HYBRID_V3_RGBA = {
+    "none": GREY_REST,
+    "decay_buffer-feature": (210, 88, 128, 255),
+    "decay_brace-feature": (236, 179, 199, 255),
+    "recruit_rewild-ground": (63, 130, 191, 255),
+    "recruit_buffer-feature": (158, 199, 230, 255),
+    "release-control_eliminate-pruning": (212, 136, 34, 255),
+    "release-control_reduce-pruning": (241, 198, 122, 255),
+    "colonise_rewild-ground": (67, 168, 92, 255),
+    "colonise_enrich-envelope": (118, 198, 107, 255),
+    "colonise_roughen-envelope": (181, 221, 155, 255),
+    "deploy-structure_adapt-utility-pole": (204, 83, 83, 255),
+    "deploy-structure_translocated-log": (170, 104, 74, 255),
+    "deploy-structure_upgrade-feature": (229, 145, 120, 255),
+}
 PROPOSAL_PRIORITY = [
     "proposal_colonise",
     "proposal_recruit",
     "proposal_release_control",
     "proposal_decay",
     "proposal_deploy_structure",
+]
+V3_PROPOSAL_PRIORITY = [
+    ("proposal_coloniseV3", "proposal_coloniseV3_intervention", "colonise"),
+    ("proposal_recruitV3", "proposal_recruitV3_intervention", "recruit"),
+    ("proposal_release_controlV3", "proposal_release_controlV3_intervention", "release-control"),
+    ("proposal_decayV3", "proposal_decayV3_intervention", "decay"),
+    ("proposal_deploy_structureV3", "proposal_deploy_structureV3_intervention", "deploy-structure"),
 ]
 
 CAMERAS = {
@@ -202,6 +224,32 @@ def proposal_hybrid_rgba(mesh: pv.PolyData) -> np.ndarray:
     return rgba
 
 
+def proposal_hybrid_v3_rgba(mesh: pv.PolyData) -> np.ndarray:
+    rgba = _empty_rgba(mesh.n_points, GREY_REST)
+    labels = np.full(mesh.n_points, "none", dtype="<U96")
+    unset_mask = np.ones(mesh.n_points, dtype=bool)
+
+    for decision_name, intervention_name, proposal_name in reversed(V3_PROPOSAL_PRIORITY):
+        if decision_name not in mesh.point_data or intervention_name not in mesh.point_data:
+            continue
+        decisions = np.asarray(mesh.point_data[decision_name]).astype(str)
+        interventions = np.asarray(mesh.point_data[intervention_name]).astype(str)
+        accepted_mask = np.char.find(np.char.lower(decisions), "_accepted") >= 0
+        active_mask = accepted_mask & (interventions != "none")
+        combined = np.array([f"{proposal_name}_{value}" for value in interventions], dtype="<U96")
+        labels[active_mask & unset_mask] = combined[active_mask & unset_mask]
+        unset_mask &= ~active_mask
+
+    for label, color in PROPOSAL_HYBRID_V3_RGBA.items():
+        rgba[labels == label] = np.asarray(color, dtype=np.uint8)
+
+    forest_size = _normalize_str_array(mesh["forest_size"])
+    for lifecycle_label in ["senescing", "snag", "fallen", "decayed"]:
+        rgba[forest_size == lifecycle_label] = np.asarray(FOREST_SIZE_RGBA[lifecycle_label], dtype=np.uint8)
+
+    return rgba
+
+
 def add_legend(plotter: pv.Plotter, entries: list[tuple[str, tuple[int, int, int, int]]]) -> None:
     legend_entries = []
     for label, rgba in entries:
@@ -263,6 +311,26 @@ def view_entries(view_name: str) -> list[tuple[str, tuple[int, int, int, int]]]:
             ("deploy adapt", PROPOSAL_HYBRID_RGBA["deploy-structure_adapt-utility-pole"]),
             ("deploy upgrade", PROPOSAL_HYBRID_RGBA["deploy-structure_upgrade-feature"]),
         ]
+    if view_name == "proposal-hybrid-v3":
+        return [
+            ("rest", GREY_REST),
+            ("senescing", FOREST_SIZE_RGBA["senescing"]),
+            ("snag", FOREST_SIZE_RGBA["snag"]),
+            ("fallen", FOREST_SIZE_RGBA["fallen"]),
+            ("decayed", FOREST_SIZE_RGBA["decayed"]),
+            ("decay buffer", PROPOSAL_HYBRID_V3_RGBA["decay_buffer-feature"]),
+            ("decay brace", PROPOSAL_HYBRID_V3_RGBA["decay_brace-feature"]),
+            ("recruit rewild", PROPOSAL_HYBRID_V3_RGBA["recruit_rewild-ground"]),
+            ("recruit buffer", PROPOSAL_HYBRID_V3_RGBA["recruit_buffer-feature"]),
+            ("release eliminate", PROPOSAL_HYBRID_V3_RGBA["release-control_eliminate-pruning"]),
+            ("release reduce", PROPOSAL_HYBRID_V3_RGBA["release-control_reduce-pruning"]),
+            ("colonise rewild", PROPOSAL_HYBRID_V3_RGBA["colonise_rewild-ground"]),
+            ("colonise enrich", PROPOSAL_HYBRID_V3_RGBA["colonise_enrich-envelope"]),
+            ("colonise roughen", PROPOSAL_HYBRID_V3_RGBA["colonise_roughen-envelope"]),
+            ("deploy adapt", PROPOSAL_HYBRID_V3_RGBA["deploy-structure_adapt-utility-pole"]),
+            ("deploy log", PROPOSAL_HYBRID_V3_RGBA["deploy-structure_translocated-log"]),
+            ("deploy upgrade", PROPOSAL_HYBRID_V3_RGBA["deploy-structure_upgrade-feature"]),
+        ]
     return [
         ("rest", GREY_REST),
         ("decay other", PROPOSAL_RGBA["decay-other"]),
@@ -303,6 +371,8 @@ def render_view(
         rgba = merged_rgba(mesh)
     elif view_name == "proposal-hybrid":
         rgba = proposal_hybrid_rgba(mesh)
+    elif view_name == "proposal-hybrid-v3":
+        rgba = proposal_hybrid_v3_rgba(mesh)
     elif view_name == "proposal":
         rgba = proposal_rgba(mesh)
     else:
@@ -363,7 +433,7 @@ def main() -> None:
         mesh = pv.read(vtk_path)
         base_name = f"{site}_{scenario}_yr{year}"
         print(f"Rendering {base_name} from {vtk_path}")
-        for view_name in ["classic", "merged", "proposal-hybrid"]:
+        for view_name in ["classic", "merged", "proposal-hybrid", "proposal-hybrid-v3"]:
             output_path = render_root / view_name / f"{base_name}_{view_name}.png"
             render_view(
                 mesh,

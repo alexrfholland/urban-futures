@@ -5,7 +5,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
-from refactor_code.scenario.engine_v2 import calculate_rewilded_status, run_scenario, run_timestep
+from refactor_code.scenario.engine_v3 import calculate_rewilded_status, run_scenario, run_timestep
 
 
 if __name__ == "__main__":
@@ -48,4 +48,3 @@ if __name__ == "__main__":
                     previous_year=previous_year,
                 )
                 previous_year = year
-

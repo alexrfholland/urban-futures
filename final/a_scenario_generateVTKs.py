@@ -27,7 +27,7 @@ from refactor_code.paths import (
     scenario_tree_df_path,
     scenario_pole_df_path,
 )
-from refactor_code.scenario.engine_v2 import calculate_rewilded_status
+from refactor_code.scenario.engine_v3 import calculate_rewilded_status
 
 VTK_PROPOSAL_LABEL_DTYPE = "<U64"
 BUILDING_URBAN_VALUES = {"facade", "green roof", "brown roof"}
@@ -62,6 +62,35 @@ def _assign_proposal_labels(labels, opportunity_mask, intervention_masks, propos
     for intervention_name, mask in intervention_masks:
         labels[mask] = f"{proposal_name}_{intervention_name}"
     return labels
+
+
+def _empty_v3_decisions(size):
+    return np.full(size, "not-assessed", dtype=VTK_PROPOSAL_LABEL_DTYPE)
+
+
+def _empty_v3_interventions(size):
+    return np.full(size, "none", dtype=VTK_PROPOSAL_LABEL_DTYPE)
+
+
+def _coerce_bool_array(values):
+    array = np.asarray(values)
+    if array.dtype == bool:
+        return array
+    if np.issubdtype(array.dtype, np.number):
+        return np.nan_to_num(array.astype(float), nan=0.0) != 0
+    normalized = _normalize_str_array(array)
+    return np.isin(normalized, ["true", "1", "yes", "y", "t"])
+
+
+def _string_ds_values(ds, name, default):
+    if name not in ds.variables:
+        return np.full(ds.sizes["voxel"], default, dtype=VTK_PROPOSAL_LABEL_DTYPE)
+    values = np.asarray(ds[name].values).astype(str)
+    if values.shape[0] != ds.sizes["voxel"]:
+        return np.full(ds.sizes["voxel"], default, dtype=VTK_PROPOSAL_LABEL_DTYPE)
+    cleaned = values.copy()
+    cleaned[np.isin(_normalize_str_array(cleaned), ["", "nan"])] = default
+    return cleaned.astype(VTK_PROPOSAL_LABEL_DTYPE)
 
 
 def _points_within_distance(points, source_mask, distance_m):
@@ -203,6 +232,148 @@ def create_proposal_point_data(ds):
     ds["proposal_release_control"] = xr.DataArray(proposal_release_control, dims="voxel")
     ds["proposal_colonise"] = xr.DataArray(proposal_colonise, dims="voxel")
     ds["proposal_deploy_structure"] = xr.DataArray(proposal_deploy_structure, dims="voxel")
+    return ds
+
+
+def create_v3_proposal_point_data(ds):
+    voxel_count = ds.sizes["voxel"]
+    proposal_decay = _empty_v3_decisions(voxel_count)
+    proposal_release_control = _empty_v3_decisions(voxel_count)
+    proposal_colonise = np.full(voxel_count, "proposal-colonise_rejected", dtype=VTK_PROPOSAL_LABEL_DTYPE)
+    proposal_recruit = _empty_v3_decisions(voxel_count)
+    proposal_deploy_structure = _empty_v3_decisions(voxel_count)
+
+    decay_intervention = _empty_v3_interventions(voxel_count)
+    release_control_intervention = _empty_v3_interventions(voxel_count)
+    colonise_intervention = _empty_v3_interventions(voxel_count)
+    recruit_intervention = _empty_v3_interventions(voxel_count)
+    deploy_structure_intervention = _empty_v3_interventions(voxel_count)
+
+    scenario_bio_envelope_lower = _normalize_str_array(_string_ds_values(ds, "scenario_bioEnvelope", "none"))
+    scenario_outputs_lower = _normalize_str_array(_string_ds_values(ds, "scenario_outputs", "none"))
+    search_bioavailable_lower = _normalize_str_array(_string_ds_values(ds, "search_bioavailable", "none"))
+    search_urban_elements = _string_ds_values(ds, "search_urban_elements", "none")
+    search_urban_elements_lower = _normalize_str_array(search_urban_elements)
+    forest_size_lower = _normalize_str_array(_string_ds_values(ds, "forest_size", "none"))
+    forest_control_lower = _normalize_str_array(_string_ds_values(ds, "forest_control", "none"))
+
+    forest_precolonial = (
+        _coerce_bool_array(ds["forest_precolonial"].values)
+        if "forest_precolonial" in ds.variables
+        else np.zeros(voxel_count, dtype=bool)
+    )
+    peeling_indicator = (
+        _coerce_bool_array(ds["indicator_Bird_self_peeling"].values)
+        if "indicator_Bird_self_peeling" in ds.variables
+        else np.zeros(voxel_count, dtype=bool)
+    )
+    recruit_indicator = (
+        _coerce_bool_array(ds["indicator_Tree_generations_grassland"].values)
+        if "indicator_Tree_generations_grassland" in ds.variables
+        else np.zeros(voxel_count, dtype=bool)
+    )
+
+    points = np.vstack(
+        (
+            ds["centroid_x"].values,
+            ds["centroid_y"].values,
+            ds["centroid_z"].values,
+        )
+    ).T
+
+    canopy_feature_mask = ~np.isin(forest_size_lower, ["", "nan", "none"])
+    if "stat_fallen log" in ds.variables:
+        fallen_log = np.asarray(ds["stat_fallen log"].values)
+        if np.issubdtype(fallen_log.dtype, np.number):
+            canopy_feature_mask |= fallen_log > 0
+
+    building_mask = np.isin(search_urban_elements_lower, list(BUILDING_URBAN_VALUES))
+    recruit_buffer_opportunity = _points_within_distance(points, canopy_feature_mask, RECRUIT_DISTANCE_M) & (~building_mask)
+    recruit_enabled_mask = (
+        np.asarray(ds["scenario_rewildingEnabled"].values) >= 0
+        if "scenario_rewildingEnabled" in ds.variables
+        else np.zeros(voxel_count, dtype=bool)
+    )
+    recruit_planting_mask = (
+        np.asarray(ds["scenario_rewildingPlantings"].values) >= 0
+        if "scenario_rewildingPlantings" in ds.variables
+        else np.zeros(voxel_count, dtype=bool)
+    )
+
+    forest_decay_decision = _string_ds_values(ds, "forest_proposal-decay_decision", "not-assessed")
+    forest_decay_intervention = _string_ds_values(ds, "forest_proposal-decay_intervention", "none")
+    forest_release_decision = _string_ds_values(ds, "forest_proposal-release-control_decision", "not-assessed")
+    forest_release_intervention = _string_ds_values(ds, "forest_proposal-release-control_intervention", "none")
+    forest_deploy_decision = _string_ds_values(ds, "forest_proposal-deploy-structure_decision", "not-assessed")
+    forest_deploy_intervention = _string_ds_values(ds, "forest_proposal-deploy-structure_intervention", "none")
+
+    forest_decay_decision_lower = _normalize_str_array(forest_decay_decision)
+    forest_decay_intervention_lower = _normalize_str_array(forest_decay_intervention)
+    forest_release_decision_lower = _normalize_str_array(forest_release_decision)
+    forest_release_intervention_lower = _normalize_str_array(forest_release_intervention)
+    forest_deploy_decision_lower = _normalize_str_array(forest_deploy_decision)
+    forest_deploy_intervention_lower = _normalize_str_array(forest_deploy_intervention)
+
+    forest_decay_mask = ~np.isin(forest_decay_decision_lower, ["", "nan", "not-assessed"])
+    proposal_decay[forest_decay_mask] = forest_decay_decision[forest_decay_mask]
+    decay_intervention[forest_decay_mask] = forest_decay_intervention[forest_decay_mask]
+
+    decay_buffer_mask = np.isin(scenario_bio_envelope_lower, list(DECAY_BUFFER_VALUES))
+    decay_brace_mask = scenario_bio_envelope_lower == "exoskeleton"
+    proposal_decay[decay_buffer_mask | decay_brace_mask] = "proposal-decay_accepted"
+    decay_intervention[decay_buffer_mask] = "buffer-feature"
+    decay_intervention[decay_brace_mask] = "brace-feature"
+
+    release_opportunity = search_bioavailable_lower == "arboreal"
+    forest_release_mask = ~np.isin(forest_release_decision_lower, ["", "nan", "not-assessed"])
+    proposal_release_control[forest_release_mask] = forest_release_decision[forest_release_mask]
+    release_control_intervention[forest_release_mask] = forest_release_intervention[forest_release_mask]
+    proposal_release_control[release_opportunity & (release_control_intervention == "none")] = "proposal-release-control_rejected"
+    release_control_intervention[
+        release_opportunity
+        & np.isin(forest_control_lower, ["park-tree", "park tree"])
+        & (release_control_intervention == "none")
+    ] = "reduce-pruning"
+    release_control_intervention[
+        release_opportunity
+        & np.isin(forest_control_lower, ["reserve-tree", "reserve tree", "improved-tree", "improved tree"])
+        & (release_control_intervention == "none")
+    ] = "eliminate-pruning"
+    proposal_release_control[release_opportunity & (release_control_intervention != "none")] = "proposal-release-control_accepted"
+
+    colonise_opportunity = np.isin(scenario_outputs_lower, list(COLONISE_PROPOSAL_VALUES))
+    proposal_colonise[colonise_opportunity] = "proposal-colonise_accepted"
+    colonise_intervention[np.isin(scenario_outputs_lower, list(COLONISE_REWILD_VALUES))] = "rewild-ground"
+    colonise_intervention[np.isin(scenario_outputs_lower, list(COLONISE_ENRICH_VALUES))] = "enrich-envelope"
+    colonise_intervention[np.isin(scenario_outputs_lower, list(COLONISE_ROUGHEN_VALUES))] = "roughen-envelope"
+
+    proposal_recruit[recruit_enabled_mask & (~recruit_planting_mask)] = "proposal-recruit_rejected"
+    proposal_recruit[recruit_buffer_opportunity | recruit_planting_mask] = "proposal-recruit_accepted"
+    recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_BUFFER_VALUES))] = "buffer-feature"
+    recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_REWILD_VALUES))] = "rewild-ground"
+    proposal_recruit[recruit_intervention != "none"] = "proposal-recruit_accepted"
+
+    forest_deploy_mask = ~np.isin(forest_deploy_decision_lower, ["", "nan", "not-assessed"])
+    proposal_deploy_structure[forest_deploy_mask] = forest_deploy_decision[forest_deploy_mask]
+    deploy_structure_intervention[forest_deploy_mask] = forest_deploy_intervention[forest_deploy_mask]
+    adapt_mask = (forest_size_lower == "artificial") & (~forest_precolonial) & (deploy_structure_intervention == "none")
+    proposal_deploy_structure[adapt_mask] = "proposal-deploy-structure_accepted"
+    deploy_structure_intervention[adapt_mask] = "adapt-utility-pole"
+    upgrade_mask = (~forest_precolonial) & peeling_indicator & (deploy_structure_intervention == "none")
+    proposal_deploy_structure[upgrade_mask] = "proposal-deploy-structure_accepted"
+    deploy_structure_intervention[upgrade_mask] = "upgrade-feature"
+
+    ds["proposal_decayV3"] = xr.DataArray(proposal_decay, dims="voxel")
+    ds["proposal_release_controlV3"] = xr.DataArray(proposal_release_control, dims="voxel")
+    ds["proposal_coloniseV3"] = xr.DataArray(proposal_colonise, dims="voxel")
+    ds["proposal_recruitV3"] = xr.DataArray(proposal_recruit, dims="voxel")
+    ds["proposal_deploy_structureV3"] = xr.DataArray(proposal_deploy_structure, dims="voxel")
+
+    ds["proposal_decayV3_intervention"] = xr.DataArray(decay_intervention, dims="voxel")
+    ds["proposal_release_controlV3_intervention"] = xr.DataArray(release_control_intervention, dims="voxel")
+    ds["proposal_coloniseV3_intervention"] = xr.DataArray(colonise_intervention, dims="voxel")
+    ds["proposal_recruitV3_intervention"] = xr.DataArray(recruit_intervention, dims="voxel")
+    ds["proposal_deploy_structureV3_intervention"] = xr.DataArray(deploy_structure_intervention, dims="voxel")
     return ds
 
 
@@ -788,6 +959,7 @@ def generate_vtk(
     #--------------------------------------------------------------------------
     ds = finalDSprocessing(ds)
     ds = create_proposal_point_data(ds)
+    ds = create_v3_proposal_point_data(ds)
 
     # Save combinedDF_scenario to csv
     print(f'Saving {year} combinedDF_scenario to csv')

@@ -12,10 +12,11 @@ It is written against the current canonical v2 state described in:
 
 Before touching code, read these in this order:
 
-1. [scenario_engine_v2_model.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v2_model.md)
-2. [scenario_engine_v2_status.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v2_status.md)
-3. [validation.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/validation.md)
-4. this plan: [scenario_engine_v3_plan.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_plan.md)
+1. this plan: [scenario_engine_v3_plan.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_plan.md). Read carefully first to understand the branch split, output roots, execution rules, and verification process.
+2. [scenario_engine_v2_model.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v2_model.md). This is the main implementation specification. It describes the proposal/intervention model changes V3 is meant to implement, and the implementation should follow it closely.
+3. [scenario_engine_v2_status.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v2_status.md). This defines what is currently canonical in v2 and what must not be overwritten.
+4. [scenario_engine_v2_canonical_checklist.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v2_canonical_checklist.md). Use this as the explicit checklist of ways canonical v2 diverges from the old v1 flow. Before trusting a v3 run, verify it is inheriting these v2 behaviors rather than silently falling back to old routes.
+5. [validation.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/validation.md). Use this as the base pattern for quick verification and full verification outputs.
 
 Important rule:
 
@@ -53,6 +54,39 @@ Canonical v2 currently means:
 - in-memory `urban_features` handoff
 
 V3 work should not overwrite these roots until v3 is accepted.
+
+## Canonical Template Root Requirement
+
+V3 must explicitly inherit the accepted canonical v2 template library configuration.
+
+Approved template root:
+
+- [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+
+Required settings:
+
+- `fallens_use = nonpre-direct`
+- `snags_use = elm-snags-old`
+- include the `decayed-small-fallen` variant bundle
+- `voxel_size = 1`
+
+Do not rely on the loader default.
+
+For v3 candidate runs:
+
+- set `TREE_TEMPLATE_ROOT` explicitly
+- persist that root into the run metadata
+- treat a missing template-root record as a validation failure
+
+Not acceptable for v3 candidate verification:
+
+- `data/revised/trees`
+
+Reason:
+
+- that is the historical default loader path
+- it does not guarantee the approved snag/fallen/decayed variant bundle
+- a v3 run can look structurally correct while still exporting the wrong deadwood geometry
 
 ## Recommended V3 Working Split
 
@@ -214,11 +248,13 @@ Actions:
   - `_statistics-refactored-v3`
 - do not reuse `final-v2` or `_data-refactored/v2engine_outputs`
 - prefer explicit root overrides first; only generalize [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py) once the v3 root layout is stable
+- set `TREE_TEMPLATE_ROOT` explicitly to the approved canonical variant root before any candidate export or verification run
 
 Reason:
 
 - path separation is the main protection against accidental overwrite
 - it keeps v2 available as a live comparison target during the refactor
+- template-root explicitness is required to preserve deadwood geometry parity with canonical v2
 
 ### 3. Add V3 State Fields In Parallel, Not By Immediate Replacement
 
@@ -392,6 +428,13 @@ Confirm for the quick-run subset:
 - `urban_features` VTKs exist
 - `state_with_indicators` VTKs exist
 - V3 proposal arrays are present on the augmented VTKs
+- the run metadata records the approved `TREE_TEMPLATE_ROOT`
+
+Fail quick verification immediately if:
+
+- no template-root metadata is recorded
+- the recorded root is `data/revised/trees`
+- the recorded root is not the approved canonical variant bundle
 
 #### B. Vocabulary Sanity
 
