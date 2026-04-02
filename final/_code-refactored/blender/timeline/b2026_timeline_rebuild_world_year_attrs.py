@@ -15,8 +15,17 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+REPO_ROOT = SCRIPT_DIR.parents[3]
+SHARED_CODE_ROOT = REPO_ROOT / "_code-refactored"
+if str(SHARED_CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SHARED_CODE_ROOT))
+
 import b2026_timeline_layout as timeline_layout
 import b2026_timeline_scene_contract as scene_contract
+from refactor_code.blender.proposal_framebuffers import (
+    DEFAULT_OUTPUT_COLUMNS as PROPOSAL_OUTPUT_COLUMNS,
+    FRAMEBUFFER_STATE_MAPPINGS,
+)
 
 
 SITE_KEY = os.environ["B2026_SITE_KEY"]
@@ -31,6 +40,14 @@ ATTR_NODES = "sim_Nodes"
 ATTR_BIO = "scenario_bioEnvelope"
 ATTR_BIO_SIMPLE = "scenario_bioEnvelopeSimple"
 ATTR_MATCHED = "sim_Matched"
+VTK_PROPOSAL_FAMILIES = (
+    ("proposal-decay", "proposal_decayV3", "proposal_decayV3_intervention"),
+    ("proposal-release-control", "proposal_release_controlV3", "proposal_release_controlV3_intervention"),
+    ("proposal-recruit", "proposal_recruitV3", "proposal_recruitV3_intervention"),
+    ("proposal-colonise", "proposal_coloniseV3", "proposal_coloniseV3_intervention"),
+    ("proposal-deploy-structure", "proposal_deploy_structureV3", "proposal_deploy_structureV3_intervention"),
+)
+PROPOSAL_ATTRIBUTE_NAMES = tuple(PROPOSAL_OUTPUT_COLUMNS[family] for family, _, _ in VTK_PROPOSAL_FAMILIES)
 
 BIO_ENVELOPE_MAP = {
     "exoskeleton": 1,
@@ -61,6 +78,7 @@ REPLACED_WORLD_ATTRIBUTE_NAMES = {
     ATTR_BIO_SIMPLE,
     ATTR_MATCHED,
     "timeline_year",
+    *PROPOSAL_ATTRIBUTE_NAMES,
 }
 
 
@@ -272,6 +290,54 @@ def vtk_string_values(point_data, name: str, count: int) -> list[str]:
     return [str(array.GetValue(i)) for i in range(count)]
 
 
+def vtk_normalized_string_array(point_data, name: str, count: int, fallback: str) -> np.ndarray:
+    values = np.asarray(vtk_string_values(point_data, name, count), dtype=str)
+    values[values == "nan"] = fallback
+    return values
+
+
+def build_blender_proposal_framebuffer_point_arrays(point_data, count: int) -> dict[str, np.ndarray]:
+    output: dict[str, np.ndarray] = {}
+
+    for family, decision_name, intervention_name in VTK_PROPOSAL_FAMILIES:
+        decisions = vtk_normalized_string_array(point_data, decision_name, count, "not-assessed")
+        interventions = vtk_normalized_string_array(point_data, intervention_name, count, "none")
+        combined = np.full(count, "not-assessed", dtype="<U32")
+
+        lowered_decisions = np.char.lower(decisions)
+        accepted_mask = np.char.find(lowered_decisions, "_accepted") >= 0
+        rejected_mask = np.char.find(lowered_decisions, "_rejected") >= 0
+        not_assessed_mask = decisions == "not-assessed"
+        known_mask = accepted_mask | rejected_mask | not_assessed_mask
+        if (~known_mask).any():
+            unknown = sorted(np.unique(decisions[~known_mask]).tolist())
+            raise ValueError(f"Unexpected {family} decision values: {unknown}")
+
+        combined[rejected_mask] = "rejected"
+
+        active_intervention_mask = accepted_mask & (interventions != "none")
+        combined[active_intervention_mask] = interventions[active_intervention_mask]
+
+        rejected_or_unset_with_intervention = (rejected_mask | not_assessed_mask) & (interventions != "none")
+        if rejected_or_unset_with_intervention.any():
+            bad_rows = int(rejected_or_unset_with_intervention.sum())
+            raise ValueError(
+                f"{family} has {bad_rows} points with intervention data on rejected/not-assessed decisions"
+            )
+
+        mapping = FRAMEBUFFER_STATE_MAPPINGS[family]
+        missing_states = sorted(set(np.unique(combined).tolist()) - set(mapping.keys()))
+        if missing_states:
+            raise ValueError(f"Unexpected unmapped {family} framebuffer states: {missing_states}")
+        output[PROPOSAL_OUTPUT_COLUMNS[family]] = np.fromiter(
+            (mapping[state] for state in combined),
+            dtype=np.uint8,
+            count=count,
+        ).astype(np.int32, copy=False)
+
+    return output
+
+
 def build_vtk_lookup(vtk_path: Path) -> dict[str, np.ndarray]:
     poly = read_vtk_polydata(vtk_path)
     points = vtk_to_numpy(poly.GetPoints().GetData()).astype(np.float64, copy=False)
@@ -294,8 +360,9 @@ def build_vtk_lookup(vtk_path: Path) -> dict[str, np.ndarray]:
         [BIO_ENVELOPE_SIMPLE_MAP.get(value, 1 if value else 0) for value in bio_raw],
         dtype=np.int32,
     )
+    proposal_arrays = build_blender_proposal_framebuffer_point_arrays(point_data, poly.GetNumberOfPoints())
 
-    return {
+    cache = {
         "origin": origin,
         "index_min": index_min.astype(np.int32),
         "index_max": index_max.astype(np.int32),
@@ -306,6 +373,9 @@ def build_vtk_lookup(vtk_path: Path) -> dict[str, np.ndarray]:
         "bio_envelope_sorted": bio_envelope[order],
         "bio_envelope_simple_sorted": bio_envelope_simple[order],
     }
+    for attr_name, values in proposal_arrays.items():
+        cache[f"{attr_name}_sorted"] = values[order].astype(np.int32, copy=False)
+    return cache
 
 
 def local_neighbor_lookup(
@@ -357,12 +427,20 @@ def transfer_lookup_to_points(world_points: np.ndarray, cache: dict[str, np.ndar
     sim_nodes_sorted = cache["sim_nodes_sorted"].astype(np.int32)
     bio_envelope_sorted = cache["bio_envelope_sorted"].astype(np.int32)
     bio_envelope_simple_sorted = cache["bio_envelope_simple_sorted"].astype(np.int32)
+    proposal_sorted_arrays = {
+        attr_name: cache[f"{attr_name}_sorted"].astype(np.int32)
+        for attr_name in PROPOSAL_ATTRIBUTE_NAMES
+    }
 
     out_turns = np.full(total, -1, dtype=np.int32)
     out_nodes = np.full(total, -1, dtype=np.int32)
     out_bio = np.zeros(total, dtype=np.int32)
     out_bio_simple = np.zeros(total, dtype=np.int32)
     out_match = np.zeros(total, dtype=np.int32)
+    out_proposals = {
+        attr_name: np.zeros(total, dtype=np.int32)
+        for attr_name in PROPOSAL_ATTRIBUTE_NAMES
+    }
 
     for start in range(0, total, CHUNK_SIZE):
         end = min(start + CHUNK_SIZE, total)
@@ -389,6 +467,8 @@ def transfer_lookup_to_points(world_points: np.ndarray, cache: dict[str, np.ndar
             out_bio[matched_positions] = bio_envelope_sorted[matched_lookup]
             out_bio_simple[matched_positions] = bio_envelope_simple_sorted[matched_lookup]
             out_match[matched_positions] = 1
+            for attr_name, sorted_values in proposal_sorted_arrays.items():
+                out_proposals[attr_name][matched_positions] = sorted_values[matched_lookup]
 
         if ENABLE_LOCAL_NEIGHBOR_FALLBACK:
             fallback_points = chunk_points[in_bounds][~found]
@@ -409,14 +489,18 @@ def transfer_lookup_to_points(world_points: np.ndarray, cache: dict[str, np.ndar
                 out_bio[matched_positions] = bio_envelope_sorted[matched_lookup]
                 out_bio_simple[matched_positions] = bio_envelope_simple_sorted[matched_lookup]
                 out_match[matched_positions] = 1
+                for attr_name, sorted_values in proposal_sorted_arrays.items():
+                    out_proposals[attr_name][matched_positions] = sorted_values[matched_lookup]
 
-    return {
+    transferred = {
         ATTR_TURNS: out_turns,
         ATTR_NODES: out_nodes,
         ATTR_BIO: out_bio,
         ATTR_BIO_SIMPLE: out_bio_simple,
         ATTR_MATCHED: out_match,
     }
+    transferred.update(out_proposals)
+    return transferred
 
 
 def refresh_existing_timeline_object(obj: bpy.types.Object, site_spec: dict, scenario: str) -> None:
@@ -431,6 +515,10 @@ def refresh_existing_timeline_object(obj: bpy.types.Object, site_spec: dict, sce
     out_bio = np.zeros(len(world_points), dtype=np.int32)
     out_bio_simple = np.zeros(len(world_points), dtype=np.int32)
     out_match = np.zeros(len(world_points), dtype=np.int32)
+    out_proposals = {
+        attr_name: np.zeros(len(world_points), dtype=np.int32)
+        for attr_name in PROPOSAL_ATTRIBUTE_NAMES
+    }
 
     vtk_cache_by_year = {}
 
@@ -451,12 +539,16 @@ def refresh_existing_timeline_object(obj: bpy.types.Object, site_spec: dict, sce
         out_bio[mask] = transferred[ATTR_BIO]
         out_bio_simple[mask] = transferred[ATTR_BIO_SIMPLE]
         out_match[mask] = transferred[ATTR_MATCHED]
+        for attr_name in PROPOSAL_ATTRIBUTE_NAMES:
+            out_proposals[attr_name][mask] = transferred[attr_name]
 
     assign_int_attribute(obj.data, ATTR_TURNS, out_turns)
     assign_int_attribute(obj.data, ATTR_NODES, out_nodes)
     assign_int_attribute(obj.data, ATTR_BIO, out_bio)
     assign_int_attribute(obj.data, ATTR_BIO_SIMPLE, out_bio_simple)
     assign_int_attribute(obj.data, ATTR_MATCHED, out_match)
+    for attr_name, values in out_proposals.items():
+        assign_int_attribute(obj.data, attr_name, values)
 
 
 def build_combined_timeline_payload(source_obj, site_spec: dict, scenario: str) -> tuple[np.ndarray, dict[str, dict]]:
@@ -473,6 +565,8 @@ def build_combined_timeline_payload(source_obj, site_spec: dict, scenario: str) 
         ATTR_MATCHED: [],
         "timeline_year": [],
     }
+    for attr_name in PROPOSAL_ATTRIBUTE_NAMES:
+        world_attr_chunks[attr_name] = []
 
     vtk_cache_by_year = {}
 
@@ -512,7 +606,7 @@ def build_combined_timeline_payload(source_obj, site_spec: dict, scenario: str) 
                 "field_name": payload["field_name"],
                 "values": np.empty(empty_shape, dtype=values.dtype if hasattr(values, "dtype") else np.float32),
             }
-        for name in (ATTR_TURNS, ATTR_NODES, ATTR_BIO, ATTR_BIO_SIMPLE, ATTR_MATCHED):
+        for name in (ATTR_TURNS, ATTR_NODES, ATTR_BIO, ATTR_BIO_SIMPLE, ATTR_MATCHED, *PROPOSAL_ATTRIBUTE_NAMES):
             empty_attrs[name] = {"data_type": "INT", "field_name": "value", "values": np.empty((0,), dtype=np.int32)}
         empty_attrs["timeline_year"] = {"data_type": "FLOAT", "field_name": "value", "values": np.empty((0,), dtype=np.float32)}
         return np.empty((0, 3), dtype=np.float32), empty_attrs
@@ -526,7 +620,7 @@ def build_combined_timeline_payload(source_obj, site_spec: dict, scenario: str) 
             "values": np.concatenate(attribute_chunks[name], axis=0),
         }
 
-    for name in (ATTR_TURNS, ATTR_NODES, ATTR_BIO, ATTR_BIO_SIMPLE, ATTR_MATCHED):
+    for name in (ATTR_TURNS, ATTR_NODES, ATTR_BIO, ATTR_BIO_SIMPLE, ATTR_MATCHED, *PROPOSAL_ATTRIBUTE_NAMES):
         combined_attrs[name] = {
             "data_type": "INT",
             "field_name": "value",

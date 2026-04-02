@@ -12,6 +12,16 @@ from pathlib import Path
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 
+REPO_ROOT = Path(__file__).resolve().parents[4]
+SHARED_CODE_ROOT = REPO_ROOT / "_code-refactored"
+if str(SHARED_CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SHARED_CODE_ROOT))
+
+from refactor_code.blender.proposal_framebuffers import (
+    DEFAULT_OUTPUT_COLUMNS as PROPOSAL_FRAMEBUFFER_OUTPUT_COLUMNS,
+    build_blender_proposal_framebuffer_columns,
+)
+
 
 def print(*args, **kwargs):
     kwargs.setdefault("flush", True)
@@ -77,6 +87,7 @@ RESOURCE_BINARY_ATTRIBUTE_NAMES = (
     'resource_fallen log',
     'resource_other',
 )
+PROPOSAL_FRAMEBUFFER_ATTRIBUTE_NAMES = tuple(PROPOSAL_FRAMEBUFFER_OUTPUT_COLUMNS.values())
 # Paths
 PLY_FOLDER = '/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/treeMeshesPly'
 LOG_FOLDER = '/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/logMeshesPly'
@@ -1612,6 +1623,12 @@ def process_collection(df, ply_folder, node_type, year_collection, variant_suffi
             pd.to_numeric(node_id_series, errors='coerce').fillna(-1).to_numpy(dtype=np.int32),
         ),
     }
+    for attr_name in PROPOSAL_FRAMEBUFFER_ATTRIBUTE_NAMES:
+        base_attr_types[attr_name] = (
+            'INT',
+            'value',
+            pd.to_numeric(get_series_or_default(df, attr_name, 0), errors='coerce').fillna(0).to_numpy(dtype=np.int32),
+        )
 
     if node_type in ['tree', 'pole']:
         base_attr_types['control'] = ('INT', 'value', convert_control(df['control']).to_numpy(dtype=np.int32))
@@ -1710,6 +1727,14 @@ def drop_ignored_size_rows(df):
     return filtered, ignored_count
 
 
+def ensure_proposal_framebuffer_columns(df):
+    proposal_columns = build_blender_proposal_framebuffer_columns(df)
+    adjusted = df.copy()
+    for attr_name in PROPOSAL_FRAMEBUFFER_ATTRIBUTE_NAMES:
+        adjusted[attr_name] = proposal_columns[attr_name].to_numpy(dtype=np.int32)
+    return adjusted
+
+
 def load_scenario_dataframe(scenario_name):
     if site_uses_timeline_mode():
         timeline_layout = get_timeline_layout_module()
@@ -1719,10 +1744,12 @@ def load_scenario_dataframe(scenario_name):
             TIMELINE_ACTIVE_YEARS,
         )
         df = apply_site_specific_csv_fixes(df)
+        df = ensure_proposal_framebuffer_columns(df)
         return df, source_paths, used_strips
 
     df = pd.read_csv(CSV_FILEPATH)
     df = apply_site_specific_csv_fixes(df)
+    df = ensure_proposal_framebuffer_columns(df)
     return df, [Path(CSV_FILEPATH)], []
 
 

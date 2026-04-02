@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 from pathlib import Path
 import hashlib
 import os
@@ -22,6 +23,12 @@ BIO_PREFIX = os.environ.get("B2026_BIO_PREFIX", f"{SITE_KEY}_")
 OUTPUT_BASENAME = os.environ.get("B2026_OUTPUT_BASENAME", BLEND_SCENE_NAME)
 OUTPUT_TAG = os.environ.get("B2026_OUTPUT_TAG", "8k")
 OUTPUT_DIR = Path(os.environ["B2026_OUTPUT_DIR"])
+SETUP_ONLY = os.environ.get("B2026_SETUP_ONLY", "0") == "1"
+SAVE_MAINFILE = os.environ.get("B2026_SAVE_MAINFILE", "1") != "0"
+MIST_WORLD_NAME = os.environ.get("B2026_MIST_WORLD_NAME", "debug_timeslice_world")
+MIST_START = float(os.environ.get("B2026_MIST_START", "560"))
+MIST_DEPTH = float(os.environ.get("B2026_MIST_DEPTH", "320"))
+MIST_FALLOFF = os.environ.get("B2026_MIST_FALLOFF", "QUADRATIC")
 
 WORLD_POINT_GROUP_NAMES = (
     "Background",
@@ -68,6 +75,11 @@ AOV_SPECS = (
     ("node_type", "VALUE"),
     ("tree_interventions", "VALUE"),
     ("tree_proposals", "VALUE"),
+    ("proposal-decay", "VALUE"),
+    ("proposal-release-control", "VALUE"),
+    ("proposal-recruit", "VALUE"),
+    ("proposal-colonise", "VALUE"),
+    ("proposal-deploy-structure", "VALUE"),
     ("improvement", "VALUE"),
     ("canopy_resistance", "VALUE"),
     ("node_id", "VALUE"),
@@ -101,6 +113,11 @@ WORLD_POINT_AOV_SPECS = (
     ("world_design_bioenvelope", "scenario_bioEnvelope", "VALUE"),
     ("world_design_bioenvelope_simple", "scenario_bioEnvelopeSimple", "VALUE"),
     ("world_sim_matched", "sim_Matched", "VALUE"),
+    ("proposal-decay", "blender_proposal-decay", "VALUE"),
+    ("proposal-release-control", "blender_proposal-release-control", "VALUE"),
+    ("proposal-recruit", "blender_proposal-recruit", "VALUE"),
+    ("proposal-colonise", "blender_proposal-colonise", "VALUE"),
+    ("proposal-deploy-structure", "blender_proposal-deploy-structure", "VALUE"),
 )
 
 
@@ -109,6 +126,46 @@ def ensure_material(name: str):
     if material is None:
         raise ValueError(f"Required material '{name}' was not found")
     return material
+
+
+def refresh_minimal_resources_material():
+    script_path = SCRIPT_DIR.parents[2] / "_blender" / "2026" / "MINIMAL_RESOURCES.py"
+    spec = importlib.util.spec_from_file_location("b2026_minimal_resources_builder", script_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load MINIMAL_RESOURCES builder from {script_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    if not hasattr(module, "main"):
+        raise AttributeError(f"{script_path} does not expose main()")
+    module.main()
+
+
+def ensure_world(name: str) -> bpy.types.World:
+    world = bpy.data.worlds.get(name)
+    if world is None:
+        world = bpy.data.worlds.new(name)
+    return world
+
+
+def ensure_scene_camera(scene: bpy.types.Scene):
+    camera = bpy.data.objects.get(CAMERA_NAME)
+    if camera is None:
+        raise ValueError(f"Camera '{CAMERA_NAME}' not found in {bpy.data.filepath}")
+    scene.camera = camera
+    return camera
+
+
+def ensure_scene_world_and_mist(scene: bpy.types.Scene):
+    world = ensure_world(MIST_WORLD_NAME)
+    scene.world = world
+    mist = world.mist_settings
+    mist.use_mist = True
+    mist.start = MIST_START
+    mist.depth = MIST_DEPTH
+    mist.falloff = MIST_FALLOFF
+    for view_layer in scene.view_layers:
+        view_layer.use_pass_mist = True
+    return world
 
 
 def restore_instancer_materials():
@@ -246,6 +303,8 @@ def ensure_target_layer_aovs(scene: bpy.types.Scene):
         view_layer = scene.view_layers.get(layer_name)
         if view_layer is None:
             continue
+        if hasattr(view_layer, "use"):
+            view_layer.use = True
         for aov_name, aov_type in AOV_SPECS:
             ensure_aov(view_layer, aov_name, aov_type)
 
@@ -380,7 +439,7 @@ def clone_scene_for_layer(scene: bpy.types.Scene, view_layer_name: str):
     temp_scene = scene.copy()
     temp_scene.name = f"{scene.name}__{view_layer_name}__exr"
     temp_scene.camera = bpy.data.objects[CAMERA_NAME]
-    temp_scene.render.use_compositing = False
+    temp_scene.render.use_compositing = True
     temp_scene.render.use_sequencer = False
     temp_scene.render.film_transparent = True
     temp_scene.render.resolution_x = FULL_RESOLUTION[0]
@@ -398,15 +457,74 @@ def clone_scene_for_layer(scene: bpy.types.Scene, view_layer_name: str):
         temp_scene.cycles.samples = FULL_SAMPLES
         temp_scene.cycles.preview_samples = FULL_SAMPLES
 
+    target_layer = temp_scene.view_layers.get(view_layer_name)
+    if target_layer is None:
+        raise ValueError(f"View layer '{view_layer_name}' not found on copied scene '{temp_scene.name}'")
+    if hasattr(target_layer, "use"):
+        target_layer.use = True
+    if hasattr(temp_scene.view_layers, "active"):
+        temp_scene.view_layers.active = target_layer
+
     for layer in list(temp_scene.view_layers):
-        if layer.name != view_layer_name:
+        if layer != target_layer:
             temp_scene.view_layers.remove(layer)
 
     target_layer = temp_scene.view_layers.get(view_layer_name)
     if target_layer is None:
         raise ValueError(f"Failed to isolate view layer '{view_layer_name}'")
+    if hasattr(target_layer, "use"):
+        target_layer.use = True
     ensure_render_passes(target_layer)
     return temp_scene
+
+
+def clear_file_output_slots(output_node: bpy.types.Node):
+    while len(output_node.inputs):
+        output_node.file_slots.remove(output_node.inputs[0])
+
+
+def configure_temp_scene_exr_output(temp_scene: bpy.types.Scene, view_layer_name: str, output_path: Path):
+    temp_scene.use_nodes = True
+    node_tree = temp_scene.node_tree
+    node_tree.nodes.clear()
+
+    render_node = node_tree.nodes.new("CompositorNodeRLayers")
+    render_node.name = f"Temp Render Layers :: {view_layer_name}"
+    render_node.scene = temp_scene
+    render_node.layer = view_layer_name
+    render_node.location = (-520.0, 0.0)
+
+    output_node = node_tree.nodes.new("CompositorNodeOutputFile")
+    output_node.name = f"Temp EXR Output :: {view_layer_name}"
+    output_node.base_path = str(output_path.with_suffix(""))
+    output_node.format.file_format = "OPEN_EXR_MULTILAYER"
+    output_node.format.color_mode = "RGBA"
+    output_node.format.color_depth = EXR_DEPTH
+    output_node.format.exr_codec = "ZIP"
+    output_node.location = (-40.0, 0.0)
+
+    clear_file_output_slots(output_node)
+    enabled_sockets = [socket for socket in render_node.outputs if getattr(socket, "enabled", True)]
+    for socket in enabled_sockets:
+        output_node.file_slots.new(socket.name)
+    for socket in enabled_sockets:
+        target_socket = output_node.inputs.get(socket.name)
+        if target_socket is not None:
+            ensure_link(node_tree, socket, target_socket)
+
+
+def rename_temp_exr_output(output_path: Path):
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    candidates = sorted(
+        output_path.parent.glob(f"{output_path.stem}*.exr"),
+        key=lambda path: path.stat().st_mtime_ns,
+    )
+    if not candidates:
+        raise FileNotFoundError(f"No EXR output found for {output_path.stem}")
+    rendered_path = candidates[-1]
+    if output_path.exists():
+        output_path.unlink()
+    rendered_path.replace(output_path)
 
 
 def render_isolated_exr(scene: bpy.types.Scene, view_layer_name: str):
@@ -414,13 +532,19 @@ def render_isolated_exr(scene: bpy.types.Scene, view_layer_name: str):
     output_path = OUTPUT_DIR / f"{OUTPUT_BASENAME}_{view_layer_name}_{OUTPUT_TAG}.exr"
 
     temp_scene = clone_scene_for_layer(scene, view_layer_name)
-    temp_scene.render.filepath = str(output_path)
+    temp_scene.frame_set(1)
+    configure_temp_scene_exr_output(temp_scene, view_layer_name, output_path)
+    target_layer = temp_scene.view_layers.get(view_layer_name)
+    if target_layer is None:
+        raise ValueError(f"Temp scene '{temp_scene.name}' is missing view layer '{view_layer_name}'")
     show_names, hide_names = build_scene_collection_toggles(view_layer_name)
     shown_state = set_collection_render_state(show_names, hide_render=False)
     hidden_state = set_collection_render_state(hide_names, hide_render=True)
 
     try:
-        bpy.ops.render.render(write_still=True, scene=temp_scene.name, layer=view_layer_name, use_viewport=False)
+        with bpy.context.temp_override(scene=temp_scene, view_layer=target_layer):
+            bpy.ops.render.render(scene=temp_scene.name, layer=view_layer_name, use_viewport=False)
+        rename_temp_exr_output(output_path)
     finally:
         restore_collection_render_state(shown_state)
         restore_collection_render_state(hidden_state)
@@ -435,13 +559,29 @@ def main():
     scene = bpy.data.scenes.get(BLEND_SCENE_NAME)
     if scene is None:
         raise ValueError(f"Scene '{BLEND_SCENE_NAME}' not found in {bpy.data.filepath}")
-    if bpy.data.objects.get(CAMERA_NAME) is None:
-        raise ValueError(f"Camera '{CAMERA_NAME}' not found in {bpy.data.filepath}")
 
+    refresh_minimal_resources_material()
+    camera = ensure_scene_camera(scene)
+    world = ensure_scene_world_and_mist(scene)
     restore_instancer_materials()
     restore_world_point_materials()
     restore_bioenvelope_materials()
     ensure_target_layer_aovs(scene)
+    for view_layer in scene.view_layers:
+        ensure_render_passes(view_layer)
+
+    if SAVE_MAINFILE:
+        bpy.ops.wm.save_mainfile()
+
+    print(
+        f"SETUP_READY scene={scene.name} camera={camera.name} world={world.name} "
+        f"mist=({world.mist_settings.start},{world.mist_settings.depth},{world.mist_settings.falloff}) "
+        f"setup_only={SETUP_ONLY}"
+    )
+
+    if SETUP_ONLY:
+        return
+
     outputs = []
     target_layers = VIEW_LAYER_FILTER or TARGET_VIEW_LAYERS
     for view_layer_name in target_layers:

@@ -190,7 +190,7 @@ TIMELINE_SITE_SPECS = {
         "scene_name": "street",
         "world_collection_name": scene_contract.get_collection_name("street", "timeline_base", legacy=True),
         "manager_collection_name": scene_contract.get_collection_name("street", "manager", legacy=True),
-        "world_objects": (
+        "source_world_objects": (
             scene_contract.SITE_CONTRACTS["street"]["world_objects"]["base"],
             scene_contract.SITE_CONTRACTS["street"]["world_objects"]["road"],
         ),
