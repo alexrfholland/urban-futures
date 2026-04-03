@@ -109,18 +109,42 @@ def infer_site_from_scene_name(scene_name):
     return scene_contract.infer_site_from_scene_name(scene_name)
 
 
+def get_build_mode(site_name=None):
+    timeline_layout = get_timeline_layout_module()
+    target_site = site_name or SITE
+    if TIMELINE_MODE and timeline_layout.timeline_mode_supported(target_site):
+        return timeline_layout.get_build_mode()
+    return "timeline"
+
+
+def single_state_mode_active(site_name=None):
+    return get_build_mode(site_name) == "single_state"
+
+
+def get_active_build_years(site_name=None):
+    timeline_layout = get_timeline_layout_module()
+    target_site = site_name or SITE
+    if TIMELINE_MODE and timeline_layout.timeline_mode_supported(target_site):
+        return tuple(timeline_layout.get_active_years(target_site))
+    return (YEAR,)
+
+
+def get_primary_build_year(site_name=None):
+    return int(get_active_build_years(site_name)[-1])
+
+
 def get_csv_filename_for_scenario(scenario_name):
-    return f'{SITE}_{scenario_name}_1_nodeDF_{YEAR}.csv'
+    return f'{SITE}_{scenario_name}_1_nodeDF_{get_primary_build_year()}.csv'
 
 
 def get_csv_filepath_for_scenario(scenario_name):
-    if site_uses_timeline_mode():
+    if TIMELINE_MODE and get_timeline_layout_module().timeline_mode_supported(SITE):
         timeline_layout = get_timeline_layout_module()
         return str(
             timeline_layout.resolve_feature_csv_path(
                 SITE,
                 scenario_name,
-                TIMELINE_ACTIVE_YEARS[-1],
+                get_primary_build_year(),
             )
         )
     return os.path.join(BASE_PATH, get_csv_filename_for_scenario(scenario_name))
@@ -150,15 +174,15 @@ def configure_site_from_scene(scene):
 
 
 def get_available_scenarios():
-    if site_uses_timeline_mode():
+    if TIMELINE_MODE and get_timeline_layout_module().timeline_mode_supported(SITE):
         timeline_layout = get_timeline_layout_module()
         available = []
         for scenario_name in SCENARIOS_TO_BUILD:
             try:
-                timeline_layout.build_timeline_dataframe(
+                timeline_layout.build_site_dataframe(
                     SITE,
                     scenario_name,
-                    TIMELINE_ACTIVE_YEARS,
+                    get_active_build_years(SITE),
                 )
             except FileNotFoundError:
                 continue
@@ -179,22 +203,41 @@ def get_available_scenarios():
 
 def get_run_id(scenario_name=None):
     scenario_name = scenario_name or SCENARIO
+    if single_state_mode_active():
+        return f"{SITE}_yr{get_primary_build_year()}_{scenario_name}"
     if site_uses_timeline_mode():
         return f"{SITE}_timeline_{scenario_name}"
     return f"{SITE}_{YEAR}_{scenario_name}"
 
 
 def get_run_collection_name(scenario_name=None):
+    if single_state_mode_active():
+        scene_contract = get_scene_contract_module()
+        scenario_name = scenario_name or SCENARIO
+        role = {
+            'positive': 'positive',
+            'trending': 'trending',
+        }.get(scenario_name, 'positive')
+        return scene_contract.get_single_state_top_level_name(SITE, role)
     return f"Year_{get_run_id(scenario_name)}"
 
 
 def get_priority_run_collection_name(scenario_name=None):
+    if single_state_mode_active():
+        scene_contract = get_scene_contract_module()
+        return scene_contract.get_single_state_top_level_name(SITE, 'priority')
     return f"{get_run_collection_name(scenario_name)}_priority"
 
 
 def get_run_parent_collection_name(scenario_name=None):
     scene_contract = get_scene_contract_module()
     scenario_name = scenario_name or SCENARIO
+    if single_state_mode_active():
+        role = {
+            'positive': 'positive',
+            'trending': 'trending',
+        }.get(scenario_name, 'positive')
+        return scene_contract.get_single_state_top_level_name(SITE, role)
     role = {
         'positive': 'positive',
         'trending': 'trending',
@@ -204,19 +247,33 @@ def get_run_parent_collection_name(scenario_name=None):
 
 def get_priority_parent_collection_name():
     scene_contract = get_scene_contract_module()
+    if single_state_mode_active():
+        return scene_contract.get_single_state_top_level_name(SITE, 'priority')
     return scene_contract.get_collection_name(SITE, 'priority')
 
 
 def ensure_child_collection(parent_collection, child_collection):
-    if child_collection.name not in parent_collection.children:
+    if parent_collection.children.get(child_collection.name) is None:
         parent_collection.children.link(child_collection)
+
+
+def ensure_single_state_collections_linked(scene):
+    if not single_state_mode_active():
+        return
+
+    scene_contract = get_scene_contract_module()
+    for role in ('manager', 'setup', 'cameras', 'positive', 'priority', 'trending'):
+        ensure_run_parent_collection(
+            scene,
+            scene_contract.get_single_state_top_level_name(SITE, role),
+        )
 
 
 def ensure_run_parent_collection(scene, collection_name):
     parent = bpy.data.collections.get(collection_name)
     if parent is None:
         parent = bpy.data.collections.new(collection_name)
-    if parent.name not in scene.collection.children:
+    if scene.collection.children.get(parent.name) is None:
         scene.collection.children.link(parent)
     return parent
 
@@ -268,6 +325,11 @@ def configure_priority_view_layer_visibility(scene, priority_scenario_name=None)
 def configure_scenario_view_layer_visibility(scene):
     available_scenarios = get_available_scenarios()
     configured = False
+    scene_contract = get_scene_contract_module()
+    site_contract = scene_contract.SITE_CONTRACTS.get(SITE, {})
+    legacy = site_contract.get('legacy', {})
+    timeline_positive_bio = f"Year_{SITE}_timeline_bioenvelope_positive"
+    timeline_trending_bio = f"Year_{SITE}_timeline_bioenvelope_trending"
     for view_layer in scene.view_layers:
         visibility_spec = SCENARIO_VIEW_LAYER_MAP.get(
             view_layer.name,
@@ -288,6 +350,28 @@ def configure_scenario_view_layer_visibility(scene):
             get_priority_parent_collection_name(),
             'priority' not in priority_visible,
         )
+        if single_state_mode_active():
+            for role in ('manager', 'setup', 'cameras', 'positive', 'priority', 'trending'):
+                collection_name = scene_contract.get_single_state_top_level_name(SITE, role)
+                set_collection_exclude(view_layer, collection_name, False)
+            for collection_name in (
+                legacy.get('timeline_base'),
+                legacy.get('timeline_positive'),
+                legacy.get('timeline_priority'),
+                legacy.get('timeline_trending'),
+                timeline_positive_bio,
+                timeline_trending_bio,
+            ):
+                if collection_name:
+                    set_collection_exclude(view_layer, collection_name, True)
+            for collection_name in (
+                legacy.get('base'),
+                legacy.get('base_cubes'),
+                legacy.get('bio_positive'),
+                legacy.get('bio_trending'),
+            ):
+                if collection_name:
+                    set_collection_exclude(view_layer, collection_name, True)
 
     if configured:
         print(
@@ -347,7 +431,11 @@ def get_scene_contract_module():
 def site_uses_timeline_mode(site_name=None):
     timeline_layout = get_timeline_layout_module()
     target_site = site_name or SITE
-    return TIMELINE_MODE and timeline_layout.timeline_mode_supported(target_site)
+    return (
+        TIMELINE_MODE
+        and timeline_layout.timeline_mode_supported(target_site)
+        and not single_state_mode_active(target_site)
+    )
 
 
 def run_clipbox_followup_scripts():
@@ -427,6 +515,16 @@ def remove_node_group_if_present(name):
 
 
 def get_node_run_id(node_type, variant_suffix=None, scenario_name=None):
+    if single_state_mode_active():
+        scenario_name = scenario_name or SCENARIO
+        priority = variant_suffix == "priority"
+        return get_scene_contract_module().get_single_state_node_collection_base(
+            SITE,
+            node_type,
+            get_primary_build_year(),
+            scenario_name,
+            priority=priority,
+        )
     base = f"{node_type}_{get_run_id(scenario_name)}"
     if variant_suffix:
         return f"{base}_{variant_suffix}"
@@ -434,6 +532,11 @@ def get_node_run_id(node_type, variant_suffix=None, scenario_name=None):
 
 
 def get_point_cloud_object_name(node_type, variant_suffix=None, scenario_name=None):
+    if single_state_mode_active():
+        scenario_name = scenario_name or SCENARIO
+        suffix = f"{scenario_name}_priority" if variant_suffix == "priority" else scenario_name
+        base = f"{node_type.capitalize()}Positions_{SITE}_yr{get_primary_build_year()}_{suffix}"
+        return base
     base = f"{node_type.capitalize()}Positions_{get_run_id(scenario_name)}"
     if variant_suffix:
         return f"{base}_{variant_suffix}"
@@ -542,8 +645,9 @@ def cleanup_existing_run_artifacts():
 
     for scenario_name in scenario_names:
         run_id = get_run_id(scenario_name)
-        collection_names.add(get_run_collection_name(scenario_name))
-        collection_names.add(get_priority_run_collection_name(scenario_name))
+        if not single_state_mode_active():
+            collection_names.add(get_run_collection_name(scenario_name))
+            collection_names.add(get_priority_run_collection_name(scenario_name))
         node_group_names.add(run_id)
 
         for node_type in node_types:
@@ -553,7 +657,7 @@ def cleanup_existing_run_artifacts():
             object_names.add(get_point_cloud_object_name(node_type, scenario_name=scenario_name))
             node_group_names.add(node_run_id)
 
-            legacy_collection_prefix = f"{node_type}_{YEAR}_{scenario_name}"
+            legacy_collection_prefix = f"{node_type}_{get_primary_build_year()}_{scenario_name}"
             for suffix in ("_positions", "_plyModels"):
                 legacy_name = f"{legacy_collection_prefix}{suffix}"
                 legacy_collection = bpy.data.collections.get(legacy_name)
@@ -1736,12 +1840,12 @@ def ensure_proposal_framebuffer_columns(df):
 
 
 def load_scenario_dataframe(scenario_name):
-    if site_uses_timeline_mode():
+    if TIMELINE_MODE and get_timeline_layout_module().timeline_mode_supported(SITE):
         timeline_layout = get_timeline_layout_module()
-        df, source_paths, used_strips = timeline_layout.build_timeline_dataframe(
+        df, source_paths, used_strips = timeline_layout.build_site_dataframe(
             SITE,
             scenario_name,
-            TIMELINE_ACTIVE_YEARS,
+            get_active_build_years(SITE),
         )
         df = apply_site_specific_csv_fixes(df)
         df = ensure_proposal_framebuffer_columns(df)
@@ -1775,13 +1879,19 @@ def run_scenario(scene, scenario_name):
     print("Counts by nodeType:")
     print(df['nodeType'].value_counts())
 
-    year_collection_name = get_run_collection_name()
-    year_collection = bpy.data.collections.new(year_collection_name)
-    run_parent = ensure_run_parent_collection(
-        scene,
-        get_run_parent_collection_name(scenario_name),
-    )
-    ensure_child_collection(run_parent, year_collection)
+    if single_state_mode_active():
+        year_collection = ensure_run_parent_collection(
+            scene,
+            get_run_parent_collection_name(scenario_name),
+        )
+    else:
+        year_collection_name = get_run_collection_name()
+        year_collection = bpy.data.collections.new(year_collection_name)
+        run_parent = ensure_run_parent_collection(
+            scene,
+            get_run_parent_collection_name(scenario_name),
+        )
+        ensure_child_collection(run_parent, year_collection)
 
     if site_uses_timeline_mode():
         df_filtered = df.copy()
@@ -1862,12 +1972,18 @@ def run_scenario(scene, scenario_name):
 
         priority_collection = None
         if len(priority_treeDF) > 0 or len(logDF) > 0:
-            priority_collection = bpy.data.collections.new(get_priority_run_collection_name())
-            priority_parent = ensure_run_parent_collection(
-                scene,
-                get_priority_parent_collection_name(),
-            )
-            ensure_child_collection(priority_parent, priority_collection)
+            if single_state_mode_active():
+                priority_collection = ensure_run_parent_collection(
+                    scene,
+                    get_priority_parent_collection_name(),
+                )
+            else:
+                priority_collection = bpy.data.collections.new(get_priority_run_collection_name())
+                priority_parent = ensure_run_parent_collection(
+                    scene,
+                    get_priority_parent_collection_name(),
+                )
+                ensure_child_collection(priority_parent, priority_collection)
 
         if len(priority_treeDF) > 0:
             print("\nProcessing priority trees...")
@@ -1911,8 +2027,9 @@ def run_scenario(scene, scenario_name):
 
     run_context = {
         'source_csv_paths': [str(path) for path in source_csv_paths],
-        'timeline_years': [strip['year'] for strip in used_timeline_strips],
+        'timeline_years': [strip['year'] for strip in used_timeline_strips] or list(get_active_build_years(SITE)),
         'merged_tree_log_csv': str(merged_tree_log_csv) if merged_tree_log_csv else None,
+        'build_mode': get_build_mode(SITE),
         'ignored_size_rows': int(ignored_size_row_count),
         'input_rows': int(len(df)),
         'filtered_rows': int(len(df_filtered)),
@@ -1941,6 +2058,7 @@ def main():
     active_test_mode = timeline_layout.get_active_timeline_test_mode()
     if active_test_mode is not None:
         print(f"Timeline test mode active: {active_test_mode}")
+    print(f"Timeline build mode: {get_build_mode(SITE)} (site={SITE}, years={get_active_build_years(SITE)})")
     cleanup_scene()
 
     available_scenarios = get_available_scenarios()
@@ -1950,8 +2068,10 @@ def main():
     for scenario_name in available_scenarios:
         scenario_results.append(run_scenario(scene, scenario_name))
 
+    ensure_single_state_collections_linked(scene)
     configure_scenario_view_layer_visibility(scene)
     run_clipbox_followup_scripts()
+    bpy.ops.wm.save_mainfile()
 
     print("\nAll processing complete!")
     return scenario_results

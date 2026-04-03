@@ -16,6 +16,7 @@ import b2026_timeline_scene_contract as scene_contract
 
 
 TIMELINE_YEARS = (0, 10, 30, 60, 180)
+VALID_BUILD_MODES = {"timeline", "single_state"}
 VISUAL_STRIP_POSITION_OVERRIDES = {
     "city": {
         0: 180,
@@ -38,6 +39,12 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 REPO_DATA_ROOT = REPO_ROOT / "data" / "revised" / "final"
 
 TIMELINE_TEST_MODE = os.environ.get("B2026_TIMELINE_TEST_MODE", "").strip().lower()
+TIMELINE_BUILD_MODE = os.environ.get("B2026_TIMELINE_BUILD_MODE", "timeline").strip().lower()
+SINGLE_STATE_YEAR = int(os.environ.get("B2026_SINGLE_STATE_YEAR", "180"))
+BUNDLE_ROOT_ENV_NAMES = (
+    "B2026_DATA_BUNDLE_ROOTS",
+    "B2026_DATA_BUNDLE_ROOT",
+)
 TIMELINE_TEST_MODE_SPECS = {
     "parade_positive180_everywhere": {
         "sites": ("trimmed-parade",),
@@ -244,6 +251,32 @@ def get_timeline_site_spec(site: str) -> dict | None:
     return TIMELINE_SITE_SPECS.get(site)
 
 
+def get_build_mode() -> str:
+    if TIMELINE_BUILD_MODE not in VALID_BUILD_MODES:
+        raise ValueError(
+            f"Unknown B2026_TIMELINE_BUILD_MODE '{TIMELINE_BUILD_MODE}'. "
+            f"Expected one of: {', '.join(sorted(VALID_BUILD_MODES))}"
+        )
+    return TIMELINE_BUILD_MODE
+
+
+def single_state_mode_active() -> bool:
+    return get_build_mode() == "single_state"
+
+
+def get_single_state_year() -> int:
+    return SINGLE_STATE_YEAR
+
+
+def get_active_years(site: str) -> tuple[int, ...]:
+    site_spec = get_timeline_site_spec(site)
+    if site_spec is None:
+        raise ValueError(f"No timeline site spec for site '{site}'")
+    if single_state_mode_active():
+        return (get_single_state_year(),)
+    return tuple(site_spec["timeline_years"])
+
+
 def get_position_year(site: str, display_year: int) -> int:
     return VISUAL_STRIP_POSITION_OVERRIDES.get(site, {}).get(display_year, display_year)
 
@@ -253,8 +286,25 @@ def timeline_mode_supported(site: str) -> bool:
 
 
 def iter_existing_bundle_roots():
+    seen: set[Path] = set()
+
+    for env_name in BUNDLE_ROOT_ENV_NAMES:
+        raw_value = os.environ.get(env_name, "")
+        if not raw_value.strip():
+            continue
+        for raw_path in raw_value.split(os.pathsep):
+            candidate = Path(raw_path.strip())
+            if not raw_path.strip() or candidate in seen:
+                continue
+            if candidate.exists():
+                seen.add(candidate)
+                yield candidate
+
     for candidate in DATA_BUNDLE_ROOT_CANDIDATES:
+        if candidate in seen:
+            continue
         if candidate.exists():
+            seen.add(candidate)
             yield candidate
 
 
@@ -482,3 +532,32 @@ def build_timeline_dataframe(site: str, scenario: str, years: tuple[int, ...] | 
     else:
         combined = pd.DataFrame()
     return combined, source_paths, used_strips
+
+
+def build_single_state_dataframe(site: str, scenario: str, year: int | None = None):
+    target_year = year if year is not None else get_single_state_year()
+    csv_path = resolve_feature_csv_path(site, scenario, target_year)
+    df = pd.read_csv(csv_path)
+    if not df.empty:
+        df = df.copy()
+        df["year"] = target_year
+        df["timeline_year"] = target_year
+        df["timeline_label"] = f"yr{target_year}"
+        df["source_scenario"] = scenario
+        df["source_timeline_year"] = target_year
+        df["position_timeline_year"] = target_year
+        df["position_timeline_label"] = f"yr{target_year}"
+        df["build_mode"] = "single_state"
+    return df, [csv_path], []
+
+
+def build_site_dataframe(site: str, scenario: str, years: tuple[int, ...] | None = None):
+    if single_state_mode_active():
+        target_years = years or (get_single_state_year(),)
+        if len(target_years) != 1:
+            raise ValueError(
+                "Single-state mode expects exactly one active year, "
+                f"got {target_years}"
+            )
+        return build_single_state_dataframe(site, scenario, target_years[0])
+    return build_timeline_dataframe(site, scenario, years)

@@ -71,6 +71,16 @@ def reset_collection(name: str, parent=None):
     return ensure_collection(name, parent=parent)
 
 
+def remove_named_object_if_present(name: str):
+    existing = bpy.data.objects.get(name)
+    if existing is None:
+        return
+    mesh = existing.data if existing.type == "MESH" else None
+    bpy.data.objects.remove(existing, do_unlink=True)
+    if mesh is not None and mesh.users == 0:
+        bpy.data.meshes.remove(mesh)
+
+
 def new_geometry_socket(node_group, name, in_out):
     return node_group.interface.new_socket(
         name=name,
@@ -199,6 +209,37 @@ def ensure_year_vertex_attribute(obj, year_value: float):
         attr.is_runtime_only = False
 
 
+def ensure_timeline_strip_box(site: str, strip_spec: dict, site_spec: dict, manager_collection):
+    name = f"TimelineStripBox__{site}__{strip_spec['label']}"
+    existing = bpy.data.objects.get(name)
+    if existing is not None:
+        return existing
+
+    lengths = site_spec["box_length"]
+    location = (
+        strip_spec["box_position"][0] + lengths[0] / 2.0,
+        strip_spec["box_position"][1] + lengths[1] / 2.0,
+        strip_spec["box_position"][2] + lengths[2] / 2.0,
+    )
+    scale = (lengths[0] / 2.0, lengths[1] / 2.0, lengths[2] / 2.0)
+
+    bpy.ops.mesh.primitive_cube_add(size=2.0, location=location)
+    clip_box = bpy.context.active_object
+    clip_box.name = name
+    clip_box.scale = scale
+    clip_box.display_type = "BOUNDS"
+    clip_box.hide_render = True
+    clip_box.show_name = True
+    clip_box.show_in_front = True
+
+    if manager_collection.objects.get(clip_box.name) is None:
+        manager_collection.objects.link(clip_box)
+    for collection in list(clip_box.users_collection):
+        if collection != manager_collection:
+            collection.objects.unlink(clip_box)
+    return clip_box
+
+
 def build_site_scenario_bioenvelopes(site: str, scenario: str, clipbox_setup, timeline_layout):
     site_spec = timeline_layout.get_timeline_site_spec(site)
     if site_spec is None:
@@ -208,28 +249,43 @@ def build_site_scenario_bioenvelopes(site: str, scenario: str, clipbox_setup, ti
     if scene is None:
         raise ValueError(f"Scene '{site_spec['scene_name']}' not found")
 
-    top_role = "bio_positive" if scenario == "positive" else "bio_trending"
-    parent_collection = bpy.data.collections.get(
-        scene_contract.get_collection_name(site, top_role)
-    )
+    single_state_mode = timeline_layout.single_state_mode_active()
+    if single_state_mode:
+        parent_collection_name = scene_contract.get_single_state_top_level_name(site, scenario)
+        legacy_name = None
+    else:
+        top_role = "bio_positive" if scenario == "positive" else "bio_trending"
+        parent_collection_name = scene_contract.get_collection_name(site, top_role)
+        legacy_name = scene_contract.get_collection_name(site, top_role, legacy=True)
+
+    parent_collection = bpy.data.collections.get(parent_collection_name)
     if parent_collection is None:
-        raise ValueError(
-            f"Collection '{scene_contract.get_collection_name(site, top_role)}' not found"
+        raise ValueError(f"Collection '{parent_collection_name}' not found")
+
+    timeline_collection_name = f"Year_{site}_timeline_bioenvelope_{scenario}"
+    if single_state_mode:
+        envelope_collection_name = scene_contract.get_single_state_envelope_collection_name(site, scenario)
+        target_collection = reset_collection(
+            envelope_collection_name,
+            parent=parent_collection,
         )
-
-    timeline_collection = reset_collection(
-        f"Year_{site}_timeline_bioenvelope_{scenario}",
-        parent=parent_collection,
-    )
-    manager_collection = bpy.data.collections.get(site_spec["manager_collection_name"])
-    if manager_collection is None:
-        raise ValueError(f"Collection '{site_spec['manager_collection_name']}' not found")
-
-    legacy_name = scene_contract.get_collection_name(site, top_role, legacy=True)
-    legacy_collection = bpy.data.collections.get(legacy_name)
-    if legacy_collection is not None:
-        legacy_collection.hide_render = True
-        legacy_collection.hide_viewport = True
+        timeline_collection = bpy.data.collections.get(timeline_collection_name)
+        if timeline_collection is not None:
+            timeline_collection.hide_render = True
+            timeline_collection.hide_viewport = True
+        manager_collection = None
+    else:
+        target_collection = reset_collection(
+            timeline_collection_name,
+            parent=parent_collection,
+        )
+        manager_collection = bpy.data.collections.get(site_spec["manager_collection_name"])
+        if manager_collection is None:
+            raise ValueError(f"Collection '{site_spec['manager_collection_name']}' not found")
+        legacy_collection = bpy.data.collections.get(legacy_name)
+        if legacy_collection is not None:
+            legacy_collection.hide_render = True
+            legacy_collection.hide_viewport = True
 
     node_group_name = SITE_ENVELOPE_NODE_GROUPS[site]
     envelope_group = bpy.data.node_groups.get(node_group_name)
@@ -238,9 +294,10 @@ def build_site_scenario_bioenvelopes(site: str, scenario: str, clipbox_setup, ti
 
     created_names = []
     strips_by_year = {strip["year"]: strip for strip in site_spec["strips"]}
-    for display_year in site_spec["timeline_years"]:
+    active_years = tuple(timeline_layout.get_active_years(site))
+    for display_year in active_years:
         position_year = timeline_layout.get_position_year(site, display_year)
-        strip_spec = strips_by_year[position_year]
+        strip_spec = strips_by_year.get(position_year)
         year = display_year
         source_scenario, source_year = timeline_layout.resolve_source_asset_request(
             site,
@@ -256,28 +313,36 @@ def build_site_scenario_bioenvelopes(site: str, scenario: str, clipbox_setup, ti
             if year not in EMPTY_BASELINE_BIOENVELOPE_YEARS:
                 continue
 
-        clip_box_name = f"TimelineStripBox__{site}__{strip_spec['label']}"
-        clip_box = bpy.data.objects.get(clip_box_name)
-        if clip_box is None:
-            asset_site = timeline_layout.canonicalize_asset_site(site)
-            if asset_site != site:
-                clip_box_name = f"TimelineStripBox__{asset_site}__{strip_spec['label']}"
-                clip_box = bpy.data.objects.get(clip_box_name)
-        if clip_box is None:
-            raise ValueError(f"Timeline strip box '{clip_box_name}' not found")
+        timeline_group = None
+        if not single_state_mode:
+            if strip_spec is None:
+                raise ValueError(
+                    f"No strip spec found for site '{site}' year {display_year} (position year {position_year})"
+                )
+            clip_box_name = f"TimelineStripBox__{site}__{strip_spec['label']}"
+            clip_box = ensure_timeline_strip_box(site, strip_spec, site_spec, manager_collection)
+            if clip_box is None:
+                asset_site = timeline_layout.canonicalize_asset_site(site)
+                if asset_site != site:
+                    clip_box_name = f"TimelineStripBox__{asset_site}__{strip_spec['label']}"
+                    clip_box = bpy.data.objects.get(clip_box_name)
+            if clip_box is None:
+                raise ValueError(f"Timeline strip box '{clip_box_name}' not found")
 
-        clip_group = clipbox_setup.build_clip_group(
-            f"Timeline Envelope Clip :: {site} :: {scenario} :: {strip_spec['label']}",
-            clip_box,
-            delete_domain="POINT",
-        )
-        timeline_group = build_timeline_group(
-            f"Timeline Envelope Transform :: {site} :: {scenario} :: {strip_spec['label']}",
-            clip_group,
-            strip_spec["translate"],
-        )
+            clip_group = clipbox_setup.build_clip_group(
+                f"Timeline Envelope Clip :: {site} :: {scenario} :: {strip_spec['label']}",
+                clip_box,
+                delete_domain="POINT",
+            )
+            timeline_group = build_timeline_group(
+                f"Timeline Envelope Transform :: {site} :: {scenario} :: {strip_spec['label']}",
+                clip_group,
+                strip_spec["translate"],
+            )
 
         object_name = f"{site}_{scenario}_envelope__yr{display_year}"
+        if single_state_mode:
+            remove_named_object_if_present(object_name)
         if source_obj is not None:
             imported = duplicate_source_object(source_obj, object_name)
         elif ply_path is None:
@@ -295,22 +360,26 @@ def build_site_scenario_bioenvelopes(site: str, scenario: str, clipbox_setup, ti
         imported["source_timeline_year"] = source_year
         imported["position_timeline_year"] = position_year
         imported["timeline_label"] = f"yr{display_year}"
-        imported["position_timeline_label"] = strip_spec["label"]
+        imported["position_timeline_label"] = (
+            strip_spec["label"] if strip_spec is not None else f"yr{display_year}"
+        )
 
-        timeline_collection.objects.link(imported)
+        target_collection.objects.link(imported)
         for collection in list(imported.users_collection):
-            if collection != timeline_collection:
+            if collection != target_collection:
                 collection.objects.unlink(imported)
 
         ensure_geometry_nodes_modifier(imported, "GeometryNodes", envelope_group)
-        prepend_geometry_nodes_modifier(imported, "Timeline Clip Translate", timeline_group)
+        if timeline_group is not None:
+            prepend_geometry_nodes_modifier(imported, "Timeline Clip Translate", timeline_group)
         ensure_material_slot(imported)
         created_names.append(imported.name)
 
     ensure_envelope_aovs(scene)
     print(
         f"TIMELINE_BIOENV site={site} scenario={scenario} "
-        f"collection={timeline_collection.name} created={created_names}"
+        f"collection={target_collection.name} build_mode={timeline_layout.get_build_mode()} "
+        f"created={created_names}"
     )
     return created_names
 

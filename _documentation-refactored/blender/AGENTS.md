@@ -1,5 +1,15 @@
 # Blender Agent Guide
 
+## Generation Note
+
+This is the older Blender `v1` rewrite/reference note.
+
+- created: `2026-04-01 23:26:24`
+- scope: earlier general Blender bundle / compositor / instancer workflow
+- status: not the current `blenderv2` note
+
+It may still contain useful historical context, input contracts, and script references, but it should be treated as an older reference rather than the active Blender v2 plan.
+
 ## 0. Refactor Status
 
 We are currently doing a limited compatibility-first refactor of the Blender-facing data endpoints.

@@ -25,8 +25,10 @@ TARGET_VIEW_LAYERS = (
     "existing_condition",
     "pathway_state",
     "priority_state",
+    "existing_condition_trending",
     "trending_state",
     "bioenvelope_positive",
+    "bioenvelope_trending",
 )
 VIEW_LAYER_FILTER = tuple(
     name.strip()
@@ -61,9 +63,23 @@ def build_scene_collection_toggles(view_layer_name: str):
     cube_timeline_name = f"{legacy['base_cubes']}_Timeline"
     timeline_positive_bio = f"Year_{SITE_KEY}_timeline_bioenvelope_positive"
     timeline_trending_bio = f"Year_{SITE_KEY}_timeline_bioenvelope_trending"
+    timeline_positive_world = scene_contract.get_timeline_world_collection_name(SITE_KEY, "positive")
+    timeline_trending_world = scene_contract.get_timeline_world_collection_name(SITE_KEY, "trending")
+
+    def timeline_show(*names):
+        return [name for name in names if name]
+
+    def timeline_hide(*names):
+        return [name for name in names if name]
 
     if view_layer_name == "bioenvelope_positive":
-        return [top["base"], legacy["timeline_base"], timeline_positive_bio], [
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_positive_world,
+            top["bio_positive"],
+            timeline_positive_bio,
+        ), timeline_hide(
             top["base_cubes"],
             top["positive"],
             top["priority"],
@@ -72,6 +88,7 @@ def build_scene_collection_toggles(view_layer_name: str):
             legacy["base"],
             legacy["base_cubes"],
             cube_timeline_name,
+            timeline_trending_world,
             legacy["positive"],
             legacy["timeline_positive"],
             legacy["priority"],
@@ -81,20 +98,53 @@ def build_scene_collection_toggles(view_layer_name: str):
             legacy["bio_positive"],
             legacy["bio_trending"],
             timeline_trending_bio,
-        ]
+        )
+
+    if view_layer_name == "bioenvelope_trending":
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_trending_world,
+            top["bio_trending"],
+            timeline_trending_bio,
+        ), timeline_hide(
+            top["base_cubes"],
+            top["positive"],
+            top["priority"],
+            top["trending"],
+            top["bio_positive"],
+            legacy["base"],
+            legacy["base_cubes"],
+            cube_timeline_name,
+            timeline_positive_world,
+            legacy["positive"],
+            legacy["timeline_positive"],
+            legacy["priority"],
+            legacy["timeline_priority"],
+            legacy["trending"],
+            legacy["timeline_trending"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            timeline_positive_bio,
+        )
 
     if view_layer_name == "priority_state":
-        return [legacy["timeline_priority"]], [
+        return timeline_show(
             top["base"],
+            legacy["timeline_base"],
+            timeline_positive_world,
+            top["priority"],
+            legacy["timeline_priority"],
+        ), timeline_hide(
             top["base_cubes"],
             top["positive"],
             top["trending"],
             top["bio_positive"],
             top["bio_trending"],
             legacy["base"],
-            legacy["timeline_base"],
             legacy["base_cubes"],
             cube_timeline_name,
+            timeline_trending_world,
             legacy["positive"],
             legacy["timeline_positive"],
             legacy["trending"],
@@ -103,20 +153,53 @@ def build_scene_collection_toggles(view_layer_name: str):
             legacy["bio_trending"],
             timeline_positive_bio,
             timeline_trending_bio,
-        ]
+        )
+
+    if view_layer_name == "existing_condition_trending":
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_trending_world,
+        ), timeline_hide(
+            top["base_cubes"],
+            top["positive"],
+            top["priority"],
+            top["trending"],
+            top["bio_positive"],
+            top["bio_trending"],
+            legacy["base"],
+            legacy["base_cubes"],
+            cube_timeline_name,
+            timeline_positive_world,
+            legacy["positive"],
+            legacy["timeline_positive"],
+            legacy["priority"],
+            legacy["timeline_priority"],
+            legacy["trending"],
+            legacy["timeline_trending"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            timeline_positive_bio,
+            timeline_trending_bio,
+        )
 
     if view_layer_name == "trending_state":
-        return [legacy["timeline_trending"]], [
+        return timeline_show(
             top["base"],
+            legacy["timeline_base"],
+            timeline_trending_world,
+            top["trending"],
+            legacy["timeline_trending"],
+        ), timeline_hide(
             top["base_cubes"],
             top["positive"],
             top["priority"],
             top["bio_positive"],
             top["bio_trending"],
             legacy["base"],
-            legacy["timeline_base"],
             legacy["base_cubes"],
             cube_timeline_name,
+            timeline_positive_world,
             legacy["positive"],
             legacy["timeline_positive"],
             legacy["priority"],
@@ -125,26 +208,61 @@ def build_scene_collection_toggles(view_layer_name: str):
             legacy["bio_trending"],
             timeline_positive_bio,
             timeline_trending_bio,
-        ]
+        )
 
-    return [
+    if view_layer_name == "pathway_state":
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_positive_world,
+            top["positive"],
+            legacy["timeline_positive"],
+        ), timeline_hide(
+            top["base_cubes"],
+            top["priority"],
+            top["trending"],
+            top["bio_positive"],
+            top["bio_trending"],
+            legacy["base"],
+            legacy["base_cubes"],
+            cube_timeline_name,
+            timeline_trending_world,
+            legacy["priority"],
+            legacy["timeline_priority"],
+            legacy["trending"],
+            legacy["timeline_trending"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            timeline_positive_bio,
+            timeline_trending_bio,
+        )
+
+    return timeline_show(
+        top["base"],
         legacy["timeline_base"],
-        legacy["timeline_positive"],
-        legacy["timeline_priority"],
-        legacy["timeline_trending"],
-        timeline_positive_bio,
-        timeline_trending_bio,
-    ], [
+        timeline_positive_world,
+    ), timeline_hide(
         top["base_cubes"],
+        top["positive"],
+        top["priority"],
+        top["trending"],
+        top["bio_positive"],
+        top["bio_trending"],
         legacy["base"],
         legacy["base_cubes"],
         cube_timeline_name,
+        timeline_trending_world,
         legacy["positive"],
+        legacy["timeline_positive"],
         legacy["priority"],
+        legacy["timeline_priority"],
         legacy["trending"],
+        legacy["timeline_trending"],
         legacy["bio_positive"],
         legacy["bio_trending"],
-    ]
+        timeline_positive_bio,
+        timeline_trending_bio,
+    )
 
 
 def main():

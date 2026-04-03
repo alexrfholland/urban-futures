@@ -22,6 +22,7 @@ if str(SHARED_CODE_ROOT) not in sys.path:
 
 import b2026_timeline_layout as timeline_layout
 import b2026_timeline_scene_contract as scene_contract
+import b2026_timeline_scene_setup as scene_setup
 from refactor_code.blender.proposal_framebuffers import (
     DEFAULT_OUTPUT_COLUMNS as PROPOSAL_OUTPUT_COLUMNS,
     FRAMEBUFFER_STATE_MAPPINGS,
@@ -81,9 +82,97 @@ REPLACED_WORLD_ATTRIBUTE_NAMES = {
     *PROPOSAL_ATTRIBUTE_NAMES,
 }
 
+TIMELINE_ALIAS_VIEW_LAYERS = (
+    "city_priority",
+    "city_bioenvelope",
+)
+
 
 def log(message: str) -> None:
     print(f"[timeline_world_year_attrs] {message}")
+
+
+def ensure_standard_timeline_view_layers(scene: bpy.types.Scene) -> None:
+    scene_setup.ensure_view_layers(
+        scene,
+        scene_contract.STANDARD_VIEW_LAYERS,
+        remove_layers=TIMELINE_ALIAS_VIEW_LAYERS,
+    )
+
+
+def normalize_timeline_view_layers(scene: bpy.types.Scene) -> None:
+    ensure_standard_timeline_view_layers(scene)
+
+    contract = scene_contract.SITE_CONTRACTS[SITE_KEY]
+    top = contract["top_level"]
+    legacy = contract["legacy"]
+
+    timeline_cube = f"{legacy['base_cubes']}_Timeline"
+    timeline_positive_bio = f"Year_{SITE_KEY}_timeline_bioenvelope_positive"
+    timeline_trending_bio = f"Year_{SITE_KEY}_timeline_bioenvelope_trending"
+    timeline_positive_world = scene_contract.get_timeline_world_collection_name(SITE_KEY, "positive")
+    timeline_trending_world = scene_contract.get_timeline_world_collection_name(SITE_KEY, "trending")
+
+    all_top_levels = (
+        top["manager"],
+        top["base"],
+        top["base_cubes"],
+        top["cameras"],
+        top["bio_positive"],
+        top["bio_trending"],
+        top["positive"],
+        top["priority"],
+        top["trending"],
+    )
+
+    child_defaults = {
+        legacy["base"]: True,
+        legacy["timeline_base"]: False,
+        timeline_positive_world: True,
+        timeline_trending_world: True,
+        legacy["base_cubes"]: True,
+        timeline_cube: True,
+        legacy["bio_positive"]: True,
+        timeline_positive_bio: True,
+        legacy["bio_trending"]: True,
+        timeline_trending_bio: True,
+        legacy["positive"]: True,
+        legacy["timeline_positive"]: True,
+        legacy["priority"]: True,
+        legacy["timeline_priority"]: True,
+        legacy["trending"]: True,
+        legacy["timeline_trending"]: True,
+    }
+
+    visible_by_layer = {
+        "existing_condition": {top["base"], legacy["timeline_base"], timeline_positive_world},
+        "pathway_state": {top["base"], legacy["timeline_base"], timeline_positive_world, top["positive"], legacy["timeline_positive"]},
+        "priority_state": {top["priority"], legacy["timeline_priority"]},
+        "existing_condition_trending": {top["base"], legacy["timeline_base"], timeline_trending_world},
+        "trending_state": {top["base"], legacy["timeline_base"], timeline_trending_world, top["trending"], legacy["timeline_trending"]},
+        "bioenvelope_positive": {top["base"], legacy["timeline_base"], timeline_positive_world, top["bio_positive"], timeline_positive_bio},
+        "bioenvelope_trending": {top["base"], legacy["timeline_base"], timeline_trending_world, top["bio_trending"], timeline_trending_bio},
+    }
+
+    for view_layer_name in scene_contract.STANDARD_VIEW_LAYERS:
+        view_layer = scene.view_layers.get(view_layer_name)
+        if view_layer is None:
+            continue
+        scene_setup.reset_view_layer_excludes(view_layer)
+        visible = visible_by_layer[view_layer_name]
+
+        for collection_name in all_top_levels:
+            if collection_name == top["base"]:
+                scene_setup.set_excluded(view_layer, [collection_name], top["base"] not in visible)
+            else:
+                scene_setup.set_excluded(view_layer, [collection_name], collection_name not in visible)
+
+        for collection_name, default_exclude in child_defaults.items():
+            scene_setup.set_excluded(
+                view_layer,
+                [collection_name],
+                collection_name not in visible if collection_name in visible else default_exclude,
+            )
 
 
 def find_scene_child_collection(scene: bpy.types.Scene, suffix: str) -> bpy.types.Collection | None:
@@ -235,6 +324,40 @@ def replace_timeline_object(
     target_collection.objects.link(duplicate)
     for collection in list(duplicate.users_collection):
         if collection != target_collection:
+            collection.objects.unlink(duplicate)
+    return duplicate
+
+
+def replace_single_state_object(
+    source_obj: bpy.types.Object,
+    target_collections: list[bpy.types.Collection],
+    target_name: str,
+    transferred: dict[str, np.ndarray],
+):
+    existing = bpy.data.objects.get(target_name)
+    if existing is not None:
+        old_mesh = existing.data if existing.type == "MESH" else None
+        bpy.data.objects.remove(existing, do_unlink=True)
+        if old_mesh is not None and old_mesh.users == 0:
+            bpy.data.meshes.remove(old_mesh)
+
+    duplicate = source_obj.copy()
+    duplicate.animation_data_clear()
+    duplicate.name = target_name
+    duplicate.hide_render = False
+    duplicate.hide_viewport = False
+    duplicate.show_name = True
+    if getattr(source_obj, "data", None) is not None:
+        duplicate.data = source_obj.data.copy()
+        duplicate.data.name = f"{target_name}_mesh"
+
+    assign_transferred_attributes(duplicate, transferred)
+
+    for collection in target_collections:
+        if collection.objects.get(duplicate.name) is None:
+            collection.objects.link(duplicate)
+    for collection in list(duplicate.users_collection):
+        if collection not in target_collections:
             collection.objects.unlink(duplicate)
     return duplicate
 
@@ -503,6 +626,16 @@ def transfer_lookup_to_points(world_points: np.ndarray, cache: dict[str, np.ndar
     return transferred
 
 
+def assign_transferred_attributes(obj: bpy.types.Object, transferred: dict[str, np.ndarray]) -> None:
+    assign_int_attribute(obj.data, ATTR_TURNS, transferred[ATTR_TURNS])
+    assign_int_attribute(obj.data, ATTR_NODES, transferred[ATTR_NODES])
+    assign_int_attribute(obj.data, ATTR_BIO, transferred[ATTR_BIO])
+    assign_int_attribute(obj.data, ATTR_BIO_SIMPLE, transferred[ATTR_BIO_SIMPLE])
+    assign_int_attribute(obj.data, ATTR_MATCHED, transferred[ATTR_MATCHED])
+    for attr_name in PROPOSAL_ATTRIBUTE_NAMES:
+        assign_int_attribute(obj.data, attr_name, transferred[attr_name])
+
+
 def refresh_existing_timeline_object(obj: bpy.types.Object, site_spec: dict, scenario: str) -> None:
     world_points = mesh_vertex_world_positions(obj)
     timeline_years = get_float_attribute_values(obj.data, "timeline_year")
@@ -542,13 +675,15 @@ def refresh_existing_timeline_object(obj: bpy.types.Object, site_spec: dict, sce
         for attr_name in PROPOSAL_ATTRIBUTE_NAMES:
             out_proposals[attr_name][mask] = transferred[attr_name]
 
-    assign_int_attribute(obj.data, ATTR_TURNS, out_turns)
-    assign_int_attribute(obj.data, ATTR_NODES, out_nodes)
-    assign_int_attribute(obj.data, ATTR_BIO, out_bio)
-    assign_int_attribute(obj.data, ATTR_BIO_SIMPLE, out_bio_simple)
-    assign_int_attribute(obj.data, ATTR_MATCHED, out_match)
-    for attr_name, values in out_proposals.items():
-        assign_int_attribute(obj.data, attr_name, values)
+    transferred = {
+        ATTR_TURNS: out_turns,
+        ATTR_NODES: out_nodes,
+        ATTR_BIO: out_bio,
+        ATTR_BIO_SIMPLE: out_bio_simple,
+        ATTR_MATCHED: out_match,
+    }
+    transferred.update(out_proposals)
+    assign_transferred_attributes(obj, transferred)
 
 
 def build_combined_timeline_payload(source_obj, site_spec: dict, scenario: str) -> tuple[np.ndarray, dict[str, dict]]:
@@ -651,6 +786,56 @@ def rebuild_site_world() -> None:
     if manager_collection is None:
         raise ValueError("Manager collection not found")
 
+    if timeline_layout.single_state_mode_active():
+        target_year = timeline_layout.get_single_state_year()
+        scenario_targets = {
+            "positive": (
+                scene_contract.get_single_state_top_level_name(SITE_KEY, "positive"),
+            ),
+            "trending": (
+                scene_contract.get_single_state_top_level_name(SITE_KEY, "trending"),
+            ),
+        }
+
+        created_objects = []
+        for scenario_name, collection_names in scenario_targets.items():
+            vtk_path = timeline_layout.resolve_state_vtk_path(SITE_KEY, scenario_name, target_year)
+            vtk_cache = build_vtk_lookup(vtk_path)
+            target_collections = [
+                bpy.data.collections.get(name)
+                for name in collection_names
+                if bpy.data.collections.get(name) is not None
+            ]
+            if not target_collections:
+                log(f"no target collections available for single-state scenario '{scenario_name}'")
+                continue
+
+            for object_name in site_spec["source_world_objects"]:
+                source_obj = bpy.data.objects.get(object_name)
+                if source_obj is None:
+                    log(f"missing single-state world object: {object_name}")
+                    continue
+                world_points = mesh_vertex_world_positions(source_obj)
+                transferred = transfer_lookup_to_points(world_points, vtk_cache)
+                created_name = scene_contract.get_single_state_world_object_name(
+                    object_name,
+                    target_year,
+                    scenario_name,
+                )
+                replace_single_state_object(
+                    source_obj,
+                    target_collections,
+                    created_name,
+                    transferred,
+                )
+                created_objects.append(created_name)
+
+        log(
+            f"site={SITE_KEY} scene={SCENE_NAME} build_mode=single_state "
+            f"year={target_year} created_objects={created_objects}"
+        )
+        return
+
     timeline_collection = bpy.data.collections.get(site_spec["world_collection_name"])
     if timeline_collection is None:
         timeline_collection = find_scene_child_collection(scene, "_world_timeline")
@@ -665,20 +850,29 @@ def rebuild_site_world() -> None:
     for strip_spec in site_spec["strips"]:
         ensure_strip_box(SITE_KEY, strip_spec, site_spec, manager_collection)
 
-    created_points = []
-    created_cubes = []
-    for object_name in site_spec["source_world_objects"]:
-        source_obj = bpy.data.objects.get(object_name)
-        timeline_name = f"{object_name}__timeline"
-        existing_timeline = bpy.data.objects.get(timeline_name)
+    created_points: dict[str, list[str]] = {"positive": [], "trending": []}
+    created_cubes: dict[str, list[str]] = {"positive": [], "trending": []}
 
-        if source_obj is not None:
-            combined_points, combined_payloads = build_combined_timeline_payload(source_obj, site_spec, WORLD_SCENARIO)
-            created_points.append(
+    for scenario_name in ("positive", "trending"):
+        target_world_collection_name = scene_contract.get_timeline_world_collection_name(SITE_KEY, scenario_name)
+        target_world_collection = bpy.data.collections.get(target_world_collection_name)
+        if target_world_collection is None:
+            target_world_collection = bpy.data.collections.new(target_world_collection_name)
+            timeline_collection.children.link(target_world_collection)
+
+        for object_name in site_spec["source_world_objects"]:
+            source_obj = bpy.data.objects.get(object_name)
+            if source_obj is None:
+                log(f"missing source world object for timeline scenario '{scenario_name}': {object_name}")
+                continue
+
+            combined_points, combined_payloads = build_combined_timeline_payload(source_obj, site_spec, scenario_name)
+            target_name = scene_contract.get_timeline_world_object_name(object_name, scenario_name)
+            created_points[scenario_name].append(
                 replace_timeline_object(
                     source_obj,
-                    timeline_collection,
-                    timeline_name,
+                    target_world_collection,
+                    target_name,
                     combined_points,
                     combined_payloads,
                 ).name
@@ -686,36 +880,29 @@ def rebuild_site_world() -> None:
 
             cube_source = bpy.data.objects.get(f"{object_name}_cubes")
             if cube_source is not None and timeline_cube_collection is not None:
-                created_cubes.append(
+                cube_target_name = scene_contract.get_timeline_world_object_name(f"{object_name}_cubes", scenario_name)
+                created_cubes[scenario_name].append(
                     replace_timeline_object(
                         cube_source,
                         timeline_cube_collection,
-                        f"{object_name}_cubes__timeline",
+                        cube_target_name,
                         combined_points,
                         combined_payloads,
                     ).name
                 )
-            continue
-
-        if existing_timeline is not None:
-            refresh_existing_timeline_object(existing_timeline, site_spec, WORLD_SCENARIO)
-            created_points.append(existing_timeline.name)
-        else:
-            log(f"missing source and timeline world object: {object_name}")
-
-        existing_timeline_cube = bpy.data.objects.get(f"{object_name}_cubes__timeline")
-        if existing_timeline_cube is not None:
-            refresh_existing_timeline_object(existing_timeline_cube, site_spec, WORLD_SCENARIO)
-            created_cubes.append(existing_timeline_cube.name)
 
     log(
-        f"site={SITE_KEY} scene={SCENE_NAME} scenario={WORLD_SCENARIO} "
+        f"site={SITE_KEY} scene={SCENE_NAME} "
         f"created_points={created_points} created_cubes={created_cubes}"
     )
 
 
 def main() -> None:
     rebuild_site_world()
+    if not timeline_layout.single_state_mode_active():
+        scene = bpy.data.scenes.get(SCENE_NAME)
+        if scene is not None:
+            normalize_timeline_view_layers(scene)
     if SAVE_MAINFILE:
         bpy.ops.wm.save_mainfile()
         log("Saved mainfile")

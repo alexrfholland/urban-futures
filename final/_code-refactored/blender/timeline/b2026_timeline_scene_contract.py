@@ -5,10 +5,14 @@ STANDARD_VIEW_LAYERS = (
     "pathway_state",
     "existing_condition",
     "priority_state",
+    "existing_condition_trending",
     "bioenvelope_positive",
     "bioenvelope_trending",
     "trending_state",
 )
+
+
+SINGLE_STATE_VIEW_LAYERS = STANDARD_VIEW_LAYERS
 
 
 SITE_CONTRACTS = {
@@ -244,3 +248,72 @@ def get_positive_bioenvelope_view_layer_names(scene_name: str | None) -> tuple[s
     if contract is None:
         return ("bioenvelope_positive",)
     return tuple(contract["view_layer_aliases"].get("bio_positive", ("bioenvelope_positive",)))
+
+
+SINGLE_STATE_TOP_LEVEL_ROLES = (
+    "manager",
+    "setup",
+    "cameras",
+    "positive",
+    "priority",
+    "trending",
+)
+
+
+def get_single_state_top_level_name(site: str, role: str) -> str:
+    if role not in SINGLE_STATE_TOP_LEVEL_ROLES:
+        raise KeyError(f"Unknown single-state top-level role '{role}'")
+    return f"{site}_{role}"
+
+
+def get_single_state_world_object_name(source_object_name: str, year: int, scenario: str) -> str:
+    return f"{source_object_name}__yr{year}_{scenario}_state"
+
+
+def get_single_state_node_collection_base(
+    site: str,
+    node_type: str,
+    year: int,
+    scenario: str,
+    *,
+    priority: bool = False,
+) -> str:
+    suffix = f"{scenario}_priority" if priority else scenario
+    return f"{node_type}_{site}_yr{year}_{suffix}"
+
+
+def get_single_state_node_collection_name(
+    site: str,
+    node_type: str,
+    year: int,
+    scenario: str,
+    collection_kind: str,
+    *,
+    priority: bool = False,
+) -> str:
+    if collection_kind not in {"positions", "plyModels"}:
+        raise KeyError(f"Unknown node collection kind '{collection_kind}'")
+    base = get_single_state_node_collection_base(
+        site,
+        node_type,
+        year,
+        scenario,
+        priority=priority,
+    )
+    return f"{base}_{collection_kind}"
+
+
+def get_single_state_envelope_object_name(site: str, scenario: str, year: int) -> str:
+    return f"{site}_{scenario}_envelope__yr{year}"
+
+
+def get_single_state_envelope_collection_name(site: str, scenario: str) -> str:
+    return f"{site}_{scenario}_envelope"
+
+
+def get_timeline_world_collection_name(site: str, scenario: str) -> str:
+    return f"Year_{site}_timeline_world_{scenario}"
+
+
+def get_timeline_world_object_name(source_object_name: str, scenario: str) -> str:
+    return f"{source_object_name}__timeline_{scenario}_state"

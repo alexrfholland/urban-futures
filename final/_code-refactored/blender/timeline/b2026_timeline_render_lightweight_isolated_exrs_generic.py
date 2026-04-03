@@ -19,6 +19,7 @@ import b2026_timeline_scene_contract as scene_contract
 BLEND_SCENE_NAME = os.environ["B2026_SCENE_NAME"]
 SITE_KEY = os.environ["B2026_SITE_KEY"]
 CAMERA_NAME = os.environ["B2026_CAMERA_NAME"]
+BUILD_MODE = os.environ.get("B2026_TIMELINE_BUILD_MODE", "timeline").strip().lower()
 BIO_PREFIX = os.environ.get("B2026_BIO_PREFIX", f"{SITE_KEY}_")
 OUTPUT_BASENAME = os.environ.get("B2026_OUTPUT_BASENAME", BLEND_SCENE_NAME)
 OUTPUT_TAG = os.environ.get("B2026_OUTPUT_TAG", "8k")
@@ -29,6 +30,10 @@ MIST_WORLD_NAME = os.environ.get("B2026_MIST_WORLD_NAME", "debug_timeslice_world
 MIST_START = float(os.environ.get("B2026_MIST_START", "560"))
 MIST_DEPTH = float(os.environ.get("B2026_MIST_DEPTH", "320"))
 MIST_FALLOFF = os.environ.get("B2026_MIST_FALLOFF", "QUADRATIC")
+CAMERA_SOURCE_BLEND = os.environ.get("B2026_CAMERA_SOURCE_BLEND", "").strip()
+CAMERA_SOURCE_NAME = os.environ.get("B2026_CAMERA_SOURCE_NAME", CAMERA_NAME).strip()
+MIST_SOURCE_BLEND = os.environ.get("B2026_MIST_SOURCE_BLEND", "").strip()
+MIST_SOURCE_SCENE = os.environ.get("B2026_MIST_SOURCE_SCENE", "").strip()
 
 WORLD_POINT_GROUP_NAMES = (
     "Background",
@@ -49,12 +54,14 @@ WORLD_POINT_SOURCE_MATERIALS = (
     "Material.001",
 )
 WORLD_AOV_MATERIAL_NAME = "WORLD_AOV"
-TARGET_VIEW_LAYERS = (
+TIMELINE_TARGET_VIEW_LAYERS = (
     "existing_condition",
     "pathway_state",
     "priority_state",
+    "existing_condition_trending",
     "trending_state",
     "bioenvelope_positive",
+    "bioenvelope_trending",
 )
 VIEW_LAYER_FILTER = tuple(
     name.strip()
@@ -147,22 +154,92 @@ def ensure_world(name: str) -> bpy.types.World:
     return world
 
 
+def append_object_from_blend(blend_path: str, object_name: str):
+    blend_file = Path(blend_path)
+    if not blend_file.exists():
+        raise FileNotFoundError(f"Blend file not found: {blend_file}")
+    with bpy.data.libraries.load(str(blend_file), link=False) as (data_from, data_to):
+        if object_name not in data_from.objects:
+            raise ValueError(f"Object '{object_name}' not found in {blend_file}")
+        data_to.objects = [object_name]
+    appended = next((obj for obj in data_to.objects if obj is not None), None)
+    if appended is None:
+        raise ValueError(f"Object '{object_name}' could not be appended from {blend_file}")
+    return appended
+
+
+def append_camera_from_source(scene: bpy.types.Scene):
+    existing = bpy.data.objects.get(CAMERA_NAME)
+    if existing is not None:
+        return existing
+    if not CAMERA_SOURCE_BLEND:
+        raise ValueError(f"Camera '{CAMERA_NAME}' not found and B2026_CAMERA_SOURCE_BLEND is not set")
+    camera = append_object_from_blend(CAMERA_SOURCE_BLEND, CAMERA_SOURCE_NAME)
+    if scene.collection.objects.get(camera.name) is None:
+        scene.collection.objects.link(camera)
+    if camera.name != CAMERA_NAME:
+        camera.name = CAMERA_NAME
+    return camera
+
+
+def read_mist_settings_from_source_scene():
+    if not MIST_SOURCE_BLEND or not MIST_SOURCE_SCENE:
+        return {
+            "use_mist": True,
+            "start": MIST_START,
+            "depth": MIST_DEPTH,
+            "falloff": MIST_FALLOFF,
+        }
+    blend_file = Path(MIST_SOURCE_BLEND)
+    if not blend_file.exists():
+        raise FileNotFoundError(f"Blend file not found: {blend_file}")
+    with bpy.data.libraries.load(str(blend_file), link=False) as (data_from, data_to):
+        if MIST_SOURCE_SCENE not in data_from.scenes:
+            raise ValueError(f"Scene '{MIST_SOURCE_SCENE}' not found in {blend_file}")
+        data_to.scenes = [MIST_SOURCE_SCENE]
+    source_scene = next((scene for scene in data_to.scenes if scene is not None), None)
+    if source_scene is None:
+        raise ValueError(f"Scene '{MIST_SOURCE_SCENE}' could not be appended from {blend_file}")
+    source_world = source_scene.world
+    if source_world is None:
+        settings = {
+            "use_mist": False,
+            "start": MIST_START,
+            "depth": MIST_DEPTH,
+            "falloff": MIST_FALLOFF,
+        }
+    else:
+        mist = source_world.mist_settings
+        settings = {
+            "use_mist": bool(mist.use_mist),
+            "start": float(mist.start),
+            "depth": float(mist.depth),
+            "falloff": mist.falloff,
+        }
+    source_world = source_scene.world
+    bpy.data.scenes.remove(source_scene)
+    if source_world is not None and source_world.users == 0:
+        bpy.data.worlds.remove(source_world)
+    return settings
+
+
 def ensure_scene_camera(scene: bpy.types.Scene):
     camera = bpy.data.objects.get(CAMERA_NAME)
     if camera is None:
-        raise ValueError(f"Camera '{CAMERA_NAME}' not found in {bpy.data.filepath}")
+        camera = append_camera_from_source(scene)
     scene.camera = camera
     return camera
 
 
 def ensure_scene_world_and_mist(scene: bpy.types.Scene):
-    world = ensure_world(MIST_WORLD_NAME)
+    world = scene.world or ensure_world(MIST_WORLD_NAME)
     scene.world = world
+    source_mist = read_mist_settings_from_source_scene()
     mist = world.mist_settings
-    mist.use_mist = True
-    mist.start = MIST_START
-    mist.depth = MIST_DEPTH
-    mist.falloff = MIST_FALLOFF
+    mist.use_mist = source_mist["use_mist"]
+    mist.start = source_mist["start"]
+    mist.depth = source_mist["depth"]
+    mist.falloff = source_mist["falloff"]
     for view_layer in scene.view_layers:
         view_layer.use_pass_mist = True
     return world
@@ -299,7 +376,8 @@ def ensure_aov(view_layer: bpy.types.ViewLayer, name: str, aov_type: str):
 
 
 def ensure_target_layer_aovs(scene: bpy.types.Scene):
-    for layer_name in TARGET_VIEW_LAYERS:
+    ensure_standard_view_layers(scene)
+    for layer_name in get_target_view_layers():
         view_layer = scene.view_layers.get(layer_name)
         if view_layer is None:
             continue
@@ -307,6 +385,23 @@ def ensure_target_layer_aovs(scene: bpy.types.Scene):
             view_layer.use = True
         for aov_name, aov_type in AOV_SPECS:
             ensure_aov(view_layer, aov_name, aov_type)
+
+
+def ensure_standard_view_layers(scene: bpy.types.Scene):
+    layer_names = (
+        scene_contract.SINGLE_STATE_VIEW_LAYERS
+        if BUILD_MODE == "single_state"
+        else scene_contract.STANDARD_VIEW_LAYERS
+    )
+    for layer_name in layer_names:
+        if scene.view_layers.get(layer_name) is None:
+            scene.view_layers.new(name=layer_name)
+
+
+def get_target_view_layers():
+    if BUILD_MODE == "single_state":
+        return scene_contract.SINGLE_STATE_VIEW_LAYERS
+    return TIMELINE_TARGET_VIEW_LAYERS
 
 
 def ensure_render_passes(view_layer: bpy.types.ViewLayer):
@@ -341,6 +436,277 @@ def restore_collection_render_state(state_by_name):
             collection.hide_render = hide_render
 
 
+def set_object_render_state(object_names, hide_render):
+    original_state = {}
+    for object_name in object_names:
+        obj = bpy.data.objects.get(object_name)
+        if obj is None:
+            continue
+        original_state[object_name] = obj.hide_render
+        obj.hide_render = hide_render
+    return original_state
+
+
+def restore_object_render_state(state_by_name):
+    for object_name, hide_render in state_by_name.items():
+        obj = bpy.data.objects.get(object_name)
+        if obj is not None:
+            obj.hide_render = hide_render
+
+
+def iter_collection_tree(collection):
+    yield collection
+    for child in collection.children:
+        yield from iter_collection_tree(child)
+
+
+def iter_layer_collection_tree(layer_collection):
+    yield layer_collection
+    for child in layer_collection.children:
+        yield from iter_layer_collection_tree(child)
+
+
+def get_layer_collection_by_name(view_layer: bpy.types.ViewLayer, collection_name: str):
+    for layer_collection in iter_layer_collection_tree(view_layer.layer_collection):
+        if layer_collection.collection.name == collection_name:
+            return layer_collection
+    return None
+
+
+def clear_collection_tree_render_flags(collection_name):
+    collection = bpy.data.collections.get(collection_name)
+    if collection is None:
+        return
+    for current in iter_collection_tree(collection):
+        current.hide_render = False
+        for obj in current.objects:
+            obj.hide_render = False
+
+
+def normalize_single_state_render_visibility(scene: bpy.types.Scene):
+    if BUILD_MODE != "single_state":
+        return
+
+    collection_names = [
+        scene_contract.get_single_state_top_level_name(SITE_KEY, role)
+        for role in ("manager", "setup", "cameras", "positive", "priority", "trending")
+    ]
+    for collection_name in collection_names:
+        clear_collection_tree_render_flags(collection_name)
+
+    for obj in bpy.data.objects:
+        if "__yr" in obj.name:
+            obj.hide_render = False
+
+
+def reset_view_layer_collection_excludes(view_layer: bpy.types.ViewLayer):
+    for layer_collection in iter_layer_collection_tree(view_layer.layer_collection):
+        layer_collection.exclude = False
+        if hasattr(layer_collection, "holdout"):
+            layer_collection.holdout = False
+        if hasattr(layer_collection, "indirect_only"):
+            layer_collection.indirect_only = False
+
+
+def apply_single_state_view_layer_excludes(view_layer: bpy.types.ViewLayer, visibility: dict):
+    reset_view_layer_collection_excludes(view_layer)
+
+    for collection_name in visibility["hide_collections"]:
+        layer_collection = get_layer_collection_by_name(view_layer, collection_name)
+        if layer_collection is not None:
+            layer_collection.exclude = True
+
+    for collection_name in visibility["hide_child_collections"]:
+        layer_collection = get_layer_collection_by_name(view_layer, collection_name)
+        if layer_collection is not None:
+            layer_collection.exclude = True
+
+
+def get_single_state_layer_visibility(view_layer_name: str):
+    contract = scene_contract.SITE_CONTRACTS[SITE_KEY]
+    year = int(os.environ.get("B2026_SINGLE_STATE_YEAR", "180"))
+    top = {
+        role: scene_contract.get_single_state_top_level_name(SITE_KEY, role)
+        for role in ("manager", "setup", "cameras", "positive", "priority", "trending")
+    }
+    positive_world = [
+        scene_contract.get_single_state_world_object_name(object_name, year, "positive")
+        for object_name in contract["world_objects"].values()
+    ]
+    trending_world = [
+        scene_contract.get_single_state_world_object_name(object_name, year, "trending")
+        for object_name in contract["world_objects"].values()
+    ]
+    setup_world = list(contract["world_objects"].values())
+    positive_tree_log = [
+        scene_contract.get_single_state_node_collection_name(
+            SITE_KEY,
+            node_type,
+            year,
+            "positive",
+            collection_kind,
+        )
+        for node_type in ("tree", "log")
+        for collection_kind in ("positions", "plyModels")
+    ]
+    positive_ply_models = [
+        scene_contract.get_single_state_node_collection_name(
+            SITE_KEY,
+            node_type,
+            year,
+            "positive",
+            "plyModels",
+        )
+        for node_type in ("tree", "log")
+    ]
+    positive_poles = [
+        scene_contract.get_single_state_node_collection_name(
+            SITE_KEY,
+            "pole",
+            year,
+            "positive",
+            collection_kind,
+        )
+        for collection_kind in ("positions", "plyModels")
+    ]
+    priority_tree_log = [
+        scene_contract.get_single_state_node_collection_name(
+            SITE_KEY,
+            node_type,
+            year,
+            "positive",
+            collection_kind,
+            priority=True,
+        )
+        for node_type in ("tree", "log")
+        for collection_kind in ("positions", "plyModels")
+    ]
+    priority_ply_models = [
+        scene_contract.get_single_state_node_collection_name(
+            SITE_KEY,
+            node_type,
+            year,
+            "positive",
+            "plyModels",
+            priority=True,
+        )
+        for node_type in ("tree", "log")
+    ]
+    priority_poles = [
+        scene_contract.get_single_state_node_collection_name(
+            SITE_KEY,
+            "pole",
+            year,
+            "positive",
+            collection_kind,
+            priority=True,
+        )
+        for collection_kind in ("positions", "plyModels")
+    ]
+    trending_tree_log = [
+        scene_contract.get_single_state_node_collection_name(
+            SITE_KEY,
+            node_type,
+            year,
+            "trending",
+            collection_kind,
+        )
+        for node_type in ("tree", "log")
+        for collection_kind in ("positions", "plyModels")
+    ]
+    trending_ply_models = [
+        scene_contract.get_single_state_node_collection_name(
+            SITE_KEY,
+            node_type,
+            year,
+            "trending",
+            "plyModels",
+        )
+        for node_type in ("tree", "log")
+    ]
+    trending_poles = [
+        scene_contract.get_single_state_node_collection_name(
+            SITE_KEY,
+            "pole",
+            year,
+            "trending",
+            collection_kind,
+        )
+        for collection_kind in ("positions", "plyModels")
+    ]
+    positive_envelope = scene_contract.get_single_state_envelope_object_name(SITE_KEY, "positive", year)
+    trending_envelope = scene_contract.get_single_state_envelope_object_name(SITE_KEY, "trending", year)
+
+    hidden_top_levels = [top["manager"], top["setup"], top["cameras"], top["positive"], top["priority"], top["trending"]]
+    visible_top_levels = []
+    hidden_child_collections = []
+    shown_objects = []
+    hidden_objects = []
+
+    if view_layer_name == "existing_condition":
+        visible_top_levels = [top["positive"]]
+        hidden_top_levels = [name for name in hidden_top_levels if name not in visible_top_levels]
+        hidden_child_collections = [*positive_tree_log, *positive_poles]
+        shown_objects = positive_world
+        hidden_objects = [*setup_world, *trending_world, positive_envelope, trending_envelope]
+    elif view_layer_name == "pathway_state":
+        visible_top_levels = [top["positive"]]
+        hidden_top_levels = [name for name in hidden_top_levels if name not in visible_top_levels]
+        shown_objects = positive_world
+        hidden_objects = [*setup_world, *trending_world, positive_envelope, trending_envelope]
+        hidden_child_collections = positive_poles
+    elif view_layer_name == "priority_state":
+        visible_top_levels = [top["priority"]]
+        hidden_top_levels = [name for name in hidden_top_levels if name not in visible_top_levels]
+        hidden_child_collections = [*priority_poles, *priority_ply_models]
+        hidden_objects = [*setup_world, *positive_world, *trending_world, positive_envelope, trending_envelope]
+    elif view_layer_name == "trending_state":
+        visible_top_levels = [top["trending"]]
+        hidden_top_levels = [name for name in hidden_top_levels if name not in visible_top_levels]
+        shown_objects = trending_world
+        hidden_objects = [*setup_world, *positive_world, positive_envelope, trending_envelope]
+        hidden_child_collections = trending_poles
+    elif view_layer_name == "existing_condition_trending":
+        visible_top_levels = [top["trending"]]
+        hidden_top_levels = [name for name in hidden_top_levels if name not in visible_top_levels]
+        shown_objects = trending_world
+        hidden_objects = [*setup_world, *positive_world, positive_envelope, trending_envelope]
+        hidden_child_collections = [*trending_tree_log, *trending_poles]
+    elif view_layer_name == "bioenvelope_positive":
+        visible_top_levels = [top["positive"]]
+        hidden_top_levels = [name for name in hidden_top_levels if name not in visible_top_levels]
+        hidden_child_collections = [*positive_tree_log, *positive_poles]
+        shown_objects = [*positive_world, positive_envelope]
+        hidden_objects = [*setup_world, *trending_world, trending_envelope]
+    elif view_layer_name == "bioenvelope_trending":
+        visible_top_levels = [top["trending"]]
+        hidden_top_levels = [name for name in hidden_top_levels if name not in visible_top_levels]
+        hidden_child_collections = [*trending_tree_log, *trending_poles]
+        shown_objects = [*trending_world, trending_envelope]
+        hidden_objects = [*setup_world, *positive_world, positive_envelope]
+    else:
+        visible_top_levels = [top["positive"]]
+        hidden_top_levels = [name for name in hidden_top_levels if name not in visible_top_levels]
+        shown_objects = positive_world
+        hidden_objects = [*setup_world, *trending_world, positive_envelope, trending_envelope]
+
+    # Extra safety: keep unrelated branch child collections hidden even if their top-level is visible elsewhere.
+    if top["positive"] not in visible_top_levels:
+        hidden_child_collections.extend([*positive_tree_log, *positive_poles])
+    if top["priority"] not in visible_top_levels:
+        hidden_child_collections.extend([*priority_tree_log, *priority_poles])
+    if top["trending"] not in visible_top_levels:
+        hidden_child_collections.extend([*trending_tree_log, *trending_poles])
+
+    return {
+        "show_collections": visible_top_levels,
+        "hide_collections": hidden_top_levels,
+        "hide_child_collections": hidden_child_collections,
+        "show_objects": shown_objects,
+        "hide_objects": hidden_objects,
+    }
+
+
 def build_scene_collection_toggles(view_layer_name: str):
     contract = scene_contract.SITE_CONTRACTS[SITE_KEY]
     legacy = contract["legacy"]
@@ -349,90 +715,305 @@ def build_scene_collection_toggles(view_layer_name: str):
     cube_timeline_name = f"{legacy['base_cubes']}_Timeline"
     timeline_positive_bio = f"Year_{SITE_KEY}_timeline_bioenvelope_positive"
     timeline_trending_bio = f"Year_{SITE_KEY}_timeline_bioenvelope_trending"
-
-    if view_layer_name == "bioenvelope_positive":
-        return [top["base"], legacy["timeline_base"], timeline_positive_bio], [
-            top["base_cubes"],
-            top["positive"],
-            top["priority"],
-            top["trending"],
-            top["bio_trending"],
-            legacy["base"],
-            legacy["base_cubes"],
-            cube_timeline_name,
-            legacy["positive"],
-            legacy["timeline_positive"],
-            legacy["priority"],
-            legacy["timeline_priority"],
-            legacy["trending"],
-            legacy["timeline_trending"],
-            legacy["bio_positive"],
-            legacy["bio_trending"],
-            timeline_trending_bio,
-        ]
-
-    if view_layer_name == "priority_state":
-        return [legacy["timeline_priority"]], [
-            top["base"],
-            top["base_cubes"],
-            top["positive"],
-            top["trending"],
-            top["bio_positive"],
-            top["bio_trending"],
-            legacy["base"],
-            legacy["timeline_base"],
-            legacy["base_cubes"],
-            cube_timeline_name,
-            legacy["positive"],
-            legacy["timeline_positive"],
-            legacy["trending"],
-            legacy["timeline_trending"],
-            legacy["bio_positive"],
-            legacy["bio_trending"],
-            timeline_positive_bio,
-            timeline_trending_bio,
-        ]
-
-    if view_layer_name == "trending_state":
-        return [legacy["timeline_trending"]], [
-            top["base"],
-            top["base_cubes"],
-            top["positive"],
-            top["priority"],
-            top["bio_positive"],
-            top["bio_trending"],
-            legacy["base"],
-            legacy["timeline_base"],
-            legacy["base_cubes"],
-            cube_timeline_name,
-            legacy["positive"],
-            legacy["timeline_positive"],
-            legacy["priority"],
-            legacy["timeline_priority"],
-            legacy["bio_positive"],
-            legacy["bio_trending"],
-            timeline_positive_bio,
-            timeline_trending_bio,
-        ]
-
-    return [
+    timeline_positive_world = scene_contract.get_timeline_world_collection_name(SITE_KEY, "positive")
+    timeline_trending_world = scene_contract.get_timeline_world_collection_name(SITE_KEY, "trending")
+    timeline_only_names = [
         legacy["timeline_base"],
+        cube_timeline_name,
         legacy["timeline_positive"],
         legacy["timeline_priority"],
         legacy["timeline_trending"],
         timeline_positive_bio,
         timeline_trending_bio,
-    ], [
+    ]
+    single_state_common_hide = [
         top["base_cubes"],
+        top["bio_trending"],
+        *timeline_only_names,
+    ]
+
+    if BUILD_MODE == "single_state":
+        if view_layer_name == "bioenvelope_positive":
+            return [
+                top["bio_positive"],
+                legacy["bio_positive"],
+            ], [
+                top["base"],
+                legacy["base"],
+                top["positive"],
+                top["priority"],
+                top["trending"],
+                legacy["positive"],
+                legacy["priority"],
+                legacy["trending"],
+                legacy["bio_trending"],
+                *single_state_common_hide,
+            ]
+
+        if view_layer_name == "priority_state":
+            return [
+                top["priority"],
+                legacy["priority"],
+            ], [
+                top["base"],
+                legacy["base"],
+                top["positive"],
+                top["trending"],
+                top["bio_positive"],
+                legacy["positive"],
+                legacy["trending"],
+                legacy["bio_positive"],
+                legacy["bio_trending"],
+                *single_state_common_hide,
+            ]
+
+        if view_layer_name == "trending_state":
+            return [
+                top["trending"],
+                legacy["trending"],
+            ], [
+                top["base"],
+                legacy["base"],
+                top["positive"],
+                top["priority"],
+                top["bio_positive"],
+                legacy["positive"],
+                legacy["priority"],
+                legacy["bio_positive"],
+                legacy["bio_trending"],
+                *single_state_common_hide,
+            ]
+
+        if view_layer_name == "existing_condition":
+            return [
+                top["base"],
+                legacy["base"],
+            ], [
+                top["positive"],
+                top["priority"],
+                top["trending"],
+                top["bio_positive"],
+                legacy["positive"],
+                legacy["priority"],
+                legacy["trending"],
+                legacy["bio_positive"],
+                legacy["bio_trending"],
+                *single_state_common_hide,
+            ]
+
+        return [
+            top["positive"],
+            legacy["positive"],
+        ], [
+            top["base"],
+            legacy["base"],
+            top["priority"],
+            top["trending"],
+            top["bio_positive"],
+            legacy["priority"],
+            legacy["trending"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            *single_state_common_hide,
+        ]
+
+    def timeline_show(*names):
+        return [name for name in names if name]
+
+    def timeline_hide(*names):
+        return [name for name in names if name]
+
+    if view_layer_name == "bioenvelope_positive":
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_positive_world,
+            top["bio_positive"],
+            timeline_positive_bio,
+        ), timeline_hide(
+            top["base_cubes"],
+            top["positive"],
+            top["priority"],
+            top["trending"],
+            top["bio_trending"],
+            legacy["base"],
+            legacy["base_cubes"],
+            cube_timeline_name,
+            timeline_trending_world,
+            legacy["positive"],
+            legacy["timeline_positive"],
+            legacy["priority"],
+            legacy["timeline_priority"],
+            legacy["trending"],
+            legacy["timeline_trending"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            timeline_trending_bio,
+        )
+
+    if view_layer_name == "bioenvelope_trending":
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_trending_world,
+            top["bio_trending"],
+            timeline_trending_bio,
+        ), timeline_hide(
+            top["base_cubes"],
+            top["positive"],
+            top["priority"],
+            top["trending"],
+            top["bio_positive"],
+            legacy["base"],
+            legacy["base_cubes"],
+            cube_timeline_name,
+            timeline_positive_world,
+            legacy["positive"],
+            legacy["timeline_positive"],
+            legacy["priority"],
+            legacy["timeline_priority"],
+            legacy["trending"],
+            legacy["timeline_trending"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            timeline_positive_bio,
+        )
+
+    if view_layer_name == "priority_state":
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_positive_world,
+            top["priority"],
+            legacy["timeline_priority"],
+        ), timeline_hide(
+            top["base_cubes"],
+            top["positive"],
+            top["trending"],
+            top["bio_positive"],
+            top["bio_trending"],
+            legacy["base"],
+            legacy["base_cubes"],
+            cube_timeline_name,
+            timeline_trending_world,
+            legacy["positive"],
+            legacy["timeline_positive"],
+            legacy["trending"],
+            legacy["timeline_trending"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            timeline_positive_bio,
+            timeline_trending_bio,
+        )
+
+    if view_layer_name == "existing_condition_trending":
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_trending_world,
+        ), timeline_hide(
+            top["base_cubes"],
+            top["positive"],
+            top["priority"],
+            top["trending"],
+            top["bio_positive"],
+            top["bio_trending"],
+            legacy["base"],
+            legacy["base_cubes"],
+            cube_timeline_name,
+            timeline_positive_world,
+            legacy["positive"],
+            legacy["timeline_positive"],
+            legacy["priority"],
+            legacy["timeline_priority"],
+            legacy["trending"],
+            legacy["timeline_trending"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            timeline_positive_bio,
+            timeline_trending_bio,
+        )
+
+    if view_layer_name == "trending_state":
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_trending_world,
+            top["trending"],
+            legacy["timeline_trending"],
+        ), timeline_hide(
+            top["base_cubes"],
+            top["positive"],
+            top["priority"],
+            top["bio_positive"],
+            top["bio_trending"],
+            legacy["base"],
+            legacy["base_cubes"],
+            cube_timeline_name,
+            timeline_positive_world,
+            legacy["positive"],
+            legacy["timeline_positive"],
+            legacy["priority"],
+            legacy["timeline_priority"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            timeline_positive_bio,
+            timeline_trending_bio,
+        )
+
+    if view_layer_name == "pathway_state":
+        return timeline_show(
+            top["base"],
+            legacy["timeline_base"],
+            timeline_positive_world,
+            top["positive"],
+            legacy["timeline_positive"],
+        ), timeline_hide(
+            top["base_cubes"],
+            top["priority"],
+            top["trending"],
+            top["bio_positive"],
+            top["bio_trending"],
+            legacy["base"],
+            legacy["base_cubes"],
+            cube_timeline_name,
+            timeline_trending_world,
+            legacy["priority"],
+            legacy["timeline_priority"],
+            legacy["trending"],
+            legacy["timeline_trending"],
+            legacy["bio_positive"],
+            legacy["bio_trending"],
+            timeline_positive_bio,
+            timeline_trending_bio,
+        )
+
+    return timeline_show(
+        top["base"],
+        legacy["timeline_base"],
+        timeline_positive_world,
+    ), timeline_hide(
+        top["base_cubes"],
+        top["positive"],
+        top["priority"],
+        top["trending"],
+        top["bio_positive"],
+        top["bio_trending"],
         legacy["base"],
         legacy["base_cubes"],
         cube_timeline_name,
+        timeline_trending_world,
         legacy["positive"],
+        legacy["timeline_positive"],
         legacy["priority"],
+        legacy["timeline_priority"],
         legacy["trending"],
+        legacy["timeline_trending"],
         legacy["bio_positive"],
         legacy["bio_trending"],
-    ]
+        timeline_positive_bio,
+        timeline_trending_bio,
+    )
 
 
 def clone_scene_for_layer(scene: bpy.types.Scene, view_layer_name: str):
@@ -537,9 +1118,21 @@ def render_isolated_exr(scene: bpy.types.Scene, view_layer_name: str):
     target_layer = temp_scene.view_layers.get(view_layer_name)
     if target_layer is None:
         raise ValueError(f"Temp scene '{temp_scene.name}' is missing view layer '{view_layer_name}'")
-    show_names, hide_names = build_scene_collection_toggles(view_layer_name)
-    shown_state = set_collection_render_state(show_names, hide_render=False)
-    hidden_state = set_collection_render_state(hide_names, hide_render=True)
+    if BUILD_MODE == "single_state":
+        visibility = get_single_state_layer_visibility(view_layer_name)
+        apply_single_state_view_layer_excludes(target_layer, visibility)
+        shown_state = set_collection_render_state(visibility["show_collections"], hide_render=False)
+        hidden_state = set_collection_render_state(visibility["hide_collections"], hide_render=True)
+        hidden_child_state = set_collection_render_state(visibility["hide_child_collections"], hide_render=True)
+        shown_object_state = set_object_render_state(visibility["show_objects"], hide_render=False)
+        hidden_object_state = set_object_render_state(visibility["hide_objects"], hide_render=True)
+    else:
+        show_names, hide_names = build_scene_collection_toggles(view_layer_name)
+        shown_state = set_collection_render_state(show_names, hide_render=False)
+        hidden_state = set_collection_render_state(hide_names, hide_render=True)
+        hidden_child_state = {}
+        shown_object_state = {}
+        hidden_object_state = {}
 
     try:
         with bpy.context.temp_override(scene=temp_scene, view_layer=target_layer):
@@ -548,6 +1141,9 @@ def render_isolated_exr(scene: bpy.types.Scene, view_layer_name: str):
     finally:
         restore_collection_render_state(shown_state)
         restore_collection_render_state(hidden_state)
+        restore_collection_render_state(hidden_child_state)
+        restore_object_render_state(shown_object_state)
+        restore_object_render_state(hidden_object_state)
         bpy.data.scenes.remove(temp_scene)
 
     digest = hashlib.sha256(output_path.read_bytes()).hexdigest()
@@ -566,6 +1162,7 @@ def main():
     restore_instancer_materials()
     restore_world_point_materials()
     restore_bioenvelope_materials()
+    normalize_single_state_render_visibility(scene)
     ensure_target_layer_aovs(scene)
     for view_layer in scene.view_layers:
         ensure_render_passes(view_layer)
@@ -583,7 +1180,7 @@ def main():
         return
 
     outputs = []
-    target_layers = VIEW_LAYER_FILTER or TARGET_VIEW_LAYERS
+    target_layers = VIEW_LAYER_FILTER or get_target_view_layers()
     for view_layer_name in target_layers:
         if scene.view_layers.get(view_layer_name) is None:
             continue
