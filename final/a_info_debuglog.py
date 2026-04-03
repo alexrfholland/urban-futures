@@ -16,13 +16,19 @@ All debug outputs are saved to: data/revised/final/output/debug/
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import sys
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import refactor_statistics_root
 
 
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
 
-DEBUG_DIR = Path('data/revised/final/output/debug')
+DEBUG_DIR = refactor_statistics_root() / 'debug'
 
 INDICATOR_METADATA = {
     'Bird.self.peeling':           {'color': '#FF8A65', 'order': 1},
@@ -53,7 +59,7 @@ def load_indicator_counts(site, voxel_size=1):
     
     Tries output/csv folder first, then falls back to site folder.
     """
-    path = Path(f'data/revised/final/output/csv/{site}_{voxel_size}_indicator_counts.csv')
+    path = refactor_statistics_root() / 'csv' / f'{site}_{voxel_size}_indicator_counts.csv'
     if not path.exists():
         path = Path(f'data/revised/final/{site}/{site}_{voxel_size}_indicator_counts.csv')
     if not path.exists():
@@ -67,7 +73,7 @@ def load_action_counts(site, voxel_size=1):
     
     Tries output/csv folder first, then falls back to site folder.
     """
-    path = Path(f'data/revised/final/output/csv/{site}_{voxel_size}_action_counts.csv')
+    path = refactor_statistics_root() / 'csv' / f'{site}_{voxel_size}_action_counts.csv'
     if not path.exists():
         path = Path(f'data/revised/final/{site}/{site}_{voxel_size}_action_counts.csv')
     if not path.exists():
@@ -335,4 +341,3 @@ if __name__ == '__main__':
             generate_debug_outputs(site, args.voxel_size)
     else:
         generate_debug_outputs(args.site, args.voxel_size)
-

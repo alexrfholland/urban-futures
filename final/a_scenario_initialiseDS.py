@@ -296,16 +296,24 @@ def PreprocessData(treeDF, ds, extraTreeDF):
     
     return treeDF, ds
 
-def initialize_dataset(site, voxel_size):
+def initialize_dataset(site, voxel_size, *, write_cache: bool = True):
     input_folder = f'data/revised/final/{site}'
     filepath = f'{input_folder}/{site}_{voxel_size}_voxelArray_RewildingNodes.nc'
+    subset_path = f'{input_folder}/{site}_{voxel_size}_subsetForScenarios.nc'
+
+    if not write_cache and os.path.exists(subset_path):
+        subsetDS = xr.open_dataset(subset_path)
+        print(f'Loaded existing subset dataset from {subset_path}')
+        return subsetDS
+
     xarray_dataset = xr.open_dataset(filepath)
 
     print("Variables in xarray_dataset:")
     print(xarray_dataset.variables)
     
     subsetDS = getDataSubest(xarray_dataset)
-    subsetDS.to_netcdf(f'{input_folder}/{site}_{voxel_size}_subsetForScenarios.nc')
+    if write_cache:
+        subsetDS.to_netcdf(subset_path)
     print('Loaded and subsetted xarray data')
     
     return subsetDS

@@ -1,7 +1,11 @@
 import os
 import importlib
 import sys
+from datetime import datetime
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
 # Import required modules
 import a_scenario_initialiseDS
@@ -9,12 +13,10 @@ import a_scenario_runscenario
 import a_scenario_generateVTKs
 import a_scenario_urban_elements_count
 import a_scenario_get_baselines
-import a_scenario_params
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+from refactor_code.scenario import params_v3
 
 from refactor_code.paths import (
+    engine_output_validation_dir,
     scenario_baseline_combined_vtk_path,
     scenario_baseline_dir,
     scenario_log_df_path,
@@ -80,7 +82,15 @@ def check_data_files_exist(site, scenario, year, voxel_size):
 # CORE PROCESSING FUNCTIONS
 #==============================================================================
 
-def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, enable_visualization=False):
+def process_scenario(
+    site,
+    scenario,
+    years,
+    voxel_size,
+    skip_scenario=False,
+    enable_visualization=False,
+    node_only=False,
+):
     """
     Process a single site with the given parameters.
     
@@ -91,6 +101,7 @@ def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, ena
     voxel_size (int): Voxel size
     skip_scenario (bool): Whether to skip the scenario simulation step
     enable_visualization (bool): Whether to enable visualization in VTK generation
+    node_only (bool): Whether to stop after writing scenario CSV/dataframe outputs
     
     Returns:
     list: List of generated VTK file paths
@@ -131,6 +142,10 @@ def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, ena
     years = sorted(years)
     current_tree_df = treeDF.copy()
     previous_year = 0
+    telemetry_dir = engine_output_validation_dir("validation") / "telemetry"
+    telemetry_dir.mkdir(parents=True, exist_ok=True)
+    telemetry_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    recruit_telemetry_path = telemetry_dir / f"{telemetry_stamp}_{site}_{scenario}_telemetry_recruit.csv"
 
     # Process each year
     for year in years:
@@ -152,6 +167,7 @@ def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, ena
                 logDF,
                 poleDF,
                 previous_year=previous_year,
+                recruit_telemetry_path=recruit_telemetry_path,
             )
         else:
             # Check if scenario data files exist
@@ -174,33 +190,37 @@ def process_scenario(site, scenario, years, voxel_size, skip_scenario=False, ena
                     logDF,
                     poleDF,
                     previous_year=previous_year,
+                    recruit_telemetry_path=recruit_telemetry_path,
                 )
         
-        #----------------------------------------------------------------------
-        # STEP 2.2: GENERATE VTKs
-        #----------------------------------------------------------------------
-        print(f"Step 2.2: Generating VTKs for year {year}")
-        vtk_result = a_scenario_generateVTKs.generate_vtk(
-            site, scenario, year, voxel_size, subsetDS.copy(deep=True),
-            treeDF_scenario, logDF_scenario, poleDF_scenario, enable_visualization,
-            return_polydata=True,
-            save_raw_vtk=False,
-        )
+        if node_only:
+            print(f"Step 2.2: Node-only mode enabled, skipping VTK generation for year {year}")
+        else:
+            #----------------------------------------------------------------------
+            # STEP 2.2: GENERATE VTKs
+            #----------------------------------------------------------------------
+            print(f"Step 2.2: Generating VTKs for year {year}")
+            vtk_result = a_scenario_generateVTKs.generate_vtk(
+                site, scenario, year, voxel_size, subsetDS.copy(deep=True),
+                treeDF_scenario, logDF_scenario, poleDF_scenario, enable_visualization,
+                return_polydata=True,
+                save_raw_vtk=False,
+            )
 
-        vtk_file, state_polydata = vtk_result
-        a_scenario_urban_elements_count.process_scenario_polydata(
-            state_polydata,
-            site=site,
-            voxel_size=voxel_size,
-            scenario=scenario,
-            year=year,
-            save_path=scenario_urban_features_vtk_path(site, scenario, year, voxel_size),
-            enable_visualization=enable_visualization,
-        )
-        
-        # Track the VTK file path
-        if vtk_file:
-            generated_vtk_files.append(vtk_file)
+            vtk_file, state_polydata = vtk_result
+            a_scenario_urban_elements_count.process_scenario_polydata(
+                state_polydata,
+                site=site,
+                voxel_size=voxel_size,
+                scenario=scenario,
+                year=year,
+                save_path=scenario_urban_features_vtk_path(site, scenario, year, voxel_size),
+                enable_visualization=enable_visualization,
+            )
+            
+            # Track the VTK file path
+            if vtk_file:
+                generated_vtk_files.append(vtk_file)
 
         current_tree_df = treeDF_scenario.copy()
         previous_year = year
@@ -292,7 +312,7 @@ def main():
         interval = default_interval
     
     # Generate years with sub-timesteps
-    years = a_scenario_params.generate_timesteps(default_base_years, interval)
+    years = params_v3.generate_timesteps(default_base_years, interval)
     print(f"Generated timesteps: {years}")
     
     # Allow user to override years
@@ -318,6 +338,10 @@ def main():
     # Ask whether to enable visualization
     vis_input = input("Enable visualization during VTK generation? (yes/no, default no): ")
     enable_visualization = vis_input.lower() in ['yes', 'y', 'true', '1']
+
+    # Ask whether to stop after CSV/dataframe outputs
+    node_only_input = input("Run node-only mode and skip all VTK generation? (yes/no, default no): ")
+    node_only = node_only_input.lower() in ['yes', 'y', 'true', '1']
     
     # Print summary of selected options
     print("\n===== Processing with the following parameters =====")
@@ -328,6 +352,7 @@ def main():
     print(f"Voxel Size: {voxel_size}")
     print(f"Skip Scenario Simulation: {skip_scenario}")
     print(f"Enable Visualization: {enable_visualization}")
+    print(f"Node-only Mode: {node_only}")
     
     # Confirm proceeding
     confirm = input("\nProceed with these settings? (yes/no, default yes): ")
@@ -348,7 +373,7 @@ def main():
             # Process site and get generated VTK files
             scenario_vtk_files = process_scenario(
                 site, scenario, years, voxel_size,
-                skip_scenario, enable_visualization
+                skip_scenario, enable_visualization, node_only
             )
             
             # Store the generated VTK files
@@ -357,13 +382,16 @@ def main():
     #--------------------------------------------------------------------------
     # STEP 3: PROCESS BASELINES
     #--------------------------------------------------------------------------
-    print("\n===== STEP 3: PROCESSING BASELINES =====")
-    # Process baselines after scenario VTKs
-    baseline_vtk_files = {}
-    for site in sites:
-        baseline_vtk = process_baseline(site, voxel_size)
-        if baseline_vtk:
-            baseline_vtk_files[site] = baseline_vtk
+    if node_only:
+        print("\n===== STEP 3: SKIPPING BASELINES (node-only mode) =====")
+    else:
+        print("\n===== STEP 3: PROCESSING BASELINES =====")
+        # Process baselines after scenario VTKs
+        baseline_vtk_files = {}
+        for site in sites:
+            baseline_vtk = process_baseline(site, voxel_size)
+            if baseline_vtk:
+                baseline_vtk_files[site] = baseline_vtk
     
     print("\n===== All processing completed =====")
 

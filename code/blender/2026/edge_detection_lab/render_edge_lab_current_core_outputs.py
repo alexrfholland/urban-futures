@@ -18,7 +18,10 @@ BLEND_PATH = env_path(
 )
 OUTPUT_ROOT = env_path(
     "EDGE_LAB_OUTPUT_ROOT",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_city_20260329/current",
+    os.environ.get(
+        "EDGE_LAB_OUTPUT_DIR",
+        "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_city_20260329/current",
+    ),
 )
 PATHWAY_EXR = env_path(
     "EDGE_LAB_PATHWAY_EXR",

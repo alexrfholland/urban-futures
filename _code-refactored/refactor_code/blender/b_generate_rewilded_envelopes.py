@@ -27,6 +27,13 @@ SCENARIOS = ["positive", "trending"]
 VOXEL_SIZE = 1
 YEARS = [10, 30, 60, 180]
 WRITE_LEGACY_OUTPUTS = True
+BLENDER_PROPOSAL_ATTRS = [
+    "blender_proposal-deploy-structure",
+    "blender_proposal-decay",
+    "blender_proposal-recruit",
+    "blender_proposal-colonise",
+    "blender_proposal-release-control",
+]
 
 
 def resolve_scenario_vtk_path(site: str, scenario: str, year: int, voxel_size: int) -> Path:
@@ -304,7 +311,12 @@ def main():
                 continue
 
             iso_surface = scenario_bioenvelope_map_to_int_simple(iso_surface)
-            attributes = ["scenario_bioEnvelope_int", "scenario_bioEnvelope_simple_int", "sim_Turns"]
+            attributes = [
+                "scenario_bioEnvelope_int",
+                "scenario_bioEnvelope_simple_int",
+                "sim_Turns",
+                *BLENDER_PROPOSAL_ATTRS,
+            ]
             if "sim_averageResistance" in iso_surface.point_data:
                 attributes.append("sim_averageResistance")
 

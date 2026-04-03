@@ -18,7 +18,7 @@ BLEND_PATH = env_path(
 )
 OUTPUT_DIR = env_path(
     "EDGE_LAB_OUTPUT_DIR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_sizes",
+    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_proposals",
 )
 PATHWAY_EXR = env_path(
     "EDGE_LAB_PATHWAY_EXR",
@@ -28,24 +28,20 @@ PRIORITY_EXR = env_path(
     "EDGE_LAB_PRIORITY_EXR",
     "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-city_priority.exr",
 )
-EXISTING_EXR = env_path(
-    "EDGE_LAB_EXISTING_EXR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-existing_condition.exr",
-)
 TRENDING_EXR = env_path(
     "EDGE_LAB_TRENDING_EXR",
     "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-trending_state.exr",
 )
 SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
-OUTPUT_FILTER = {
-    item.strip()
-    for item in os.environ.get("EDGE_LAB_OUTPUT_FILTER", "").split(",")
+PHASE_FILTER = {
+    item.strip().lower()
+    for item in os.environ.get("EDGE_LAB_PHASE_FILTER", "").split(",")
     if item.strip()
 }
 
 
 def log(message: str) -> None:
-    print(f"[render_edge_lab_current_sizes] {message}")
+    print(f"[render_edge_lab_current_proposals] {message}")
 
 
 def set_standard_view(scene: bpy.types.Scene) -> None:
@@ -177,6 +173,7 @@ def render_socket_to_png(
         node_tree.links.remove(link)
     node_tree.links.new(image_socket, composite.inputs[0])
     node_tree.links.new(image_socket, viewer.inputs[0])
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     scene.render.filepath = str(output_path)
     bpy.ops.render.render(write_still=True, scene=scene.name)
     log(f"Wrote {output_path}")
@@ -186,14 +183,20 @@ def output_nodes(node_tree: bpy.types.NodeTree) -> list[bpy.types.Node]:
     nodes = [
         node
         for node in node_tree.nodes
-        if node.bl_idname == "CompositorNodeOutputFile" and node.name.startswith("Sizes::Output :: ")
+        if node.bl_idname == "CompositorNodeOutputFile" and node.name.startswith("Proposals::Output :: ")
     ]
     if not nodes:
-        raise ValueError("No Sizes output nodes found")
-    if OUTPUT_FILTER:
-        nodes = [node for node in nodes if output_stem(node) in OUTPUT_FILTER]
-        if not nodes:
-            raise ValueError(f"No Sizes outputs matched EDGE_LAB_OUTPUT_FILTER={sorted(OUTPUT_FILTER)}")
+        raise ValueError("No Proposals output nodes found")
+    if PHASE_FILTER:
+        filtered = []
+        for node in nodes:
+            stem = output_stem(node)
+            phase = stem.split("/", 1)[0].lower()
+            if phase in PHASE_FILTER:
+                filtered.append(node)
+        if not filtered:
+            raise ValueError(f"No Proposals outputs matched EDGE_LAB_PHASE_FILTER={sorted(PHASE_FILTER)}")
+        nodes = filtered
     return sorted(nodes, key=lambda node: node.name)
 
 
@@ -220,24 +223,21 @@ def main() -> None:
         raise ValueError(f"Scene '{SCENE_NAME}' not found in {BLEND_PATH}")
 
     node_tree = scene.node_tree
-    existing = require_node(node_tree, "AO::EXR Existing")
-    pathway = require_node(node_tree, "AO::EXR Pathway")
-    priority = require_node(node_tree, "AO::EXR Priority")
-    trending = require_node(node_tree, "Resources::EXR Trending")
+    pathway = require_node(node_tree, "Proposals::EXR Pathway")
+    priority = require_node(node_tree, "Proposals::EXR Priority")
+    trending = require_node(node_tree, "Proposals::EXR Trending")
 
-    repath_exr_node(existing, EXISTING_EXR)
     repath_exr_node(pathway, PATHWAY_EXR)
     repath_exr_node(priority, PRIORITY_EXR)
     repath_exr_node(trending, TRENDING_EXR)
-    reconnect_image_links(node_tree, existing)
     reconnect_image_links(node_tree, pathway)
     reconnect_image_links(node_tree, priority)
     reconnect_image_links(node_tree, trending)
 
     configure_scene(
         scene,
-        [EXISTING_EXR, PATHWAY_EXR, PRIORITY_EXR, TRENDING_EXR],
-        [node.image for node in (existing, pathway, priority, trending) if node.image is not None],
+        [PATHWAY_EXR, PRIORITY_EXR, TRENDING_EXR],
+        [node.image for node in (pathway, priority, trending) if node.image is not None],
     )
     mute_all_output_nodes(node_tree)
 

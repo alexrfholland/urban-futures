@@ -12,22 +12,22 @@ Do not guess which one is current.
   - practical pre-v2 baseline branch
   - use this only as the old pre-refactor reference
 - `master`
-  - current canonical v2 branch
-  - this is the latest accepted simulation core
+  - old canonical v2 branch
+  - use this as the accepted pre-v3 reference
 - `engine-v3`
-  - v3 candidate branch
-  - use this only for the new refactor work
+  - current canonical branch
+  - this is the latest accepted simulation core
 
-### Current Canonical V2
+### Current Canonical V3
 
-Canonical v2 currently means:
+Canonical v3 currently means:
 
-- branch: `master`
-- scenario outputs: [data/revised/final-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2)
-- engine outputs: [_data-refactored/v2engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs)
-- statistics: [_statistics-refactored-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored-v2)
+- branch: `engine-v3`
+- scenario outputs: [data/revised/final-v3](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v3)
+- engine outputs: [_data-refactored/v3engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v3engine_outputs)
+- statistics: [_statistics-refactored-v3](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored-v3)
 
-Canonical v2 template configuration means:
+Canonical v3 template configuration means:
 
 - `fallens_use = nonpre-direct`
 - `snags_use = elm-snags-old`
@@ -69,57 +69,112 @@ Rule:
 
 - do not rely on the fallback for canonical or candidate validation work
 
-`REFACTOR_SCENARIO_OUTPUT_ROOT`
+`REFACTOR_RUN_OUTPUT_ROOT`
 
-- overrides the scenario-output root used by [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py)
-- use this when a run should write somewhere other than the default mode root
-- canonical v2 root:
-  - [data/revised/final-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2)
-- typical v3 candidate root:
-  - `data/revised/final-v3`
-
-`REFACTOR_ENGINE_OUTPUT_ROOT`
-
-- overrides the refactored engine-output root used by [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py)
-- use this when a run should write augmented VTKs, renders, and related engine outputs somewhere other than the default mode root
-- canonical v2 root:
-  - [_data-refactored/v2engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs)
-- typical v3 candidate root:
-  - `_data-refactored/v3engine_outputs`
-
-`REFACTOR_STATISTICS_ROOT`
-
-- overrides the statistics root used by [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py)
-- use this when a run should write stats/graphs somewhere other than the default mode root
-- canonical v2 root:
-  - [_statistics-refactored-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored-v2)
-- typical v3 candidate root:
-  - `_statistics-refactored-v3`
+- the only supported override for candidate run outputs
+- used by [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py)
+- a run written to this root is split as:
+  - `temp/interim-data`
+  - `temp/validation`
+  - `output`
+- durable postprocessed outputs for rendering/validation live under:
+  - `output/vtks`
+  - `output/feature-locations`
+  - `output/bioenvelopes`
+- old split vars are removed:
+  - `REFACTOR_SCENARIO_OUTPUT_ROOT`
+  - `REFACTOR_ENGINE_OUTPUT_ROOT`
+  - `REFACTOR_STATISTICS_ROOT`
 
 ### How To Get The Latest Accepted Setup
 
 If you need the latest accepted simulation core and accepted templates:
 
-1. use branch `master`
-2. use the canonical v2 roots:
-   - [data/revised/final-v2](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v2)
-   - [_data-refactored/v2engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v2engine_outputs)
+1. use branch `engine-v3`
+2. use the canonical v3 roots:
+   - [data/revised/final-v3](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v3)
+   - [_data-refactored/v3engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v3engine_outputs)
+   - [_statistics-refactored-v3](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored-v3)
 3. set `TREE_TEMPLATE_ROOT` to:
    - [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
 4. read these docs before changing anything:
-   - [_documentation-refactored/scenario_engine_v2_model.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v2_model.md)
-   - [_documentation-refactored/scenario_engine_v2_status.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v2_status.md)
-   - [_documentation-refactored/validation.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/validation.md)
+   - [_documentation-refactored/scenario_engine_v3_status.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_status.md)
+   - [_documentation-refactored/scenario_engine_v3_validation.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_validation.md)
 
 ### V3 Rule
 
 If you are working on v3:
 
-- do not overwrite canonical v2 outputs
+- treat v3 outputs as canonical outputs
 - use the `engine-v3` branch
-- use the dedicated v3 roots
+- use the canonical v3 roots unless you are intentionally creating a scratch candidate root
 - still inherit the approved canonical template root unless an explicitly approved new template bundle is being tested
 - if a run does not record its template root in metadata, treat that as a validation failure
+
+### V3 Batch Modes
+
+The main non-interactive batch runner is:
+
+- [final/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/run_full_v3_batch.py)
+
+Default behavior:
+
+- runs scenario generation
+- runs scenario VTK generation
+- runs urban-features VTK generation
+- runs the capability / indicator pass
+- does **not** regenerate baselines unless explicitly asked
+
+Important flags:
+
+- `--node-only`
+  - write scenario CSV/dataframe outputs only
+  - skip VTK generation
+  - skip baseline regeneration
+  - skip capability / indicator generation
+
+- `--vtk-only`
+  - skip scenario CSV generation
+  - load saved `treeDF` / `logDF` / `poleDF`
+  - rebuild `subsetDS`
+  - run scenario VTK generation and urban-features generation from saved CSVs
+
+- `--regenerate-baselines`
+  - opt-in baseline regeneration
+  - default is off
+
+- `--multiple-agent`
+  - intended for split parallel work
+  - runs only the requested site / scenario / year slice
+  - respects `--vtk-only`
+  - skips the cross-state capability pass so another later run can compile it
+
+- `--save-raw-vtk`
+  - writes raw scenario state VTKs in addition to the normal downstream outputs
+
+Useful selector flags:
+
+- `--sites`
+- `--scenarios`
+- `--years`
+- `--voxel-size`
+
+### Saved-CSV VTK Workflow
+
+If scenario CSVs already exist and you only want to regenerate VTK-side outputs:
+
+1. set the explicit roots and `TREE_TEMPLATE_ROOT`
+2. use `run_full_v3_batch.py --vtk-only`
+3. add `--multiple-agent` if you are intentionally splitting the years across agents
+4. add `--save-raw-vtk` if you want the raw scenario VTKs written too
+
+This workflow still requires:
+
+- saved `treeDF` / `logDF` / `poleDF`
+- rebuilt `subsetDS`
+- the approved template root
+
+It does **not** rerun the scenario engine.
 
 ### Never Assume
 
@@ -142,6 +197,8 @@ Always verify:
 ### SIMULATION
 
 #### Ticket 1. Year 0 Scenario Behaviour
+
+Completed.
 
 High amount of release control in trending because `reduce_control_of_trees(...)` in [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py#L204) assigns trees in positive to `street-tree`.
 
@@ -186,7 +243,65 @@ That is why:
 
 #### Ticket 2. Rename Release-Control Buffer / Brace
 
+Completed.
+
 Rename `Release-Control -> Buffer-Feature` and `Release-Control -> Brace-Feature` to:
 
 - `Release-Control -> Eliminate-Pruning`
 - `Release-Control -> Reduce-Pruning`
+
+#### Ticket 3. Parade Tree / Reproduce Follow-Up
+
+Completed.
+
+The Parade `yr180 / Tree / Reproduce` divergence has been investigated, re-run, and incorporated into the current v3 comparison outputs.
+
+#### Ticket 4. Fallen / Decayed Resource Classification
+
+Open.
+
+Need to decide whether `fallen` and `decayed` are counted primarily as `fallen log` or `dead branch`.
+
+Current issue:
+
+- `fallen` is still dominated by `stat_dead branch`, while `stat_fallen log` remains sparse
+- `resource_dead branch` and `resource_fallen log` are both relatively low compared with the visible deadwood footprint
+- `decayed` has minimal resource presence across both `resource_*` and `stat_*`
+
+Current reference stats for `trimmed-parade / positive / yr180`:
+
+Fallen
+
+- voxel count: `88,053`
+- `resource_dead branch`: `2,316`
+- `resource_epiphyte`: `50`
+- `resource_fallen log`: `276`
+- `resource_hollow`: `49`
+- `resource_other`: `107,568`
+- `resource_peeling bark`: `843`
+- `resource_perch branch`: `2,768`
+- `stat_dead branch`: `108,172`
+- `stat_epiphyte`: `26`
+- `stat_fallen log`: `276`
+- `stat_hollow`: `24`
+- `stat_other`: `106,316`
+- `stat_peeling bark`: `775`
+- `stat_perch branch`: `2,734`
+
+Decayed
+
+- voxel count: `11,512`
+- `resource_dead branch`: `98`
+- `resource_epiphyte`: `0`
+- `resource_fallen log`: `79`
+- `resource_hollow`: `1`
+- `resource_other`: `13,126`
+- `resource_peeling bark`: `46`
+- `resource_perch branch`: `741`
+- `stat_dead branch`: `1,353`
+- `stat_epiphyte`: `1`
+- `stat_fallen log`: `79`
+- `stat_hollow`: `0`
+- `stat_other`: `1,287`
+- `stat_peeling bark`: `45`
+- `stat_perch branch`: `98`

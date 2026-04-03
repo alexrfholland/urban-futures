@@ -125,6 +125,16 @@ CAMERAS = {
     },
 }
 
+VIEW_ALIASES = {
+    "lifecycle-phases": "classic",
+    "lifecycles-ground-conditons": "merged",
+}
+
+VIEW_TITLE_ALIASES = {
+    "lifecycle-phases": "lifecycle phases",
+    "lifecycles-ground-conditons": "lifecyles -ground conditons",
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Render classic, merged, and proposal view image sequences.")
@@ -259,6 +269,7 @@ def add_legend(plotter: pv.Plotter, entries: list[tuple[str, tuple[int, int, int
 
 
 def view_entries(view_name: str) -> list[tuple[str, tuple[int, int, int, int]]]:
+    view_name = VIEW_ALIASES.get(view_name, view_name)
     if view_name == "classic":
         ordered = [
             ("rest", GREY_REST),
@@ -364,16 +375,18 @@ def render_view(
     window_height: int,
 ) -> None:
     camera = CAMERAS[site]
+    resolved_view_name = VIEW_ALIASES.get(view_name, view_name)
+    display_view_name = VIEW_TITLE_ALIASES.get(view_name, view_name)
 
-    if view_name == "classic":
+    if resolved_view_name == "classic":
         rgba = classic_rgba(mesh)
-    elif view_name == "merged":
+    elif resolved_view_name == "merged":
         rgba = merged_rgba(mesh)
-    elif view_name == "proposal-hybrid":
+    elif resolved_view_name == "proposal-hybrid":
         rgba = proposal_hybrid_rgba(mesh)
-    elif view_name == "proposal-hybrid-v3":
+    elif resolved_view_name == "proposal-hybrid-v3":
         rgba = proposal_hybrid_v3_rgba(mesh)
-    elif view_name == "proposal":
+    elif resolved_view_name == "proposal":
         rgba = proposal_rgba(mesh)
     else:
         raise ValueError(f"Unknown view: {view_name}")
@@ -388,7 +401,7 @@ def render_view(
         point_size=point_size,
     )
     plotter.enable_eye_dome_lighting()
-    plotter.add_text(f"{site} | {scenario} | yr{year} | {view_name}", position="upper_left", font_size=14, color="black")
+    plotter.add_text(f"{site} | {scenario} | yr{year} | {display_view_name}", position="upper_left", font_size=14, color="black")
     add_legend(plotter, view_entries(view_name))
     plotter.camera_position = [
         camera["position"],
@@ -433,7 +446,14 @@ def main() -> None:
         mesh = pv.read(vtk_path)
         base_name = f"{site}_{scenario}_yr{year}"
         print(f"Rendering {base_name} from {vtk_path}")
-        for view_name in ["classic", "merged", "proposal-hybrid", "proposal-hybrid-v3"]:
+        for view_name in [
+            "classic",
+            "merged",
+            "proposal-hybrid",
+            "proposal-hybrid-v3",
+            "lifecycle-phases",
+            "lifecycles-ground-conditons",
+        ]:
             output_path = render_root / view_name / f"{base_name}_{view_name}.png"
             render_view(
                 mesh,

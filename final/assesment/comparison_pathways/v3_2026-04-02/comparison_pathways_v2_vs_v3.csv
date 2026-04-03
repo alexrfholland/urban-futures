@@ -1,0 +1,28 @@
+site,site_key,persona,capability,measure,v2_ratio,v2_positive_pct,v2_trending_pct,v3_ratio,v3_positive_pct,v3_trending_pct,v2_positive_count,v2_trending_count,v2_baseline_count,v3_positive_count,v3_trending_count,v3_baseline_count,positive_pct_delta_points,trending_pct_delta_points
+Parade,trimmed-parade,Bird,Acquire Resources,Peeling bark volume,4.90x,40.9,8.3,5.62x,46.9,8.3,32888,6706,80329,37649,6698,80329,6.0,0.0
+Parade,trimmed-parade,Bird,Communicate,Perchable canopy volume,1.14x,23.5,20.5,1.37x,27.9,20.4,152255,132984,649014,181169,132112,649014,4.4,-0.1
+Parade,trimmed-parade,Bird,Reproduce,Hollow count,122.89x,52.4,0.4,138.00x,58.9,0.4,1106,9,2110,1242,9,2110,6.5,0.0
+Parade,trimmed-parade,Lizard,Acquire Resources,Combined ground-cover/dead branch/epiphyte indicators,33.81x,90.0,2.7,13.51x,84.9,6.3,398647,11791,442698,375889,27826,442698,-5.1,3.6
+Parade,trimmed-parade,Lizard,Communicate,Non-paved surface area,2.69x,105.0,39.0,2.47x,97.3,39.3,223884,83259,213304,207449,83854,213304,-7.7,0.3
+Parade,trimmed-parade,Lizard,Reproduce,Combined nurse-log/fallen-tree indicators,∞x,68.8,0.0,∞x,60.0,0.0,134641,0,195771,117501,0,195771,-8.8,0.0
+Parade,trimmed-parade,Tree,Acquire Resources,Senescent biovolume,∞x,84.2,0.0,∞x,96.1,0.0,88583,0,105217,101158,0,105217,11.9,0.0
+Parade,trimmed-parade,Tree,Communicate,Soil near canopy features,3.14x,104.7,33.4,2.88x,97.0,33.7,223419,71171,213304,207008,71822,213304,-7.7,0.3
+Parade,trimmed-parade,Tree,Reproduce,Grassland-for-recruitment indicator,5095.65x,88.4,0.0,10.69x,80.5,7.5,188539,37,213304,171751,16063,213304,-7.9,7.5
+Street,uni,Bird,Acquire Resources,Peeling bark volume,10.20x,31.8,3.1,9.10x,32.7,3.6,25831,2533,81316,26611,2924,81316,0.9,0.5
+Street,uni,Bird,Communicate,Perchable canopy volume,3.03x,33.6,11.1,3.08x,34.8,11.3,216656,71616,644169,223888,72707,644169,1.2,0.2
+Street,uni,Bird,Reproduce,Hollow count,14.83x,56.9,3.8,14.29x,58.2,4.1,1201,81,2110,1229,86,2110,1.3,0.3
+Street,uni,Lizard,Acquire Resources,Combined ground-cover/dead branch/epiphyte indicators,17.94x,81.4,4.5,18.66x,78.9,4.2,367749,20498,451545,356387,19094,451545,-2.5,-0.3
+Street,uni,Lizard,Communicate,Non-paved surface area,3.87x,126.9,32.8,3.85x,124.0,32.2,279666,72257,220347,273176,70991,220347,-2.9,-0.6
+Street,uni,Lizard,Reproduce,Combined nurse-log/fallen-tree indicators,15.64x,20.9,1.3,23.62x,17.4,0.7,40840,2612,195766,33982,1439,195766,-3.5,-0.6
+Street,uni,Tree,Acquire Resources,Senescent biovolume,53.46x,26.5,0.5,13.70x,27.8,2.0,28974,542,109197,30403,2219,109197,1.3,1.5
+Street,uni,Tree,Communicate,Soil near canopy features,4.33x,57.5,13.3,4.30x,54.6,12.7,126635,29237,220347,120391,27969,220347,-2.9,-0.6
+Street,uni,Tree,Reproduce,Grassland-for-recruitment indicator,12.86x,43.5,3.4,14.52x,40.6,2.8,95805,7447,220347,89488,6162,220347,-2.9,-0.6
+City,city,Bird,Acquire Resources,Peeling bark volume,9.15x,23.8,2.6,7.66x,24.6,3.2,19172,2096,80507,19828,2589,80507,0.8,0.6
+City,city,Bird,Communicate,Perchable canopy volume,3.69x,22.3,6.0,3.63x,23.3,6.4,144860,39217,648382,151078,41589,648382,1.0,0.4
+City,city,Bird,Reproduce,Hollow count,8.88x,31.6,3.6,7.63x,31.1,4.1,666,75,2110,656,86,2110,-0.5,0.5
+City,city,Lizard,Acquire Resources,Combined ground-cover/dead branch/epiphyte indicators,6.11x,100.6,16.5,6.51x,98.1,15.1,461520,75502,458893,450269,69143,458893,-2.5,-1.4
+City,city,Lizard,Communicate,Non-paved surface area,5.85x,147.2,25.1,6.14x,144.6,23.6,334457,57140,227252,328627,53526,227252,-2.6,-1.5
+City,city,Lizard,Reproduce,Combined nurse-log/fallen-tree indicators,4.10x,59.3,14.5,4.54x,56.6,12.4,117698,28710,198316,112180,24685,198316,-2.7,-2.1
+City,city,Tree,Acquire Resources,Senescent biovolume,69.31x,30.6,0.4,18.81x,35.2,1.9,32643,471,106811,37577,1998,106811,4.6,1.5
+City,city,Tree,Communicate,Soil near canopy features,3.83x,55.5,14.5,4.08x,53.1,13.0,126187,32969,227252,120619,29582,227252,-2.4,-1.5
+City,city,Tree,Reproduce,Grassland-for-recruitment indicator,4.90x,60.6,12.4,5.30x,58.0,10.9,137656,28102,227252,131911,24880,227252,-2.6,-1.5

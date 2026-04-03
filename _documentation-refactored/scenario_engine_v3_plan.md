@@ -80,10 +80,8 @@ For v3 candidate runs:
 
 Required run-config record for candidate runs:
 
+- `REFACTOR_RUN_OUTPUT_ROOT`
 - `TREE_TEMPLATE_ROOT`
-- `REFACTOR_SCENARIO_OUTPUT_ROOT`
-- `REFACTOR_ENGINE_OUTPUT_ROOT`
-- `REFACTOR_STATISTICS_ROOT`
 
 Not acceptable for v3 candidate verification:
 

@@ -350,11 +350,11 @@ def format_voxel_size(voxel_size: float) -> str:
 
 
 def get_output_dir(output_mode: str | None) -> Path:
-    return scenario_output_root(output_mode) / "output" / "csv"
+    return refactor_statistics_root(output_mode) / "csv"
 
 
 def get_indicator_output_dir(output_mode: str | None) -> Path:
-    return scenario_output_root(output_mode) / "output"
+    return refactor_statistics_root(output_mode).parent
 
 
 def normalize_scalar(value) -> str:

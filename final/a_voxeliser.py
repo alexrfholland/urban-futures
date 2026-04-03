@@ -950,7 +950,9 @@ def integrate_resources_into_xarray(ds, treeLocationsDF, templateResolution = 0.
         original_attrs = ds.attrs.copy()
 
         if 'size' in treeLocationsDF.columns:
-            treeLocationsDF = treeLocationsDF.loc[treeLocationsDF['size'].astype(str) != 'gone'].copy()
+            treeLocationsDF = treeLocationsDF.loc[
+                ~treeLocationsDF['size'].astype(str).isin(['gone', 'early-tree-death'])
+            ].copy()
 
         #process trees
         treeLocationsDF['nodeType'] = 'tree'

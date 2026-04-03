@@ -311,8 +311,77 @@ Latest working files:
 
 - human-facing compositor:
   - [edge_lab_final_template.blend](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/edge_lab_final_template.blend)
+- simple proposal compositor template:
+  - [proposal_release_control_pathway_debug.blend](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/proposal_release_control_pathway_debug.blend)
+  - current scope is pathway-only proposal exports from `parade_pathway_state_8k.exr`
+  - current families are `release-control`, `decay`, `recruit`, `colonise`, and `deploy-structure`
+  - node pattern is: EXR channel -> `COMPARE` -> `RGB` -> `Set Alpha` -> one shared `File Output`
 - older validated execution blend:
   - [edge_lab_output_suite_combined.blend](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/edge_lab_output_suite_combined.blend)
+
+## 4. Timeslice / Proposal Status
+
+Current local 8K time-slice EXR inputs:
+
+- [parade_8k_network_20260402](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/inputs/parade_8k_network_20260402)
+- [city_8k_network_20260402](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/inputs/city_8k_network_20260402)
+- [street_8k_network_20260402](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/inputs/street_8k_network_20260402)
+
+Generated Photoshop base files:
+
+- [city_timeline_base.psb](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_outputs-refactored/Blender/timeslices/city_timeline_base.psb)
+- [street_timeline_base.psb](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_outputs-refactored/Blender/timeslices/street_timeline_base.psb)
+
+Verified status for the base files:
+
+- both are now full-canvas `7680 x 4320`
+- they are no longer built on the cropped extracted smart-object canvas
+
+Generated simplified timeslice PSDs:
+
+- [timeslice-city.psd](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_outputs-refactored/Blender/timeslices/timeslice-city.psd)
+- [timeslice-street.psd](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_outputs-refactored/Blender/timeslices/timeslice-street.psd)
+
+Current simplified PSD structure:
+
+1. `trending`
+2. `positive`
+
+Included content:
+
+- `trending/tree sizes`
+- `trending/proposals`
+- `trending_depth_outliner`
+- `positive/proposals`
+- `positive/tree sizes`
+- `base_sim-turns`
+- `pathway_depth_outliner`
+- `priority_depth_outliner`
+
+Explicitly omitted from these simplified PSDs:
+
+- `BASE WORLD`
+- `rejected`
+- `moderated`
+
+Current proposal-compositor status:
+
+- the simple reference proposal compositor is still:
+  - [proposal_release_control_pathway_debug.blend](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/proposal_release_control_pathway_debug.blend)
+- the main template proposal branch inside:
+  - [edge_lab_final_template.blend](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/edge_lab_final_template.blend)
+  is not yet fully trusted for the city 8K proposal set
+- known blocker:
+  - `proposal-colonise-enrich-envelope.png` from the city pathway set did not match the expected mask during the latest check
+- confirmed non-issue:
+  - this is not an 8K canvas-size detection problem
+- likely problem area:
+  - proposal-mask node logic / value matching inside the final-template proposal branch
+
+Important practical note:
+
+- `edge_lab_final_template.blend` has manual in-app edits now
+- do not overwrite that blend casually while proposal debugging is in progress
 - final-template driver:
   - [run_edge_lab_final_template.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/run_edge_lab_final_template.py)
 - final-template mist adapter:

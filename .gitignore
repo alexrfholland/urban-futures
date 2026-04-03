@@ -13,6 +13,7 @@ venv
 .env
 .claude/
 .tmp/
+.tmp_psd_env/
 tmp_*.py
 docker-compose.yml
 
@@ -58,6 +59,7 @@ _statistics-refactored/plots/
 _statistics-refactored-v2*/
 _statistics-refactored-v3*/
 outputs/
+_outputs-refactored/
 util/
 pathwalker_3d_results/
 trash/

@@ -66,6 +66,9 @@ def build_template() -> None:
             "EDGE_LAB_CURRENT_SOURCE_BLEND": str(DATA_ROOT / "edge_lab_output_suite_refined.blend"),
             "EDGE_LAB_LEGACY_SOURCE_BLEND": str(LEGACY_SOURCE_BLEND),
             "EDGE_LAB_FINAL_TEMPLATE_BLEND": str(FINAL_TEMPLATE_BLEND),
+            "EDGE_LAB_PROPOSAL_PATHWAY_EXR": str(PATHWAY_EXR),
+            "EDGE_LAB_PROPOSAL_PRIORITY_EXR": str(PRIORITY_EXR),
+            "EDGE_LAB_PROPOSAL_TRENDING_EXR": str(TRENDING_EXR),
         },
     )
 
@@ -193,6 +196,21 @@ def run_current_sizes() -> None:
     )
 
 
+def run_current_proposals() -> None:
+    proposals_root = OUTPUT_ROOT / "current" / "proposals"
+    run_blender_python(
+        CODE_ROOT / "render_edge_lab_current_proposals.py",
+        {
+            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "EDGE_LAB_SCENE_NAME": "Current",
+            "EDGE_LAB_OUTPUT_DIR": str(proposals_root),
+            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
+            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
+            "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
+        },
+    )
+
+
 def prune_current_outputs() -> None:
     current_root = OUTPUT_ROOT / "current"
     for path in list(current_root.rglob("*")):
@@ -221,6 +239,7 @@ def main() -> None:
     run_current_shading()
     run_current_base()
     run_current_sizes()
+    run_current_proposals()
     run_current_bioenvelopes()
     run_legacy_shading()
     prune_shading_outputs()

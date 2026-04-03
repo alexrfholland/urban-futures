@@ -25,13 +25,18 @@ DEBUG OUTPUTS (optional, use --debug flag):
 
 import pandas as pd
 from pathlib import Path
+import sys
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+
+from refactor_code.paths import refactor_statistics_root
 
 
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
 
-OUTPUT_DIR = Path('data/revised/final/output/csv')
 SITES = ['trimmed-parade', 'city', 'uni']
 
 
@@ -46,6 +51,10 @@ def format_voxel_size(voxel_size):
     return str(voxel_size)
 
 
+def output_dir(output_mode: str | None = None) -> Path:
+    return refactor_statistics_root(output_mode) / "csv"
+
+
 # =============================================================================
 # DATA LOADING
 # =============================================================================
@@ -53,7 +62,7 @@ def format_voxel_size(voxel_size):
 def load_indicator_counts(site, voxel_size=1):
     """Load indicator counts CSV for a site."""
     voxel = format_voxel_size(voxel_size)
-    path = OUTPUT_DIR / f'{site}_{voxel}_indicator_counts.csv'
+    path = output_dir() / f'{site}_{voxel}_indicator_counts.csv'
     if not path.exists():
         path = Path(f'data/revised/final/{site}/{site}_{voxel}_indicator_counts.csv')
     if not path.exists():
@@ -64,7 +73,7 @@ def load_indicator_counts(site, voxel_size=1):
 def load_action_counts(site, voxel_size=1):
     """Load action counts CSV for a site."""
     voxel = format_voxel_size(voxel_size)
-    path = OUTPUT_DIR / f'{site}_{voxel}_action_counts.csv'
+    path = output_dir() / f'{site}_{voxel}_action_counts.csv'
     if not path.exists():
         path = Path(f'data/revised/final/{site}/{site}_{voxel}_action_counts.csv')
     if not path.exists():
@@ -75,7 +84,7 @@ def load_action_counts(site, voxel_size=1):
 def load_proposal_opportunities(site, voxel_size=1):
     """Load proposal opportunities CSV for a site."""
     voxel = format_voxel_size(voxel_size)
-    path = OUTPUT_DIR / f'{site}_{voxel}_proposal_opportunities.csv'
+    path = output_dir() / f'{site}_{voxel}_proposal_opportunities.csv'
     if not path.exists():
         path = Path(f'data/revised/final/{site}/{site}_{voxel}_proposal_opportunities.csv')
     if not path.exists():
@@ -86,7 +95,7 @@ def load_proposal_opportunities(site, voxel_size=1):
 def load_proposal_interventions(site, voxel_size=1):
     """Load proposal interventions CSV for a site."""
     voxel = format_voxel_size(voxel_size)
-    path = OUTPUT_DIR / f'{site}_{voxel}_proposal_interventions.csv'
+    path = output_dir() / f'{site}_{voxel}_proposal_interventions.csv'
     if not path.exists():
         path = Path(f'data/revised/final/{site}/{site}_{voxel}_proposal_interventions.csv')
     if not path.exists():
@@ -113,7 +122,8 @@ def combine_sites(sites=None, voxel_size=1):
         sites = SITES
     voxel = format_voxel_size(voxel_size)
     
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    current_output_dir = output_dir()
+    current_output_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"\n{'#'*60}")
     print(f"# COMBINING {len(sites)} SITES")
@@ -167,28 +177,28 @@ def combine_sites(sites=None, voxel_size=1):
             / combined_indicators.loc[non_baseline_mask, 'trending_count']
         )
         combined_indicators = combined_indicators.drop(columns=['trending_count'])
-        combined_path = OUTPUT_DIR / f'all_sites_{voxel}_indicator_counts.csv'
+        combined_path = current_output_dir / f'all_sites_{voxel}_indicator_counts.csv'
         combined_indicators.to_csv(combined_path, index=False)
         print(f"\nSaved: {combined_path}")
         print(f"  {len(combined_indicators)} total indicator records")
     
     if all_actions:
         combined_actions = pd.concat(all_actions, ignore_index=True)
-        actions_path = OUTPUT_DIR / f'all_sites_{voxel}_action_counts.csv'
+        actions_path = current_output_dir / f'all_sites_{voxel}_action_counts.csv'
         combined_actions.to_csv(actions_path, index=False)
         print(f"Saved: {actions_path}")
         print(f"  {len(combined_actions)} total action records")
 
     if all_proposal_opportunities:
         combined_proposal_opportunities = pd.concat(all_proposal_opportunities, ignore_index=True)
-        proposal_opp_path = OUTPUT_DIR / f'all_sites_{voxel}_proposal_opportunities.csv'
+        proposal_opp_path = current_output_dir / f'all_sites_{voxel}_proposal_opportunities.csv'
         combined_proposal_opportunities.to_csv(proposal_opp_path, index=False)
         print(f"Saved: {proposal_opp_path}")
         print(f"  {len(combined_proposal_opportunities)} total proposal opportunity records")
 
     if all_proposal_interventions:
         combined_proposal_interventions = pd.concat(all_proposal_interventions, ignore_index=True)
-        proposal_int_path = OUTPUT_DIR / f'all_sites_{voxel}_proposal_interventions.csv'
+        proposal_int_path = current_output_dir / f'all_sites_{voxel}_proposal_interventions.csv'
         combined_proposal_interventions.to_csv(proposal_int_path, index=False)
         print(f"Saved: {proposal_int_path}")
         print(f"  {len(combined_proposal_interventions)} total proposal intervention records")

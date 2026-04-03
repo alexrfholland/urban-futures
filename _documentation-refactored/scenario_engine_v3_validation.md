@@ -40,11 +40,13 @@ Validation should record the full candidate run-config block, not just the templ
 
 Required env/config record:
 
+- `REFACTOR_RUN_OUTPUT_ROOT`
 - `TREE_TEMPLATE_ROOT`
-- `REFACTOR_SCENARIO_OUTPUT_ROOT`
-- `REFACTOR_ENGINE_OUTPUT_ROOT`
-- `REFACTOR_STATISTICS_ROOT`
 - `EXPORT_ALL_POINTDATA_VARIABLES`
+
+Custom proposal render schema:
+
+- [_documentation-refactored/scenario_engine_v3_render_schema.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_render_schema.md)
 
 ## Quick Verification
 
@@ -69,7 +71,7 @@ Quick verification result is split:
 - quick render counts passed for `classic`, `merged`, `proposal-hybrid`, and `proposal-hybrid-v3`
 - quick year-180 sensitive-cell checks kept `positive > trending`
 - initial template-root validity failed for the first quick run
-- targeted reruns have corrected specific cases, but the full quick subset has not yet been re-derived end to end under the approved template root
+- targeted reruns and the full approved-root batch have now been completed
 
 Redundant support alias families have now been removed from the live v3 schema.
 
@@ -167,40 +169,61 @@ Both checks passed with:
 
 ## Full Verification
 
-Full verification has not been completed yet.
-
-Still required:
-
-- all sites: `trimmed-parade`, `city`, `uni`
-- all years: `0, 10, 30, 60, 90, 120, 150, 180`
-- full augmented VTK count checks
-- full render count checks
-- full V3 pathway table
-- direct `v2 vs v3` delta outputs
+Full verification has been completed for the current approved-root v3 batch.
 
 Current status for the required minimum record:
 
 - candidate roots checked: yes
 - quick verification subset recorded: yes
 - repeatability passed: yes
-- full file counts passed: not yet checked
-- `v2 vs v3` delta location: not yet generated
+- full file counts passed: yes
+- `v2 vs v3` delta location: generated
 
 ## Known Issues / To Do
 
 - the initial quick V3 export was run against the loader default template root `data/revised/trees`, not the approved edited deadwood variant root
 - that means the first quick deadwood renders are not valid as a visual parity check against canonical v2
 - this should be treated as a verification validity failure on the first quick run, not as the current live template configuration
-- targeted reruns have corrected specific cases, but the full quick subset still needs to be re-derived under the approved root before the quick bundle can be treated as fully valid
-- `trimmed-parade / yr180 / Tree / Reproduce` requires follow-up before promotion.
-- Current quick-test comparison:
-  - v2: `positive = 188,539` voxels (`88.4%` baseline), `trending = 37` voxels (`0.0%` baseline)
-  - v3 candidate: `positive = 80,486` voxels (`37.7%` baseline), `trending = 16,063` voxels (`7.5%` baseline)
-- Current interpretation: the v3 candidate is allowing `trending` `park-tree` rows to contribute `footprint-depaved` ground treatment, so `Tree.generations.grassland` is no longer near-zero in `trending`.
-- Follow-up requirement: keep the required ground-clearing logic, but add a condition so `trending` does not give `park-tree` rows `footprint-depaved` in this path, then re-check Parade `yr180` ground-linked indicators.
+- the wrong-root quick run is now a closed historical validation failure, not a current blocker
 - Current proposal-field limitation: the V3 `proposal_*V3` and `*_intervention` arrays are currently being applied at the assessed site-voxel level only, not transferred back onto the tree/node dataframe rows during attribute handoff.
 - Follow-up requirement: specify that these proposal/intervention columns are transferred with the other dataframe attributes in the tree/node-to-voxel export path before using VTK proposal counts as a direct proxy for tree/node proposal counts.
 - `proposal_deploy_structureV3` is still using voxel-side fallback for `upgrade-feature` and `adapt-utility-pole`.
 - Follow-up is to standardise the path for the proxy logic.
 - `proposal-deploy-structure_accepted` + `upgrade-feature` should be tracked as a proxy through `(~forest_precolonial) & indicator_Bird_self_peeling`, using peeling bark in elms as a proxy for artificial bark and thus upgraded structures.
 - Fallback for artificial trees might be duplicated; investigate.
+- Need to decide whether `fallen` and `decayed` should count primarily as `fallen log` or `dead branch`.
+- Current issue:
+  - `fallen` is still dominated by `stat_dead branch`, while `stat_fallen log` remains sparse
+  - `resource_dead branch` and `resource_fallen log` are both relatively low compared with the visible deadwood footprint
+  - `decayed` has minimal resource presence across both `resource_*` and `stat_*`
+- Current reference stats for `trimmed-parade / positive / yr180` assessed VTK:
+  - Fallen voxel count: `88,053`
+  - Fallen `resource_dead branch`: `2,316`
+  - Fallen `resource_epiphyte`: `50`
+  - Fallen `resource_fallen log`: `276`
+  - Fallen `resource_hollow`: `49`
+  - Fallen `resource_other`: `107,568`
+  - Fallen `resource_peeling bark`: `843`
+  - Fallen `resource_perch branch`: `2,768`
+  - Fallen `stat_dead branch`: `108,172`
+  - Fallen `stat_epiphyte`: `26`
+  - Fallen `stat_fallen log`: `276`
+  - Fallen `stat_hollow`: `24`
+  - Fallen `stat_other`: `106,316`
+  - Fallen `stat_peeling bark`: `775`
+  - Fallen `stat_perch branch`: `2,734`
+  - Decayed voxel count: `11,512`
+  - Decayed `resource_dead branch`: `98`
+  - Decayed `resource_epiphyte`: `0`
+  - Decayed `resource_fallen log`: `79`
+  - Decayed `resource_hollow`: `1`
+  - Decayed `resource_other`: `13,126`
+  - Decayed `resource_peeling bark`: `46`
+  - Decayed `resource_perch branch`: `741`
+  - Decayed `stat_dead branch`: `1,353`
+  - Decayed `stat_epiphyte`: `1`
+  - Decayed `stat_fallen log`: `79`
+  - Decayed `stat_hollow`: `0`
+  - Decayed `stat_other`: `1,287`
+  - Decayed `stat_peeling bark`: `45`
+  - Decayed `stat_perch branch`: `98`

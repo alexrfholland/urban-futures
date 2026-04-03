@@ -33,7 +33,7 @@ from pathlib import Path
 import numpy as np
 import pyvista as pv
 
-from refactor_code.blender.proposal_framebuffers import FRAMEBUFFER_STATE_MAPPINGS, DEFAULT_OUTPUT_COLUMNS
+from refactor_code.blender.proposal_framebuffers import DEFAULT_OUTPUT_COLUMNS, FRAMEBUFFER_STATE_MAPPINGS
 
 
 VTK_PROPOSAL_FAMILIES = [
@@ -45,21 +45,26 @@ VTK_PROPOSAL_FAMILIES = [
 ]
 
 
-def _normalized_array(mesh: pv.PolyData, name: str, fallback: str) -> np.ndarray:
-    if name not in mesh.point_data:
+def _normalized_array(values_by_name, name: str, fallback: str) -> np.ndarray:
+    if name not in values_by_name:
         raise KeyError(f"Missing required point-data array: {name}")
-    values = np.asarray(mesh.point_data[name]).astype(str)
+    values = np.asarray(values_by_name[name]).astype(str)
     values[values == "nan"] = fallback
     return values
 
 
-def build_blender_proposal_framebuffer_pointdata(mesh: pv.PolyData) -> dict[str, np.ndarray]:
+def build_blender_proposal_framebuffer_arrays(values_by_name) -> dict[str, np.ndarray]:
     output: dict[str, np.ndarray] = {}
 
+    first_key = VTK_PROPOSAL_FAMILIES[0][1]
+    if first_key not in values_by_name:
+        raise KeyError(f"Missing required point-data array: {first_key}")
+    point_count = len(np.asarray(values_by_name[first_key]))
+
     for family, decision_name, intervention_name in VTK_PROPOSAL_FAMILIES:
-        decisions = _normalized_array(mesh, decision_name, "not-assessed")
-        interventions = _normalized_array(mesh, intervention_name, "none")
-        combined = np.full(mesh.n_points, "not-assessed", dtype="<U32")
+        decisions = _normalized_array(values_by_name, decision_name, "not-assessed")
+        interventions = _normalized_array(values_by_name, intervention_name, "none")
+        combined = np.full(point_count, "not-assessed", dtype="<U32")
 
         accepted_mask = np.char.find(np.char.lower(decisions), "_accepted") >= 0
         rejected_mask = np.char.find(np.char.lower(decisions), "_rejected") >= 0
@@ -88,10 +93,14 @@ def build_blender_proposal_framebuffer_pointdata(mesh: pv.PolyData) -> dict[str,
         output[DEFAULT_OUTPUT_COLUMNS[family]] = np.fromiter(
             (mapping[state] for state in combined),
             dtype=np.uint8,
-            count=mesh.n_points,
+            count=point_count,
         )
 
     return output
+
+
+def build_blender_proposal_framebuffer_pointdata(mesh: pv.PolyData) -> dict[str, np.ndarray]:
+    return build_blender_proposal_framebuffer_arrays(mesh.point_data)
 
 
 def parse_args() -> argparse.Namespace:

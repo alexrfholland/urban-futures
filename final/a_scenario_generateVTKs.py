@@ -14,7 +14,6 @@ from pathlib import Path
 from scipy.spatial import cKDTree
 import a_helper_functions
 import a_voxeliser
-import a_scenario_params  # Import the centralized parameters module
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
@@ -27,7 +26,10 @@ from refactor_code.paths import (
     scenario_tree_df_path,
     scenario_pole_df_path,
 )
+from refactor_code.blender.proposal_framebuffers import build_blender_proposal_framebuffer_columns
+from refactor_code.blender.proposal_framebuffers_vtk import build_blender_proposal_framebuffer_arrays
 from refactor_code.scenario.engine_v3 import calculate_rewilded_status
+from refactor_code.scenario import params_v3
 
 VTK_PROPOSAL_LABEL_DTYPE = "<U64"
 BUILDING_URBAN_VALUES = {"facade", "green roof", "brown roof"}
@@ -370,6 +372,24 @@ def create_v3_proposal_point_data(ds):
     ds["proposal_coloniseV3_intervention"] = xr.DataArray(colonise_intervention, dims="voxel")
     ds["proposal_recruitV3_intervention"] = xr.DataArray(recruit_intervention, dims="voxel")
     ds["proposal_deploy_structureV3_intervention"] = xr.DataArray(deploy_structure_intervention, dims="voxel")
+
+    blender_point_arrays = build_blender_proposal_framebuffer_arrays(
+        {
+            "proposal_decayV3": proposal_decay,
+            "proposal_release_controlV3": proposal_release_control,
+            "proposal_coloniseV3": proposal_colonise,
+            "proposal_recruitV3": proposal_recruit,
+            "proposal_deploy_structureV3": proposal_deploy_structure,
+            "proposal_decayV3_intervention": decay_intervention,
+            "proposal_release_controlV3_intervention": release_control_intervention,
+            "proposal_coloniseV3_intervention": colonise_intervention,
+            "proposal_recruitV3_intervention": recruit_intervention,
+            "proposal_deploy_structureV3_intervention": deploy_structure_intervention,
+        }
+    )
+    for name, values in blender_point_arrays.items():
+        ds[name] = xr.DataArray(values, dims="voxel")
+
     return ds
 
 
@@ -876,7 +896,7 @@ def generate_vtk(
     ds = ds.copy(deep=True)
 
     # Get scenario parameters with interpolation for sub-timesteps
-    params = a_scenario_params.get_params_for_year(site, scenario, year)
+    params = params_v3.get_params_for_year(site, scenario, year)
     params["absolute_year"] = year
     params["previous_year"] = max(0, year - 30)
     params["step_years"] = max(0, params["absolute_year"] - params["previous_year"])
@@ -956,6 +976,10 @@ def generate_vtk(
     ds = finalDSprocessing(ds)
     ds = create_proposal_point_data(ds)
     ds = create_v3_proposal_point_data(ds)
+
+    blender_framebuffer_columns = build_blender_proposal_framebuffer_columns(combinedDF_scenario)
+    for column_name in blender_framebuffer_columns.columns:
+        combinedDF_scenario[column_name] = blender_framebuffer_columns[column_name]
 
     # Save combinedDF_scenario to csv
     print(f'Saving {year} combinedDF_scenario to csv')

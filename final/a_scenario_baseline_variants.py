@@ -27,11 +27,7 @@ def parse_sites(raw: str | None) -> list[str]:
     return [site.strip() for site in raw.split(",") if site.strip()]
 
 
-def scenario_variant_root(variant_name: str) -> Path:
-    return REPO_ROOT / "data" / "revised" / "baseline-variants" / variant_name
-
-
-def engine_variant_root(variant_name: str) -> Path:
+def variant_run_root(variant_name: str) -> Path:
     return REPO_ROOT / "_data-refactored" / "baseline-variants" / variant_name
 
 
@@ -55,19 +51,19 @@ def write_metadata(
     template_root: Path,
     sites: Iterable[str],
     voxel_size: float,
-    scenario_root: Path,
-    engine_root: Path,
+    run_root: Path,
 ) -> Path:
     metadata = {
         "variant_name": variant_name,
         "template_root": str(template_root.resolve()),
         "sites": list(sites),
         "voxel_size": voxel_size,
-        "scenario_root": str(scenario_root.resolve()),
-        "engine_root": str(engine_root.resolve()),
+        "run_root": str(run_root.resolve()),
+        "scenario_root": str((run_root / "temp" / "interim-data").resolve()),
+        "engine_root": str((run_root / "output").resolve()),
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
     }
-    metadata_path = engine_root / "variant_metadata.json"
+    metadata_path = run_root / "variant_metadata.json"
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     metadata_path.write_text(json.dumps(metadata, indent=2) + "\n")
     return metadata_path
@@ -79,15 +75,12 @@ def generate_variant_baselines(
     sites: list[str],
     voxel_size: float,
 ) -> tuple[Path, Path]:
-    scenario_root = scenario_variant_root(variant_name)
-    engine_root = engine_variant_root(variant_name)
-    scenario_root.mkdir(parents=True, exist_ok=True)
-    engine_root.mkdir(parents=True, exist_ok=True)
+    run_root = variant_run_root(variant_name)
+    run_root.mkdir(parents=True, exist_ok=True)
 
     env = {
         "TREE_TEMPLATE_ROOT": str(template_root.resolve()),
-        "REFACTOR_SCENARIO_OUTPUT_ROOT": str(scenario_root.resolve()),
-        "REFACTOR_ENGINE_OUTPUT_ROOT": str(engine_root.resolve()),
+        "REFACTOR_RUN_OUTPUT_ROOT": str(run_root.resolve()),
     }
 
     with temporary_env(env):
@@ -96,7 +89,7 @@ def generate_variant_baselines(
             a_scenario_get_baselines.generate_baseline(
                 site=site,
                 voxel_size=voxel_size,
-                output_folder=str(scenario_root / "baselines"),
+                output_folder=str(run_root / "temp" / "interim-data" / "baselines"),
             )
 
     metadata_path = write_metadata(
@@ -104,11 +97,10 @@ def generate_variant_baselines(
         template_root=template_root,
         sites=sites,
         voxel_size=voxel_size,
-        scenario_root=scenario_root,
-        engine_root=engine_root,
+        run_root=run_root,
     )
     print(f"\nWrote metadata: {metadata_path}")
-    return scenario_root, engine_root
+    return run_root / "temp" / "interim-data", run_root / "output"
 
 
 def main() -> None:

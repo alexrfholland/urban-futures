@@ -147,7 +147,9 @@ def get_scenario_parameters():
     """
     paramsPARADE_positive = {
     'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
+    'plantingDensity' : 50, # 50 per hectare
+    'annual_tree_death_urban' : 0.06,
+    'annual_tree_death_nature-reserves' : 0.03,
     'ageInPlaceThreshold' : 70,
     'plantThreshold' : 50,
     'rewildThreshold' : 10,
@@ -164,7 +166,9 @@ def get_scenario_parameters():
 
     paramsPARADE_trending = {
     'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
+    'plantingDensity' : 50, # 50 per hectare
+    'annual_tree_death_urban' : 0.06,
+    'annual_tree_death_nature-reserves' : 0.03,
     'ageInPlaceThreshold' : 2, # Highest threshold
     'plantThreshold' : 1, # Middle threshold
     'rewildThreshold' : 0, # Lowest threshold
@@ -181,7 +185,9 @@ def get_scenario_parameters():
 
     paramsCITY_positive = {
     'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
+    'plantingDensity' : 50, # 50 per hectare
+    'annual_tree_death_urban' : 0.06,
+    'annual_tree_death_nature-reserves' : 0.03,
     'ageInPlaceThreshold' : 70,
     'plantThreshold' : 50,
     'rewildThreshold' : 10,
@@ -203,7 +209,9 @@ def get_scenario_parameters():
 
     paramsCITY_trending = {
     'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
+    'plantingDensity' : 50, # 50 per hectare
+    'annual_tree_death_urban' : 0.06,
+    'annual_tree_death_nature-reserves' : 0.03,
     'ageInPlaceThreshold' : 15,
     'plantThreshold' : 10,
     'rewildThreshold' : 5,
@@ -225,7 +233,9 @@ def get_scenario_parameters():
 
     paramsUNI_positive = {
     'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
+    'plantingDensity' : 50, # 50 per hectare
+    'annual_tree_death_urban' : 0.06,
+    'annual_tree_death_nature-reserves' : 0.03,
     'ageInPlaceThreshold' : 70,
     'plantThreshold' : 50,
     'rewildThreshold' : 10,
@@ -247,7 +257,9 @@ def get_scenario_parameters():
 
     paramsUNI_trending = {
     'growth_factor_range' : [0.37, 0.51], # Growth factor is a range
-    'plantingDensity' : 50, # 10 per hectare
+    'plantingDensity' : 50, # 50 per hectare
+    'annual_tree_death_urban' : 0.06,
+    'annual_tree_death_nature-reserves' : 0.03,
     'ageInPlaceThreshold' : 15,
     'plantThreshold' : 10,
     'rewildThreshold' : 5,
@@ -277,4 +289,3 @@ def get_scenario_parameters():
     }
     
     return paramsDic 
-

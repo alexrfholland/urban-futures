@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import hashlib
 import sys
 from pathlib import Path
@@ -16,7 +17,7 @@ if str(FINAL_DIR) not in sys.path:
     sys.path.insert(0, str(FINAL_DIR))
 
 import a_scenario_initialiseDS  # noqa: E402
-import a_scenario_params  # noqa: E402
+from refactor_code.scenario import params_v3  # noqa: E402
 
 from refactor_code.paths import (  # noqa: E402
     scenario_log_df_path,
@@ -32,14 +33,18 @@ from refactor_code.scenario.structure_ids import (  # noqa: E402
 )
 
 
-MAX_RECRUIT_PULSE_YEARS = 30
+ENGINE_PULSE_INTERVAL = 10
+RECRUIT_INTERVAL = 30
+ABSENT_TREE_SIZES = {"gone", "early-tree-death"}
+NON_OCCUPYING_TREE_SIZES = {"snag", "fallen", "decayed", *ABSENT_TREE_SIZES}
 DISTANCE_THRESHOLD_METERS = 5.0
+RECRUIT_SPACING_THRESHOLD_METERS = 1.5
+RELAXED_RECRUIT_SPACING_THRESHOLD_METERS = 0.5
+BUFFER_RECRUIT_PARENT_OFFSET_METERS = 2.5
 LOW_CONTROL_STATE = "low-control"
 REDUCE_PRUNING_TO_PARK_YEARS = 20
 ELIMINATE_PRUNING_TO_PARK_YEARS = 20
 ELIMINATE_PRUNING_TO_LOW_YEARS = 40
-FALLEN_TO_DECAY_RANGE_YEARS = (50, 150)
-DECAYED_REMOVE_RANGE_YEARS = (50, 100)
 PRUNING_TARGET_ORDER = {
     "standard-pruning": 0,
     "reduce-pruning": 1,
@@ -74,6 +79,14 @@ def remap_values(values, old_min, old_max, new_min, new_max):
     if old_max == old_min:
         return np.full_like(values, new_max, dtype=float)
     return (values - old_min) / (old_max - old_min) * (new_max - new_min) + new_min
+
+
+def _sample_triangular_years(spec: dict, size: int) -> np.ndarray:
+    minimum = float(spec["min"])
+    mode = float(spec["mode"])
+    maximum = float(spec["max"])
+    samples = np.random.triangular(minimum, mode, maximum, size=size)
+    return np.rint(samples).astype(int)
 
 
 def _as_object_series(values, length, default):
@@ -151,6 +164,33 @@ def _seeded_years(*parts: object, minimum: int, maximum: int) -> int:
     return minimum + (seed_value % (maximum - minimum + 1))
 
 
+def _seeded_unit_float(*parts: object) -> float:
+    joined = "::".join(str(part) for part in parts)
+    digest = hashlib.sha256(joined.encode("utf-8")).hexdigest()
+    seed_value = int(digest[:16], 16)
+    return seed_value / float(16**16 - 1)
+
+
+def _seeded_triangular_year(*parts: object, minimum: float, mode: float, maximum: float) -> int:
+    if maximum <= minimum:
+        return int(round(minimum))
+
+    unit = _seeded_unit_float(*parts)
+    split = (mode - minimum) / (maximum - minimum) if maximum > minimum else 0.5
+
+    if unit <= split:
+        sample = minimum + np.sqrt(unit * (maximum - minimum) * (mode - minimum))
+    else:
+        sample = maximum - np.sqrt((1.0 - unit) * (maximum - minimum) * (maximum - mode))
+    return int(round(sample))
+
+
+def _seeded_year_within_window(*parts: object, window_start: int, window_end: int) -> int:
+    if window_end <= window_start:
+        return int(window_end)
+    return _seeded_years(*parts, minimum=int(window_start), maximum=int(window_end))
+
+
 def _site_specific_structures(site: str, log_df: pd.DataFrame | None, pole_df: pd.DataFrame | None):
     if site == "trimmed-parade":
         return None, None
@@ -209,9 +249,16 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         "control_reached": None,
         "lifecycle_decision": None,
         "lifecycle_state": None,
-        "fallen_since_year": np.nan,
+        "early_death_at_year": np.nan,
+        "became_large_at_year": np.nan,
+        "became_senescing_at_year": np.nan,
+        "became_snag_at_year": np.nan,
+        "senescing_duration_years": np.nan,
+        "snag_duration_years": np.nan,
+        "became_fallen_at_year": np.nan,
+        "became_decayed_at_year": np.nan,
+        "became_gone_at_year": np.nan,
         "fallen_decay_after_years": np.nan,
-        "decayed_since_year": np.nan,
         "decayed_remove_after_years": np.nan,
         "structureID": np.nan,
     }.items():
@@ -397,6 +444,15 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         if numeric_column not in df.columns:
             df[numeric_column] = default
 
+    # Some legacy site inputs carry the column but leave row values blank.
+    ule_series = pd.to_numeric(df["useful_life_expectancy"], errors="coerce")
+    size_based_ule = df["size"].map({
+        "small": 80.0,
+        "medium": 50.0,
+        "large": 10.0,
+    })
+    df["useful_life_expectancy"] = ule_series.fillna(size_based_ule).fillna(120.0)
+
     df["sim_NodesArea"] = df["sim_NodesArea"].fillna(df["CanopyArea"])
     df["autonomy_years"] = pd.to_numeric(df["autonomy_years"], errors="coerce").fillna(0.0)
     df["pruning_target_years"] = pd.to_numeric(df["pruning_target_years"], errors="coerce").fillna(0.0)
@@ -409,23 +465,30 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     df["pruning_target_years"] = df["proposal-release-control_target_years"]
     df["autonomy_years"] = df["proposal-release-control_years"]
     df["recruit_year"] = pd.to_numeric(df["recruit_year"], errors="coerce")
-    df["fallen_since_year"] = pd.to_numeric(df["fallen_since_year"], errors="coerce")
+    df["early_death_at_year"] = pd.to_numeric(df["early_death_at_year"], errors="coerce")
+    df["became_large_at_year"] = pd.to_numeric(df["became_large_at_year"], errors="coerce")
+    df["became_senescing_at_year"] = pd.to_numeric(df["became_senescing_at_year"], errors="coerce")
+    df["became_snag_at_year"] = pd.to_numeric(df["became_snag_at_year"], errors="coerce")
+    df["senescing_duration_years"] = pd.to_numeric(df["senescing_duration_years"], errors="coerce")
+    df["snag_duration_years"] = pd.to_numeric(df["snag_duration_years"], errors="coerce")
+    df["became_fallen_at_year"] = pd.to_numeric(df["became_fallen_at_year"], errors="coerce")
+    df["became_decayed_at_year"] = pd.to_numeric(df["became_decayed_at_year"], errors="coerce")
+    df["became_gone_at_year"] = pd.to_numeric(df["became_gone_at_year"], errors="coerce")
     df["fallen_decay_after_years"] = pd.to_numeric(df["fallen_decay_after_years"], errors="coerce")
-    df["decayed_since_year"] = pd.to_numeric(df["decayed_since_year"], errors="coerce")
     df["decayed_remove_after_years"] = pd.to_numeric(df["decayed_remove_after_years"], errors="coerce")
 
     return df
 
 
 def get_timestep_params(site: str, scenario: str, absolute_year: int, previous_year: int) -> dict:
-    params = a_scenario_params.get_params_for_year(site, scenario, absolute_year)
+    params = params_v3.get_params_for_year(site, scenario, absolute_year)
     params["absolute_year"] = absolute_year
     params["previous_year"] = previous_year
     params["step_years"] = max(0, absolute_year - previous_year)
     return params
 
 
-def split_window_into_pulses(previous_year: int, absolute_year: int, max_pulse_years: int = MAX_RECRUIT_PULSE_YEARS):
+def split_window_into_pulses(previous_year: int, absolute_year: int, max_pulse_years: int = ENGINE_PULSE_INTERVAL):
     if absolute_year <= previous_year:
         return []
 
@@ -446,6 +509,7 @@ def age_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
 
     growth_factor_per_year = np.mean(params["growth_factor_range"])
     living_mask = df["size"].isin(["small", "medium", "large"])
+    previous_size = df["size"].copy()
     df.loc[living_mask, "diameter_breast_height"] = (
         df.loc[living_mask, "diameter_breast_height"] + (growth_factor_per_year * step_years)
     )
@@ -456,9 +520,73 @@ def age_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         bins=[-10, 30, 80, float("inf")],
         labels=["small", "medium", "large"],
     ).astype(str)
+    newly_large_mask = growth_mask & previous_size.ne("large") & df["size"].eq("large")
+    df.loc[newly_large_mask & df["became_large_at_year"].isna(), "became_large_at_year"] = int(params["absolute_year"])
 
     df["useful_life_expectancy"] = df["useful_life_expectancy"] - step_years
     df.loc[df["size"].isin(["small", "medium", "large"]), "lifecycle_state"] = "standing"
+    return df
+
+
+def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) -> pd.DataFrame:
+    df = df.copy()
+    step_years = int(params["step_years"])
+    if step_years <= 0:
+        return df
+
+    candidate_mask = df["size"].isin(["small", "medium"])
+    if not candidate_mask.any():
+        return df
+
+    np.random.seed(seed + 2000 + int(params["absolute_year"]))
+
+    annual_tree_death_urban = float(params.get("annual_tree_death_urban", 0.06))
+    annual_tree_death_nature_reserves = float(params.get("annual_tree_death_nature-reserves", 0.03))
+
+    reserve_like_mask = candidate_mask & (
+        df["proposal-recruit_intervention"].eq("rewild-ground")
+        | df["recruit_intervention_type"].eq("rewild-ground")
+    )
+
+    annual_death_rate = np.where(
+        reserve_like_mask.to_numpy(dtype=bool),
+        annual_tree_death_nature_reserves,
+        annual_tree_death_urban,
+    ).astype(float)
+    annual_death_rate = np.clip(annual_death_rate, 0.0, 1.0)
+    step_death_probability = 1.0 - np.power(1.0 - annual_death_rate, step_years)
+
+    death_roll = np.random.uniform(0.0, 1.0, len(df))
+    mortality_mask = candidate_mask & (death_roll < step_death_probability)
+    if not mortality_mask.any():
+        return df
+
+    recruit_mortality_mask = mortality_mask & df["isNewTree"].fillna(False)
+    existing_dieback_mask = mortality_mask & ~df["isNewTree"].fillna(False)
+
+    df.loc[recruit_mortality_mask, "size"] = "early-tree-death"
+    df.loc[recruit_mortality_mask, "lifecycle_state"] = "early-tree-death"
+    df.loc[recruit_mortality_mask, "lifecycle_decision"] = "early-tree-death"
+    df.loc[recruit_mortality_mask, "replacement_reason"] = "annual-tree-death"
+    df.loc[recruit_mortality_mask, "early_death_at_year"] = int(params["absolute_year"])
+    df.loc[recruit_mortality_mask, "action"] = "None"
+    df.loc[recruit_mortality_mask, "rewilded"] = "paved"
+    df.loc[recruit_mortality_mask, "under-node-treatment"] = "paved"
+    df.loc[recruit_mortality_mask, "proposal-decay_decision"] = "not-assessed"
+    df.loc[recruit_mortality_mask, "proposal-decay_intervention"] = "none"
+    df.loc[recruit_mortality_mask, "proposal-recruit_decision"] = "not-assessed"
+    df.loc[recruit_mortality_mask, "proposal-recruit_intervention"] = "none"
+    df.loc[recruit_mortality_mask, "recruit_intervention_type"] = "none"
+    df.loc[recruit_mortality_mask, "recruit_source_id"] = "none"
+    df.loc[recruit_mortality_mask, "proposal-colonise_decision"] = "not-assessed"
+    df.loc[recruit_mortality_mask, "proposal-colonise_intervention"] = "none"
+
+    df.loc[existing_dieback_mask, "action"] = "REPLACE"
+    df.loc[existing_dieback_mask, "lifecycle_state"] = "standing"
+    df.loc[existing_dieback_mask, "lifecycle_decision"] = "early-dieback-replant"
+    df.loc[existing_dieback_mask, "replacement_reason"] = "early-dieback-replant"
+    df.loc[existing_dieback_mask, "proposal-decay_decision"] = "not-assessed"
+    df.loc[existing_dieback_mask, "proposal-decay_intervention"] = "none"
     return df
 
 
@@ -467,13 +595,15 @@ def determine_lifecycle_decisions(df: pd.DataFrame, params: dict, seed: int = 42
     np.random.seed(seed + int(params["absolute_year"]))
 
     living_mask = df["size"].isin(["small", "medium", "large"])
-    df.loc[living_mask, "action"] = "None"
-    df.loc[living_mask, "replacement_reason"] = "none"
-    df.loc[living_mask, "lifecycle_decision"] = "stable"
-    df.loc[living_mask, "proposal-decay_decision"] = "not-assessed"
-    df.loc[living_mask, "proposal-decay_intervention"] = "none"
+    preexisting_replace_mask = living_mask & df["action"].eq("REPLACE")
+    lifecycle_living_mask = living_mask & ~preexisting_replace_mask
+    df.loc[lifecycle_living_mask, "action"] = "None"
+    df.loc[lifecycle_living_mask, "replacement_reason"] = "none"
+    df.loc[lifecycle_living_mask, "lifecycle_decision"] = "stable"
+    df.loc[lifecycle_living_mask, "proposal-decay_decision"] = "not-assessed"
+    df.loc[lifecycle_living_mask, "proposal-decay_intervention"] = "none"
 
-    if not living_mask.any():
+    if not lifecycle_living_mask.any():
         return df
 
     senesce_threshold = params["senescingThreshold"]
@@ -486,7 +616,7 @@ def determine_lifecycle_decisions(df: pd.DataFrame, params: dict, seed: int = 42
     ).clip(0, 100)
     df["senesceRoll"] = np.random.uniform(0, 100, len(df))
 
-    senesce_mask = living_mask & (df["senesceRoll"] < df["senesceChance"])
+    senesce_mask = lifecycle_living_mask & (df["senesceRoll"] < df["senesceChance"])
     age_in_place_mask = senesce_mask & (df["CanopyResistance"] < params["ageInPlaceThreshold"])
     replace_mask = senesce_mask & ~age_in_place_mask
 
@@ -502,6 +632,7 @@ def determine_lifecycle_decisions(df: pd.DataFrame, params: dict, seed: int = 42
 def apply_senescence_states(df: pd.DataFrame, params: dict, seed: int = 42) -> pd.DataFrame:
     df = df.copy()
     np.random.seed(seed + 1000 + int(params["absolute_year"]))
+    current_year = int(params["absolute_year"])
 
     age_in_place_mask = (
         df["proposal-decay_decision"].eq("proposal-decay_accepted")
@@ -510,30 +641,38 @@ def apply_senescence_states(df: pd.DataFrame, params: dict, seed: int = 42) -> p
 
     new_senescing_mask = age_in_place_mask & df["size"].isin(["small", "medium", "large"])
     df.loc[new_senescing_mask, "size"] = "senescing"
+    df.loc[new_senescing_mask & df["became_senescing_at_year"].isna(), "became_senescing_at_year"] = current_year
+    missing_senescing_duration_mask = df["size"].eq("senescing") & df["senescing_duration_years"].isna()
+    if missing_senescing_duration_mask.any():
+        df.loc[missing_senescing_duration_mask, "senescing_duration_years"] = _sample_triangular_years(
+            params["senescing_duration_years"],
+            int(missing_senescing_duration_mask.sum()),
+        )
 
-    df["snagChance"] = remap_values(
-        df["useful_life_expectancy"].to_numpy(dtype=float),
-        old_min=params["snagThreshold"],
-        old_max=0,
-        new_min=100,
-        new_max=0,
-    ).clip(0, 100)
-    df["collapseChance"] = remap_values(
-        df["useful_life_expectancy"].to_numpy(dtype=float),
-        old_min=params["collapsedThreshold"],
-        old_max=0,
-        new_min=100,
-        new_max=0,
-    ).clip(0, 100)
-    df["snagRoll"] = np.random.uniform(0, 100, len(df))
-    df["collapseRoll"] = np.random.uniform(0, 100, len(df))
+    senescing_to_snag_mask = (
+        df["size"].eq("senescing")
+        & df["became_senescing_at_year"].notna()
+        & df["senescing_duration_years"].notna()
+        & ((current_year - df["became_senescing_at_year"]) >= df["senescing_duration_years"])
+    )
+    df.loc[senescing_to_snag_mask, "size"] = "snag"
+    df.loc[senescing_to_snag_mask & df["became_snag_at_year"].isna(), "became_snag_at_year"] = current_year
 
-    snag_mask = df["size"].eq("senescing") & (df["snagRoll"] < df["snagChance"])
-    df.loc[snag_mask, "size"] = "snag"
+    new_snag_duration_mask = df["size"].eq("snag") & df["snag_duration_years"].isna()
+    if new_snag_duration_mask.any():
+        df.loc[new_snag_duration_mask, "snag_duration_years"] = _sample_triangular_years(
+            params["snag_duration_years"],
+            int(new_snag_duration_mask.sum()),
+        )
 
-    collapse_mask = df["size"].isin(["senescing", "snag"]) & (df["collapseRoll"] < df["collapseChance"])
-    brace_collapse_mask = collapse_mask & df["proposal-decay_intervention"].eq("brace-feature")
-    df.loc[collapse_mask & ~brace_collapse_mask, "size"] = "fallen"
+    snag_to_fallen_mask = (
+        df["size"].eq("snag")
+        & df["became_snag_at_year"].notna()
+        & df["snag_duration_years"].notna()
+        & ((current_year - df["became_snag_at_year"]) >= df["snag_duration_years"])
+    )
+    brace_collapse_mask = snag_to_fallen_mask & df["proposal-decay_intervention"].eq("brace-feature")
+    df.loc[snag_to_fallen_mask & ~brace_collapse_mask, "size"] = "fallen"
     df.loc[brace_collapse_mask, "action"] = "REPLACE"
     df.loc[brace_collapse_mask, "lifecycle_decision"] = "replace"
     df.loc[brace_collapse_mask, "replacement_reason"] = "brace-collapse"
@@ -563,6 +702,7 @@ def handle_replace_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     df.loc[replace_mask, "diameter_breast_height"] = replacement_dbh
     df.loc[replace_mask, "precolonial"] = True
     df.loc[replace_mask, "useful_life_expectancy"] = 120 - replacement_growth_years
+    df.loc[replace_mask, "hasbeenReplanted"] = True
     df.loc[replace_mask, "size"] = pd.cut(
         df.loc[replace_mask, "diameter_breast_height"],
         bins=[-10, 30, 80, float("inf")],
@@ -573,6 +713,17 @@ def handle_replace_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     df.loc[replace_mask, "rewilded"] = "paved"
     df.loc[replace_mask, "proposal-decay_decision"] = "not-assessed"
     df.loc[replace_mask, "proposal-decay_intervention"] = "none"
+    df.loc[replace_mask, "early_death_at_year"] = np.nan
+    df.loc[replace_mask, "became_large_at_year"] = np.nan
+    df.loc[replace_mask, "became_senescing_at_year"] = np.nan
+    df.loc[replace_mask, "became_snag_at_year"] = np.nan
+    df.loc[replace_mask, "senescing_duration_years"] = np.nan
+    df.loc[replace_mask, "snag_duration_years"] = np.nan
+    df.loc[replace_mask, "became_fallen_at_year"] = np.nan
+    df.loc[replace_mask, "became_decayed_at_year"] = np.nan
+    df.loc[replace_mask, "became_gone_at_year"] = np.nan
+    df.loc[replace_mask, "fallen_decay_after_years"] = np.nan
+    df.loc[replace_mask, "decayed_remove_after_years"] = np.nan
     used_ids = collect_structure_ids(df.loc[~replace_mask])
     df.loc[replace_mask, "structureID"] = replacement_structure_ids(
         df,
@@ -728,87 +879,126 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     return df
 
 
-def update_fallen_tracking(df: pd.DataFrame, site: str, scenario: str, current_year: int) -> pd.DataFrame:
+def update_fallen_tracking(
+    df: pd.DataFrame,
+    site: str,
+    scenario: str,
+    pulse_start_year: int,
+    current_year: int,
+    params: dict,
+) -> pd.DataFrame:
     df = df.copy()
     fallen_mask = df["size"].eq("fallen")
-    newly_fallen_mask = fallen_mask & df["fallen_since_year"].isna()
+    newly_fallen_mask = fallen_mask & df["fallen_decay_after_years"].isna()
     if newly_fallen_mask.any():
-        df.loc[newly_fallen_mask, "fallen_since_year"] = current_year
+        df.loc[newly_fallen_mask & df["became_fallen_at_year"].isna(), "became_fallen_at_year"] = current_year
 
         decay_years = []
         for index, row in df.loc[newly_fallen_mask].iterrows():
             identity = row.get("structureID", row.get("NodeID", row.get("tree_number", index)))
             decay_years.append(
-                _seeded_years(
+                _seeded_triangular_year(
                     site,
                     scenario,
                     identity,
                     current_year,
                     "fallen-to-decayed",
-                    minimum=FALLEN_TO_DECAY_RANGE_YEARS[0],
-                    maximum=FALLEN_TO_DECAY_RANGE_YEARS[1],
+                    minimum=float(params["fallen_duration_years"]["min"]),
+                    mode=float(params["fallen_duration_years"]["mode"]),
+                    maximum=float(params["fallen_duration_years"]["max"]),
                 )
             )
         df.loc[newly_fallen_mask, "fallen_decay_after_years"] = decay_years
 
     decayed_transition_mask = (
         fallen_mask
-        & df["fallen_since_year"].notna()
+        & df["became_fallen_at_year"].notna()
         & df["fallen_decay_after_years"].notna()
-        & ((current_year - df["fallen_since_year"]) >= df["fallen_decay_after_years"])
+        & ((current_year - df["became_fallen_at_year"]) >= df["fallen_decay_after_years"])
     )
     if decayed_transition_mask.any():
         df.loc[decayed_transition_mask, "size"] = "decayed"
         df.loc[decayed_transition_mask, "lifecycle_state"] = "decayed"
-        df.loc[decayed_transition_mask, "decayed_since_year"] = current_year
+        became_decayed_years = []
+        for index, row in df.loc[decayed_transition_mask].iterrows():
+            identity = row.get("structureID", row.get("NodeID", row.get("tree_number", index)))
+            became_decayed_years.append(
+                _seeded_year_within_window(
+                    site,
+                    scenario,
+                    identity,
+                    current_year,
+                    "fallen-to-decayed-observed-year",
+                    window_start=pulse_start_year,
+                    window_end=current_year,
+                )
+            )
+        df.loc[decayed_transition_mask, "became_decayed_at_year"] = became_decayed_years
 
         remove_years = []
         for index, row in df.loc[decayed_transition_mask].iterrows():
             identity = row.get("structureID", row.get("NodeID", row.get("tree_number", index)))
             remove_years.append(
-                _seeded_years(
+                _seeded_triangular_year(
                     site,
                     scenario,
                     identity,
                     current_year,
                     "decayed-remove",
-                    minimum=DECAYED_REMOVE_RANGE_YEARS[0],
-                    maximum=DECAYED_REMOVE_RANGE_YEARS[1],
+                    minimum=float(params["decayed_duration_years"]["min"]),
+                    mode=float(params["decayed_duration_years"]["mode"]),
+                    maximum=float(params["decayed_duration_years"]["max"]),
                 )
             )
         df.loc[decayed_transition_mask, "decayed_remove_after_years"] = remove_years
 
     decayed_mask = df["size"].eq("decayed")
-    newly_decayed_mask = decayed_mask & df["decayed_since_year"].isna()
+    newly_decayed_mask = decayed_mask & df["became_decayed_at_year"].isna()
     if newly_decayed_mask.any():
-        df.loc[newly_decayed_mask, "decayed_since_year"] = current_year
+        became_decayed_years = []
+        for index, row in df.loc[newly_decayed_mask].iterrows():
+            identity = row.get("structureID", row.get("NodeID", row.get("tree_number", index)))
+            became_decayed_years.append(
+                _seeded_year_within_window(
+                    site,
+                    scenario,
+                    identity,
+                    current_year,
+                    "decayed-observed-year",
+                    window_start=pulse_start_year,
+                    window_end=current_year,
+                )
+            )
+        df.loc[newly_decayed_mask, "became_decayed_at_year"] = became_decayed_years
 
         remove_years = []
         for index, row in df.loc[newly_decayed_mask].iterrows():
             identity = row.get("structureID", row.get("NodeID", row.get("tree_number", index)))
             remove_years.append(
-                _seeded_years(
+                _seeded_triangular_year(
                     site,
                     scenario,
                     identity,
                     current_year,
                     "decayed-remove",
-                    minimum=DECAYED_REMOVE_RANGE_YEARS[0],
-                    maximum=DECAYED_REMOVE_RANGE_YEARS[1],
+                    minimum=float(params["decayed_duration_years"]["min"]),
+                    mode=float(params["decayed_duration_years"]["mode"]),
+                    maximum=float(params["decayed_duration_years"]["max"]),
                 )
             )
         df.loc[newly_decayed_mask, "decayed_remove_after_years"] = remove_years
 
     removable_mask = (
         decayed_mask
-        & df["decayed_since_year"].notna()
+        & df["became_decayed_at_year"].notna()
         & df["decayed_remove_after_years"].notna()
-        & ((current_year - df["decayed_since_year"]) >= df["decayed_remove_after_years"])
+        & ((current_year - df["became_decayed_at_year"]) >= df["decayed_remove_after_years"])
     )
     if removable_mask.any():
         df.loc[removable_mask, "size"] = "gone"
         df.loc[removable_mask, "lifecycle_state"] = "gone"
         df.loc[removable_mask, "lifecycle_decision"] = "gone"
+        df.loc[removable_mask & df["became_gone_at_year"].isna(), "became_gone_at_year"] = current_year
         df.loc[removable_mask, "action"] = "None"
         df.loc[removable_mask, "rewilded"] = "paved"
         df.loc[removable_mask, "under-node-treatment"] = "paved"
@@ -834,6 +1024,54 @@ def _build_voxel_tree(ds: xr.Dataset):
 def _resolve_candidate_voxel(ds: xr.Dataset, tree: cKDTree, position: tuple[float, float, float]) -> int:
     _, voxel_index = tree.query(np.array(position))
     return int(voxel_index)
+
+
+def _resolve_candidate_from_indices(
+    points: np.ndarray,
+    tree: cKDTree | None,
+    voxel_indices: np.ndarray,
+    position: tuple[float, float, float],
+) -> int | None:
+    if tree is None or len(voxel_indices) == 0:
+        return None
+    _, local_index = tree.query(np.array(position))
+    return int(voxel_indices[int(local_index)])
+
+
+def _recruit_active_mask(df: pd.DataFrame) -> pd.Series:
+    return df["size"].isin(["small", "medium", "large", "senescing"])
+
+
+def _append_recruit_telemetry_csv(path: Path | str, rows: list[dict[str, object]]) -> None:
+    if not rows:
+        return
+    telemetry_path = Path(path)
+    telemetry_path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "site",
+        "scenario",
+        "assessed_year",
+        "pulse_start_year",
+        "pulse_end_year",
+        "recruit_type",
+        "source_id",
+        "source_treatment",
+        "candidate_count",
+        "quota",
+        "starting_occupancy",
+        "remaining_capacity",
+        "placed",
+        "unfilled",
+        "rejected_spacing",
+        "rejected_attempt_limit",
+        "attempts",
+    ]
+    write_header = not telemetry_path.exists()
+    with telemetry_path.open("a", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        if write_header:
+            writer.writeheader()
+        writer.writerows(rows)
 
 
 def _format_source_id(value: object, fallback: object) -> str:
@@ -868,7 +1106,7 @@ def _recruit_occupancy_counts(df: pd.DataFrame, intervention_type: str) -> dict[
         df["isNewTree"].fillna(False)
         & df["recruit_intervention_type"].eq(intervention_type)
         & df["recruit_source_id"].ne("none")
-        & ~df["size"].isin(["snag", "fallen", "decayed", "gone"])
+        & ~df["size"].isin(NON_OCCUPYING_TREE_SIZES)
     )
     if not occupied_mask.any():
         return {}
@@ -952,10 +1190,17 @@ def _make_new_tree_record(
             "control": "reserve-tree",
             "lifecycle_decision": "stable",
             "lifecycle_state": "standing",
-            "fallen_since_year": np.nan,
+            "early_death_at_year": np.nan,
+            "became_large_at_year": np.nan,
+            "became_senescing_at_year": np.nan,
+            "became_snag_at_year": np.nan,
+            "senescing_duration_years": np.nan,
+            "snag_duration_years": np.nan,
+            "became_fallen_at_year": np.nan,
             "fallen_decay_after_years": np.nan,
-            "decayed_since_year": np.nan,
+            "became_decayed_at_year": np.nan,
             "decayed_remove_after_years": np.nan,
+            "became_gone_at_year": np.nan,
         }
     )
     return record
@@ -969,7 +1214,7 @@ def calculate_rewilded_status(df: pd.DataFrame, ds: xr.Dataset, params: dict):
         ds["scenario_rewildingPlantings"] = xr.full_like(ds["node_CanopyID"], -1)
         return df, ds
 
-    active_df = df.loc[~df["size"].eq("gone")].copy()
+    active_df = df.loc[_recruit_active_mask(df)].copy()
 
     depaved_threshold = params["sim_TurnsThreshold"]
     depaved_mask = (ds["sim_Turns"] <= depaved_threshold) & (ds["sim_Turns"] >= 0)
@@ -991,8 +1236,8 @@ def calculate_rewilded_status(df: pd.DataFrame, ds: xr.Dataset, params: dict):
 
     tree_locations = np.vstack([active_df["x"], active_df["y"], active_df["z"]]).T
     tree_kdtree = cKDTree(tree_locations)
-    distances, _ = tree_kdtree.query(voxel_positions, distance_upper_bound=DISTANCE_THRESHOLD_METERS)
-    filtered_proximity_mask = distances > DISTANCE_THRESHOLD_METERS
+    distances, _ = tree_kdtree.query(voxel_positions, distance_upper_bound=RECRUIT_SPACING_THRESHOLD_METERS)
+    filtered_proximity_mask = distances > RECRUIT_SPACING_THRESHOLD_METERS
 
     proximity_mask = np.full(ds.sizes["voxel"], False)
     proximity_mask[filtered_voxel_ids] = filtered_proximity_mask
@@ -1002,13 +1247,21 @@ def calculate_rewilded_status(df: pd.DataFrame, ds: xr.Dataset, params: dict):
     return df, ds
 
 
-def apply_recruit(df: pd.DataFrame, ds: xr.Dataset, params: dict) -> pd.DataFrame:
+def apply_recruit(
+    df: pd.DataFrame,
+    ds: xr.Dataset,
+    params: dict,
+    telemetry_rows: list[dict[str, object]] | None = None,
+) -> pd.DataFrame:
     df = df.copy()
     step_years = params["step_years"]
     if step_years <= 0:
         return df
 
-    gone_mask = df["size"].eq("gone")
+    seed = int(params.get("seed", 42))
+    np.random.seed(seed + 3000 + int(params["absolute_year"]))
+
+    gone_mask = df["size"].isin(ABSENT_TREE_SIZES)
     if gone_mask.any():
         df.loc[gone_mask, "proposal-recruit_decision"] = "not-assessed"
         df.loc[gone_mask, "proposal-recruit_intervention"] = "none"
@@ -1023,17 +1276,24 @@ def apply_recruit(df: pd.DataFrame, ds: xr.Dataset, params: dict) -> pd.DataFram
     )
 
     absolute_year = int(params["absolute_year"])
-    pulse_factor = step_years / MAX_RECRUIT_PULSE_YEARS
+    site = str(params["site"])
+    scenario = str(params["scenario"])
+    pulse_factor = step_years / RECRUIT_INTERVAL
     planting_density_sqm = params["plantingDensity"] / 10000
     df_template = _new_tree_template(df)
     voxel_points, voxel_tree = _build_voxel_tree(ds)
+    planting_mask = ds["scenario_rewildingPlantings"].values == params["absolute_year"]
+    available_voxel_indices = np.arange(ds.sizes["voxel"])[planting_mask]
+    eligible_voxel_points = voxel_points[available_voxel_indices] if len(available_voxel_indices) else np.empty((0, 3))
+    eligible_voxel_tree = cKDTree(eligible_voxel_points) if len(eligible_voxel_points) else None
 
-    active_df = df.loc[~df["size"].eq("gone")]
+    active_df = df.loc[_recruit_active_mask(df)]
     current_positions = np.vstack([active_df["x"], active_df["y"], active_df["z"]]).T if len(active_df) else np.empty((0, 3))
     accepted_positions = [tuple(position) for position in current_positions]
 
     node_candidates: list[dict] = []
-    existing_mask = (~df["isNewTree"].fillna(False)) & (~df["size"].eq("gone"))
+    node_telemetry: dict[str, dict[str, object]] = {}
+    existing_mask = (~df["isNewTree"].fillna(False)) & (~df["size"].isin(ABSENT_TREE_SIZES))
     node_support_mask = existing_mask & df["under-node-treatment"].isin(["node-rewilded", "footprint-depaved"])
     df.loc[node_support_mask, "proposal-recruit_decision"] = "proposal-recruit_accepted"
     df.loc[node_support_mask, "proposal-recruit_intervention"] = "buffer-feature"
@@ -1053,24 +1313,74 @@ def apply_recruit(df: pd.DataFrame, ds: xr.Dataset, params: dict) -> pd.DataFram
                 parent_row.get("debugNodeID"),
                 fallback="unknown",
             )
+            source_treatment = str(parent_row.get("under-node-treatment", "none"))
+            parent_position = (
+                float(parent_row["x"]),
+                float(parent_row["y"]),
+                float(parent_row["z"]),
+            )
+            starting_occupancy = int(node_occupancy.get(source_id, 0))
             remaining_capacity = max(0, int(quota) - node_occupancy.get(source_id, 0))
+            telemetry = node_telemetry.setdefault(
+                source_id,
+                {
+                    "site": site,
+                    "scenario": scenario,
+                    "assessed_year": absolute_year,
+                    "pulse_start_year": int(params["previous_year"]),
+                    "pulse_end_year": absolute_year,
+                    "recruit_type": "buffer-feature",
+                    "source_id": source_id,
+                    "source_treatment": source_treatment,
+                    "candidate_count": 0,
+                    "quota": 0,
+                    "starting_occupancy": starting_occupancy,
+                    "remaining_capacity": 0,
+                    "placed": 0,
+                    "unfilled": 0,
+                    "rejected_spacing": 0,
+                    "rejected_attempt_limit": 0,
+                    "attempts": 0,
+                },
+            )
+            telemetry["quota"] += int(quota)
+            telemetry["remaining_capacity"] += int(remaining_capacity)
             if remaining_capacity <= 0:
                 continue
             planted_here = 0
             attempts = 0
-            while planted_here < remaining_capacity and attempts < max(remaining_capacity * 8, 8):
+            attempt_cap = max(remaining_capacity * 8, 8)
+            spacing_threshold = RECRUIT_SPACING_THRESHOLD_METERS
+            while planted_here < remaining_capacity and attempts < attempt_cap:
                 attempts += 1
+                telemetry["candidate_count"] += 1
                 candidate_position = (
-                    float(parent_row["x"] + np.random.uniform(-2.5, 2.5)),
-                    float(parent_row["y"] + np.random.uniform(-2.5, 2.5)),
-                    float(parent_row["z"]),
+                    float(parent_position[0] + np.random.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
+                    float(parent_position[1] + np.random.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
+                    float(parent_position[2]),
                 )
                 if accepted_positions:
-                    candidate_tree = cKDTree(np.array(accepted_positions))
-                    distance, _ = candidate_tree.query(np.array(candidate_position), distance_upper_bound=DISTANCE_THRESHOLD_METERS)
-                    if np.isfinite(distance) and distance <= DISTANCE_THRESHOLD_METERS:
-                        continue
-                voxel_index = _resolve_candidate_voxel(ds, voxel_tree, candidate_position)
+                    spacing_positions = accepted_positions
+                    if parent_position in accepted_positions:
+                        spacing_positions = [position for position in accepted_positions if position != parent_position]
+                    if spacing_positions:
+                        candidate_tree = cKDTree(np.array(spacing_positions))
+                        distance, _ = candidate_tree.query(
+                            np.array(candidate_position),
+                            distance_upper_bound=spacing_threshold,
+                        )
+                        if np.isfinite(distance) and distance <= spacing_threshold:
+                            telemetry["rejected_spacing"] += 1
+                            continue
+                voxel_index = _resolve_candidate_from_indices(
+                    eligible_voxel_points,
+                    eligible_voxel_tree,
+                    available_voxel_indices,
+                    candidate_position,
+                )
+                if voxel_index is None:
+                    telemetry["rejected_attempt_limit"] += 1
+                    continue
                 node_candidates.append(
                     _make_new_tree_record(
                         df_template=df_template,
@@ -1085,12 +1395,65 @@ def apply_recruit(df: pd.DataFrame, ds: xr.Dataset, params: dict) -> pd.DataFram
                 )
                 accepted_positions.append(candidate_position)
                 planted_here += 1
+                telemetry["placed"] += 1
                 node_occupancy[source_id] = node_occupancy.get(source_id, 0) + 1
+            if planted_here < remaining_capacity and attempts >= attempt_cap:
+                spacing_threshold = RELAXED_RECRUIT_SPACING_THRESHOLD_METERS
+                extra_attempts = 0
+                while planted_here < remaining_capacity and extra_attempts < attempt_cap:
+                    extra_attempts += 1
+                    telemetry["candidate_count"] += 1
+                    candidate_position = (
+                        float(parent_position[0] + np.random.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
+                        float(parent_position[1] + np.random.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
+                        float(parent_position[2]),
+                    )
+                    if accepted_positions:
+                        spacing_positions = accepted_positions
+                        if parent_position in accepted_positions:
+                            spacing_positions = [position for position in accepted_positions if position != parent_position]
+                        if spacing_positions:
+                            candidate_tree = cKDTree(np.array(spacing_positions))
+                            distance, _ = candidate_tree.query(
+                                np.array(candidate_position),
+                                distance_upper_bound=spacing_threshold,
+                            )
+                            if np.isfinite(distance) and distance <= spacing_threshold:
+                                telemetry["rejected_spacing"] += 1
+                                continue
+                    voxel_index = _resolve_candidate_from_indices(
+                        eligible_voxel_points,
+                        eligible_voxel_tree,
+                        available_voxel_indices,
+                        candidate_position,
+                    )
+                    if voxel_index is None:
+                        continue
+                    node_candidates.append(
+                        _make_new_tree_record(
+                            df_template=df_template,
+                            ds=ds,
+                            voxel_index=voxel_index,
+                            position=candidate_position,
+                            recruit_intervention="buffer-feature",
+                            recruit_intervention_type="buffer-feature",
+                            recruit_source_id=source_id,
+                            recruit_year=absolute_year,
+                        )
+                    )
+                    accepted_positions.append(candidate_position)
+                    planted_here += 1
+                    telemetry["placed"] += 1
+                    node_occupancy[source_id] = node_occupancy.get(source_id, 0) + 1
+                attempts += extra_attempts
+            telemetry["attempts"] += int(attempts)
+            telemetry["unfilled"] += max(0, remaining_capacity - planted_here)
+            if planted_here < remaining_capacity and attempts >= attempt_cap:
+                telemetry["rejected_attempt_limit"] += max(0, remaining_capacity - planted_here)
 
     turn_candidates: list[dict] = []
-    planting_mask = ds["scenario_rewildingPlantings"].values == params["absolute_year"]
+    ground_telemetry: dict[str, dict[str, object]] = {}
     if planting_mask.any():
-        available_voxel_indices = np.arange(ds.sizes["voxel"])[planting_mask]
         sim_node_values = ds["sim_Nodes"].values if "sim_Nodes" in ds.variables else np.full(ds.sizes["voxel"], np.nan)
         analysis_node_values = (
             ds["analysis_nodeID"].values if "analysis_nodeID" in ds.variables else np.full(ds.sizes["voxel"], np.nan)
@@ -1114,7 +1477,30 @@ def apply_recruit(df: pd.DataFrame, ds: xr.Dataset, params: dict) -> pd.DataFram
         for source_id, voxel_indices in ground_source_to_voxels.items():
             source_area_sqm = len(voxel_indices) * voxel_area_sqm
             source_quota = int(np.round(source_area_sqm * planting_density_sqm * pulse_factor))
+            starting_occupancy = int(ground_occupancy.get(source_id, 0))
             remaining_capacity = max(0, source_quota - ground_occupancy.get(source_id, 0))
+            telemetry = ground_telemetry.setdefault(
+                source_id,
+                {
+                    "site": site,
+                    "scenario": scenario,
+                    "assessed_year": absolute_year,
+                    "pulse_start_year": int(params["previous_year"]),
+                    "pulse_end_year": absolute_year,
+                    "recruit_type": "rewild-ground",
+                    "source_id": source_id,
+                    "source_treatment": "scenario_rewildingPlantings",
+                    "candidate_count": int(len(voxel_indices)),
+                    "quota": int(source_quota),
+                    "starting_occupancy": starting_occupancy,
+                    "remaining_capacity": int(remaining_capacity),
+                    "placed": 0,
+                    "unfilled": 0,
+                    "rejected_spacing": 0,
+                    "rejected_attempt_limit": 0,
+                    "attempts": 0,
+                },
+            )
             if remaining_capacity <= 0:
                 continue
 
@@ -1122,13 +1508,18 @@ def apply_recruit(df: pd.DataFrame, ds: xr.Dataset, params: dict) -> pd.DataFram
             np.random.shuffle(candidate_indices)
 
             for voxel_index in candidate_indices:
+                telemetry["attempts"] += 1
                 if ground_occupancy.get(source_id, 0) >= source_quota:
                     break
                 candidate_position = tuple(voxel_points[int(voxel_index)])
                 if accepted_positions:
                     candidate_tree = cKDTree(np.array(accepted_positions))
-                    distance, _ = candidate_tree.query(np.array(candidate_position), distance_upper_bound=DISTANCE_THRESHOLD_METERS)
-                    if np.isfinite(distance) and distance <= DISTANCE_THRESHOLD_METERS:
+                    distance, _ = candidate_tree.query(
+                        np.array(candidate_position),
+                        distance_upper_bound=RECRUIT_SPACING_THRESHOLD_METERS,
+                    )
+                    if np.isfinite(distance) and distance <= RECRUIT_SPACING_THRESHOLD_METERS:
+                        telemetry["rejected_spacing"] += 1
                         continue
                 turn_candidates.append(
                     _make_new_tree_record(
@@ -1143,10 +1534,16 @@ def apply_recruit(df: pd.DataFrame, ds: xr.Dataset, params: dict) -> pd.DataFram
                     )
                 )
                 accepted_positions.append(candidate_position)
+                telemetry["placed"] += 1
                 ground_occupancy[source_id] = ground_occupancy.get(source_id, 0) + 1
+            telemetry["unfilled"] += max(0, source_quota - ground_occupancy.get(source_id, 0))
 
     if node_candidates or turn_candidates:
         df = pd.concat([df, pd.DataFrame(node_candidates + turn_candidates)], ignore_index=True)
+
+    if telemetry_rows is not None:
+        telemetry_rows.extend(node_telemetry.values())
+        telemetry_rows.extend(ground_telemetry.values())
 
     return _refresh_schema(df)
 
@@ -1192,9 +1589,11 @@ def _run_single_pulse(
     site: str,
     scenario: str,
     params: dict,
+    telemetry_rows: list[dict[str, object]] | None = None,
 ) -> pd.DataFrame:
     df = _refresh_schema(df)
     df = age_trees(df, params)
+    df = apply_annual_tree_mortality(df, params)
     df = determine_lifecycle_decisions(df, params)
     df = assign_decay_support(df, params)
     df = apply_senescence_states(df, params)
@@ -1204,10 +1603,10 @@ def _run_single_pulse(
     df = handle_replace_trees(df, params)
     df = apply_release_control(df, params)
     df = refresh_colonise_support(df)
-    df = update_fallen_tracking(df, site, scenario, params["absolute_year"])
+    df = update_fallen_tracking(df, site, scenario, params["previous_year"], params["absolute_year"], params)
 
     _, pulse_ds = calculate_rewilded_status(df, ds, params)
-    df = apply_recruit(df, pulse_ds, params)
+    df = apply_recruit(df, pulse_ds, params, telemetry_rows=telemetry_rows)
     df = refresh_colonise_support(df)
     return _refresh_schema(df)
 
@@ -1275,14 +1674,23 @@ def run_timestep(
     pole_df: pd.DataFrame | None = None,
     output_mode: str | None = None,
     write_outputs: bool = True,
+    recruit_telemetry_path: Path | str | None = None,
 ):
     if year == 0:
         return _year_zero_state(site, scenario, year, voxel_size, tree_df, log_df, pole_df, output_mode)
 
     tree_state = _refresh_schema(tree_df)
+    recruit_telemetry_rows: list[dict[str, object]] = []
     for pulse_start, pulse_end in split_window_into_pulses(previous_year, year):
         pulse_params = get_timestep_params(site, scenario, pulse_end, pulse_start)
-        tree_state = _run_single_pulse(tree_state, subset_ds.copy(deep=True), site, scenario, pulse_params)
+        tree_state = _run_single_pulse(
+            tree_state,
+            subset_ds.copy(deep=True),
+            site,
+            scenario,
+            pulse_params,
+            telemetry_rows=recruit_telemetry_rows,
+        )
 
     final_params = get_timestep_params(site, scenario, year, previous_year)
     log_df, pole_df = _site_specific_structures(site, log_df, pole_df)
@@ -1301,6 +1709,8 @@ def run_timestep(
             log_df.to_csv(scenario_log_df_path(site, scenario, year, voxel_size, output_mode), index=False)
         if pole_df is not None:
             pole_df.to_csv(scenario_pole_df_path(site, scenario, year, voxel_size, output_mode), index=False)
+        if recruit_telemetry_path is not None and recruit_telemetry_rows:
+            _append_recruit_telemetry_csv(recruit_telemetry_path, recruit_telemetry_rows)
 
     return tree_state, log_df, pole_df
 
@@ -1317,6 +1727,7 @@ def run_scenario(
     previous_year=None,
     output_mode=None,
     write_outputs=True,
+    recruit_telemetry_path: Path | str | None = None,
 ):
     previous_year = 0 if previous_year is None else previous_year
 
@@ -1337,4 +1748,5 @@ def run_scenario(
         pole_df=poleDF,
         output_mode=output_mode,
         write_outputs=write_outputs,
+        recruit_telemetry_path=recruit_telemetry_path,
     )

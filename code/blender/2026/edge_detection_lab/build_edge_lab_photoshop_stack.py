@@ -29,6 +29,7 @@ PSD_PATH = Path(
 ).expanduser()
 PHOTOSHOP_APP = os.environ.get("EDGE_LAB_PHOTOSHOP_APP", "Adobe Photoshop 2026")
 PSD_MIST_VARIANT = os.environ.get("EDGE_LAB_PHOTOSHOP_MIST_VARIANT", "mist_kirsch_extra_thin").strip()
+BASE_ONLY = os.environ.get("EDGE_LAB_PHOTOSHOP_BASE_ONLY", "").strip().lower() in {"1", "true", "yes"}
 
 
 def require(path: Path) -> str:
@@ -173,20 +174,20 @@ def build_manifest(bioenvelope_outline_path: Path, base_rgb_path: Path) -> dict[
     ao = current / "ao"
     sizes = current / "sizes"
 
-    return {
-        "psd_path": str(PSD_PATH),
-        "canvas_source": require(base_rgb_path),
-        "document_name": PSD_PATH.stem,
-        # Build bottom-to-top so new groups/layers added at the top land in the intended order.
-        "stack": [
-            group(
-                "BASE WORLD",
-                [
-                    file_layer("base_rgb", base_rgb_path, "COLOR"),
-                    file_layer("base ambient occlusion", ao / "existing_condition_ao_full.png", "MULTIPLY"),
-                    file_layer("base_depth_filter", base / "base_outlines.png", "MULTIPLY"),
-                ],
-            ),
+    stack = [
+        group(
+            "BASE WORLD",
+            [
+                file_layer("base ambient occlusion", ao / "existing_condition_ao_full.png", "MULTIPLY"),
+                file_layer("base_rgb", base_rgb_path, "COLOR"),
+                file_layer("base_rgb copy", base_rgb_path, "MULTIPLY", 40),
+                file_layer("base_depth_filter", base / "base_outlines.png", "MULTIPLY"),
+                file_layer("base_depth_windowed_balanced_dense", base / "base_depth_windowed_balanced_dense.png"),
+            ],
+        ),
+    ]
+    if not BASE_ONLY:
+        stack.extend([
             group(
                 "1. POSITIVE BIOENVELOPES",
                 [
@@ -242,7 +243,14 @@ def build_manifest(bioenvelope_outline_path: Path, base_rgb_path: Path) -> dict[
                 PSD_MIST_VARIANT,
                 depth / "priority_depth_outliner.png",
             ),
-        ],
+        ])
+
+    return {
+        "psd_path": str(PSD_PATH),
+        "canvas_source": require(base_rgb_path),
+        "document_name": PSD_PATH.stem,
+        # Build bottom-to-top so new groups/layers added at the top land in the intended order.
+        "stack": stack,
     }
 
 
@@ -359,16 +367,16 @@ savePsd(doc, config.psd_path);
 def run() -> None:
     OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
     PSD_PATH.parent.mkdir(parents=True, exist_ok=True)
-    base_rgb_path = normalize_png_for_photoshop(
-        OUTPUT_ROOT / "current" / "base" / "base_rgb.png",
-        OUTPUT_ROOT / "_photoshop_generated" / "base_rgb_photoshop.png",
-    )
-    outline_path = write_outline_from_alpha(
-        OUTPUT_ROOT / "current" / "bioenvelope" / "bioenvelope_full-image.png",
-        OUTPUT_ROOT / "_photoshop_generated" / "bioenvelope_full-image_outline.png",
+    base_rgb_path = OUTPUT_ROOT / "current" / "base" / "base_rgb.png"
+    outline_path = (
+        write_outline_from_alpha(
+            OUTPUT_ROOT / "current" / "bioenvelope" / "bioenvelope_full-image.png",
+            OUTPUT_ROOT / "_photoshop_generated" / "bioenvelope_full-image_outline.png",
+        )
+        if not BASE_ONLY
+        else OUTPUT_ROOT / "_photoshop_generated" / "bioenvelope_full-image_outline.png"
     )
     config = build_manifest(outline_path, base_rgb_path)
-    normalize_stack_file_paths(config["stack"], OUTPUT_ROOT / "_photoshop_generated" / "import_cache")
 
     with tempfile.TemporaryDirectory(prefix="edge_lab_psd_") as tmpdir:
         tmpdir_path = Path(tmpdir)

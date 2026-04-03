@@ -11,8 +11,10 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "final"))
+sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
 import a_info_gather_capabilities as gather_capabilities
+from refactor_code.paths import refactor_statistics_root
 
 
 DEFAULT_SITES = ("trimmed-parade", "city", "uni")
@@ -25,12 +27,12 @@ def parse_sites(raw: str | None) -> list[str]:
     return [site.strip() for site in raw.split(",") if site.strip()]
 
 
-def indicator_csv_path(scenario_root: Path, site: str, voxel_size: int) -> Path:
-    return scenario_root / "output" / "csv" / f"{site}_{voxel_size}_indicator_counts.csv"
+def indicator_csv_path(site: str, voxel_size: int) -> Path:
+    return refactor_statistics_root("validation") / "csv" / f"{site}_{voxel_size}_indicator_counts.csv"
 
 
-def action_csv_path(scenario_root: Path, site: str, voxel_size: int) -> Path:
-    return scenario_root / "output" / "csv" / f"{site}_{voxel_size}_action_counts.csv"
+def action_csv_path(site: str, voxel_size: int) -> Path:
+    return refactor_statistics_root("validation") / "csv" / f"{site}_{voxel_size}_action_counts.csv"
 
 
 def sort_indicator_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -62,9 +64,8 @@ def sort_action_df(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def refresh_site(site: str, scenario_root: Path, engine_root: Path, voxel_size: int) -> None:
-    os.environ["REFACTOR_SCENARIO_OUTPUT_ROOT"] = str(scenario_root.resolve())
-    os.environ["REFACTOR_ENGINE_OUTPUT_ROOT"] = str(engine_root.resolve())
+def refresh_site(site: str, run_root: Path, voxel_size: int) -> None:
+    os.environ["REFACTOR_RUN_OUTPUT_ROOT"] = str(run_root.resolve())
 
     vtk_path = gather_capabilities.get_vtk_path(site, "baseline", -180, voxel_size, "validation")
     baseline_indicator_counts, baseline_action_counts, _ = gather_capabilities.process_vtk(
@@ -77,7 +78,7 @@ def refresh_site(site: str, scenario_root: Path, engine_root: Path, voxel_size: 
         output_mode="validation",
     )
 
-    indicator_path = indicator_csv_path(scenario_root, site, voxel_size)
+    indicator_path = indicator_csv_path(site, voxel_size)
     indicator_df = pd.read_csv(indicator_path)
     baseline_indicator_df = pd.DataFrame(baseline_indicator_counts)
 
@@ -100,7 +101,7 @@ def refresh_site(site: str, scenario_root: Path, engine_root: Path, voxel_size: 
     indicator_path.parent.mkdir(parents=True, exist_ok=True)
     indicator_df.to_csv(indicator_path, index=False)
 
-    action_path = action_csv_path(scenario_root, site, voxel_size)
+    action_path = action_csv_path(site, voxel_size)
     if action_path.exists():
         action_df = pd.read_csv(action_path)
         baseline_action_df = pd.DataFrame(baseline_action_counts)
@@ -118,14 +119,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Refresh per-site indicator/action CSVs using a regenerated baseline, without rerunning all scenario states."
     )
-    parser.add_argument("--scenario-root", required=True, type=Path)
-    parser.add_argument("--engine-root", required=True, type=Path)
+    parser.add_argument("--run-root", required=True, type=Path)
     parser.add_argument("--sites", default="all")
     parser.add_argument("--voxel-size", type=int, default=1)
     args = parser.parse_args()
 
     for site in parse_sites(args.sites):
-        refresh_site(site, args.scenario_root, args.engine_root, args.voxel_size)
+        refresh_site(site, args.run_root, args.voxel_size)
 
 
 if __name__ == "__main__":

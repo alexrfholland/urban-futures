@@ -208,46 +208,89 @@ def detect_resolution(exr_paths: list[Path], images: list[bpy.types.Image]) -> t
     return 3840, 2160
 
 
-def build_outliner_branch(node_tree, exr_node, mask_socket, prefix: str, y: float, parent) -> list[Path]:
-    depth_norm = normalize_node(node_tree, exr_node.outputs["Depth"], f"{prefix}_depth_normalize", f"{prefix} depth normalize", (-980.0, y))
-    depth_norm.parent = parent
+def build_outliner_branch(node_tree, signal_socket, mask_socket, prefix: str, y: float, parent, signal_name: str, stem_name: str) -> tuple[list[Path], bpy.types.Node]:
+    signal_norm = normalize_node(
+        node_tree,
+        signal_socket,
+        f"{prefix}_{signal_name}_normalize",
+        f"{prefix} {signal_name} normalize",
+        (-980.0, y),
+    )
+    signal_norm.parent = parent
     depth_prepped = set_alpha_node(
         node_tree,
-        depth_norm.outputs[0],
+        signal_norm.outputs[0],
         mask_socket,
-        f"{prefix}_depth_prepped",
-        f"{prefix} depth prepped",
+        f"{prefix}_{signal_name}_prepped",
+        f"{prefix} {signal_name} prepped",
         (-760.0, y),
         "REPLACE_ALPHA",
     )
     depth_prepped.parent = parent
-    kirsch = filter_node(node_tree, depth_norm.outputs[0], f"{prefix}_kirsch", f"{prefix} kirsch", (-540.0, y), "KIRSCH")
+    kirsch = filter_node(
+        node_tree,
+        signal_norm.outputs[0],
+        f"{prefix}_{signal_name}_kirsch",
+        f"{prefix} {signal_name} kirsch",
+        (-540.0, y),
+        "KIRSCH",
+    )
     kirsch.parent = parent
-    ramp = ramp_node(node_tree, kirsch.outputs["Image"], f"{prefix}_ramp", f"{prefix} hard threshold", (-320.0, y), OUTLINER_THRESHOLD)
+    ramp = ramp_node(
+        node_tree,
+        kirsch.outputs["Image"],
+        f"{prefix}_{signal_name}_ramp",
+        f"{prefix} {signal_name} hard threshold",
+        (-320.0, y),
+        OUTLINER_THRESHOLD,
+    )
     ramp.parent = parent
-    ramp_bw = rgb_to_bw_node(node_tree, ramp.outputs["Image"], f"{prefix}_ramp_bw", f"{prefix} ramp bw", (-100.0, y))
+    ramp_bw = rgb_to_bw_node(
+        node_tree,
+        ramp.outputs["Image"],
+        f"{prefix}_{signal_name}_ramp_bw",
+        f"{prefix} {signal_name} ramp bw",
+        (-100.0, y),
+    )
     ramp_bw.parent = parent
-    masked_alpha = math_node(node_tree, "MULTIPLY", f"{prefix}_masked_alpha", f"{prefix} masked alpha", (120.0, y))
+    masked_alpha = math_node(
+        node_tree,
+        "MULTIPLY",
+        f"{prefix}_{signal_name}_masked_alpha",
+        f"{prefix} {signal_name} masked alpha",
+        (120.0, y),
+    )
     masked_alpha.parent = parent
     ensure_link(node_tree, ramp_bw.outputs["Val"], masked_alpha.inputs[0])
     ensure_link(node_tree, mask_socket, masked_alpha.inputs[1])
-    edge_rgb = rgb_node(node_tree, f"{prefix}_edge_rgb", f"{prefix} edge rgb", (120.0, y - 180.0), EDGE_COLOR_LINEAR)
+    edge_rgb = rgb_node(
+        node_tree,
+        f"{prefix}_{signal_name}_edge_rgb",
+        f"{prefix} {signal_name} edge rgb",
+        (120.0, y - 180.0),
+        EDGE_COLOR_LINEAR,
+    )
     edge_rgb.parent = parent
     edge_masked = set_alpha_node(
         node_tree,
         edge_rgb.outputs[0],
         masked_alpha.outputs["Value"],
-        f"{prefix}_edge_masked",
-        f"{prefix} edge masked",
+        f"{prefix}_{signal_name}_edge_masked",
+        f"{prefix} {signal_name} edge masked",
         (360.0, y),
         "REPLACE_ALPHA",
     )
     edge_masked.parent = parent
-    depth_output = output_node(node_tree, depth_prepped.outputs["Image"], f"{prefix}_depth_normalized_visible_arboreal", (840.0, y + 120.0))
-    node_tree.nodes[f"Output {prefix}_depth_normalized_visible_arboreal"].parent = parent
-    edge_output = output_node(node_tree, edge_masked.outputs["Image"], f"{prefix}_depth_outliner", (620.0, y - 120.0))
-    node_tree.nodes[f"Output {prefix}_depth_outliner"].parent = parent
-    return [depth_output, edge_output]
+    prepped_output = output_node(
+        node_tree,
+        depth_prepped.outputs["Image"],
+        f"{prefix}_{stem_name}_normalized_visible_arboreal",
+        (840.0, y + 120.0),
+    )
+    node_tree.nodes[f"Output {prefix}_{stem_name}_normalized_visible_arboreal"].parent = parent
+    edge_output = output_node(node_tree, edge_masked.outputs["Image"], f"{prefix}_{stem_name}_outliner", (620.0, y - 120.0))
+    node_tree.nodes[f"Output {prefix}_{stem_name}_outliner"].parent = parent
+    return [prepped_output, edge_output], edge_masked
 
 
 def build_scene(scene: bpy.types.Scene) -> list[Path]:
@@ -333,9 +376,32 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
     ensure_link(node_tree, mask_visible_pathway.outputs["Alpha"], mask_visible_priority.inputs[1])
 
     rendered_paths: list[Path] = []
-    rendered_paths.extend(build_outliner_branch(node_tree, pathway, mask_visible_pathway.outputs["Alpha"], "pathway", 620.0, pathway_frame))
-    rendered_paths.extend(build_outliner_branch(node_tree, priority, mask_visible_priority.outputs["Value"], "priority", 80.0, priority_frame))
-    rendered_paths.extend(build_outliner_branch(node_tree, trending, mask_visible_trending.outputs["Alpha"], "trending", -460.0, trending_frame))
+    depth_edge_nodes: dict[str, bpy.types.Node] = {}
+    mist_edge_nodes: dict[str, bpy.types.Node] = {}
+    depth_paths, depth_edge_nodes["pathway"] = build_outliner_branch(
+        node_tree, pathway.outputs["Depth"], mask_visible_pathway.outputs["Alpha"], "pathway", 620.0, pathway_frame, "depth", "depth"
+    )
+    rendered_paths.extend(depth_paths)
+    mist_paths, mist_edge_nodes["pathway"] = build_outliner_branch(
+        node_tree, pathway.outputs["Mist"], mask_visible_pathway.outputs["Alpha"], "pathway", 260.0, pathway_frame, "mist", "mist"
+    )
+    rendered_paths.extend(mist_paths)
+    depth_paths, depth_edge_nodes["priority"] = build_outliner_branch(
+        node_tree, priority.outputs["Depth"], mask_visible_priority.outputs["Value"], "priority", 80.0, priority_frame, "depth", "depth"
+    )
+    rendered_paths.extend(depth_paths)
+    mist_paths, mist_edge_nodes["priority"] = build_outliner_branch(
+        node_tree, priority.outputs["Mist"], mask_visible_priority.outputs["Value"], "priority", -280.0, priority_frame, "mist", "mist"
+    )
+    rendered_paths.extend(mist_paths)
+    depth_paths, depth_edge_nodes["trending"] = build_outliner_branch(
+        node_tree, trending.outputs["Depth"], mask_visible_trending.outputs["Alpha"], "trending", -460.0, trending_frame, "depth", "depth"
+    )
+    rendered_paths.extend(depth_paths)
+    mist_paths, mist_edge_nodes["trending"] = build_outliner_branch(
+        node_tree, trending.outputs["Mist"], mask_visible_trending.outputs["Alpha"], "trending", -820.0, trending_frame, "mist", "mist"
+    )
+    rendered_paths.extend(mist_paths)
 
     composite = new_node(node_tree, "CompositorNodeComposite", "Composite", "Composite", (1120.0, 140.0))
     viewer = new_node(node_tree, "CompositorNodeViewer", "Viewer", "Viewer", (1120.0, -60.0))
@@ -350,9 +416,9 @@ def build_scene(scene: bpy.types.Scene) -> list[Path]:
     )
     combined.parent = pathway_frame
     combined.premul = 1.0
-    ensure_link(node_tree, node_tree.nodes["pathway_edge_masked"].outputs["Image"], combined.inputs[1])
-    ensure_link(node_tree, node_tree.nodes["priority_edge_masked"].outputs["Image"], combined.inputs[2])
-    ensure_link(node_tree, node_tree.nodes["trending_edge_masked"].outputs["Image"], combined.inputs[0])
+    ensure_link(node_tree, depth_edge_nodes["pathway"].outputs["Image"], combined.inputs[1])
+    ensure_link(node_tree, depth_edge_nodes["priority"].outputs["Image"], combined.inputs[2])
+    ensure_link(node_tree, depth_edge_nodes["trending"].outputs["Image"], combined.inputs[0])
     ensure_link(node_tree, combined.outputs["Image"], composite.inputs[0])
     ensure_link(node_tree, combined.outputs["Image"], viewer.inputs[0])
     return rendered_paths
@@ -366,20 +432,38 @@ def finalize_render(scene: bpy.types.Scene, rendered_paths: list[Path]) -> None:
     render_socket_to_png(
         scene,
         node_tree,
-        node_tree.nodes["pathway_edge_masked"].outputs["Image"],
+        node_tree.nodes["pathway_depth_edge_masked"].outputs["Image"],
         OUTPUT_DIR / "pathway_depth_outliner.png",
     )
     render_socket_to_png(
         scene,
         node_tree,
-        node_tree.nodes["priority_edge_masked"].outputs["Image"],
+        node_tree.nodes["priority_depth_edge_masked"].outputs["Image"],
         OUTPUT_DIR / "priority_depth_outliner.png",
     )
     render_socket_to_png(
         scene,
         node_tree,
-        node_tree.nodes["trending_edge_masked"].outputs["Image"],
+        node_tree.nodes["trending_depth_edge_masked"].outputs["Image"],
         OUTPUT_DIR / "trending_depth_outliner.png",
+    )
+    render_socket_to_png(
+        scene,
+        node_tree,
+        node_tree.nodes["pathway_mist_edge_masked"].outputs["Image"],
+        OUTPUT_DIR / "pathway_mist_outliner.png",
+    )
+    render_socket_to_png(
+        scene,
+        node_tree,
+        node_tree.nodes["priority_mist_edge_masked"].outputs["Image"],
+        OUTPUT_DIR / "priority_mist_outliner.png",
+    )
+    render_socket_to_png(
+        scene,
+        node_tree,
+        node_tree.nodes["trending_mist_edge_masked"].outputs["Image"],
+        OUTPUT_DIR / "trending_mist_outliner.png",
     )
 
 

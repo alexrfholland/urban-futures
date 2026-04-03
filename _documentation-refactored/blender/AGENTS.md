@@ -75,7 +75,7 @@ Current site-level `nodeType` patterns are:
 | --- | --- | --- |
 | `x`, `y`, `z` | point location | world-space placement |
 | `nodeType` | feature class | `tree`, `pole`, `log` |
-| `size` | lifecycle / morphology class | `small`, `medium`, `large`, `senescing`, `snag`, `fallen` |
+| `size` | lifecycle / morphology class | `small`, `medium`, `large`, `senescing`, `snag`, `fallen`, `decayed`; terminal absent states include `gone` and `early-tree-death` |
 | `control` | management class | `street-tree`, `park-tree`, `reserve-tree`, `improved-tree` |
 | `precolonial` | origin class | boolean-like, mapped to Blender int |
 | `tree_id` | template selector | used to match the PLY library filename |
@@ -134,6 +134,11 @@ Primary folders are:
 - `data/revised/final/logMeshesPly`
 
 In the 2026 instancer, `treeMeshesPly` also contains the pole / artificial-support templates used by `nodeType == pole`.
+
+`early-tree-death` should not normally appear as a rendered tree state in Blender.
+
+- it is a terminal absent state used by the simulation for young-tree mortality
+- like `gone`, it should be filtered before template instancing / voxel export
 
 ### 2.3. Base World PLYs
 

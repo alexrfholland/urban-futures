@@ -1,5 +1,9 @@
 # 2.3-INFO-2 Proposal And Intervention Descriptions
 
+TODO:L
+
+For `proposal-recruit`, we use `annual_tree_death_urban` by default and `annual_tree_death_nature-reserves` for tree mortality in larger rewilded areas to reflect these different conditions of proposals under recruit that are partially supported (smaller nodes, higher mortality) and fully supported (rewilded nodes, lower mortality).
+
 This note defines the proposal and intervention vocabulary conceptually.
 
 For measurement logic, Blender mapping, and export outputs, use [2-3-INFO-2-proposal-and-intervention-technical-specifications.md](./2-3-INFO-2-proposal-and-intervention-technical-specifications.md).
@@ -79,6 +83,8 @@ The manuscript defines five proposals:
 - `Rewild-Ground = full`
   - Converts ground to a larger habitat patch by depaving and reducing management, allowing grasslands to form.
   - Indicators: `Acquire Resources (L)`, `Communicate (L, T)`, `Reproduce (T)`
+
+For `proposal-recruit`, we use `annual_tree_death_urban` by default and `annual_tree_death_nature-reserves` for tree mortality in larger rewilded areas to reflect these different conditions of proposals under recruit that are partially supported (smaller nodes, higher mortality) and fully supported (rewilded nodes, lower mortality).
 
 ### `Colonise`
 

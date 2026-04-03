@@ -56,6 +56,52 @@ Final template status:
   - the final-template mist runner now also writes the canonical mist PNGs from EXRs, using the validated `kirschsizes` mist workflow on a temporary scratch scene during the final-template run
 - The remaining cleanup is to decide whether the saved mist branch inside `Current` should be made canonical, or kept as a reference while the scratch-scene mist adapter remains the trusted path.
 
+Simple proposal template:
+- `data/blender/2026/edge_detection_lab/proposal_release_control_pathway_debug.blend` is the current simple proposal compositor template.
+- It is a stripped-down pathway-only EXR compositor for proposal masks and fills.
+- Current contents:
+  - `proposal-release-control`
+  - `proposal-decay`
+  - `proposal-recruit`
+  - `proposal-colonise`
+  - `proposal-deploy-structure`
+- It uses:
+  - one EXR image node
+  - compare nodes for discrete framebuffer values
+  - RGB nodes for the fill colours
+  - `Set Alpha` with the compare result as alpha
+  - one `File Output` node with one slot per proposal-intervention PNG
+- Current working output root:
+  - `data/blender/2026/edge_detection_lab/outputs/proposal_release_control_pathway_debug_20260402`
+
+Timeslice / proposal status:
+- Local 8K EXR sets are now copied for:
+  - `parade`
+  - `city`
+  - `street`
+- Local input roots:
+  - `data/blender/2026/edge_detection_lab/inputs/parade_8k_network_20260402`
+  - `data/blender/2026/edge_detection_lab/inputs/city_8k_network_20260402`
+  - `data/blender/2026/edge_detection_lab/inputs/street_8k_network_20260402`
+- Timeline-base Photoshop files now exist at full canvas size (`7680 x 4320`):
+  - `/_outputs-refactored/Blender/timeslices/city_timeline_base.psb`
+  - `/_outputs-refactored/Blender/timeslices/street_timeline_base.psb`
+- Simplified site timeslice PSDs now exist:
+  - `/_outputs-refactored/Blender/timeslices/timeslice-city.psd`
+  - `/_outputs-refactored/Blender/timeslices/timeslice-street.psd`
+- Those simplified PSDs currently contain:
+  - top-level `trending`
+  - top-level `positive`
+  - no base-world / rejected / moderated groups
+- Current blocker:
+  - proposal outputs inside `edge_lab_final_template.blend`, scene `Current`, are not yet fully trusted for the city 8K set
+  - specifically, `proposal-colonise-enrich-envelope.png` from the city pathway run has not matched the expected mask
+  - this is a proposal-mask / node-logic issue, not an 8K sizing issue
+- The simple proposal debug blend remains the clean reference for proposal extraction logic:
+  - `data/blender/2026/edge_detection_lab/proposal_release_control_pathway_debug.blend`
+- Important practical note:
+  - `data/blender/2026/edge_detection_lab/edge_lab_final_template.blend` has now been manually edited in-app; do not overwrite it casually during proposal debugging
+
 Verified now:
 - `edge_lab_final_template.blend`, scene `Current`, works for:
   - AO
@@ -84,6 +130,8 @@ Still to do:
 Latest files:
 - human-facing compositor:
   - `data/blender/2026/edge_detection_lab/edge_lab_final_template.blend`
+- simple proposal compositor template:
+  - `data/blender/2026/edge_detection_lab/proposal_release_control_pathway_debug.blend`
 - old validated multi-scene runner blend:
   - `data/blender/2026/edge_detection_lab/edge_lab_output_suite_combined.blend`
 - final-template driver:
@@ -101,6 +149,11 @@ Latest files:
   - `data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_city_20260329`
 - latest validated combined-suite outputs:
   - `data/blender/2026/edge_detection_lab/outputs/edge_lab_output_suite_city_20260329`
+- latest timeslice / base files:
+  - `/_outputs-refactored/Blender/timeslices/city_timeline_base.psb`
+  - `/_outputs-refactored/Blender/timeslices/street_timeline_base.psb`
+  - `/_outputs-refactored/Blender/timeslices/timeslice-city.psd`
+  - `/_outputs-refactored/Blender/timeslices/timeslice-street.psd`
 
 What the scaffold does:
 - creates a dedicated scene named `edge_detection_lab`

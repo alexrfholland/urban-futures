@@ -37,6 +37,18 @@ OUTPUT_BLEND = env_path(
     "EDGE_LAB_FINAL_TEMPLATE_BLEND",
     DATA_ROOT / "edge_lab_final_template.blend",
 )
+PROPOSAL_PATHWAY_EXR = env_path(
+    "EDGE_LAB_PROPOSAL_PATHWAY_EXR",
+    DATA_ROOT / "inputs" / "parade_8k_network_20260402" / "parade_pathway_state_8k.exr",
+)
+PROPOSAL_PRIORITY_EXR = env_path(
+    "EDGE_LAB_PROPOSAL_PRIORITY_EXR",
+    DATA_ROOT / "inputs" / "parade_8k_network_20260402" / "parade_priority_state_8k.exr",
+)
+PROPOSAL_TRENDING_EXR = env_path(
+    "EDGE_LAB_PROPOSAL_TRENDING_EXR",
+    DATA_ROOT / "inputs" / "parade_8k_network_20260402" / "parade_trending_state_8k.exr",
+)
 
 CURRENT_SOURCE_SCENE = os.environ.get("EDGE_LAB_CURRENT_SOURCE_SCENE", "Suite")
 LEGACY_SOURCE_SCENE = os.environ.get("EDGE_LAB_LEGACY_SOURCE_SCENE", "City")
@@ -196,9 +208,55 @@ SIZE_SPECS: tuple[dict[str, object], ...] = (
     {"slug": "large", "value": 3, "hex": "#F99F76"},
     {"slug": "senescing", "value": 4, "hex": "#EB9BC5"},
     {"slug": "snag", "value": 5, "hex": "#FCE358"},
-    {"slug": "fallen", "value": 6, "hex": "#82CBB9"},
+    {"slug": "fallen", "value": 6, "hex": "#8F89BF"},
     {"slug": "artificial", "value": 7, "hex": "#FF0000"},
 )
+
+PROPOSAL_BRANCH_SPECS: tuple[tuple[str, tuple[tuple[int, str, str], ...]], ...] = (
+    (
+        "proposal-deploy-structure",
+        (
+            (2, "adapt-utility-pole", "#FF0000"),
+            (3, "translocated-log", "#8F89BF"),
+            (4, "upgrade-feature", "#CE6DD9"),
+        ),
+    ),
+    (
+        "proposal-decay",
+        (
+            (2, "buffer-feature", "#B83B6B"),
+            (3, "brace-feature", "#D9638C"),
+        ),
+    ),
+    (
+        "proposal-recruit",
+        (
+            (2, "buffer-feature", "#C5E28E"),
+            (3, "rewild-ground", "#5CB85C"),
+        ),
+    ),
+    (
+        "proposal-colonise",
+        (
+            (2, "rewild-ground", "#5CB85C"),
+            (3, "enrich-envelope", "#8CCC4F"),
+            (4, "roughen-envelope", "#B87A38"),
+        ),
+    ),
+    (
+        "proposal-release-control",
+        (
+            (1, "rejected", "#333333"),
+            (2, "reduce-pruning", "#808080"),
+            (3, "eliminate-pruning", "#FFFFFF"),
+        ),
+    ),
+)
+
+
+def release_control_hex(intensity: float) -> str:
+    value = max(0, min(255, round(255.0 * intensity)))
+    return f"#{value:02X}{value:02X}{value:02X}"
 
 
 def apply_bioenvelope_palette_defaults(node: bpy.types.Node) -> None:
@@ -248,47 +306,21 @@ def build_value_match_socket(
     y: float,
     parent: bpy.types.Node,
 ):
-    subtract = new_node(
+    compare = new_node(
         node_tree,
         "CompositorNodeMath",
-        f"{base_name} :: subtract",
-        "subtract",
+        f"{base_name} :: compare",
+        "compare",
         (x, y),
         parent=parent,
         color=(0.18, 0.16, 0.20),
     )
-    subtract.operation = "SUBTRACT"
-    subtract.use_clamp = False
-    subtract.inputs[1].default_value = float(target_value)
-    ensure_link(node_tree, value_socket, subtract.inputs[0])
-
-    absolute = new_node(
-        node_tree,
-        "CompositorNodeMath",
-        f"{base_name} :: absolute",
-        "absolute",
-        (x + 220.0, y),
-        parent=parent,
-        color=(0.18, 0.16, 0.20),
-    )
-    absolute.operation = "ABSOLUTE"
-    absolute.use_clamp = False
-    ensure_link(node_tree, subtract.outputs["Value"], absolute.inputs[0])
-
-    less_than = new_node(
-        node_tree,
-        "CompositorNodeMath",
-        f"{base_name} :: match",
-        "match",
-        (x + 440.0, y),
-        parent=parent,
-        color=(0.18, 0.16, 0.20),
-    )
-    less_than.operation = "LESS_THAN"
-    less_than.use_clamp = True
-    less_than.inputs[1].default_value = MATCH_EPSILON
-    ensure_link(node_tree, absolute.outputs["Value"], less_than.inputs[0])
-    return less_than.outputs["Value"]
+    compare.operation = "COMPARE"
+    compare.use_clamp = True
+    compare.inputs[1].default_value = float(target_value)
+    compare.inputs[2].default_value = 0.0
+    ensure_link(node_tree, value_socket, compare.inputs[0])
+    return compare.outputs["Value"]
 
 
 def build_multiply_socket(
@@ -345,7 +377,7 @@ def build_color_alpha_image(
         parent=parent,
         color=(0.16, 0.20, 0.16),
     )
-    set_alpha.mode = "REPLACE_ALPHA"
+    set_alpha.mode = "APPLY"
     ensure_link(node_tree, rgb.outputs[0], set_alpha.inputs["Image"])
     ensure_link(node_tree, alpha_socket, set_alpha.inputs["Alpha"])
     return set_alpha.outputs["Image"]
@@ -1006,6 +1038,195 @@ def add_current_sizes_branch(scene: bpy.types.Scene) -> None:
         ensure_link(node_tree, combined_socket, combined_output.inputs[0])
 
 
+def add_current_proposals_branch(scene: bpy.types.Scene) -> None:
+    if scene.node_tree is None:
+        raise ValueError("Current scene has no compositor node tree")
+
+    prefix = "Proposals::"
+    node_tree = scene.node_tree
+    remove_prefixed_nodes(node_tree, prefix)
+
+    mask_pathway_source = node_tree.nodes.get("AO::EXR Pathway")
+    mask_priority_source = node_tree.nodes.get("AO::EXR Priority")
+    mask_trending_source = node_tree.nodes.get("Resources::EXR Trending")
+    if mask_pathway_source is None or mask_priority_source is None or mask_trending_source is None:
+        raise ValueError("Current scene is missing EXR inputs for proposal visibility masks")
+
+    frame = new_node(
+        node_tree,
+        "NodeFrame",
+        f"{prefix}FamilyFrame",
+        "Proposals",
+        (5400.0, 3400.0),
+    )
+    frame.use_custom_color = True
+    frame.color = (0.18, 0.16, 0.12)
+
+    proposal_pathway = new_node(
+        node_tree,
+        "CompositorNodeImage",
+        f"{prefix}EXR Pathway",
+        "EXR Pathway",
+        (5600.0, 3380.0),
+        parent=frame,
+        color=(0.12, 0.18, 0.10),
+    )
+    proposal_pathway.image = bpy.data.images.load(str(PROPOSAL_PATHWAY_EXR), check_existing=True)
+
+    proposal_priority = new_node(
+        node_tree,
+        "CompositorNodeImage",
+        f"{prefix}EXR Priority",
+        "EXR Priority",
+        (5600.0, 3300.0),
+        parent=frame,
+        color=(0.12, 0.18, 0.10),
+    )
+    proposal_priority.image = bpy.data.images.load(str(PROPOSAL_PRIORITY_EXR), check_existing=True)
+
+    proposal_trending = new_node(
+        node_tree,
+        "CompositorNodeImage",
+        f"{prefix}EXR Trending",
+        "EXR Trending",
+        (5600.0, 3220.0),
+        parent=frame,
+        color=(0.12, 0.18, 0.10),
+    )
+    proposal_trending.image = bpy.data.images.load(str(PROPOSAL_TRENDING_EXR), check_existing=True)
+
+    mask_visible_pathway = new_node(
+        node_tree,
+        "CompositorNodeIDMask",
+        f"{prefix}mask_visible-arboreal_pathway",
+        "mask_visible-arboreal_pathway",
+        (5600.0, 3120.0),
+        parent=frame,
+        color=(0.18, 0.18, 0.10),
+    )
+    mask_visible_pathway.index = TREE_ID
+    mask_visible_pathway.use_antialiasing = True
+    ensure_link(node_tree, mask_pathway_source.outputs["IndexOB"], mask_visible_pathway.inputs["ID value"])
+
+    mask_all_priority = new_node(
+        node_tree,
+        "CompositorNodeIDMask",
+        f"{prefix}mask_all-arboreal_priority",
+        "mask_all-arboreal_priority",
+        (5600.0, 2840.0),
+        parent=frame,
+        color=(0.18, 0.18, 0.10),
+    )
+    mask_all_priority.index = TREE_ID
+    mask_all_priority.use_antialiasing = True
+    ensure_link(node_tree, mask_priority_source.outputs["IndexOB"], mask_all_priority.inputs["ID value"])
+
+    mask_visible_priority = new_node(
+        node_tree,
+        "CompositorNodeMath",
+        f"{prefix}mask_visible-arboreal_priority",
+        "mask_visible-arboreal_priority",
+        (5840.0, 2960.0),
+        parent=frame,
+        color=(0.18, 0.16, 0.20),
+    )
+    mask_visible_priority.operation = "MULTIPLY"
+    mask_visible_priority.use_clamp = True
+    ensure_link(node_tree, mask_all_priority.outputs["Alpha"], mask_visible_priority.inputs[0])
+    ensure_link(node_tree, mask_visible_pathway.outputs["Alpha"], mask_visible_priority.inputs[1])
+
+    mask_visible_trending = new_node(
+        node_tree,
+        "CompositorNodeIDMask",
+        f"{prefix}mask_visible-arboreal_trending",
+        "mask_visible-arboreal_trending",
+        (5600.0, 2560.0),
+        parent=frame,
+        color=(0.18, 0.18, 0.10),
+    )
+    mask_visible_trending.index = TREE_ID
+    mask_visible_trending.use_antialiasing = True
+    ensure_link(node_tree, mask_trending_source.outputs["IndexOB"], mask_visible_trending.inputs["ID value"])
+
+    phase_specs = (
+        ("pathway", proposal_pathway, mask_visible_pathway.outputs["Alpha"], 0.0),
+        ("priority", proposal_priority, mask_visible_priority.outputs["Value"], -1700.0),
+        ("trending", proposal_trending, mask_visible_trending.outputs["Alpha"], -3400.0),
+    )
+
+    output_base_path = "//outputs/current/proposals"
+
+    for phase_slug, exr_node, visible_mask_socket, phase_y in phase_specs:
+        phase_frame = new_node(
+            node_tree,
+            "NodeFrame",
+            f"{prefix}{phase_slug}::Frame",
+            phase_slug,
+            (6120.0, phase_y + 2920.0),
+            parent=frame,
+        )
+        phase_frame.use_custom_color = True
+        phase_frame.color = (0.12, 0.14, 0.12)
+
+        channel_y = phase_y + 2720.0
+        for family_name, interventions in PROPOSAL_BRANCH_SPECS:
+            family_frame = new_node(
+                node_tree,
+                "NodeFrame",
+                f"{prefix}{phase_slug}::{family_name}::Frame",
+                family_name,
+                (6280.0, channel_y + 80.0),
+                parent=phase_frame,
+            )
+            family_frame.use_custom_color = True
+            family_frame.color = (0.14, 0.12, 0.12)
+
+            proposal_socket = socket_by_name(exr_node, family_name)
+            for idx, (value, intervention_slug, hex_value) in enumerate(interventions):
+                class_y = channel_y - idx * 120.0
+                base_name = f"{prefix}{phase_slug}::{family_name}::{intervention_slug}"
+                matched_socket = build_value_match_socket(
+                    node_tree,
+                    proposal_socket,
+                    int(value),
+                    base_name,
+                    6480.0,
+                    class_y,
+                    family_frame,
+                )
+                masked_socket = build_multiply_socket(
+                    node_tree,
+                    visible_mask_socket,
+                    matched_socket,
+                    f"{base_name} :: masked",
+                    7200.0,
+                    class_y,
+                    family_frame,
+                )
+                color_socket = build_color_alpha_image(
+                    node_tree,
+                    hex_to_linear_rgba(str(hex_value)),
+                    masked_socket,
+                    base_name,
+                    7440.0,
+                    class_y,
+                    family_frame,
+                )
+                stem = f"{phase_slug}/proposal-{family_name.replace('proposal-', '')}-{intervention_slug}"
+                output_node = new_node(
+                    node_tree,
+                    "CompositorNodeOutputFile",
+                    f"{prefix}Output :: {phase_slug}::{family_name}::{intervention_slug}",
+                    f"Output :: {phase_slug}::{family_name}::{intervention_slug}",
+                    (7960.0, class_y),
+                    parent=family_frame,
+                    color=(0.12, 0.20, 0.14),
+                )
+                configure_png_output_node(output_node, output_base_path, stem)
+                ensure_link(node_tree, color_socket, output_node.inputs[0])
+            channel_y -= 460.0
+
+
 def add_current_bioenvelope_branch(
     current: bpy.types.Scene,
     legacy: bpy.types.Scene,
@@ -1440,6 +1661,7 @@ def main() -> None:
 
     add_current_base_outputs_branch(current)
     add_current_sizes_branch(current)
+    add_current_proposals_branch(current)
     add_current_bioenvelope_branch(current, legacy)
     add_current_shading_branch(current)
     mist_helper.ensure_current_mist_exr_branch(current)

@@ -36,26 +36,61 @@ def normalize_output_mode(output_mode: str | None = None) -> str:
     return mode
 
 
-def scenario_output_root(output_mode: str | None = None) -> Path:
-    override = os.environ.get("REFACTOR_SCENARIO_OUTPUT_ROOT")
+def refactor_run_output_root(output_mode: str | None = None) -> Path | None:
+    override = os.environ.get("REFACTOR_RUN_OUTPUT_ROOT")
     if override:
         return Path(override)
+    return None
+
+
+def _unified_interim_root(output_mode: str | None = None) -> Path | None:
+    run_root = refactor_run_output_root(output_mode)
+    if run_root is None:
+        return None
+    return run_root / "temp" / "interim-data"
+
+
+def _unified_validation_root(output_mode: str | None = None) -> Path | None:
+    run_root = refactor_run_output_root(output_mode)
+    if run_root is None:
+        return None
+    return run_root / "temp" / "validation"
+
+
+def _unified_postprocess_root(output_mode: str | None = None) -> Path | None:
+    run_root = refactor_run_output_root(output_mode)
+    if run_root is None:
+        return None
+    return run_root / "output"
+
+
+def _unified_statistics_root(output_mode: str | None = None) -> Path | None:
+    run_root = refactor_run_output_root(output_mode)
+    if run_root is None:
+        return None
+    return run_root / "output" / "stats"
+
+
+def scenario_output_root(output_mode: str | None = None) -> Path:
+    unified_root = _unified_interim_root(output_mode)
+    if unified_root is not None:
+        return unified_root
     mode = normalize_output_mode(output_mode)
     return VALIDATION_SCENARIO_OUTPUT_ROOT if mode == "validation" else CANONICAL_SCENARIO_OUTPUT_ROOT
 
 
 def engine_output_root(output_mode: str | None = None) -> Path:
-    override = os.environ.get("REFACTOR_ENGINE_OUTPUT_ROOT")
-    if override:
-        return Path(override)
+    unified_root = _unified_postprocess_root(output_mode)
+    if unified_root is not None:
+        return unified_root
     mode = normalize_output_mode(output_mode)
     return V2_ENGINE_OUTPUT_ROOT if mode == "validation" else FINAL_HOOKS_ROOT
 
 
 def refactor_statistics_root(output_mode: str | None = None) -> Path:
-    override = os.environ.get("REFACTOR_STATISTICS_ROOT")
-    if override:
-        return Path(override)
+    unified_root = _unified_statistics_root(output_mode)
+    if unified_root is not None:
+        return unified_root
     mode = normalize_output_mode(output_mode)
     return (
         VALIDATION_REFACTORED_STATISTICS_ROOT
@@ -257,6 +292,10 @@ def engine_output_nodedf_path(
 
 
 def engine_output_validation_dir(output_mode: str | None = None) -> Path:
+    unified_root = _unified_validation_root(output_mode)
+    if unified_root is not None:
+        unified_root.mkdir(parents=True, exist_ok=True)
+        return unified_root
     return _engine_output_write_path("validation", output_mode)
 
 

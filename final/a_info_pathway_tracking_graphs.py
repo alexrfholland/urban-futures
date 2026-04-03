@@ -34,11 +34,13 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from scipy.interpolate import PchipInterpolator
 SCRIPT_DIR = Path(__file__).parent
 REPO_DIR = SCRIPT_DIR.parent
 sys.path.insert(0, str(REPO_DIR / "_code-refactored"))
 
 from refactor_code.paths import normalize_output_mode, refactor_statistics_root
+from refactor_code.scenario.render_proposal_schema_v3 import PROPOSAL_HEX
 
 PAGE_WIDTH_PT = 45 * 12 + 4.252
 PAGE_MARGIN_PT = 3 * 12 + 2.608
@@ -66,7 +68,7 @@ PROPOSAL_ORDER = [
 ]
 
 STREAM_ORDER_BY_PROPOSAL = {
-    "Deploy-Structure": ["Adapt-Utility-Pole", "Upgrade-Feature"],
+    "Deploy-Structure": ["Adapt-Utility-Pole", "Translocated-Log", "Upgrade-Feature"],
     "Decay": ["Buffer-Feature", "Brace-Feature"],
     "Recruit": ["Buffer-Feature", "Rewild-Ground"],
     "Colonise": ["Rewild-Ground", "Enrich-Envelope", "Roughen-Envelope"],
@@ -77,9 +79,14 @@ CANONICAL_MEASURE_PRIORITY = {
     ("Deploy-Structure", "Adapt-Utility-Pole", "full"): [
         "artificial canopy voxels",
         "utility poles",
+        "adapt-utility-pole voxels",
+    ],
+    ("Deploy-Structure", "Translocated-Log", "full"): [
+        "translocated-log voxels",
     ],
     ("Deploy-Structure", "Upgrade-Feature", "full"): [
         "upgraded-feature voxels",
+        "upgrade-feature voxels",
     ],
     ("Decay", "Buffer-Feature", "full"): [
         "buffer-feature voxels",
@@ -113,24 +120,29 @@ CANONICAL_MEASURE_PRIORITY = {
     ],
 }
 
-STREAM_COLORS = {
-    "Adapt-Utility-Pole": "#1f6f8b",
-    "Upgrade-Feature": "#7c5ba6",
-    "Buffer-Feature": "#d97a3a",
-    "Brace-Feature": "#c0a02d",
-    "Eliminate-Pruning": "#d97a3a",
-    "Reduce-Pruning": "#c0a02d",
-    "Rewild-Ground": "#4f8b57",
-    "Enrich-Envelope": "#8a63d2",
-    "Roughen-Envelope": "#8e6b52",
-}
-
-PROPOSAL_BASE_COLORS = {
-    "Deploy-Structure": "#0f766e",
-    "Decay": "#d97706",
-    "Recruit": "#65a30d",
-    "Colonise": "#7c3aed",
-    "Release-Control": "#2563eb",
+SCHEMA_STREAM_COLORS = {
+    "Deploy-Structure": {
+        "Adapt-Utility-Pole": PROPOSAL_HEX["blender_proposal-deploy-structure"][2],
+        "Translocated-Log": PROPOSAL_HEX["blender_proposal-deploy-structure"][3],
+        "Upgrade-Feature": PROPOSAL_HEX["blender_proposal-deploy-structure"][4],
+    },
+    "Decay": {
+        "Buffer-Feature": PROPOSAL_HEX["blender_proposal-decay"][2],
+        "Brace-Feature": PROPOSAL_HEX["blender_proposal-decay"][3],
+    },
+    "Recruit": {
+        "Buffer-Feature": PROPOSAL_HEX["blender_proposal-recruit"][2],
+        "Rewild-Ground": PROPOSAL_HEX["blender_proposal-recruit"][3],
+    },
+    "Colonise": {
+        "Rewild-Ground": PROPOSAL_HEX["blender_proposal-colonise"][2],
+        "Enrich-Envelope": PROPOSAL_HEX["blender_proposal-colonise"][3],
+        "Roughen-Envelope": PROPOSAL_HEX["blender_proposal-colonise"][4],
+    },
+    "Release-Control": {
+        "Reduce-Pruning": "#EBBF54",
+        "Eliminate-Pruning": "#FFCB00",
+    },
 }
 
 FIGURE_WIDTH_PX = round((CONTENT_WIDTH_PT / 72.0) * EXPORT_DPI)
@@ -292,6 +304,12 @@ def prepare_streams(scope_df: pd.DataFrame, proposal_label: str) -> list[dict]:
                 "display_label": f"{proposal_label} / {intervention} ({support})",
                 "year_series": year_series,
                 "order_key": proposal_stream_order(proposal_label, intervention, support),
+                "color": combined_stream_color(
+                    {
+                        "proposal_label": proposal_label,
+                        "intervention": intervention,
+                    }
+                ),
             }
         )
 
@@ -319,27 +337,11 @@ def mix_hex(hex_color: str, target_hex: str, amount: float) -> str:
 
 
 def combined_stream_color(stream: dict) -> str:
-    base = PROPOSAL_BASE_COLORS.get(stream["proposal_label"], "#5c6f82")
-    support = stream.get("support", "")
-    intervention_rank = int(stream.get("order_key", (0, 0))[0]) if isinstance(stream.get("order_key"), tuple) else 0
-
-    if support == "full":
-        color = mix_hex(base, "#000000", 0.06)
-    elif support == "mixed":
-        color = mix_hex(base, "#ffffff", 0.16)
-    else:
-        color = mix_hex(base, "#ffffff", 0.34)
-
-    if intervention_rank > 0:
-        tweak = min(0.10, 0.04 * intervention_rank)
-        color = mix_hex(color, "#ffffff", tweak)
-    return color
+    return SCHEMA_STREAM_COLORS.get(stream["proposal_label"], {}).get(stream["intervention"], "#5c6f82")
 
 
 def scenario_fill_color(base_color: str, scenario: str) -> str:
-    if scenario == "positive":
-        return mix_hex(base_color, "#ffffff", 0.12)
-    return mix_hex(base_color, "#000000", 0.06)
+    return base_color
 
 
 def max_stack_total(streams: list[dict], scenario: str) -> float:
@@ -358,11 +360,33 @@ def smooth_series(years: list[int], values: list[float]) -> tuple[list[float], l
     if not dense_years:
         return dense_years, dense_values
 
-    # Add constant endcaps beyond the first/last timestep so filled bands do not
-    # terminate flush against the plot boundary and appear horizontally clipped.
+    if len(dense_years) < 3:
+        return (
+            [dense_years[0] - X_RANGE_PAD] + dense_years + [dense_years[-1] + X_RANGE_PAD],
+            [dense_values[0]] + dense_values + [dense_values[-1]],
+        )
+
+    year_frame = (
+        pd.DataFrame({"year": dense_years, "value": dense_values})
+        .groupby("year", as_index=False)["value"]
+        .mean()
+        .sort_values("year")
+    )
+    x = year_frame["year"].to_numpy(dtype=float)
+    y = year_frame["value"].to_numpy(dtype=float)
+    x_smooth = np.arange(int(x.min()), int(x.max()) + 1, 1).astype(float)
+
+    try:
+        pchip = PchipInterpolator(x, y)
+        y_smooth = pchip(x_smooth)
+    except Exception:
+        y_smooth = np.interp(x_smooth, x, y)
+
+    y_smooth = np.maximum(y_smooth, 0.0)
+
     return (
-        [dense_years[0] - X_RANGE_PAD] + dense_years + [dense_years[-1] + X_RANGE_PAD],
-        [dense_values[0]] + dense_values + [dense_values[-1]],
+        [x_smooth[0] - X_RANGE_PAD] + x_smooth.tolist() + [x_smooth[-1] + X_RANGE_PAD],
+        [float(y_smooth[0])] + y_smooth.astype(float).tolist() + [float(y_smooth[-1])],
     )
 
 
@@ -379,9 +403,9 @@ def add_stream_band(
     showlegend: bool,
     separator: bool = False,
 ) -> None:
-    color = stream.get("color") or STREAM_COLORS.get(stream["intervention"], "#5c6f82")
+    color = stream.get("color") or combined_stream_color(stream)
     legend_label = f"{stream['legend_label']} — {stream['canonical_measure']}"
-    fill_color = scenario_fill_color(color, scenario)
+    fill_color = color
 
     fig.add_trace(
         go.Scatter(
@@ -422,6 +446,7 @@ def build_proposal_figure(
     compact: bool = False,
     proposal_separators: bool = False,
     half_range_override: float | None = None,
+    subplot_vertical_spacing: float = 0.16,
 ) -> go.Figure:
     panel_titles = [
         SCENARIO_LABELS["trending"],
@@ -431,7 +456,7 @@ def build_proposal_figure(
         rows=2,
         cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.16,
+        vertical_spacing=subplot_vertical_spacing,
         subplot_titles=panel_titles,
     )
 
@@ -519,12 +544,18 @@ def build_proposal_figure(
             col=1,
             range=[YEAR_TICKS[0] - X_RANGE_PAD, YEAR_TICKS[-1] + X_RANGE_PAD],
             tickmode="array",
-            tickvals=YEAR_TICKS,
-            ticktext=[str(year) for year in YEAR_TICKS],
+            tickvals=[YEAR_TICKS[0], YEAR_TICKS[-1]],
+            ticktext=[str(YEAR_TICKS[0]), str(YEAR_TICKS[-1])],
             showgrid=False,
             zeroline=False,
-            showline=False,
-            ticks="",
+            showline=(row_index == 2),
+            linecolor="#111111",
+            linewidth=1.2,
+            ticks="outside" if row_index == 2 else "",
+            ticklen=7 if row_index == 2 else 0,
+            tickwidth=1.2,
+            tickcolor="#111111",
+            showticklabels=(row_index == 2),
             title_text=None if compact else ("Year" if row_index == 2 else None),
         )
         fig.update_yaxes(
@@ -670,7 +701,6 @@ def prepare_all_proposal_streams(scope_df: pd.DataFrame) -> list[dict]:
                 stream["order_key"][0],
                 stream["order_key"][1],
             )
-            stream_copy["color"] = combined_stream_color(stream_copy)
             streams.append(stream_copy)
     streams.sort(key=lambda item: item["combined_order"])
     return streams
@@ -769,6 +799,7 @@ def build_all_proposals_figure(
     height_scale: float = 1.0,
     compact: bool = False,
     half_range_override: float | None = None,
+    subplot_vertical_spacing: float = 0.16,
 ) -> go.Figure:
     fig = build_proposal_figure(
         streams=streams,
@@ -778,6 +809,7 @@ def build_all_proposals_figure(
         compact=compact,
         proposal_separators=True,
         half_range_override=half_range_override,
+        subplot_vertical_spacing=subplot_vertical_spacing,
     )
     fig.update_layout(
         title=dict(
@@ -785,7 +817,7 @@ def build_all_proposals_figure(
             if compact
             else (
                 f"All proposals intervention streams: {scope_label}"
-                f"<br><sup>{'Each proposal normalized to its own peak total; ' if normalized else ''}Interventions coloured by proposal; full support richer, partial lighter.</sup>"
+                f"<br><sup>{'Each proposal normalized to its own peak total; ' if normalized else ''}Interventions coloured by the v3 schema.</sup>"
             ),
             x=0.5,
             font=dict(size=14 if compact else 22, color="#27496d"),
@@ -877,7 +909,7 @@ def generate_outputs(
         prepared_scope_relative_global[scope_slug] = rel_all_global_streams
         if all_streams:
             abs_combined_range = max(abs_combined_range, paired_half_range(all_streams))
-            rel_combined_range = max(rel_combined_range, paired_half_range(rel_all_streams))
+            rel_combined_range = max(rel_combined_range, paired_half_range(rel_all_global_streams))
             if scope_slug != "all-sites-combined":
                 abs_per_site_range = max(abs_per_site_range, paired_half_range(all_streams))
                 rel_per_site_range = max(rel_per_site_range, paired_half_range(rel_all_global_streams))
@@ -923,9 +955,10 @@ def generate_outputs(
             mode_streams,
             combined_slug,
             normalized=(mode == "relative"),
-            height_scale=4.5,
+            height_scale=6.0,
             compact=False,
             half_range_override=abs_combined_range if mode == "absolute" else rel_combined_range,
+            subplot_vertical_spacing=0.07,
         )
         target_dir = variant_dir(output_dir, mode, "combined", "combined")
         png_path = save_png_figure(combined_fig, target_dir, combined_slug)

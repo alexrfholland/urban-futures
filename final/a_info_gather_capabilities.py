@@ -26,19 +26,21 @@ import a_helper_functions
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
-import a_scenario_params
 from refactor_code.paths import (
     engine_output_baseline_state_vtk_path,
     engine_output_state_vtk_path,
     normalize_output_mode,
+    refactor_statistics_root,
     scenario_baseline_combined_vtk_path,
     scenario_output_root,
 )
+from refactor_code.blender.proposal_framebuffers_vtk import build_blender_proposal_framebuffer_arrays
+from refactor_code.scenario import params_v3
 
 SCRIPT_DIR = Path(__file__).parent
 
-# Default timesteps (can include sub-timesteps)
-DEFAULT_YEARS = a_scenario_params.generate_timesteps(interval=None)  # [0, 10, 30, 60, 180]
+# Default assessed years for the current v3 stack.
+DEFAULT_YEARS = params_v3.generate_timesteps(interval=30)  # [0, 10, 30, 60, 90, 120, 150, 180]
 
 
 def format_voxel_size(voxel_size):
@@ -639,6 +641,9 @@ def ensure_v3_proposal_point_data(polydata):
     polydata.point_data["proposal_coloniseV3_intervention"] = colonise_intervention
     polydata.point_data["proposal_recruitV3_intervention"] = recruit_intervention
     polydata.point_data["proposal_deploy_structureV3_intervention"] = deploy_structure_intervention
+    blender_point_arrays = build_blender_proposal_framebuffer_arrays(polydata.point_data)
+    for name, values in blender_point_arrays.items():
+        polydata.point_data[name] = values
     return polydata
 
 
@@ -1067,6 +1072,8 @@ def main():
     parser.add_argument('--site', type=str, default='trimmed-parade')
     parser.add_argument('--scenario', type=str, default=None,
                         help='Single scenario, or omit for all')
+    parser.add_argument('--years', type=str, default=None,
+                        help='Comma-separated assessed years, for example 0,10,30,60,90,120,150,180')
     parser.add_argument('--year', type=int, default=None,
                         help='Single year, or omit for all')
     parser.add_argument('--interval', type=int, default=None,
@@ -1087,10 +1094,12 @@ def main():
     scenarios = [args.scenario] if args.scenario else None
     
     # Handle years with optional interval
-    if args.year is not None:
+    if args.years:
+        years = [int(item.strip()) for item in args.years.split(',') if item.strip()]
+    elif args.year is not None:
         years = [args.year]
     elif args.interval is not None:
-        years = a_scenario_params.generate_timesteps(interval=args.interval)
+        years = params_v3.generate_timesteps(interval=args.interval)
         print(f"Generated timesteps with interval {args.interval}: {years}")
     else:
         years = None  # Uses DEFAULT_YEARS
@@ -1107,7 +1116,7 @@ def main():
     )
     
     # Save CSVs to csv subfolder
-    csv_dir = scenario_output_root(output_mode) / 'output' / 'csv'
+    csv_dir = refactor_statistics_root(output_mode) / 'csv'
     csv_dir.mkdir(parents=True, exist_ok=True)
     
     if not indicator_df.empty:
