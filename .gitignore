@@ -52,6 +52,7 @@ RhinoCompute.cs
 # .gitignore
 .venv/
 .vscode/
+.tools/
 data/
 data-refactored/
 _data-refactored/
