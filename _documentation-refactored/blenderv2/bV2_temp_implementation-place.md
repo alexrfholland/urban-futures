@@ -438,6 +438,20 @@ The important practical point for `blenderv2` is that v1.5 is not a clean from-s
 - staged sim tweak bundle: [simv3recruitanddecaytweaks](/e:/2026%20Arboreal%20Futures/blender/inputs/v3%20tests/simv3recruitanddecaytweaks)
 - generated validation outputs: [urban-futures_validation](/e:/2026%20Arboreal%20Futures/urban-futures_validation)
 
+### Current bV2 bundle preference
+
+- `blenderv2` should read from the local temp bundle root, not directly from the network share
+- shared settings now live in [bV2_paths.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blenderv2/bV2_paths.py):
+  - `BLENDER_USE_REMOTE`
+  - `BLENDER_TEMP_REPO`
+  - `BLENDER_REPO_ROOT`
+- sync helper now lives in [bV2_sync_inputs.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blenderv2/bV2_sync_inputs.py)
+- current intended flow:
+  - copy from `BLENDER_REPO_ROOT` (currently the mapped `Z:` drive location)
+  - into `BLENDER_TEMP_REPO`
+  - write `_bV2_source.txt` in the temp repo for provenance
+  - builders read from `BLENDER_TEMP_REPO`
+
 ## Immediate note for bV2
 
 When we rebuild this as `blenderv2`, the goal is not to rename the existing v1.5 wrappers. The goal is to move to a genuinely modular `bV2_*` pipeline inside the `_...-refactored` roots, with:

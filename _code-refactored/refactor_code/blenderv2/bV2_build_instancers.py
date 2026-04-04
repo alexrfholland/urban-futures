@@ -22,6 +22,7 @@ try:
         make_models_collection_name,
         make_position_object_name,
     )
+    from .bV2_paths import iter_blender_input_roots
     from refactor_code.blender.proposal_framebuffers import (
         DEFAULT_OUTPUT_COLUMNS as PROPOSAL_FRAMEBUFFER_OUTPUT_COLUMNS,
         build_blender_proposal_framebuffer_columns,
@@ -39,6 +40,7 @@ except ImportError:
         make_models_collection_name,
         make_position_object_name,
     )
+    from bV2_paths import iter_blender_input_roots  # type: ignore
     from refactor_code.blender.proposal_framebuffers import (  # type: ignore
         DEFAULT_OUTPUT_COLUMNS as PROPOSAL_FRAMEBUFFER_OUTPUT_COLUMNS,
         build_blender_proposal_framebuffer_columns,
@@ -108,11 +110,6 @@ DATA_BUNDLE_ROOT_ENV_NAMES = (
     "BV2_DATA_BUNDLE_ROOT",
     "B2026_DATA_BUNDLE_ROOTS",
     "B2026_DATA_BUNDLE_ROOT",
-)
-DATA_BUNDLE_ROOT_CANDIDATES = (
-    Path(r"E:\2026 Arboreal Futures\blender\inputs\v3 tests\simv3recruitanddecaytweaks"),
-    Path(r"D:\2026 Arboreal Futures\urban-futures\_data-refactored\v3engine_outputs"),
-    Path(r"D:\2026 Arboreal Futures\data"),
 )
 
 ASSET_SITE_ALIASES = {"street": "uni"}
@@ -195,12 +192,11 @@ def iter_existing_bundle_roots() -> Iterable[Path]:
                 seen.add(candidate)
                 yield candidate
 
-    for candidate in DATA_BUNDLE_ROOT_CANDIDATES:
+    for candidate in iter_blender_input_roots():
         if candidate in seen:
             continue
-        if candidate.exists():
-            seen.add(candidate)
-            yield candidate
+        seen.add(candidate)
+        yield candidate
 
 
 def resolve_feature_csv_path(site: str, scenario: str, year: int) -> Path:
