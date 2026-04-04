@@ -10,7 +10,7 @@ Expected env vars (see _documentation-refactored/scenario_engine_v3_validation.m
 - EXPORT_ALL_POINTDATA_VARIABLES
 
 Typical usage:
-  PYTHONPATH=$REPO/final:$REPO/_code-refactored .venv/bin/python final/run_full_v3_batch.py
+  uv run python final/run_full_v3_batch.py
 """
 
 from __future__ import annotations

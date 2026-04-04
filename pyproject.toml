@@ -1,0 +1,73 @@
+[project]
+name = "urban-futures"
+version = "0.1.0"
+description = "Volumetric scenarios, v3 simulation, and Blender pipeline tooling."
+requires-python = "==3.10.*"
+dependencies = [
+  "dask",
+  "h5py",
+  "matplotlib",
+  "netCDF4",
+  "numpy",
+  "pandas",
+  "pyarrow",
+  "pyvista",
+  "scipy",
+  "sparse",
+  "tqdm",
+  "vtk",
+  "xarray",
+]
+
+[project.optional-dependencies]
+world-construction = [
+  "affine",
+  "cloth-simulation-filter",
+  "colormaps",
+  "faiss-cpu",
+  "geopandas",
+  "laspy",
+  "noise",
+  "numba",
+  "open3d",
+  "opencv-python",
+  "palettable",
+  "pathos",
+  "plyfile",
+  "point-cloud-utils",
+  "pvlib",
+  "pyacvd",
+  "pyproj",
+  "rasterio",
+  "requests",
+  "rtree",
+  "scikit-image",
+  "scikit-learn",
+  "seaborn",
+  "shapely",
+  "trimesh",
+]
+visuals = [
+  "fastkml",
+  "leidenalg",
+  "networkx",
+  "plotly",
+  "psutil",
+  "python-igraph",
+  "python-louvain",
+  "pyvista-xarray",
+]
+blender = [
+  "opencv-python",
+  "pillow",
+  "plyfile",
+  "trimesh",
+]
+rhino-legacy = [
+  "flask",
+  "ghhops-server",
+  "rhino3dm",
+]
+
+[tool.uv]
+package = false

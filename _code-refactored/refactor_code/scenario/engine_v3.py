@@ -528,6 +528,14 @@ def age_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     return df
 
 
+def _mortality_dbh_cohorts(dbh_values: pd.Series) -> pd.Series:
+    """Return 10 cm DBH cohort indices for mortality thinning."""
+    dbh = _numeric_series(dbh_values, default=0.0).clip(lower=0.0)
+    cohort_index = np.floor(dbh / 10.0).astype(int)
+    cohort_index = cohort_index.clip(lower=0, upper=7)
+    return pd.Series(cohort_index, index=dbh_values.index, dtype="int64")
+
+
 def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) -> pd.DataFrame:
     df = df.copy()
     step_years = int(params["step_years"])
@@ -538,8 +546,6 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
     if not candidate_mask.any():
         return df
 
-    np.random.seed(seed + 2000 + int(params["absolute_year"]))
-
     annual_tree_death_urban = float(params.get("annual_tree_death_urban", 0.06))
     annual_tree_death_nature_reserves = float(params.get("annual_tree_death_nature-reserves", 0.03))
 
@@ -547,17 +553,38 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
         df["proposal-recruit_intervention"].eq("rewild-ground")
         | df["recruit_intervention_type"].eq("rewild-ground")
     )
+    dbh_cohorts = _mortality_dbh_cohorts(df["diameter_breast_height"])
+    rng = np.random.default_rng(seed + 2000 + int(params["absolute_year"]))
+    mortality_mask = pd.Series(False, index=df.index, dtype=bool)
 
-    annual_death_rate = np.where(
-        reserve_like_mask.to_numpy(dtype=bool),
-        annual_tree_death_nature_reserves,
-        annual_tree_death_urban,
-    ).astype(float)
-    annual_death_rate = np.clip(annual_death_rate, 0.0, 1.0)
-    step_death_probability = 1.0 - np.power(1.0 - annual_death_rate, step_years)
+    # Thin small/medium trees by DBH cohort so each cohort retains a stable
+    # surviving proportion, rather than rolling every row independently.
+    for is_reserve_like, annual_rate in (
+        (False, annual_tree_death_urban),
+        (True, annual_tree_death_nature_reserves),
+    ):
+        context_mask = candidate_mask & reserve_like_mask.eq(is_reserve_like)
+        if not context_mask.any():
+            continue
 
-    death_roll = np.random.uniform(0.0, 1.0, len(df))
-    mortality_mask = candidate_mask & (death_roll < step_death_probability)
+        step_death_probability = 1.0 - np.power(1.0 - float(np.clip(annual_rate, 0.0, 1.0)), step_years)
+        context_cohorts = dbh_cohorts.loc[context_mask]
+
+        for cohort in sorted(context_cohorts.unique()):
+            cohort_index = context_cohorts.index[context_cohorts.eq(int(cohort))]
+            cohort_size = int(len(cohort_index))
+            if cohort_size == 0:
+                continue
+
+            survivor_count = int(np.rint(cohort_size * (1.0 - step_death_probability)))
+            survivor_count = max(0, min(cohort_size, survivor_count))
+            death_count = cohort_size - survivor_count
+            if death_count <= 0:
+                continue
+
+            dead_index = rng.choice(cohort_index.to_numpy(), size=death_count, replace=False)
+            mortality_mask.loc[dead_index] = True
+
     if not mortality_mask.any():
         return df
 

@@ -5,7 +5,6 @@ import numpy as np
 import xml.etree.ElementTree as ET
 from pyproj import Transformer
 import matplotlib.pyplot as plt
-from shapely.ops import cascaded_union
 
 def parse_kml(kml_path):
     tree = ET.parse(kml_path)

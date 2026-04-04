@@ -10,7 +10,7 @@ Expected env vars:
 - TREE_TEMPLATE_ROOT
 
 Typical usage:
-  PYTHONPATH=$REPO/final:$REPO/_code-refactored .venv/bin/python final/run_saved_v3_vtks.py
+  uv run python final/run_saved_v3_vtks.py
 """
 
 from __future__ import annotations
