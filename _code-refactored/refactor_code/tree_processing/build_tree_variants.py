@@ -26,6 +26,7 @@ import combined_voxelise_dfs  # noqa: E402
 
 
 TREE_DATA_ROOT = REPO_ROOT / "data" / "revised" / "trees"
+BASE_TREE_LIBRARY_ROOT = REPO_ROOT / "_data-refactored" / "tree_libraries" / "base" / "trees"
 VARIANT_ROOT = REPO_ROOT / "_data-refactored" / "tree_variants"
 
 
@@ -289,7 +290,7 @@ def build_decayed_variant_rows(
 
 
 def build_variant_templates(config: VariantConfig) -> tuple[pd.DataFrame, dict]:
-    canonical_combined_templates = pd.read_pickle(TREE_DATA_ROOT / "combined_templateDF.pkl")
+    canonical_combined_templates = pd.read_pickle(BASE_TREE_LIBRARY_ROOT / "template-library.base.pkl")
     normalized_snags_use = normalize_snags_use(config.snags_use)
 
     elm_templates, euc_templates, graph_dict, resource_df = combined_tree_manager.load_files()
@@ -373,7 +374,7 @@ def save_variant_tables(
     trees_dir = variant_dir / "trees"
     trees_dir.mkdir(parents=True, exist_ok=True)
 
-    combined_path = trees_dir / "combined_templateDF.pkl"
+    combined_path = trees_dir / "template-library.overrides-applied.pkl"
     if config.save_template_pickle:
         variant_templates.to_pickle(combined_path)
     else:
@@ -410,7 +411,7 @@ def save_variant_tables(
         decayed_summary.to_csv(trees_dir / "decayed_rows_summary.csv", index=False)
 
     affected_rows = variant_templates[variant_templates["size"].isin(["fallen", "snag", "decayed"])].copy()
-    template_edits_path = trees_dir / "template-edits.pkl"
+    template_edits_path = trees_dir / "template-library.selected-overrides.pkl"
     affected_rows.to_pickle(template_edits_path)
     if not affected_rows.empty:
         affected_summary = affected_rows[["precolonial", "size", "control", "tree_id"]].copy()

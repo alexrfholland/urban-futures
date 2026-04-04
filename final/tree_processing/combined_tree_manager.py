@@ -512,16 +512,16 @@ def main():
 
         #5. SAVE OUTPUTS
         print(f'saving')
-        output_dir = Path('data/revised/trees') 
+        output_dir = Path('_data-refactored/tree_libraries/base/trees') 
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        outputName = f'combined_templateDF.pkl'
+        outputName = 'template-library.base.pkl'
         output_path = output_dir / outputName
         combined_templates.to_pickle(output_path)
         print(f'Combined templates dataframe saved at {output_path}')
 
         #save regenerated snags
-        output_dir = Path('data/revised/trees')
+        output_dir = Path('_data-refactored/tree_libraries/base/trees')
         outputName = f'regenerated_snags.pkl'
         output_path = output_dir / outputName
         #regenerated snags is a dictionary, save it as a pickle
@@ -542,8 +542,8 @@ def main():
     else:
         # Load existing voxelised templates
         print('\nLoading existing templates...')
-        output_dir = Path('data/revised/trees')
-        combined_templates = pd.read_pickle(output_dir / f'combined_templateDF.pkl')
+        output_dir = Path('_data-refactored/tree_libraries/base/trees')
+        combined_templates = pd.read_pickle(output_dir / 'template-library.base.pkl')
         voxelised_templates = pd.read_pickle(output_dir / f'combined_voxelSize_{voxel_size}_templateDF.pkl')
         with open(output_dir / f'regenerated_snags.pkl', 'rb') as f:
             regenerated_snags = pickle.load(f)
@@ -659,8 +659,8 @@ def main():
 
     print(justEditsDF.head())
     # Save both DataFrames
-    combined_templates.to_pickle('data/revised/trees/edited_combined_templateDF.pkl')
-    justEditsDF.to_pickle('data/revised/trees/just_edits_templateDF.pkl')
+    combined_templates.to_pickle('_data-refactored/tree_libraries/base/trees/template-library.overrides-applied.pkl')
+    justEditsDF.to_pickle('_data-refactored/tree_libraries/base/trees/template-library.selected-overrides.pkl')
 
     #save snags and original VTKS
     save_snags_and_originalVTKS(regenerated_snags, combined_templates, 'data/revised/final/stanislav')

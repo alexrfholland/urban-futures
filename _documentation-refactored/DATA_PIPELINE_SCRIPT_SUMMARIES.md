@@ -705,29 +705,29 @@ Inputs:
 Description of processing:
 - Merges the eucalypt and elm template families, regenerates and edits snag variants, and writes the combined template DataFrames used for both voxelisation and mesh regeneration.
 Outputs:
-- `data/revised/trees/combined_templateDF.pkl`
-- `data/revised/trees/edited_combined_templateDF.pkl`
-- `data/revised/trees/just_edits_templateDF.pkl`
-- `data/revised/trees/regenerated_snags.pkl`
-- `data/revised/trees/combined_voxelSize_{voxel_size}_templateDF.pkl`
+- `_data-refactored/tree_libraries/base/trees/template-library.base.pkl`
+- `_data-refactored/tree_libraries/base/trees/template-library.overrides-applied.pkl`
+- `_data-refactored/tree_libraries/base/trees/template-library.selected-overrides.pkl`
+- `_data-refactored/tree_libraries/base/trees/regenerated_snags.pkl`
+- `_data-refactored/tree_libraries/base/trees/combined_voxelSize_{voxel_size}_templateDF.pkl`
 Chain note:
 - `combined_tree_manager.py` writes `combined_voxelSize_{voxel_size}_templateDF.pkl`, but `final/a_resource_distributor_dataframes.py` reads `{voxel_size}_combined_voxel_templateDF.pkl`; the filename chain breaks unless `combined_voxelise_dfs.py` is run separately.
 
 Step 18. `final/tree_processing/combined_voxelise_dfs.py`
 Inputs:
-- `data/revised/trees/edited_combined_templateDF.pkl`
+- `_data-refactored/tree_libraries/base/trees/template-library.overrides-applied.pkl`
 Description of processing:
 - Voxelizes the edited combined template DataFrame at a chosen resolution, collapses point resources into per-voxel stats, and writes the baseline-facing voxel template tables.
 Outputs:
-- `data/revised/trees/{voxel_size}_combined_voxel_templateDF.pkl`
-- `data/revised/trees/{voxel_size}_combined_voxel_adjustment_summary.csv`
-- `data/revised/trees/{voxel_size}_combined_voxel_all_resource_stats.csv`
+- `_data-refactored/tree_libraries/base/trees/{voxel_size}_combined_voxel_templateDF.pkl`
+- `_data-refactored/tree_libraries/base/trees/{voxel_size}_combined_voxel_adjustment_summary.csv`
+- `_data-refactored/tree_libraries/base/trees/{voxel_size}_combined_voxel_all_resource_stats.csv`
 Chain note:
 - `final/a_resource_distributor_dataframes.py` currently reads this standalone filename pattern.
 
 Step 19. `final/tree_processing/combine_resource_treeMeshGenerator.py`
 Inputs:
-- `data/revised/trees/edited_combined_templateDF.pkl` or `data/revised/trees/just_edits_templateDF.pkl`
+- `_data-refactored/tree_libraries/base/trees/template-library.overrides-applied.pkl` or `_data-refactored/tree_libraries/base/trees/template-library.selected-overrides.pkl`
 Description of processing:
 - Extracts isosurfaces from the combined template points, transfers template attributes onto mesh vertices, and writes the tree-mesh VTK library.
 Outputs:
@@ -736,7 +736,7 @@ Outputs:
 Step 20. `final/_blender/a_vtk_to_ply.py`
 Inputs:
 - `data/revised/final/treeMeshes/*.vtk`
-- optionally filtered by `data/revised/trees/just_edits_templateDF.pkl`
+- optionally filtered by `_data-refactored/tree_libraries/base/trees/template-library.selected-overrides.pkl`
 Description of processing:
 - Converts the tree VTK meshes into Blender-facing PLYs and preserves the numeric point attributes.
 Outputs:

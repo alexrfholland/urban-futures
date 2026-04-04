@@ -573,6 +573,13 @@ def _template_root() -> Path:
     return Path("data/revised/trees")
 
 
+def _canonical_base_template_root() -> Path:
+    override = os.environ.get("TREE_TEMPLATE_BASE_ROOT")
+    if override:
+        return Path(override)
+    return Path("_data-refactored/tree_libraries/base/trees")
+
+
 def _apply_template_edits(
     canonical_templates: pd.DataFrame,
     template_edits: pd.DataFrame,
@@ -605,23 +612,24 @@ def _apply_template_edits(
 
 def _load_full_template_table(template_dir: Path) -> tuple[pd.DataFrame, Path]:
     combined_candidates = [
-        template_dir / "edited_combined_templateDF.pkl",
-        template_dir / "combined_templateDF.pkl",
+        template_dir / "template-library.overrides-applied.pkl",
+        template_dir / "template-library.base.pkl",
     ]
     for path in combined_candidates:
         if path.exists():
             return pd.read_pickle(path), path
 
-    template_edits_path = template_dir / "template-edits.pkl"
+    template_edits_path = template_dir / "template-library.selected-overrides.pkl"
     if template_edits_path.exists():
-        canonical_path = Path("data/revised/trees/combined_templateDF.pkl")
+        canonical_path = _canonical_base_template_root() / "template-library.base.pkl"
         canonical_templates = pd.read_pickle(canonical_path)
         template_edits = pd.read_pickle(template_edits_path)
         return _apply_template_edits(canonical_templates, template_edits), template_edits_path
 
     raise FileNotFoundError(
         f"Could not find combined templates in {template_dir}. "
-        "Expected edited_combined_templateDF.pkl, combined_templateDF.pkl, or template-edits.pkl."
+        "Expected template-library.overrides-applied.pkl, template-library.base.pkl, "
+        "or template-library.selected-overrides.pkl."
     )
 
 

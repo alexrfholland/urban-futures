@@ -272,8 +272,8 @@ def edit_individual_trees(templatesDF):
 if __name__ == "__main__":
     print("Loading templates...")
     
-    templateDir = Path('data/revised/trees')
-    templateName = 'combined_templateDF.pkl'
+    templateDir = Path('_data-refactored/tree_libraries/base/trees')
+    templateName = 'template-library.base.pkl'
     
     template_input_path = templateDir / templateName
     

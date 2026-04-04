@@ -239,9 +239,16 @@ def build_base_deadwood_volume_lookup(
     template_root: Path,
     wood_density_t_per_m3: float = DEFAULT_WOOD_DENSITY_T_PER_M3,
 ) -> tuple[pd.DataFrame, Path]:
-    template_table_path = template_root / "template-edits.pkl"
-    if not template_table_path.exists():
-        raise FileNotFoundError(f"Deadwood template edit table not found: {template_table_path}")
+    candidates = [
+        template_root / "template-library.selected-overrides.pkl",
+        template_root / "template-library.overrides-applied.pkl",
+    ]
+    template_table_path = next((path for path in candidates if path.exists()), None)
+    if template_table_path is None:
+        raise FileNotFoundError(
+            "Deadwood template table not found. "
+            f"Tried: {[str(path) for path in candidates]}"
+        )
 
     template_df = pd.read_pickle(template_table_path)
 

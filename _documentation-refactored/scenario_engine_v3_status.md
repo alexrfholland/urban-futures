@@ -26,6 +26,48 @@ Required settings:
 
 The default loader root `data/revised/trees` is not an acceptable V3 validation root.
 
+## Template Library Layout
+
+Template libraries now use three clearer filenames:
+
+- `template-library.base.pkl`
+  - full base library
+- `template-library.selected-overrides.pkl`
+  - only the override rows chosen for this variant
+- `template-library.overrides-applied.pkl`
+  - full resolved library after those overrides are applied
+
+Current canonical base-library root:
+
+- [_data-refactored/tree_libraries/base/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_libraries/base/trees)
+
+Current canonical v3 variant root:
+
+- [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+
+Here, `variant` means one selected template bundle under `_data-refactored/tree_variants`. We maintain multiple variant roots so different fallen / snag / decayed strategies can be compared.
+
+To decide the variant, we currently select between:
+
+- fallen modes:
+  - `canonical`
+  - `nonpre-direct`
+  - `nonpre-geometry-pre-attrs`
+- snag modes:
+  - `elm-models-new`
+  - `elm-snags-old`
+- decayed strategy:
+  - currently the script includes the `decayed-small-fallen` bundle logic
+
+The main scripts involved are:
+
+- builder:
+  - [_code-refactored/refactor_code/tree_processing/build_tree_variants.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/build_tree_variants.py)
+- runtime template loader:
+  - [final/a_resource_distributor_dataframes.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_resource_distributor_dataframes.py)
+- v3 baseline helper:
+  - [_code-refactored/refactor_code/scenario/baseline_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/baseline_v3.py)
+
 ## Required Run Metadata
 
 Every v3 candidate run should persist the full run-config block, not just the template root.

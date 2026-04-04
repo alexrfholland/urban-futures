@@ -414,7 +414,7 @@ They are lost in the active combined-template pipeline in [combined_tree_manager
 Cause:
 
 - `update_template_files(...)` only appends eucalyptus rows when `precolonial` is `True`
-- because elm has no fallen templates, the active [combined_templateDF.pkl](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/trees/combined_templateDF.pkl) ends up with only `precolonial=True` fallen rows
+- because elm has no fallen templates, the active [template-library.base.pkl](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_libraries/base/trees/template-library.base.pkl) ends up with only `precolonial=True` fallen rows
 
 Related note:
 
@@ -492,34 +492,34 @@ Current working choice:
 Important implementation detail:
 
 - full variant template pickles are disabled by default to avoid multi-gigabyte duplicate outputs
-- the builder writes `template-edits.pkl`, compact summaries, metadata, VTK meshes, and sample renders by default
+- the builder writes `template-library.selected-overrides.pkl`, compact summaries, metadata, VTK meshes, and sample renders by default
 - full template pickles and voxel tables remain optional via:
   - `--save-template-pickle`
   - `--build-voxel-tables`
 
-### What `template-edits.pkl` Is
+### What `template-library.selected-overrides.pkl` Is
 
 Primary artifact:
 
-- `trees/template-edits.pkl`
+- `trees/template-library.selected-overrides.pkl`
 
 Logic:
 
-- [combined_templateDF.pkl](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/trees/combined_templateDF.pkl) is the full active template table
-- `template-edits.pkl` contains only the rows that should replace canonical rows
+- [template-library.base.pkl](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_libraries/base/trees/template-library.base.pkl) is the full base template table
+- `template-library.selected-overrides.pkl` contains only the rows that should replace canonical rows
 - in the current fallen/snag investigation, that means the edited `fallen` and `snag` rows only
 
 Practical use:
 
-1. load canonical `combined_templateDF.pkl`
-2. remove rows whose keys appear in `template-edits.pkl`
-3. append the rows from `template-edits.pkl`
+1. load canonical `template-library.base.pkl`
+2. remove rows whose keys appear in `template-library.selected-overrides.pkl`
+3. append the rows from `template-library.selected-overrides.pkl`
 4. continue to voxelisation or mesh generation from that edited template state
 
 So:
 
-- `combined_templateDF.pkl` = the whole table
-- `template-edits.pkl` = the patch to apply to that whole table
+- `template-library.base.pkl` = the whole base table
+- `template-library.selected-overrides.pkl` = the patch to apply to that base table
 
 ### Resource Adjustment Point For Fallen Variants
 
@@ -548,7 +548,7 @@ Two non-destructive variant roots have been built:
 
 Each variant contains:
 
-- `trees/template-edits.pkl`
+- `trees/template-library.selected-overrides.pkl`
 - `trees/template-edits_summary.csv`
 - `trees/variant_metadata.json`
 - `trees/fallen_rows_summary.csv`

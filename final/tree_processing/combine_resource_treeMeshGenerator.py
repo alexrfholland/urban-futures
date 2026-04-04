@@ -337,15 +337,15 @@ if __name__ == "__main__":
     choice = input("Enter choice (1, 2 or 3): ")
 
     if choice == "1":
-        templateName = 'edited_combined_templateDF.pkl'
+        templateName = 'template-library.overrides-applied.pkl'
     elif choice == "2":
-        templateName = 'just_edits_templateDF.pkl'
+        templateName = 'template-library.selected-overrides.pkl'
     elif choice == "3":
-        templateName = 'edited_combined_templateDF.pkl'
+        templateName = 'template-library.overrides-applied.pkl'
     else:
         raise ValueError("Invalid choice. Please enter 1, 2 or 3.")
     
-    templateDir = Path('data/revised/trees')    
+    templateDir = Path('_data-refactored/tree_libraries/base/trees')    
     template_input_path = templateDir / templateName
     
     print(f"Loading templates from: {template_input_path}")

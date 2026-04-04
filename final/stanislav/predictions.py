@@ -27,8 +27,8 @@ predictions = pd.read_csv('data/csvs/branchPredictions - adjusted.csv')
 predictions_grouped = predictions.groupby('Tree.ID')
 
 # Load templates once
-output_dir = Path('data/revised/trees')
-combined_templates = pd.read_pickle(output_dir / 'combined_templateDF.pkl')
+output_dir = Path('_data-refactored/tree_libraries/base/trees')
+combined_templates = pd.read_pickle(output_dir / 'template-library.base.pkl')
 
 
 largeTree = aa_tree_helper_functions.get_template(combined_templates, True, 'large', 'reserve-tree', 4)
@@ -119,7 +119,6 @@ for tree in [largeTree, mediumTree]:
     print("----------------------------------------")
 
   
-
 
 
 

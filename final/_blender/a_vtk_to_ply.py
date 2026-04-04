@@ -546,7 +546,7 @@ if __name__ == "__main__":
         output_folder = base_dir / 'final/treeMeshesPly'  # Updated to match other sections
         refactored_output_folder = hook_tree_ply_library_dir()
         
-        justEditsDF = pd.read_pickle(base_dir / 'trees/just_edits_templateDF.pkl')
+        justEditsDF = pd.read_pickle(Path('_data-refactored/tree_libraries/base/trees/template-library.selected-overrides.pkl'))
 
         # Create filenames for each row in justEditsDF
         justEditsDF['filename'] = justEditsDF.apply(
@@ -588,7 +588,7 @@ if __name__ == "__main__":
         refactored_output_folder = hook_tree_ply_library_dir()
         
         # Load the full templates dataframe
-        templatesDF = pd.read_pickle(base_dir / 'trees/edited_combined_templateDF.pkl')
+        templatesDF = pd.read_pickle(Path('_data-refactored/tree_libraries/base/trees/template-library.overrides-applied.pkl'))
 
         # Create mask for snags and precolonial trees
         mask = (templatesDF['size'] == 'snag') & (templatesDF['precolonial'] == False)
