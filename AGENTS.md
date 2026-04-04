@@ -120,10 +120,12 @@ The main non-interactive batch runner is:
 Default behavior:
 
 - runs scenario generation
-- runs scenario VTK generation
-- runs urban-features VTK generation
-- runs the capability / indicator pass
+- writes interim scenario CSVs
+- builds the final integrated `nodeDF`
+- builds the final `state_with_indicators.vtk`
 - does **not** regenerate baselines unless explicitly asked
+- does **not** run the stats pass unless explicitly asked
+- does **not** write intermediate `urban_features.vtk` files in the normal path
 
 Important flags:
 
@@ -132,22 +134,37 @@ Important flags:
   - skip VTK generation
   - skip baseline regeneration
   - skip capability / indicator generation
+  - writes:
+    - `treeDF`
+    - `logDF` if present
+    - `poleDF` if present
 
 - `--vtk-only`
   - skip scenario CSV generation
   - load saved `treeDF` / `logDF` / `poleDF`
   - rebuild `subsetDS`
-  - run scenario VTK generation and urban-features generation from saved CSVs
+  - build final enriched `state_with_indicators.vtk` and final integrated `nodeDF` from saved CSVs
+
+- `--baselines-only`
+  - regenerate baseline outputs only
+  - write final baseline `state_with_indicators.vtk`
+  - do not run pathway generation or stats
 
 - `--regenerate-baselines`
   - opt-in baseline regeneration
   - default is off
 
+- `--compile-stats-only`
+  - read final `state_with_indicators.vtk` files
+  - write per-state stats
+  - merge site-level stats CSVs
+  - do no scenario or VTK generation
+
 - `--multiple-agent`
   - intended for split parallel work
   - runs only the requested site / scenario / year slice
   - respects `--vtk-only`
-  - skips the cross-state capability pass so another later run can compile it
+  - keeps stats for a later explicit `--compile-stats-only` pass
 
 - `--save-raw-vtk`
   - writes raw scenario state VTKs in addition to the normal downstream outputs
@@ -175,6 +192,21 @@ This workflow still requires:
 - the approved template root
 
 It does **not** rerun the scenario engine.
+
+Normal outputs under the unified run root are:
+
+- `temp/interim-data`
+  - interim `treeDF` / `logDF` / `poleDF`
+- `temp/validation`
+  - metadata, timing logs, validation renders
+- `output/vtks`
+  - final `state_with_indicators.vtk`
+- `output/feature-locations`
+  - final integrated `nodeDF`
+- `output/stats/per-state`
+  - per-state indicator and action counts
+- `output/stats/csv`
+  - merged site-level indicator and action counts
 
 ### Never Assume
 

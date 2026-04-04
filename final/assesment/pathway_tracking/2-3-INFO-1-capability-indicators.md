@@ -51,6 +51,6 @@ Capability layers written into `*_urban_features_with_indicators.vtk`:
 | Lizard | `others` | Non-paved surface area | `indicator_Lizard_others_notpaved` |
 | Lizard | `generations` | Nurse log volume | `indicator_Lizard_generations_nurse-log` |
 | Lizard | `generations` | Fallen tree volume | `indicator_Lizard_generations_fallen-tree` |
-| Tree | `self` | Senescing tree volume | `indicator_Tree_self_senescent` |
+| Tree | `self` | Late-life tree and deadwood volume | `indicator_Tree_self_senescent` |
 | Tree | `others` | Soil near canopy features | `indicator_Tree_others_notpaved` |
 | Tree | `generations` | Grassland for recruitment | `indicator_Tree_generations_grassland` |

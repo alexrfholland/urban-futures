@@ -299,6 +299,58 @@ def engine_output_validation_dir(output_mode: str | None = None) -> Path:
     return _engine_output_write_path("validation", output_mode)
 
 
+def engine_output_state_indicator_counts_path(
+    site: str,
+    scenario: str,
+    year: int,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _engine_output_write_path(
+        Path("stats") / "per-state" / site / f"{site}_{scenario}_{voxel}_yr{year}_indicator_counts.csv",
+        output_mode,
+    )
+
+
+def engine_output_state_action_counts_path(
+    site: str,
+    scenario: str,
+    year: int,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _engine_output_write_path(
+        Path("stats") / "per-state" / site / f"{site}_{scenario}_{voxel}_yr{year}_action_counts.csv",
+        output_mode,
+    )
+
+
+def engine_output_baseline_indicator_counts_path(
+    site: str,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _engine_output_write_path(
+        Path("stats") / "per-state" / site / f"{site}_baseline_{voxel}_indicator_counts.csv",
+        output_mode,
+    )
+
+
+def engine_output_baseline_action_counts_path(
+    site: str,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _engine_output_write_path(
+        Path("stats") / "per-state" / site / f"{site}_baseline_{voxel}_action_counts.csv",
+        output_mode,
+    )
+
+
 def engine_output_bioenvelope_ply_path(
     site: str,
     scenario: str,

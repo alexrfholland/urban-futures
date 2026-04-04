@@ -24,9 +24,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
 import a_scenario_generateVTKs
+import a_info_gather_capabilities
 import a_scenario_initialiseDS
 import a_scenario_urban_elements_count
-from refactor_code.paths import scenario_urban_features_vtk_path
 from refactor_code.scenario import params_v3
 
 
@@ -123,14 +123,24 @@ def run_saved_site_scenario(
             save_raw_vtk=save_raw_vtk,
         )
         vtk_file, state_polydata = vtk_result
-        a_scenario_urban_elements_count.process_scenario_polydata(
+        state_polydata = a_scenario_urban_elements_count.process_scenario_polydata(
             state_polydata,
             site=site,
             voxel_size=voxel_size,
             scenario=scenario,
             year=year,
-            save_path=scenario_urban_features_vtk_path(site, scenario, year, voxel_size),
+            save_path=None,
             enable_visualization=enable_visualization,
+        )
+        a_info_gather_capabilities.process_polydata(
+            state_polydata,
+            site,
+            scenario,
+            year,
+            voxel_size=voxel_size,
+            save_vtk=True,
+            save_stats=False,
+            output_mode="validation",
         )
         if vtk_file:
             print(f"Saved raw VTK to {vtk_file}")

@@ -62,7 +62,6 @@ def main() -> None:
     print(f"Baseline resources: {artifacts.resource_vtk_path}")
     print(f"Baseline terrain: {artifacts.terrain_vtk_path}")
     print(f"Baseline combined: {artifacts.combined_vtk_path}")
-    print(f"Baseline urban features: {artifacts.urban_features_vtk_path}")
     print(f"Deadwood allocation: {artifacts.allocation_csv_path}")
     print(f"Metadata: {artifacts.metadata_json_path}")
 

@@ -40,8 +40,13 @@ Required env/config record:
 
 - v3 engine runtime: [_code-refactored/refactor_code/scenario/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v3.py)
 - scenario runner now imports v3: [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py)
-- v3 proposal arrays are computed during scenario VTK generation and carried forward into `urban_features` / `state_with_indicators`: [a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_generateVTKs.py)
-- v3 proposal arrays are recomputed on the enriched augmented VTKs, which are the main validation artifact: [a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_gather_capabilities.py)
+- the normal per-state chain is now:
+  - interim `treeDF` / `logDF` / `poleDF`
+  - in-memory polydata enrichment through search layers and indicator/proposal arrays
+  - final `state_with_indicators.vtk`
+  - final integrated `nodeDF`
+- normal v3 candidate runs do not write intermediate `urban_features.vtk` files
+- v3 proposal arrays are derived on the final enriched state artifact in [a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_gather_capabilities.py)
 - v3 proposal render view: [render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_forest_size_views.py)
 - custom v3 proposal render schema: [_documentation-refactored/scenario_engine_v3_render_schema.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_render_schema.md)
 
@@ -244,6 +249,33 @@ This scratch experiment includes the following engine-behaviour changes relative
 This scratch experiment is not canonical v3.
 
 It is a candidate branch-state experiment recorded for recruit/deadwood testing only.
+
+## Current Candidate Run: simv3-5
+
+The current streamlined candidate run root is:
+
+- [_data-refactored/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5)
+
+Its output layout is:
+
+- [temp/interim-data](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/temp/interim-data)
+- [temp/validation](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/temp/validation)
+- [output/vtks](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/vtks)
+- [output/feature-locations](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/feature-locations)
+- [output/stats](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/stats)
+
+Verified output counts:
+
+- `48` pathway `state_with_indicators.vtk`
+- `3` baseline `state_with_indicators.vtk`
+- `48` integrated `nodeDF` CSVs
+- `102` per-state stats CSVs
+- `6` merged site stats CSVs
+
+Verified non-outputs:
+
+- no intermediate `urban_features.vtk` files under `temp/interim-data`
+- no raw `scenarioYR*.vtk` files under `temp/interim-data`
 
 ## Open State
 

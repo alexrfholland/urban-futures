@@ -65,7 +65,7 @@ Saved quick verification artifacts:
 Quick verification result is split:
 
 - repeatability passed
-- all expected quick-subset `treeDF`, `urban_features`, and augmented `state_with_indicators` files exist
+- all expected quick-subset `treeDF` and final `state_with_indicators` files exist
 - all quick-subset V3 proposal arrays exist on augmented VTKs
 - no unexpected V3 proposal labels were found
 - quick render counts passed for `classic`, `merged`, `proposal-hybrid`, and `proposal-hybrid-v3`
@@ -178,6 +178,39 @@ Current status for the required minimum record:
 - repeatability passed: yes
 - full file counts passed: yes
 - `v2 vs v3` delta location: generated
+
+## Current Refactored Validation Flow
+
+The normal candidate flow is now split into three explicit phases:
+
+1. `--node-only`
+   - writes interim `treeDF`
+   - writes `logDF` and `poleDF` when those resources exist for the site
+2. `--vtk-only`
+   - rebuilds `subsetDS`
+   - loads saved interim CSVs
+   - builds one in-memory polydata per state
+   - mutates that same object through search-layer and indicator/proposal enrichment
+   - writes only the final `state_with_indicators.vtk`
+   - writes the final integrated `nodeDF`
+3. `--compile-stats-only`
+   - reads final `state_with_indicators.vtk`
+   - writes per-state stats
+   - merges site-level stats CSVs
+
+Normal candidate runs no longer require saved intermediate `urban_features.vtk` files.
+
+Current full candidate root:
+
+- [_data-refactored/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5)
+
+Verified counts for that root:
+
+- `48` pathway `state_with_indicators.vtk`
+- `3` baseline `state_with_indicators.vtk`
+- `48` integrated `nodeDF` CSVs
+- `102` per-state stats CSVs
+- `6` merged site stats CSVs
 
 ## Known Issues / To Do
 

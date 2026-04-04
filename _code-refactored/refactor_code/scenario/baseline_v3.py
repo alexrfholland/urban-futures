@@ -25,7 +25,6 @@ for import_root in (CODE_ROOT, FINAL_DIR):
 
 import a_helper_functions  # noqa: E402
 import a_resource_distributor_dataframes  # noqa: E402
-import a_scenario_urban_elements_count  # noqa: E402
 
 from refactor_code.paths import (  # noqa: E402
     engine_output_baseline_terrain_vtk_path,
@@ -37,7 +36,6 @@ from refactor_code.paths import (  # noqa: E402
     scenario_baseline_resources_vtk_path,
     scenario_baseline_terrain_vtk_path,
     scenario_baseline_trees_csv_path,
-    scenario_baseline_urban_features_vtk_path,
 )
 from refactor_code.scenario.structure_ids import assign_baseline_tree_structure_ids  # noqa: E402
 
@@ -103,13 +101,13 @@ class GeneratedBaselineArtifacts:
     resource_vtk_path: Path
     terrain_vtk_path: Path
     combined_vtk_path: Path
-    urban_features_vtk_path: Path
     refactored_trees_csv_path: Path
     refactored_terrain_vtk_path: Path
     allocation_csv_path: Path
     metadata_json_path: Path
     candidate_csv_path: Path
     target_json_path: Path
+    combined_polydata: pv.PolyData
 
 
 def _v3_output_roots(
@@ -895,7 +893,6 @@ def generate_baseline(
     trees_csv_path = scenario_baseline_trees_csv_path(site)
     terrain_vtk_path = scenario_baseline_terrain_vtk_path(site, voxel_size)
     combined_vtk_path = scenario_baseline_combined_vtk_path(site, voxel_size)
-    urban_features_vtk_path = scenario_baseline_urban_features_vtk_path(site, voxel_size)
     refactored_trees_csv_path = engine_output_baseline_trees_csv_path(site)
     refactored_terrain_vtk_path = engine_output_baseline_terrain_vtk_path(site, voxel_size)
 
@@ -906,13 +903,6 @@ def generate_baseline(
     terrain_output_poly.save(terrain_vtk_path)
     terrain_output_poly.save(refactored_terrain_vtk_path)
     combined_poly.save(combined_vtk_path)
-
-    a_scenario_urban_elements_count.process_baseline_polydata(
-        combined_poly.copy(deep=True),
-        site=site,
-        voxel_size=voxel_size,
-        save_path=urban_features_vtk_path,
-    )
 
     allocation_csv_path = _support_file(site, voxel_size, "deadwood_allocation", ".csv")
     allocation_df = pd.concat([fallen_allocation_df, decayed_allocation_df], ignore_index=True)
@@ -960,11 +950,11 @@ def generate_baseline(
         resource_vtk_path=resource_vtk_path,
         terrain_vtk_path=terrain_vtk_path,
         combined_vtk_path=combined_vtk_path,
-        urban_features_vtk_path=urban_features_vtk_path,
         refactored_trees_csv_path=refactored_trees_csv_path,
         refactored_terrain_vtk_path=refactored_terrain_vtk_path,
         allocation_csv_path=allocation_csv_path,
         metadata_json_path=metadata_json_path,
         candidate_csv_path=preflight.candidate_csv_path,
         target_json_path=preflight.target_json_path,
+        combined_polydata=combined_poly,
     )

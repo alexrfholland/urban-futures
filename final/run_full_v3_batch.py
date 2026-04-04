@@ -27,17 +27,14 @@ sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
 import a_info_gather_capabilities
 import a_scenario_generateVTKs
-import a_scenario_get_baselines
 import a_scenario_initialiseDS
 import a_scenario_runscenario
 import a_scenario_urban_elements_count
 from refactor_code.scenario import params_v3
+from refactor_code.scenario import baseline_v3
 
 from refactor_code.paths import (
     engine_output_validation_dir,
-    refactor_statistics_root,
-    scenario_baseline_dir,
-    scenario_urban_features_vtk_path,
 )
 
 
@@ -101,12 +98,14 @@ def parse_args() -> argparse.Namespace:
         help="Skip scenario CSV generation, load saved scenario CSVs, and run downstream VTK work only.",
     )
     parser.add_argument(
-        "--capabilities-only",
+        "--compile-stats-only",
         action="store_true",
-        help=(
-            "Skip scenario and VTK generation and run the capability/statistics pass only "
-            "against existing urban_features outputs for the requested site/scenario/year slice."
-        ),
+        help="Run the stats pass from final state VTKs and write/merge stats CSVs only; do no scenario or VTK generation.",
+    )
+    parser.add_argument(
+        "--baselines-only",
+        action="store_true",
+        help="Generate baselines only; do no scenario, VTK, or stats work.",
     )
     parser.add_argument(
         "--regenerate-baselines",
@@ -205,14 +204,25 @@ def run_site_scenario(
                 save_raw_vtk=save_raw_vtk,
             )
 
-            a_scenario_urban_elements_count.process_scenario_polydata(
+            state_polydata = a_scenario_urban_elements_count.process_scenario_polydata(
                 state_polydata,
                 site=site,
                 voxel_size=voxel_size,
                 scenario=scenario,
                 year=year,
-                save_path=scenario_urban_features_vtk_path(site, scenario, year, voxel_size),
+                save_path=None,
                 enable_visualization=False,
+            )
+
+            a_info_gather_capabilities.process_polydata(
+                state_polydata,
+                site,
+                scenario,
+                year,
+                voxel_size=voxel_size,
+                save_vtk=True,
+                save_stats=False,
+                output_mode="validation",
             )
 
             if vtk_file:
@@ -223,37 +233,42 @@ def run_site_scenario(
 
 
 def run_baselines(sites: list[str], *, voxel_size: int = 1) -> None:
-    output_folder = str(scenario_baseline_dir())
-    print(f"\n===== V3: Baselines (output_folder={output_folder}) =====\n")
+    print("\n===== V3: Baselines =====\n")
     for site in sites:
         print(f"\n----- V3: baseline / {site} -----\n")
-        a_scenario_get_baselines.generate_baseline(site, voxel_size, output_folder, visualize=False)
+        artifacts = baseline_v3.generate_baseline(site=site, voxel_size=voxel_size, visualize=False)
+        baseline_polydata = a_scenario_urban_elements_count.process_baseline_polydata(
+            artifacts.combined_polydata,
+            site=site,
+            voxel_size=voxel_size,
+            save_path=None,
+        )
+        a_info_gather_capabilities.process_polydata(
+            baseline_polydata,
+            site,
+            "baseline",
+            -180,
+            voxel_size=voxel_size,
+            save_vtk=True,
+            save_stats=False,
+            output_mode="validation",
+        )
 
 
 def run_capabilities(sites: list[str], scenarios: list[str], years: list[int], *, voxel_size: int = 1) -> None:
-    print("\n===== V3: Capability Pass (state_with_indicators + indicator CSVs) =====\n")
-    csv_dir = refactor_statistics_root("validation") / "csv"
-    csv_dir.mkdir(parents=True, exist_ok=True)
+    print("\n===== V3: Stats Pass =====\n")
     for site in sites:
         indicator_df, action_df = a_info_gather_capabilities.process_site(
             site,
             scenarios=scenarios,
             years=years,
             voxel_size=voxel_size,
-            save_vtk=True,
+            save_vtk=False,
             include_baseline=True,
             output_mode="validation",
         )
-        if not indicator_df.empty:
-            indicator_path = csv_dir / f"{site}_{voxel_size}_indicator_counts.csv"
-            indicator_df.to_csv(indicator_path, index=False)
-            print(f"Saved indicator CSV: {indicator_path}")
-        if not action_df.empty:
-            action_path = csv_dir / f"{site}_{voxel_size}_action_counts.csv"
-            action_df.to_csv(action_path, index=False)
-            print(f"Saved action CSV: {action_path}")
         print(
-            f"Capability pass complete: {site} "
+            f"Stats pass complete: {site} "
             f"(indicator_rows={len(indicator_df)}, action_rows={len(action_df)})"
         )
 
@@ -280,7 +295,8 @@ def main() -> None:
                 "voxel_size": args.voxel_size,
                 "node_only": args.node_only,
                 "vtk_only": args.vtk_only,
-                "capabilities_only": args.capabilities_only,
+                "compile_stats_only": args.compile_stats_only,
+                "baselines_only": args.baselines_only,
                 "regenerate_baselines": args.regenerate_baselines,
                 "multiple_agent": args.multiple_agent,
                 "save_raw_vtk": args.save_raw_vtk,
@@ -293,13 +309,14 @@ def main() -> None:
     )
     print(f"Wrote run metadata: {run_meta_path}")
 
-    if args.capabilities_only:
-        print("\n===== V3: Capabilities-only mode =====\n")
-        if args.regenerate_baselines:
-            run_baselines(sites, voxel_size=args.voxel_size)
-        else:
-            print("\n===== V3: Baseline regeneration disabled =====\n")
+    if args.compile_stats_only:
+        print("\n===== V3: Compile-stats-only mode =====\n")
         run_capabilities(sites, scenarios, years, voxel_size=args.voxel_size)
+        return
+
+    if args.baselines_only:
+        print("\n===== V3: Baselines-only mode =====\n")
+        run_baselines(sites, voxel_size=args.voxel_size)
         return
 
     for site in sites:
@@ -325,10 +342,11 @@ def main() -> None:
         print("\n===== V3: Baseline regeneration disabled =====\n")
 
     if args.multiple_agent:
-        print("\n===== V3: Multiple-agent mode, skipping capability pass for later aggregation =====\n")
+        print("\n===== V3: Multiple-agent mode, stats remain for later explicit compilation =====\n")
         return
 
-    run_capabilities(sites, scenarios, years, voxel_size=args.voxel_size)
+    print("\n===== V3: Generation complete, skipping stats pass by default =====\n")
+    print("Run --compile-stats-only to build per-state and merged stats from final state_with_indicators VTKs.\n")
 
 
 if __name__ == "__main__":

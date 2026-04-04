@@ -27,7 +27,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
 
 from refactor_code.paths import (
+    engine_output_root,
+    engine_output_baseline_action_counts_path,
+    engine_output_baseline_indicator_counts_path,
     engine_output_baseline_state_vtk_path,
+    engine_output_state_action_counts_path,
+    engine_output_state_indicator_counts_path,
     engine_output_state_vtk_path,
     normalize_output_mode,
     refactor_statistics_root,
@@ -89,7 +94,7 @@ def format_voxel_size(voxel_size):
 # │ Lizard.generations.nurse-log    │ stat_fallen log > 0                                           │
 # │ Lizard.generations.fallen-tree  │ forest_size in fallen|decayed                                 │
 # ├─────────────────────────────────┼───────────────────────────────────────────────────────────────┤
-# │ Tree.self.senescent             │ forest_size == senescing                                      │
+# │ Tree.self.senescent             │ forest_size in senescing|snag|fallen|decayed                  │
 # │ Tree.others.notpaved            │ ground_not_paved + within 50m canopy + ground_only            │
 # │ Tree.generations.grassland      │ low-vegetation + within 20m canopy + ground_only              │
 # └─────────────────────────────────┴───────────────────────────────────────────────────────────────┘
@@ -171,8 +176,8 @@ INDICATORS = [
         'id': 'Tree.self.senescent',
         'persona': 'Tree',
         'capability': 'self',
-        'label': 'Senescing tree volume',
-        'query': 'forest_size == senescing',
+        'label': 'Late-life tree and deadwood volume',
+        'query': 'forest_size in senescing|snag|fallen|decayed',
     },
     {
         'id': 'Tree.others.notpaved',
@@ -883,63 +888,46 @@ def gather_all_support_actions(polydata):
 # =============================================================================
 
 def get_vtk_path(site, scenario, year, voxel_size=1, output_mode=None):
-    """Construct path to scenario VTK file."""
+    """Construct path to the best available VTK for compatibility processing."""
     data_dir = scenario_output_root(output_mode)
     voxel = format_voxel_size(voxel_size)
 
-    # Handle baseline specially
     if scenario == 'baseline':
-        baseline_path = scenario_baseline_combined_vtk_path(site, voxel_size, output_mode).with_name(
+        final_path = engine_output_baseline_state_vtk_path(site, voxel_size, output_mode)
+        if final_path.exists():
+            return final_path
+        urban_features_path = scenario_baseline_combined_vtk_path(site, voxel_size, output_mode).with_name(
             f'{site}_baseline_combined_{voxel}_urban_features.vtk'
         )
-        if baseline_path.exists():
-            return baseline_path
+        if urban_features_path.exists():
+            return urban_features_path
+        combined_path = scenario_baseline_combined_vtk_path(site, voxel_size, output_mode)
+        if combined_path.exists():
+            return combined_path
         raise FileNotFoundError(f"No baseline VTK found for {site}")
-    
+
+    final_path = engine_output_state_vtk_path(site, scenario, year, voxel_size, output_mode)
+    if final_path.exists():
+        return final_path
+
     base = data_dir / site
-    
-    # Try urban_features version first
-    vtk_name = f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features.vtk"
-    vtk_path = base / vtk_name
-    if vtk_path.exists():
-        return vtk_path
-    
-    # Try alternative naming
-    vtk_name = f"{site}_{voxel}_{scenario}_scenarioYR{year}_urban_features.vtk"
-    vtk_path = base / vtk_name
-    if vtk_path.exists():
-        return vtk_path
-    
+    candidates = [
+        base / f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features.vtk",
+        base / f"{site}_{voxel}_{scenario}_scenarioYR{year}_urban_features.vtk",
+        base / f"{site}_{scenario}_{voxel}_scenarioYR{year}.vtk",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
     raise FileNotFoundError(f"No VTK found for {site}/{scenario}/year{year}")
 
 
-def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True, output_mode=None):
-    """
-    Process a single VTK file: apply indicators and gather counts.
-    
-    Returns:
-        indicator_counts: List of dicts with indicator counts
-        action_counts: List of dicts with support action counts
-        polydata: The processed polydata (with indicator layers)
-    """
-    print(f"\n{'='*60}")
-    print(f"Processing: {vtk_path.name}")
-    print(f"{'='*60}")
-    
-    # Load VTK
-    polydata = pv.read(str(vtk_path))
-    print(f"Loaded {polydata.n_points:,} points")
-    
-    # Apply indicators
-    polydata, results = apply_indicators(polydata)
-    polydata = add_proposal_point_data(polydata)
-    polydata = ensure_v3_proposal_point_data(polydata)
-
-    # Build indicator counts records
-    indicator_counts = []
+def _build_indicator_action_frames(polydata, results, site, scenario, year, voxel_size):
+    indicator_records = []
     for indicator in INDICATORS:
         ind_id = indicator['id']
-        indicator_counts.append({
+        indicator_records.append({
             'site': site,
             'scenario': scenario,
             'year': year,
@@ -948,20 +936,111 @@ def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True, out
             'capability': indicator['capability'],
             'label': indicator['label'],
             'count': results.get(ind_id, 0),
-            'voxel_size': voxel_size
+            'voxel_size': voxel_size,
         })
-    
-    # Gather support actions
+
     action_records = gather_all_support_actions(polydata)
-    action_counts = []
     for record in action_records:
         record.update({
             'site': site,
             'scenario': scenario,
             'year': year,
-            'voxel_size': voxel_size
+            'voxel_size': voxel_size,
         })
-        action_counts.append(record)
+
+    return pd.DataFrame(indicator_records), pd.DataFrame(action_records)
+
+
+def _write_per_state_stats(indicator_df, action_df, site, scenario, year, voxel_size=1, output_mode=None):
+    if scenario == 'baseline':
+        indicator_path = engine_output_baseline_indicator_counts_path(site, voxel_size, output_mode)
+        action_path = engine_output_baseline_action_counts_path(site, voxel_size, output_mode)
+    else:
+        indicator_path = engine_output_state_indicator_counts_path(site, scenario, year, voxel_size, output_mode)
+        action_path = engine_output_state_action_counts_path(site, scenario, year, voxel_size, output_mode)
+
+    if not indicator_df.empty:
+        indicator_df.to_csv(indicator_path, index=False)
+    if not action_df.empty:
+        action_df.to_csv(action_path, index=False)
+
+
+def merge_site_stats(site, scenarios=None, years=None, voxel_size=1, include_baseline=True, output_mode=None):
+    if scenarios is None:
+        scenarios = ['positive', 'trending']
+    if years is None:
+        years = DEFAULT_YEARS
+
+    indicator_frames = []
+    action_frames = []
+    baseline_counts = {}
+
+    if include_baseline:
+        baseline_indicator_path = engine_output_baseline_indicator_counts_path(site, voxel_size, output_mode)
+        baseline_action_path = engine_output_baseline_action_counts_path(site, voxel_size, output_mode)
+        if baseline_indicator_path.exists():
+            baseline_indicator_df = pd.read_csv(baseline_indicator_path)
+            indicator_frames.append(baseline_indicator_df)
+            for _, row in baseline_indicator_df.iterrows():
+                baseline_counts[row['indicator_id']] = row['count']
+        if baseline_action_path.exists():
+            action_frames.append(pd.read_csv(baseline_action_path))
+
+    for scenario in scenarios:
+        for year in years:
+            indicator_path = engine_output_state_indicator_counts_path(site, scenario, year, voxel_size, output_mode)
+            action_path = engine_output_state_action_counts_path(site, scenario, year, voxel_size, output_mode)
+            if indicator_path.exists():
+                indicator_frames.append(pd.read_csv(indicator_path))
+            if action_path.exists():
+                action_frames.append(pd.read_csv(action_path))
+
+    indicator_df = pd.concat(indicator_frames, ignore_index=True) if indicator_frames else pd.DataFrame()
+    action_df = pd.concat(action_frames, ignore_index=True) if action_frames else pd.DataFrame()
+
+    if not indicator_df.empty and baseline_counts:
+        def calc_pct(row):
+            baseline = baseline_counts.get(row['indicator_id'], 0)
+            if baseline > 0:
+                return round(row['count'] / baseline * 100, 1)
+            return None
+        indicator_df['pct_of_baseline'] = indicator_df.apply(calc_pct, axis=1)
+
+    csv_dir = refactor_statistics_root(output_mode) / 'csv'
+    csv_dir.mkdir(parents=True, exist_ok=True)
+
+    if not indicator_df.empty:
+        indicator_df.to_csv(csv_dir / f'{site}_{voxel_size}_indicator_counts.csv', index=False)
+    if not action_df.empty:
+        action_df.to_csv(csv_dir / f'{site}_{voxel_size}_action_counts.csv', index=False)
+
+    return indicator_df, action_df
+
+
+def process_polydata(polydata, site, scenario, year, voxel_size=1, save_vtk=True, save_stats=True, output_mode=None):
+    """
+    Process a single in-memory polydata: apply indicators, gather counts, and optionally save.
+    
+    Returns:
+        indicator_df: DataFrame of indicator counts
+        action_df: DataFrame of support action counts
+        polydata: The processed polydata (with indicator/proposal layers)
+    """
+    print(f"\n{'='*60}")
+    print(f"Processing in-memory state: {site} / {scenario} / yr{year}")
+    print(f"Loaded {polydata.n_points:,} points")
+    print(f"{'='*60}")
+
+    polydata, results = apply_indicators(polydata)
+    polydata = add_proposal_point_data(polydata)
+    polydata = ensure_v3_proposal_point_data(polydata)
+
+    indicator_df, action_df = _build_indicator_action_frames(
+        polydata, results, site, scenario, year, voxel_size
+    )
+
+    if save_stats:
+        _write_per_state_stats(indicator_df, action_df, site, scenario, year, voxel_size, output_mode)
 
     if not a_helper_functions.export_all_pointdata_variables():
         polydata = a_helper_functions.drop_polydata_point_arrays_if_present(
@@ -969,7 +1048,6 @@ def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True, out
             a_helper_functions.LEAN_EXPORT_POINTDATA_DROP_ARRAYS,
         )
     
-    # Save VTK with indicators to the configured engine-output state path
     if save_vtk:
         if scenario == 'baseline':
             output_path = engine_output_baseline_state_vtk_path(site, voxel_size, output_mode)
@@ -977,8 +1055,29 @@ def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True, out
             output_path = engine_output_state_vtk_path(site, scenario, year, voxel_size, output_mode)
         polydata.save(str(output_path))
         print(f"\nSaved: {output_path}")
-    
-    return indicator_counts, action_counts, polydata
+
+    return indicator_df, action_df, polydata
+
+
+def process_vtk(vtk_path, site, scenario, year, voxel_size=1, save_vtk=True, save_stats=True, output_mode=None):
+    """
+    Compatibility wrapper that loads a VTK from disk and passes it to process_polydata.
+    """
+    print(f"\n{'='*60}")
+    print(f"Processing: {vtk_path.name}")
+    print(f"{'='*60}")
+    polydata = pv.read(str(vtk_path))
+    print(f"Loaded {polydata.n_points:,} points")
+    return process_polydata(
+        polydata,
+        site,
+        scenario,
+        year,
+        voxel_size=voxel_size,
+        save_vtk=save_vtk,
+        save_stats=save_stats,
+        output_mode=output_mode,
+    )
 
 
 def process_site(
@@ -1009,23 +1108,20 @@ def process_site(
     print(f"# Include baseline: {include_baseline}")
     print(f"{'#'*60}")
     
-    all_indicator_counts = []
-    all_action_counts = []
-    baseline_counts = {}  # Store baseline counts for percentage calculation
-    
+    all_indicator_frames = []
+    all_action_frames = []
+
     # Process baseline first (scenario='baseline', year=-180)
     if include_baseline:
         try:
             vtk_path = get_vtk_path(site, 'baseline', -180, voxel_size, output_mode)
-            ind_counts, act_counts, _ = process_vtk(
-                vtk_path, site, 'baseline', -180, voxel_size, save_vtk, output_mode
+            indicator_df, action_df, _ = process_vtk(
+                vtk_path, site, 'baseline', -180, voxel_size, save_vtk, False, output_mode
             )
-            all_indicator_counts.extend(ind_counts)
-            all_action_counts.extend(act_counts)
-            
-            # Store baseline counts for percentage calculation
-            for record in ind_counts:
-                baseline_counts[record['indicator_id']] = record['count']
+            if not indicator_df.empty:
+                all_indicator_frames.append(indicator_df)
+            if not action_df.empty:
+                all_action_frames.append(action_df)
         except FileNotFoundError as e:
             print(f"Skipping baseline: {e}")
     
@@ -1034,29 +1130,45 @@ def process_site(
         for year in years:
             try:
                 vtk_path = get_vtk_path(site, scenario, year, voxel_size, output_mode)
-                ind_counts, act_counts, _ = process_vtk(
-                    vtk_path, site, scenario, year, voxel_size, save_vtk, output_mode
+                indicator_df, action_df, _ = process_vtk(
+                    vtk_path, site, scenario, year, voxel_size, save_vtk, False, output_mode
                 )
-                all_indicator_counts.extend(ind_counts)
-                all_action_counts.extend(act_counts)
+                if not indicator_df.empty:
+                    all_indicator_frames.append(indicator_df)
+                if not action_df.empty:
+                    all_action_frames.append(action_df)
             except FileNotFoundError as e:
                 print(f"Skipping: {e}")
-    
-    # Convert to DataFrame and add percentage of baseline
-    indicator_df = pd.DataFrame(all_indicator_counts)
-    action_df = pd.DataFrame(all_action_counts)
-    
-    if not indicator_df.empty and baseline_counts:
-        # Add percentage of baseline column
-        def calc_pct(row):
-            baseline = baseline_counts.get(row['indicator_id'], 0)
-            if baseline > 0:
-                return round(row['count'] / baseline * 100, 1)
-            return None
-        
-        indicator_df['pct_of_baseline'] = indicator_df.apply(calc_pct, axis=1)
-    
-    return indicator_df, action_df
+
+    if not all_indicator_frames and not all_action_frames:
+        return pd.DataFrame(), pd.DataFrame()
+
+    per_state_dir = engine_output_root(output_mode) / "stats" / "per-state" / site
+    per_state_dir.mkdir(parents=True, exist_ok=True)
+
+    if include_baseline and all_indicator_frames:
+        baseline_indicator_df = next((df for df in all_indicator_frames if not df.empty and (df["scenario"] == "baseline").all()), None)
+        baseline_action_df = next((df for df in all_action_frames if not df.empty and (df["scenario"] == "baseline").all()), None)
+        if baseline_indicator_df is not None:
+            _write_per_state_stats(baseline_indicator_df, baseline_action_df if baseline_action_df is not None else pd.DataFrame(), site, 'baseline', -180, voxel_size, output_mode)
+
+    for df in all_indicator_frames:
+        if df.empty or (df["scenario"] == "baseline").all():
+            continue
+        first = df.iloc[0]
+        matching_action_df = next(
+            (
+                action_df
+                for action_df in all_action_frames
+                if not action_df.empty
+                and action_df.iloc[0]["scenario"] == first["scenario"]
+                and int(action_df.iloc[0]["year"]) == int(first["year"])
+            ),
+            pd.DataFrame(),
+        )
+        _write_per_state_stats(df, matching_action_df, site, first["scenario"], int(first["year"]), voxel_size, output_mode)
+
+    return merge_site_stats(site, scenarios=scenarios, years=years, voxel_size=voxel_size, include_baseline=include_baseline, output_mode=output_mode)
 
 
 # =============================================================================

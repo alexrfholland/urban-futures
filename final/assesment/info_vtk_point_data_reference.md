@@ -268,7 +268,7 @@ Each indicator is named `indicator_{Persona}_{capability}_{indicator}` (dots rep
 | `indicator_Lizard_others_notpaved` | Lizard | others | `ground_not_paved` (ground mask AND NOT paved mask) |
 | `indicator_Lizard_generations_nurse-log` | Lizard | generations | `stat_fallen log > 0` |
 | `indicator_Lizard_generations_fallen-tree` | Lizard | generations | `forest_size == fallen` |
-| `indicator_Tree_self_senescent` | Tree | self | `forest_size == senescing` |
+| `indicator_Tree_self_senescent` | Tree | self | `forest_size in senescing|snag|fallen|decayed` |
 | `indicator_Tree_others_notpaved` | Tree | others | `ground_not_paved` + within 50m of canopy-feature + ground_only |
 | `indicator_Tree_generations_grassland` | Tree | generations | `search_bioavailable == low-vegetation` + within 20m of canopy-feature + ground_only |
 
