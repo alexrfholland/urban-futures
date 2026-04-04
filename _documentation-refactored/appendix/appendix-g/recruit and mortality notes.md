@@ -11,6 +11,8 @@ For mortality, we use two Le Roux data values that are described as derived from
 
 We use `annual_tree_death_urban` by default and `annual_tree_death_nature-reserves` for tree mortality in larger rewilded areas to reflect these different conditions of proposals under recruit that are partially supported (smaller nodes, higher mortality) and fully supported (rewilded nodes, lower mortality).
 
+In the current v3 implementation, we follow Le Roux's cohort-thinning logic, keep their standard `0.06` urban and `0.03` nature-reserve annual mortality values as anchors, and apply DBH-cohort survival curves based on their assessments of tree survival across successive cohorts.
+
 In the current v3 implementation, `buffer-feature` recruits use the urban mortality rate and `rewild-ground` recruits use the nature-reserve mortality rate. Other `small` and `medium` trees also use the urban mortality rate by default.
 
 - adds annual_tree_death_urban = 0.06
@@ -19,6 +21,39 @@ In the current v3 implementation, `buffer-feature` recruits use the urban mortal
 - uses rewild-ground recruits as the lower-mortality case
 - uses buffer-feature recruits as the urban-rate case
 - uses the urban rate for other small / medium trees by default
+
+Definitions for the current implementation:
+
+- `raw mortality` = the literal annual mortality implied by a direct Le Roux-style cohort calculation from the raw cohort totals, using `1 - s^(1/8)`. This is useful as a shape reference, but it is noisy and can produce invalid negative values.
+- `shaped mortality` = the smoothed cohort factor we apply to the anchor rate in the current engine.
+- `s over 8 years` = the implied proportion of trees surviving an 8-year period for that cohort after shaping, calculated as `(1 - annual mortality)^8`.
+- `annual mortality` = the final annual cohort mortality rate used in the current engine.
+
+Urban cohorts, anchored to `0.06`
+
+| DBH cohort | Raw mortality | Shaped mortality | `s` over 8 years | Annual mortality |
+| --- | ---: | ---: | ---: | ---: |
+| `0-10` | `0.1067` | `1.0000` | `0.6096` | `0.060` |
+| `10-20` | `-0.0407` | `0.7500` | `0.6919` | `0.045` |
+| `20-30` | `0.0503` | `0.5833` | `0.7520` | `0.035` |
+| `30-40` | `0.0540` | `0.5000` | `0.7837` | `0.030` |
+| `40-50` | `0.0632` | `0.4333` | `0.8100` | `0.026` |
+| `50-60` | `0.0511` | `0.3500` | `0.8438` | `0.021` |
+| `60-70` | `0.0173` | `0.2500` | `0.8861` | `0.015` |
+| `70-80` | `0.0950` | `0.1667` | `0.9227` | `0.010` |
+
+Nature-reserve cohorts, anchored to `0.03`
+
+| DBH cohort | Raw mortality | Shaped mortality | `s` over 8 years | Annual mortality |
+| --- | ---: | ---: | ---: | ---: |
+| `0-10` | `0.2186` | `1.0000` | `0.7837` | `0.030` |
+| `10-20` | `0.0974` | `0.8000` | `0.8234` | `0.024` |
+| `20-30` | `0.1085` | `0.6333` | `0.8577` | `0.019` |
+| `30-40` | `0.1919` | `0.5000` | `0.8861` | `0.015` |
+| `40-50` | `-0.1366` | `0.4000` | `0.9079` | `0.012` |
+| `50-60` | `0.0745` | `0.3000` | `0.9302` | `0.009` |
+| `60-70` | `0.0261` | `0.2333` | `0.9454` | `0.007` |
+| `70-80` | `0.0000` | `0.1667` | `0.9607` | `0.005` |
 
 # Recruit density values
 

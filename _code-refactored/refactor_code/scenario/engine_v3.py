@@ -73,6 +73,17 @@ RELEASE_TREATMENT_BY_INTERVENTION = {
     "standard-pruning": "paved",
     "none": "paved",
 }
+# Le Roux-shaped mortality curves, anchored to the current annual mortality
+# defaults. Only cohorts up to 70-80 cm are used because this mortality pass
+# only applies to trees currently classed as small or medium.
+URBAN_MORTALITY_CURVE_FACTORS = np.array(
+    [1.0, 0.75, 0.5833333333, 0.5, 0.4333333333, 0.35, 0.25, 0.1666666667],
+    dtype=float,
+)
+RESERVE_MORTALITY_CURVE_FACTORS = np.array(
+    [1.0, 0.8, 0.6333333333, 0.5, 0.4, 0.3, 0.2333333333, 0.1666666667],
+    dtype=float,
+)
 
 
 def remap_values(values, old_min, old_max, new_min, new_max):
@@ -536,6 +547,18 @@ def _mortality_dbh_cohorts(dbh_values: pd.Series) -> pd.Series:
     return pd.Series(cohort_index, index=dbh_values.index, dtype="int64")
 
 
+def _annual_mortality_rate_for_cohort(cohort: int, *, reserve_like: bool, params: dict) -> float:
+    anchor = float(
+        params.get(
+            "annual_tree_death_nature-reserves" if reserve_like else "annual_tree_death_urban",
+            0.03 if reserve_like else 0.06,
+        )
+    )
+    factors = RESERVE_MORTALITY_CURVE_FACTORS if reserve_like else URBAN_MORTALITY_CURVE_FACTORS
+    cohort_idx = int(np.clip(cohort, 0, len(factors) - 1))
+    return float(np.clip(anchor * factors[cohort_idx], 0.0, 1.0))
+
+
 def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) -> pd.DataFrame:
     df = df.copy()
     step_years = int(params["step_years"])
@@ -545,9 +568,6 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
     candidate_mask = df["size"].isin(["small", "medium"])
     if not candidate_mask.any():
         return df
-
-    annual_tree_death_urban = float(params.get("annual_tree_death_urban", 0.06))
-    annual_tree_death_nature_reserves = float(params.get("annual_tree_death_nature-reserves", 0.03))
 
     reserve_like_mask = candidate_mask & (
         df["proposal-recruit_intervention"].eq("rewild-ground")
@@ -559,15 +579,10 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
 
     # Thin small/medium trees by DBH cohort so each cohort retains a stable
     # surviving proportion, rather than rolling every row independently.
-    for is_reserve_like, annual_rate in (
-        (False, annual_tree_death_urban),
-        (True, annual_tree_death_nature_reserves),
-    ):
+    for is_reserve_like in (False, True):
         context_mask = candidate_mask & reserve_like_mask.eq(is_reserve_like)
         if not context_mask.any():
             continue
-
-        step_death_probability = 1.0 - np.power(1.0 - float(np.clip(annual_rate, 0.0, 1.0)), step_years)
         context_cohorts = dbh_cohorts.loc[context_mask]
 
         for cohort in sorted(context_cohorts.unique()):
@@ -576,6 +591,8 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
             if cohort_size == 0:
                 continue
 
+            annual_rate = _annual_mortality_rate_for_cohort(int(cohort), reserve_like=is_reserve_like, params=params)
+            step_death_probability = 1.0 - np.power(1.0 - annual_rate, step_years)
             survivor_count = int(np.rint(cohort_size * (1.0 - step_death_probability)))
             survivor_count = max(0, min(cohort_size, survivor_count))
             death_count = cohort_size - survivor_count

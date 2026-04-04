@@ -145,6 +145,16 @@ def transfer_attributes_to_donor_geometry(
     return out
 
 
+def relabel_as_fallen_log(template: pd.DataFrame) -> pd.DataFrame:
+    template = template.copy()
+    if "resource_fallen log" not in template.columns:
+        template["resource_fallen log"] = 0
+    template["resource_fallen log"] = 1
+    template["stat_fallen log"] = 1
+    template["resource"] = "fallen log"
+    return template
+
+
 def build_fallen_variant_rows(
     canonical_combined_templates: pd.DataFrame,
     eucalyptus_df: pd.DataFrame,
@@ -152,6 +162,7 @@ def build_fallen_variant_rows(
 ) -> tuple[pd.DataFrame, dict]:
     canonical_fallen = canonical_combined_templates[canonical_combined_templates["size"] == "fallen"].copy()
     if fallens_use == "canonical":
+        canonical_fallen["template"] = canonical_fallen["template"].apply(relabel_as_fallen_log)
         return canonical_fallen, {"fallens_use": fallens_use, "mapping": {}, "added_non_precolonial_fallens": 0}
 
     euc_fallen = eucalyptus_df[eucalyptus_df["size"] == "fallen"].copy()
@@ -182,6 +193,7 @@ def build_fallen_variant_rows(
         else:
             raise ValueError(f"Unsupported fallens_use: {fallens_use}")
 
+        replacement_template = relabel_as_fallen_log(replacement_template)
         new_row = row.copy()
         new_row["template"] = replacement_template
         replaced_pre_rows.append(new_row)
@@ -194,6 +206,10 @@ def build_fallen_variant_rows(
                 "template_points": int(len(replacement_template)),
             }
         )
+
+    if not non_pre_fallen.empty:
+        non_pre_fallen = non_pre_fallen.copy()
+        non_pre_fallen["template"] = non_pre_fallen["template"].apply(relabel_as_fallen_log)
 
     variant_rows = pd.concat([non_pre_fallen, pd.DataFrame(replaced_pre_rows)], ignore_index=True)
     variant_rows = variant_rows.sort_values(["precolonial", "tree_id"]).reset_index(drop=True)
@@ -234,6 +250,7 @@ def build_decayed_variant_rows(
         (canonical_combined_templates["size"] == "fallen") & (canonical_combined_templates["precolonial"] == True)
     ].copy()
     canonical_pre_fallen["size"] = "decayed"
+    canonical_pre_fallen["template"] = canonical_pre_fallen["template"].apply(relabel_as_fallen_log)
 
     tree_id_mapping = combined_voxelise_dfs.create_treeid_mapping(eucalyptus_df, target_sizes=["fallen"])
     duplicated_false_rows = []
