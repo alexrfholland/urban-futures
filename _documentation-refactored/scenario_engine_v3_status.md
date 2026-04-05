@@ -15,7 +15,7 @@ Current canonical references remain unchanged:
 
 V3 candidate runs must explicitly use the approved canonical deadwood template bundle:
 
-- [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+- [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
 
 Required settings:
 
@@ -26,7 +26,23 @@ Required settings:
 
 The default loader root `data/revised/trees` is not an acceptable V3 validation root.
 
+Current optional template-root env vars:
+
+- `TREE_TEMPLATE_ROOT`
+  - explicit variant root for runtime loading
+- `TREE_TEMPLATE_BASE_ROOT`
+  - optional canonical base-library override
+- `TREE_TEMPLATE_VARIANTS_ROOT`
+  - optional variant-builder root override
+- `BASE_TREE_TEMPLATES_ROOT`
+  - legacy alias for `TREE_TEMPLATE_BASE_ROOT`
+
 ## Template Library Layout
+
+Current rule:
+
+- all tree-template artifacts live under `_data-refactored/model-inputs`
+- `model-outputs` is reserved for simulation-state outputs
 
 Template libraries now use three clearer filenames:
 
@@ -39,13 +55,13 @@ Template libraries now use three clearer filenames:
 
 Current canonical base-library root:
 
-- [_data-refactored/tree_libraries/base/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_libraries/base/trees)
+- [_data-refactored/model-inputs/tree_libraries/base/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees)
 
 Current canonical v3 variant root:
 
-- [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+- [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
 
-Here, `variant` means one selected template bundle under `_data-refactored/tree_variants`. We maintain multiple variant roots so different fallen / snag / decayed strategies can be compared.
+Here, `variant` means one selected template bundle under `_data-refactored/model-inputs/tree_variants`.
 
 To decide the variant, we currently select between:
 
@@ -227,7 +243,7 @@ A full scratch candidate run has now been generated under:
 
 This scratch run used the approved canonical v3 template root explicitly:
 
-- [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+- [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
 
 The scratch run covered all six `{site, scenario}` pathways:
 
@@ -296,15 +312,15 @@ It is a candidate branch-state experiment recorded for recruit/deadwood testing 
 
 The current streamlined candidate run root is:
 
-- [_data-refactored/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5)
+- [_data-refactored/model-outputs/generated-states/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5)
 
 Its output layout is:
 
-- [temp/interim-data](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/temp/interim-data)
-- [temp/validation](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/temp/validation)
-- [output/vtks](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/vtks)
-- [output/feature-locations](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/feature-locations)
-- [output/stats](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/stats)
+- [temp/interim-data](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/temp/interim-data)
+- [temp/validation](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/temp/validation)
+- [output/vtks](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/vtks)
+- [output/feature-locations](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/feature-locations)
+- [output/stats](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/stats)
 
 Verified output counts:
 

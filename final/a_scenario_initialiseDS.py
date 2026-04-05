@@ -302,9 +302,13 @@ def initialize_dataset(site, voxel_size, *, write_cache: bool = True):
     subset_path = f'{input_folder}/{site}_{voxel_size}_subsetForScenarios.nc'
 
     if not write_cache and os.path.exists(subset_path):
-        subsetDS = xr.open_dataset(subset_path)
-        print(f'Loaded existing subset dataset from {subset_path}')
-        return subsetDS
+        try:
+            subsetDS = xr.open_dataset(subset_path)
+            print(f'Loaded existing subset dataset from {subset_path}')
+            return subsetDS
+        except Exception as exc:
+            print(f'Failed to load existing subset dataset from {subset_path}: {exc}')
+            print('Rebuilding subset dataset in-memory without writing cache.')
 
     xarray_dataset = xr.open_dataset(filepath)
 

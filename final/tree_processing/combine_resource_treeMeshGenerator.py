@@ -338,14 +338,16 @@ if __name__ == "__main__":
 
     if choice == "1":
         templateName = 'template-library.overrides-applied.pkl'
+        templateDir = Path('_data-refactored/model-inputs/tree_libraries/base/trees')
     elif choice == "2":
         templateName = 'template-library.selected-overrides.pkl'
+        templateDir = Path('_data-refactored/model-inputs/tree_libraries/base/trees')
     elif choice == "3":
         templateName = 'template-library.overrides-applied.pkl'
+        templateDir = Path('_data-refactored/model-inputs/tree_libraries/base/trees')
     else:
         raise ValueError("Invalid choice. Please enter 1, 2 or 3.")
-    
-    templateDir = Path('_data-refactored/tree_libraries/base/trees')    
+
     template_input_path = templateDir / templateName
     
     print(f"Loading templates from: {template_input_path}")

@@ -346,11 +346,11 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
             legacy_release_support.ne("none"),
             release_intervention_from_target,
         )
-    blank_release_intervention = _blank_like(df["proposal-release-control_intervention"], {"not-assessed"})
+    living_mask = df["size"].isin(["small", "medium", "large"])
+    blank_release_intervention = _blank_like(df["proposal-release-control_intervention"], {"not-assessed"}) & living_mask
     df.loc[blank_release_intervention, "proposal-release-control_intervention"] = (
         release_intervention_from_target[blank_release_intervention]
     )
-    living_mask = df["size"].isin(["small", "medium", "large"])
     blank_release_decision = _blank_like(df["proposal-release-control_decision"], {"not-assessed"})
     df.loc[blank_release_decision & living_mask, "proposal-release-control_decision"] = np.where(
         df.loc[blank_release_decision & living_mask, "proposal-release-control_intervention"].eq("none"),
@@ -475,6 +475,16 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     ).fillna(df["autonomy_years"])
     df["pruning_target_years"] = df["proposal-release-control_target_years"]
     df["autonomy_years"] = df["proposal-release-control_years"]
+
+    non_living_mask = ~df["size"].isin(["small", "medium", "large"])
+    if non_living_mask.any():
+        df.loc[non_living_mask, "proposal-release-control_decision"] = "not-assessed"
+        df.loc[non_living_mask, "proposal-release-control_intervention"] = "none"
+        df.loc[non_living_mask, "proposal-release-control_target_years"] = 0.0
+        df.loc[non_living_mask, "proposal-release-control_years"] = 0.0
+        df.loc[non_living_mask, "pruning_target_years"] = 0.0
+        df.loc[non_living_mask, "autonomy_years"] = 0.0
+
     df["recruit_year"] = pd.to_numeric(df["recruit_year"], errors="coerce")
     df["early_death_at_year"] = pd.to_numeric(df["early_death_at_year"], errors="coerce")
     df["became_large_at_year"] = pd.to_numeric(df["became_large_at_year"], errors="coerce")
@@ -618,6 +628,10 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
     df.loc[recruit_mortality_mask, "under-node-treatment"] = "paved"
     df.loc[recruit_mortality_mask, "proposal-decay_decision"] = "not-assessed"
     df.loc[recruit_mortality_mask, "proposal-decay_intervention"] = "none"
+    df.loc[recruit_mortality_mask, "proposal-release-control_decision"] = "not-assessed"
+    df.loc[recruit_mortality_mask, "proposal-release-control_intervention"] = "none"
+    df.loc[recruit_mortality_mask, "proposal-release-control_target_years"] = 0.0
+    df.loc[recruit_mortality_mask, "proposal-release-control_years"] = 0.0
     df.loc[recruit_mortality_mask, "proposal-recruit_decision"] = "not-assessed"
     df.loc[recruit_mortality_mask, "proposal-recruit_intervention"] = "none"
     df.loc[recruit_mortality_mask, "recruit_intervention_type"] = "none"
@@ -842,6 +856,11 @@ def _realized_control_from_years(pruning_target: str, autonomy_years: float) -> 
 def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     df = df.copy()
     living_mask = df["size"].isin(["small", "medium", "large"])
+    non_living_mask = ~living_mask
+    df.loc[non_living_mask, "proposal-release-control_decision"] = "not-assessed"
+    df.loc[non_living_mask, "proposal-release-control_intervention"] = "none"
+    df.loc[non_living_mask, "proposal-release-control_target_years"] = 0.0
+    df.loc[non_living_mask, "proposal-release-control_years"] = 0.0
     df.loc[living_mask, "proposal-release-control_decision"] = "proposal-release-control_rejected"
 
     if living_mask.any():
@@ -907,7 +926,16 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         "reduce-pruning": "reduce-pruning",
         "eliminate-pruning": "eliminate-pruning",
     }
-    df["proposal-release-control_intervention"] = df["pruning_target"].map(support_from_target).fillna("none")
+    accepted_release_mask = df["proposal-release-control_decision"].eq("proposal-release-control_accepted")
+    df.loc[accepted_release_mask, "proposal-release-control_intervention"] = (
+        df.loc[accepted_release_mask, "pruning_target"].map(support_from_target).fillna("none")
+    )
+    df.loc[living_mask, "proposal-release-control_intervention"] = df.loc[living_mask, "proposal-release-control_intervention"].fillna("none")
+    df.loc[df["proposal-release-control_decision"].ne("proposal-release-control_accepted"), "proposal-release-control_intervention"] = "none"
+    df.loc[non_living_mask, "proposal-release-control_decision"] = "not-assessed"
+    df.loc[non_living_mask, "proposal-release-control_intervention"] = "none"
+    df.loc[non_living_mask, "proposal-release-control_target_years"] = 0.0
+    df.loc[non_living_mask, "proposal-release-control_years"] = 0.0
 
     df["control_reached"] = [
         _realized_control_from_years(target, years)

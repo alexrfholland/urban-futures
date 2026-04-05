@@ -43,10 +43,13 @@ from refactor_code.scenario.structure_ids import assign_baseline_tree_structure_
 APPROVED_CANONICAL_TEMPLATE_ROOT = (
     REPO_ROOT
     / "_data-refactored"
+    / "model-inputs"
     / "tree_variants"
     / "template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen"
     / "trees"
 )
+DEFAULT_TEMPLATE_BASE_ROOT = REPO_ROOT / "_data-refactored" / "model-inputs" / "tree_libraries" / "base" / "trees"
+DEFAULT_TEMPLATE_VARIANTS_ROOT = REPO_ROOT / "_data-refactored" / "model-inputs" / "tree_variants"
 DEFAULT_V3_SCENARIO_OUTPUT_ROOT = REPO_ROOT / "data" / "revised" / "final-v3"
 DEFAULT_V3_ENGINE_OUTPUT_ROOT = REPO_ROOT / "_data-refactored" / "v3engine_outputs"
 BASELINE_DENSITY_CSV = REPO_ROOT / "data" / "csvs" / "tree-baseline-density.csv"
@@ -135,6 +138,13 @@ def require_tree_template_root(template_root: str | Path | None = None) -> Path:
     if not resolved.exists():
         raise FileNotFoundError(f"TREE_TEMPLATE_ROOT does not exist: {resolved}")
     return resolved
+
+
+def _template_base_root() -> Path:
+    override = os.environ.get("TREE_TEMPLATE_BASE_ROOT") or os.environ.get("BASE_TREE_TEMPLATES_ROOT")
+    if override:
+        return Path(override).resolve()
+    return DEFAULT_TEMPLATE_BASE_ROOT.resolve()
 
 
 def _input_subset_path(site: str, voxel_size: float | int) -> Path:

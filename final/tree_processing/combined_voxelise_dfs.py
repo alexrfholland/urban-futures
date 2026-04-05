@@ -809,14 +809,14 @@ if __name__ == "__main__":
     voxel_size = 1
 
     # Load existing voxelised templates
-    # combined_templates = pd.read_pickle('_data-refactored/tree_libraries/base/trees/template-library.base.pkl')
-    combined_templates = pd.read_pickle('_data-refactored/tree_libraries/base/trees/template-library.overrides-applied.pkl')
+    # combined_templates = pd.read_pickle('_data-refactored/model-inputs/tree_libraries/base/trees/template-library.base.pkl')
+    combined_templates = pd.read_pickle('_data-refactored/model-inputs/tree_libraries/base/trees/template-library.overrides-applied.pkl')
 
     voxelised_templates_DF, adjustment_summary, all_resource_stats = process_trees(combined_templates, voxel_size=voxel_size, resetCount=True)
 
 
     # Check that output directory exists, create if not
-    output_dir = Path('_data-refactored/tree_libraries/base/trees') 
+    output_dir = Path('_data-refactored/model-inputs/tree_libraries/base/trees') 
     
     output_dir.mkdir(parents=True, exist_ok=True)
 

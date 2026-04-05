@@ -36,7 +36,7 @@ Canonical v3 template configuration means:
 
 Approved canonical template root:
 
-- [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+- [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
 
 ### Required Rule For Simulation Runs
 
@@ -50,7 +50,7 @@ Do not rely on the loader default.
 
 The default fallback path:
 
-- `data/revised/trees`
+- [_data-refactored/model-inputs/tree_libraries/base/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees)
 
 is not sufficient to guarantee the canonical accepted deadwood template bundle.
 
@@ -61,13 +61,27 @@ is not sufficient to guarantee the canonical accepted deadwood template bundle.
 - controls which tree-template library is used by resource distribution / VTK export
 - must be set explicitly for candidate simulation runs and validation runs
 - current approved canonical value:
-  - [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
-- unsafe fallback:
-  - [data/revised/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/trees)
+  - [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+- default fallback:
+  - [_data-refactored/model-inputs/tree_libraries/base/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees)
 
 Rule:
 
 - do not rely on the fallback for canonical or candidate validation work
+
+`TREE_TEMPLATE_BASE_ROOT`
+
+- optional override for the canonical base template-library root
+- current default value:
+  - [_data-refactored/model-inputs/tree_libraries/base/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees)
+- legacy alias still accepted by the builder/loader:
+  - `BASE_TREE_TEMPLATES_ROOT`
+
+`TREE_TEMPLATE_VARIANTS_ROOT`
+
+- optional override for the tree-variant root used by the variant builder
+- current default value:
+  - [_data-refactored/model-inputs/tree_variants](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants)
 
 `REFACTOR_RUN_OUTPUT_ROOT`
 
@@ -96,7 +110,7 @@ If you need the latest accepted simulation core and accepted templates:
    - [_data-refactored/v3engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v3engine_outputs)
    - [_statistics-refactored-v3](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored-v3)
 3. set `TREE_TEMPLATE_ROOT` to:
-   - [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+   - [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
 4. read these docs before changing anything:
    - [_documentation-refactored/scenario_engine_v3_status.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_status.md)
    - [_documentation-refactored/scenario_engine_v3_validation.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_validation.md)
@@ -337,3 +351,15 @@ Decayed
 - `stat_other`: `1,287`
 - `stat_peeling bark`: `45`
 - `stat_perch branch`: `98`
+
+#### Ticket 5. Simplify Tree Variant Data Structure
+
+Open.
+
+Current tree-variant storage is too confusing, too bloated, and still carries unnecessary test/debug artifacts.
+
+To do:
+
+- simplify the tree variant data structure
+- remove unnecessary duplicated derivative files where possible
+- reduce legacy test/debug artifacts stored alongside live inputs

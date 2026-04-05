@@ -414,7 +414,7 @@ They are lost in the active combined-template pipeline in [combined_tree_manager
 Cause:
 
 - `update_template_files(...)` only appends eucalyptus rows when `precolonial` is `True`
-- because elm has no fallen templates, the active [template-library.base.pkl](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_libraries/base/trees/template-library.base.pkl) ends up with only `precolonial=True` fallen rows
+- because elm has no fallen templates, the active [template-library.base.pkl](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees/template-library.base.pkl) ends up with only `precolonial=True` fallen rows
 
 Related note:
 
@@ -456,7 +456,7 @@ A new refactor-side variant builder now exists at [build_tree_variants.py](/User
 Purpose:
 
 - build fallen/snag source variants without touching canonical template tables
-- write variant outputs into [_data-refactored/tree_variants](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants)
+- write variant outputs into [_data-refactored/model-inputs/tree_variants](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants)
 - make the fallen and snag source switches explicit and repeatable
 
 Current exposed switches:
@@ -505,7 +505,7 @@ Primary artifact:
 
 Logic:
 
-- [template-library.base.pkl](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_libraries/base/trees/template-library.base.pkl) is the full base template table
+- [template-library.base.pkl](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees/template-library.base.pkl) is the full base template table
 - `template-library.selected-overrides.pkl` contains only the rows that should replace canonical rows
 - in the current fallen/snag investigation, that means the edited `fallen` and `snag` rows only
 
@@ -542,9 +542,9 @@ So the clean path is:
 
 Two non-destructive variant roots have been built:
 
-- [fallen-nonpre-preattrs__snag-regenerated](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/fallen-nonpre-preattrs__snag-regenerated)
-- [fallen-nonpre-preattrs__snag-updated-original-geometry](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/fallen-nonpre-preattrs__snag-updated-original-geometry)
-- [template-edits__fallens-nonpre-direct__snags-elm-snags-old](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old)
+- [fallen-nonpre-preattrs__snag-regenerated](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/fallen-nonpre-preattrs__snag-regenerated)
+- [fallen-nonpre-preattrs__snag-updated-original-geometry](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/fallen-nonpre-preattrs__snag-updated-original-geometry)
+- [template-edits__fallens-nonpre-direct__snags-elm-snags-old](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old)
 
 Each variant contains:
 
@@ -560,11 +560,11 @@ Each variant contains:
 Sample renders:
 
 - `elm-models-new` variant fallen sample:
-  - [precolonial.True_size.fallen_control.improved-tree_id.15.png](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/fallen-nonpre-preattrs__snag-regenerated/renders/precolonial.True_size.fallen_control.improved-tree_id.15.png)
+  - [precolonial.True_size.fallen_control.improved-tree_id.15.png](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/fallen-nonpre-preattrs__snag-regenerated/renders/precolonial.True_size.fallen_control.improved-tree_id.15.png)
 - `elm-models-new` snag sample:
-  - [precolonial.False_size.snag_control.improved-tree_id.11.png](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/fallen-nonpre-preattrs__snag-regenerated/renders/precolonial.False_size.snag_control.improved-tree_id.11.png)
+  - [precolonial.False_size.snag_control.improved-tree_id.11.png](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/fallen-nonpre-preattrs__snag-regenerated/renders/precolonial.False_size.snag_control.improved-tree_id.11.png)
 - `elm-snags-old` snag sample:
-  - [precolonial.False_size.snag_control.improved-tree_id.11.png](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/fallen-nonpre-preattrs__snag-updated-original-geometry/renders/precolonial.False_size.snag_control.improved-tree_id.11.png)
+  - [precolonial.False_size.snag_control.improved-tree_id.11.png](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/fallen-nonpre-preattrs__snag-updated-original-geometry/renders/precolonial.False_size.snag_control.improved-tree_id.11.png)
 
 ## Template-Edits Validation Run
 
@@ -575,7 +575,7 @@ The current comparison run used this tree-template configuration:
 
 Variant root:
 
-- [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old)
+- [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old)
 
 Non-overwriting validation output roots for this run:
 
@@ -804,7 +804,7 @@ Example:
 ```bash
 .venv/bin/python final/a_scenario_baseline_variants.py \
   --variant-name template-edits__fallens-nonpre-direct__snags-elm-snags-old \
-  --template-root _data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old/trees \
+  --template-root _data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old/trees \
   --sites all
 ```
 

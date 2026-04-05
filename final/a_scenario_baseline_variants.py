@@ -116,7 +116,7 @@ def main() -> None:
         "--template-root",
         required=True,
         type=Path,
-        help="Directory containing the chosen template library, e.g. .../tree_variants/<variant>/trees",
+        help="Directory containing the chosen template library, e.g. .../model-inputs/tree_variants/<variant>/trees",
     )
     parser.add_argument(
         "--sites",

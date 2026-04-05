@@ -512,7 +512,7 @@ def main():
 
         #5. SAVE OUTPUTS
         print(f'saving')
-        output_dir = Path('_data-refactored/tree_libraries/base/trees') 
+        output_dir = Path('_data-refactored/model-inputs/tree_libraries/base/trees')
         output_dir.mkdir(parents=True, exist_ok=True)
 
         outputName = 'template-library.base.pkl'
@@ -521,7 +521,6 @@ def main():
         print(f'Combined templates dataframe saved at {output_path}')
 
         #save regenerated snags
-        output_dir = Path('_data-refactored/tree_libraries/base/trees')
         outputName = f'regenerated_snags.pkl'
         output_path = output_dir / outputName
         #regenerated snags is a dictionary, save it as a pickle
@@ -542,7 +541,7 @@ def main():
     else:
         # Load existing voxelised templates
         print('\nLoading existing templates...')
-        output_dir = Path('_data-refactored/tree_libraries/base/trees')
+        output_dir = Path('_data-refactored/model-inputs/tree_libraries/base/trees')
         combined_templates = pd.read_pickle(output_dir / 'template-library.base.pkl')
         voxelised_templates = pd.read_pickle(output_dir / f'combined_voxelSize_{voxel_size}_templateDF.pkl')
         with open(output_dir / f'regenerated_snags.pkl', 'rb') as f:
@@ -659,8 +658,8 @@ def main():
 
     print(justEditsDF.head())
     # Save both DataFrames
-    combined_templates.to_pickle('_data-refactored/tree_libraries/base/trees/template-library.overrides-applied.pkl')
-    justEditsDF.to_pickle('_data-refactored/tree_libraries/base/trees/template-library.selected-overrides.pkl')
+    combined_templates.to_pickle('_data-refactored/model-inputs/tree_libraries/base/trees/template-library.overrides-applied.pkl')
+    justEditsDF.to_pickle('_data-refactored/model-inputs/tree_libraries/base/trees/template-library.selected-overrides.pkl')
 
     #save snags and original VTKS
     save_snags_and_originalVTKS(regenerated_snags, combined_templates, 'data/revised/final/stanislav')

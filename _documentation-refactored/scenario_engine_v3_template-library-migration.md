@@ -54,15 +54,29 @@ Canonical base library currently referenced by many scripts:
 
 Canonical v3 variant root currently used for simulation runs:
 
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees`
 
 ### Intended migration direction
 
 The intended direction is:
 
-- move canonical template-library storage into `_data-refactored`
-- keep variant roots in `_data-refactored/tree_variants`
+- move canonical template-library storage into `_data-refactored/model-inputs`
+- keep variant roots in `_data-refactored/model-inputs/tree_variants`
 - rename files so the base table, selected overrides, and overrides-applied full table are unambiguous
+
+### Post-change outcome
+
+The migration is now applied in the current working tree:
+
+- canonical base-library root:
+  - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees`
+- canonical variant root:
+  - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees`
+- optional env overrides now supported:
+  - `TREE_TEMPLATE_ROOT`
+  - `TREE_TEMPLATE_BASE_ROOT`
+  - `TREE_TEMPLATE_VARIANTS_ROOT`
+  - `BASE_TREE_TEMPLATES_ROOT` as a legacy alias
 
 ### Main runtime loader to update
 

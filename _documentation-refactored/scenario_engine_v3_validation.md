@@ -17,7 +17,7 @@ V3 validation is not valid unless the run explicitly records the approved templa
 
 Approved template root:
 
-- [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+- [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
 
 Required settings:
 
@@ -202,7 +202,7 @@ Normal candidate runs no longer require saved intermediate `urban_features.vtk` 
 
 Current full candidate root:
 
-- [_data-refactored/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5)
+- [_data-refactored/model-outputs/generated-states/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5)
 
 Verified counts for that root:
 

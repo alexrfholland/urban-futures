@@ -129,15 +129,15 @@ Immediate Blender-facing generator:
 Tree mesh chain:
 
 1. `final/tree_processing/combine_resource_treeMeshGenerator.py`
-   - reads `_data-refactored/tree_libraries/base/trees/template-library.overrides-applied.pkl` or `_data-refactored/tree_libraries/base/trees/template-library.selected-overrides.pkl`
+   - reads `_data-refactored/model-inputs/tree_libraries/base/trees/template-library.overrides-applied.pkl` or `_data-refactored/model-inputs/tree_libraries/base/trees/template-library.selected-overrides.pkl`
    - writes `data/revised/final/treeMeshes/*.vtk`
 2. `final/tree_processing/combined_tree_manager.py`
    - reads `data/revised/trees/elm_tree_dict.pkl`
    - reads `data/revised/trees/updated_tree_dict.pkl`
    - reads `data/revised/trees/resource_dicDF.csv`
    - reads `data/revised/lidar scans/elm/adtree/processedGraph/*.graphml`
-   - writes `_data-refactored/tree_libraries/base/trees/template-library.overrides-applied.pkl`
-   - writes `_data-refactored/tree_libraries/base/trees/template-library.selected-overrides.pkl`
+   - writes `_data-refactored/model-inputs/tree_libraries/base/trees/template-library.overrides-applied.pkl`
+   - writes `_data-refactored/model-inputs/tree_libraries/base/trees/template-library.selected-overrides.pkl`
 3. `final/tree_processing/combined_generateResourceDict.py`
    - reads `data/csvs/lerouxdata-update.csv`
    - writes `data/revised/trees/resource_dicDF.csv`

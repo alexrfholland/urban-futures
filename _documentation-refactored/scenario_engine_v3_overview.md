@@ -16,23 +16,23 @@ Use it first, then follow the linked documents for detail.
 
 Current unified candidate root example:
 
-- [_data-refactored/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5)
+- [_data-refactored/model-outputs/generated-states/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5)
 
 The run is split into three buckets:
 
-- [temp/interim-data](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/temp/interim-data)
+- [temp/interim-data](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/temp/interim-data)
   - interim `treeDF`
   - interim `logDF`
   - interim `poleDF`
-- [temp/validation](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/temp/validation)
+- [temp/validation](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/temp/validation)
   - run metadata
   - timing logs
   - validation renders
-- [output](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output)
-  - [vtks](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/vtks)
-  - [feature-locations](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/feature-locations)
-  - [stats](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/stats)
-  - [baselines](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/baselines)
+- [output](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output)
+  - [vtks](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/vtks)
+  - [feature-locations](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/feature-locations)
+  - [stats](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/stats)
+  - [baselines](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/baselines)
 
 ## Settings
 
@@ -43,7 +43,7 @@ Required environment variables for candidate runs:
 
 Approved template root:
 
-- [_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
+- [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
 
 Current standard voxel size:
 
@@ -130,18 +130,18 @@ So the practical rule is:
 
 Production-ready for Blender / rendering:
 
-- final [state_with_indicators.vtk](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/vtks)
-- final integrated [nodeDF](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/feature-locations)
+- final [state_with_indicators.vtk](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/vtks)
+- final integrated [nodeDF](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/feature-locations)
 
 Statistics:
 
-- per-state stats: [output/stats/per-state](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/stats/per-state)
-- merged site stats: [output/stats/csv](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/stats/csv)
-- pathway comparison: [output/stats/comparison_pathways](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/stats/comparison_pathways)
+- per-state stats: [output/stats/per-state](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/stats/per-state)
+- merged site stats: [output/stats/csv](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/stats/csv)
+- pathway comparison: [output/stats/comparison_pathways](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/stats/comparison_pathways)
 
 Validation / visualisation:
 
-- render outputs and timing logs in [temp/validation](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/temp/validation)
+- render outputs and timing logs in [temp/validation](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/temp/validation)
 - render scripts:
   - [_code-refactored/refactor_code/scenario/render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_forest_size_views.py)
   - [_code-refactored/refactor_code/scenario/render_custom_proposal_schema_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_custom_proposal_schema_v3.py)
@@ -174,7 +174,7 @@ Use the flow below in order.
    - Use the merged stats in `output/stats/csv`.
    - Write comparison tables and explanatory markdown into `output/stats/comparison_pathways`.
    - Current example:
-     - [comparison_capability-indicatorsYr180.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5/output/stats/comparison_pathways/comparison_capability-indicatorsYr180.md)
+     - [comparison_capability-indicatorsYr180.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/output/stats/comparison_pathways/comparison_capability-indicatorsYr180.md)
 
 6. Run validation renders.
    - Use the final `state_with_indicators.vtk` files, not interim CSVs.
@@ -196,7 +196,7 @@ So comparison is a postprocess on final VTK-derived stats, and validation render
 
 Current verified run:
 
-- [_data-refactored/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/simv3-5)
+- [_data-refactored/model-outputs/generated-states/simv3-5](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5)
 
 Verified counts:
 

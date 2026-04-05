@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pickle
 import sys
 from dataclasses import dataclass
@@ -26,8 +27,21 @@ import combined_voxelise_dfs  # noqa: E402
 
 
 TREE_DATA_ROOT = REPO_ROOT / "data" / "revised" / "trees"
-BASE_TREE_LIBRARY_ROOT = REPO_ROOT / "_data-refactored" / "tree_libraries" / "base" / "trees"
-VARIANT_ROOT = REPO_ROOT / "_data-refactored" / "tree_variants"
+BASE_TREE_LIBRARY_ROOT = Path(
+    os.environ.get(
+        "TREE_TEMPLATE_BASE_ROOT",
+        os.environ.get(
+            "BASE_TREE_TEMPLATES_ROOT",
+            str(REPO_ROOT / "_data-refactored" / "model-inputs" / "tree_libraries" / "base" / "trees"),
+        ),
+    )
+).expanduser()
+VARIANT_ROOT = Path(
+    os.environ.get(
+        "TREE_TEMPLATE_VARIANTS_ROOT",
+        str(REPO_ROOT / "_data-refactored" / "model-inputs" / "tree_variants"),
+    )
+).expanduser()
 
 
 RESOURCE_COLORS = {

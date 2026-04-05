@@ -253,7 +253,7 @@ def interactive_template_viewer():
     Interactive function to visualize tree templates with user-selected parameters.
     """
     # Load templates once
-    output_dir = Path('_data-refactored/tree_libraries/base/trees')
+    output_dir = Path('_data-refactored/model-inputs/tree_libraries/base/trees')
     combined_templates = pd.read_pickle(output_dir / 'template-library.base.pkl')
     
     def get_user_selections():

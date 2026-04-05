@@ -570,14 +570,14 @@ def _template_root() -> Path:
     override = os.environ.get("TREE_TEMPLATE_ROOT")
     if override:
         return Path(override)
-    return Path("data/revised/trees")
+    return _canonical_base_template_root()
 
 
 def _canonical_base_template_root() -> Path:
-    override = os.environ.get("TREE_TEMPLATE_BASE_ROOT")
+    override = os.environ.get("TREE_TEMPLATE_BASE_ROOT") or os.environ.get("BASE_TREE_TEMPLATES_ROOT")
     if override:
         return Path(override)
-    return Path("_data-refactored/tree_libraries/base/trees")
+    return Path("_data-refactored/model-inputs/tree_libraries/base/trees")
 
 
 def _apply_template_edits(

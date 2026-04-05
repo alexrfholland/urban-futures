@@ -187,6 +187,10 @@ def main() -> None:
         [f"base_bioenvelope_{suffix}" for suffix in palette_suffixes]
         + [f"bioenvelope_{suffix}" for suffix in palette_suffixes]
         + [f"trending_bioenvelope_{suffix}" for suffix in palette_suffixes]
+        + [
+            "bioenvelope_outlines-depth",
+            "bioenvelope_outlines-simple",
+        ]
     )
     outputs = []
     for stem in stems:
