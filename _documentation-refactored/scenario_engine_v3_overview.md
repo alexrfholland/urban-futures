@@ -61,7 +61,7 @@ The normal flow is:
    - writes interim `treeDF`
    - writes `logDF` and `poleDF` when the site carries those resources
 2. `--vtk-only`
-   - loads the saved interim CSVs and `subsetDS`
+   - loads the saved interim CSVs and `possibility_space_ds`
    - builds one in-memory polydata per state
    - mutates it through search-layer and indicator/proposal enrichment
    - writes the final `state_with_indicators.vtk`
@@ -166,7 +166,7 @@ Use the flow below in order.
 
 2. Generate final state outputs.
    - Run `--vtk-only`.
-   - This loads the interim CSVs and `subsetDS`, builds one polydata per state in memory, enriches it, then writes:
+   - This loads the interim CSVs and `possibility_space_ds`, builds one polydata per state in memory, enriches it, then writes:
      - final `state_with_indicators.vtk`
      - final integrated `nodeDF`
 

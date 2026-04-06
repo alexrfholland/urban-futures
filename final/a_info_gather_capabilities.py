@@ -438,7 +438,7 @@ def add_proposal_point_data(polydata):
 
     n_points = polydata.n_points
     required_arrays = {
-        "scenario_rewilded",
+        "scenario_under-node-treatment",
         "scenario_bioEnvelope",
         "scenario_outputs",
         "search_bioavailable",
@@ -461,7 +461,7 @@ def add_proposal_point_data(polydata):
             polydata.point_data[proposal_name] = _empty_proposal_labels(n_points)
         return polydata
 
-    scenario_rewilded_lower = _normalize_str_array(polydata.point_data["scenario_rewilded"])
+    scenario_under_node_treatment_lower = _normalize_str_array(polydata.point_data["scenario_under-node-treatment"])
     scenario_bio_envelope_lower = _normalize_str_array(polydata.point_data["scenario_bioEnvelope"])
     scenario_outputs_lower = _normalize_str_array(polydata.point_data["scenario_outputs"])
     search_bioavailable_lower = _normalize_str_array(polydata.point_data["search_bioavailable"])
@@ -481,7 +481,7 @@ def add_proposal_point_data(polydata):
     proposal_decay = _assign_proposal_labels(
         _empty_proposal_labels(n_points),
         np.isin(
-            scenario_rewilded_lower,
+            scenario_under_node_treatment_lower,
             ["exoskeleton", "footprint-depaved", "node-rewilded", "rewilded"],
         ),
         [
@@ -857,10 +857,10 @@ def count_support_actions(polydata, indicator_id, indicator_mask):
             })
     
     # Count by rewilding status
-    if breakdown == 'rewilding_status' and 'scenario_rewilded' in polydata.point_data:
-        rewilded = polydata.point_data['scenario_rewilded']
+    if breakdown == 'rewilding_status' and 'scenario_under-node-treatment' in polydata.point_data:
+        under_node_treatment = polydata.point_data['scenario_under-node-treatment']
         for rwild_type in REWILDING_TYPES:
-            rwild_mask = (rewilded == rwild_type)
+            rwild_mask = (under_node_treatment == rwild_type)
             count = np.sum(indicator_mask & rwild_mask)
             records.append({
                 'indicator_id': indicator_id,

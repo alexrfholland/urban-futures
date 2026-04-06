@@ -156,7 +156,7 @@ Important flags:
 - `--vtk-only`
   - skip scenario CSV generation
   - load saved `treeDF` / `logDF` / `poleDF`
-  - rebuild `subsetDS`
+  - rebuild `possibility_space_ds`
   - build final enriched `state_with_indicators.vtk` and final integrated `nodeDF` from saved CSVs
 
 - `--baselines-only`
@@ -202,7 +202,7 @@ If scenario CSVs already exist and you only want to regenerate VTK-side outputs:
 This workflow still requires:
 
 - saved `treeDF` / `logDF` / `poleDF`
-- rebuilt `subsetDS`
+- rebuilt `possibility_space_ds`
 - the approved template root
 
 It does **not** rerun the scenario engine.
@@ -271,12 +271,12 @@ Why this happens:
 
 Why positive gets hit much harder:
 
-- `positive` thresholds are broad in [a_scenario_params.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_params.py#L148):
-- `rewildThreshold = 10`
-- `plantThreshold = 50`
+- `positive` thresholds are broad in the v3 parameters:
+- `maximum-tree-support-threshold = 10`
+- `moderate-tree-support-threshold = 50`
 - `trending` thresholds are much tighter:
-- `rewildThreshold = 0`
-- `plantThreshold = 1`
+- `maximum-tree-support-threshold = 0`
+- `moderate-tree-support-threshold = 1`
 
 So in `positive`, many more trees enter that mask and get reassigned to `street-tree` at year `0`.
 In `trending`, far fewer do, so most original `park-tree` canopy stays `park-tree`.

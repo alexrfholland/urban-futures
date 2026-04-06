@@ -28,7 +28,7 @@ from refactor_code.paths import (
 )
 from refactor_code.blender.proposal_framebuffers import build_blender_proposal_framebuffer_columns
 from refactor_code.blender.proposal_framebuffers_vtk import build_blender_proposal_framebuffer_arrays
-from refactor_code.scenario.engine_v3 import calculate_rewilded_status
+from refactor_code.scenario.engine_v3 import calculate_under_node_treatment_status
 from refactor_code.scenario import params_v3
 
 VTK_PROPOSAL_LABEL_DTYPE = "<U64"
@@ -115,7 +115,7 @@ def create_proposal_point_data(ds):
         "forest_size",
         "scenario_bioEnvelope",
         "scenario_outputs",
-        "scenario_rewilded",
+        "scenario_under-node-treatment",
         "search_bioavailable",
         "search_urban_elements",
         "indicator_Bird_self_peeling",
@@ -127,7 +127,7 @@ def create_proposal_point_data(ds):
         return ds
 
     voxel_count = ds.sizes["voxel"]
-    scenario_rewilded_lower = _normalize_str_array(ds["scenario_rewilded"].values)
+    scenario_under_node_treatment_lower = _normalize_str_array(ds["scenario_under-node-treatment"].values)
     scenario_bio_envelope_lower = _normalize_str_array(ds["scenario_bioEnvelope"].values)
     scenario_outputs_lower = _normalize_str_array(ds["scenario_outputs"].values)
     forest_control_lower = _normalize_str_array(ds["forest_control"].values)
@@ -158,7 +158,7 @@ def create_proposal_point_data(ds):
     proposal_decay = _assign_proposal_labels(
         _empty_proposal_labels(voxel_count),
         np.isin(
-            scenario_rewilded_lower,
+            scenario_under_node_treatment_lower,
             ["exoskeleton", "footprint-depaved", "node-rewilded", "rewilded"],
         ),
         [
@@ -396,35 +396,35 @@ def create_v3_proposal_point_data(ds):
 #==============================================================================
 # XARRAY PROCESSING FUNCTIONS
 #==============================================================================
-def create_rewilded_variable(ds, df):
+def create_under_node_treatment_variable(ds, df):
     """
-    Updates the 'scenario_rewilded' variable in the xarray dataset based on the dataframe values.
+    Updates the 'scenario_under-node-treatment' variable in the xarray dataset based on the dataframe values.
     Matches are made based on NodeID. Non-matching NodeIDs are ignored.
     
     Parameters:
     ds (xarray.Dataset): The xarray dataset containing voxel and node information.
-    df (pandas.DataFrame): The dataframe containing NodeID and rewilded scenarios.
+    df (pandas.DataFrame): The dataframe containing NodeID and under-node treatment scenarios.
     
     Returns:
-    xarray.Dataset: The updated dataset with the 'scenario_rewilded' variable modified.
+    xarray.Dataset: The updated dataset with the 'scenario_under-node-treatment' variable modified.
     
     Variables created/modified:
-    - ds['scenario_rewilded']: Categorical variable indicating rewilding status for each voxel
+    - ds['scenario_under-node-treatment']: Categorical variable indicating under-node treatment status for each voxel
     """
     #--------------------------------------------------------------------------
     # STEP 1: PREPARE INPUT DATA
     # Standardize 'None' values to lowercase 'none' for consistency
     #--------------------------------------------------------------------------
     # Replace 'None' with 'none' in the DataFrame
-    df['rewilded'] = df['rewilded'].replace('None', 'none')
+    df['under-node-treatment'] = df['under-node-treatment'].replace('None', 'none')
     
     #--------------------------------------------------------------------------
     # STEP 2: INITIALIZE SCENARIO_REWILDED VARIABLE
     # Create the variable if it doesn't exist with default 'none' values
     #--------------------------------------------------------------------------
-    if 'scenario_rewilded' not in ds.variables:
+    if 'scenario_under-node-treatment' not in ds.variables:
         # Use object dtype for variable-length strings
-        ds = ds.assign(scenario_rewilded=('voxel', np.array(['none'] * ds.dims['voxel'], dtype='O')))
+        ds = ds.assign(**{"scenario_under-node-treatment": ('voxel', np.array(['none'] * ds.dims['voxel'], dtype='O'))})
     
     #--------------------------------------------------------------------------
     # STEP 3: EXTRACT REFERENCE ARRAYS
@@ -439,8 +439,8 @@ def create_rewilded_variable(ds, df):
     #--------------------------------------------------------------------------
     skipped_invalid_node_ids = 0
     for idx, row in df.iterrows():
-        rewilded_value = row['rewilded']
-        if rewilded_value not in ['exoskeleton', 'footprint-depaved', 'node-rewilded']:
+        treatment_value = row['under-node-treatment']
+        if treatment_value not in ['exoskeleton', 'footprint-depaved', 'node-rewilded']:
             continue
 
         raw_node_id = row.get('NodeID', np.nan)
@@ -461,22 +461,22 @@ def create_rewilded_variable(ds, df):
             skipped_invalid_node_ids += 1
             continue
 
-        if rewilded_value in ['exoskeleton', 'footprint-depaved']:
+        if treatment_value in ['exoskeleton', 'footprint-depaved']:
             # Match using 'node_CanopyID'
             mask = (canopy_id == node_id)
         else:
             # Match using 'sim_Nodes'
             mask = (sim_nodes == node_id)
 
-        # Update 'scenario_rewilded' for matching voxels
-        ds['scenario_rewilded'].values[mask] = rewilded_value
+        # Update 'scenario_under-node-treatment' for matching voxels
+        ds['scenario_under-node-treatment'].values[mask] = treatment_value
 
     if skipped_invalid_node_ids:
-        print(f"Skipped {skipped_invalid_node_ids} rewilded rows with invalid NodeID values")
+        print(f"Skipped {skipped_invalid_node_ids} under-node treatment rows with invalid NodeID values")
 
     #--------------------------------------------------------------------------
     # STEP 5: ASSIGN NON-NODE BASED REWILDING STATUS
-    # For points that are scenario_rewildingEnabled but have scenario_rewilded = 'none'
+    # For points that are scenario_rewildingEnabled but have scenario_under-node-treatment = 'none'
     #--------------------------------------------------------------------------
     # Check if scenario_rewildingEnabled exists
     if 'scenario_rewildingEnabled' in ds.variables:
@@ -487,14 +487,17 @@ def create_rewilded_variable(ds, df):
         print(f"Number of voxels with scenario_rewildingEnabled >= 0: {enabled_count}")
         
         # Create mask for points that are enabled for rewilding but don't have a specific type
-        generic_rewilding_mask = (ds['scenario_rewildingEnabled'] >= 0) & (ds['scenario_rewilded'] == 'none')
+        generic_rewilding_mask = (
+            (ds['scenario_rewildingEnabled'] >= 0)
+            & (ds['scenario_under-node-treatment'] == 'none')
+        )
         
         # Print count of voxels that match the mask
         mask_count = generic_rewilding_mask.sum().item()
         print(f"Number of voxels that match the generic rewilding mask: {mask_count}")
         
         # Assign 'rewilded' category to these points
-        ds['scenario_rewilded'].values[generic_rewilding_mask] = 'rewilded'
+        ds['scenario_under-node-treatment'].values[generic_rewilding_mask] = 'rewilded'
         
         # Print count of generic rewilded points
         print(f'Number of rewilded points: {generic_rewilding_mask.sum().item()}')
@@ -505,15 +508,15 @@ def create_rewilded_variable(ds, df):
     # STEP 6: PRINT STATISTICS
     # Output counts of rewilding categories for verification
     #--------------------------------------------------------------------------
-    # Print all unique values and counts for df['rewilded'] using pandas
-    print('Column rewilded values and counts in dataframe:')
-    print(df['rewilded'].value_counts())
-    
-    # Print all unique variable values and counts for scenario_rewilded
-    unique_values, counts = np.unique(ds['scenario_rewilded'], return_counts=True)
-    print('Column scenario_rewilded values and counts in xarray dataset:')
+    # Print all unique values and counts for df['under-node-treatment'] using pandas
+    print("Column under-node-treatment values and counts in dataframe:")
+    print(df['under-node-treatment'].value_counts())
+
+    # Print all unique variable values and counts for scenario_under-node-treatment
+    unique_values, counts = np.unique(ds['scenario_under-node-treatment'], return_counts=True)
+    print("Column scenario_under-node-treatment values and counts in xarray dataset:")
     for value, count in zip(unique_values, counts):
-        print(f'scenario_rewilded value: {value}, count: {count}')
+        print(f"scenario_under-node-treatment value: {value}, count: {count}")
     
     return ds
 
@@ -551,7 +554,7 @@ def create_bioEnvelope_catagories(ds, params):
     # STEP 2: ASSIGN BIO-ENVELOPE CATEGORIES
     # Update bio-envelope categories based on building elements and bioMask
     #--------------------------------------------------------------------------
-    # Note: scenario_bioEnvelope is already initialized as a copy of scenario_rewilded in generate_vtk
+    # Note: scenario_bioEnvelope is already initialized as a copy of scenario_under-node-treatment in generate_vtk
     
     # Assign 'otherGround' to bio-envelope-eligible voxels that remain unlabeled
     otherground_mask = bioMask & (ds['scenario_bioEnvelope'] == 'none')
@@ -671,13 +674,13 @@ def finalDSprocessing(ds):
     scenario_outputs = np.full(ds.dims['voxel'], 'none', dtype='O')
     
     # For rewilded voxels, use the appropriate rewilding status
-    # Check if scenario_bioEnvelope exists and use it instead of scenario_rewilded
+    # Check if scenario_bioEnvelope exists and use it instead of scenario_under-node-treatment
     if 'scenario_bioEnvelope' in ds.variables:
         print("Using scenario_bioEnvelope for rewilded voxels in scenario_outputs")
         scenario_outputs[maskForRewilding] = ds['scenario_bioEnvelope'].values[maskForRewilding]
     else:
-        print("Using scenario_rewilded for rewilded voxels in scenario_outputs")
-        scenario_outputs[maskForRewilding] = ds['scenario_rewilded'].values[maskForRewilding]
+        print("Using scenario_under-node-treatment for rewilded voxels in scenario_outputs")
+        scenario_outputs[maskForRewilding] = ds['scenario_under-node-treatment'].values[maskForRewilding]
     
     # For tree voxels, use the forest size
     scenario_outputs[maskforTrees] = ds['forest_size'].values[maskforTrees]
@@ -733,13 +736,13 @@ def process_polydata(polydata):
     scenario_outputs = np.full(polydata.n_points, 'none', dtype='O')
     
     # For rewilded voxels, use the appropriate rewilding status
-    # Check if scenario_bioEnvelope exists and use it instead of scenario_rewilded
+    # Check if scenario_bioEnvelope exists and use it instead of scenario_under-node-treatment
     if 'scenario_bioEnvelope' in polydata.point_data:
         print("Using scenario_bioEnvelope for rewilded voxels in scenario_outputs")
         scenario_outputs[maskForRewilding] = polydata.point_data['scenario_bioEnvelope'][maskForRewilding]
     else:
-        print("Using scenario_rewilded for rewilded voxels in scenario_outputs")
-        scenario_outputs[maskForRewilding] = polydata.point_data['scenario_rewilded'][maskForRewilding]
+        print("Using scenario_under-node-treatment for rewilded voxels in scenario_outputs")
+        scenario_outputs[maskForRewilding] = polydata.point_data['scenario_under-node-treatment'][maskForRewilding]
     
     # For tree voxels, use the forest size
     scenario_outputs[maskforTrees] = polydata.point_data['forest_size'][maskforTrees]
@@ -755,7 +758,7 @@ def process_polydata(polydata):
 #==============================================================================
 # VISUALIZATION FUNCTIONS
 #==============================================================================
-def plot_scenario_rewilded(polydata, treeDF, years_passed, site):
+def plot_scenario_under_node_treatment(polydata, treeDF, years_passed, site):
     """
     Creates a visualization of the scenario with trees, rewilding, and site voxels.
     
@@ -858,9 +861,9 @@ def print_simulation_statistics(df, year, site):
     print("\nUnique values and their counts for 'action':")
     print(df['action'].value_counts())
 
-    # Print unique values and their counts for the 'rewilded' column
-    print("\nUnique values and their counts for 'rewilded':")
-    print(df['rewilded'].value_counts())
+    # Print unique values and their counts for the 'under-node-treatment' column
+    print("\nUnique values and their counts for 'under-node-treatment':")
+    print(df['under-node-treatment'].value_counts())
 
     print(f"Trees planted: {df[df['isNewTree'] == True].shape[0]}")
     
@@ -912,22 +915,22 @@ def generate_vtk(
     #--------------------------------------------------------------------------
     # STEP 1: UPDATE XARRAY WITH SCENARIO DATA
     # Variables created/modified:
-    # - ds['scenario_rewilded']: Rewilded status for each voxel
+    # - ds['scenario_under-node-treatment']: Under-node treatment status for each voxel
     # - ds['scenario_bioEnvelope']: Bio-envelope status for each voxel (if logs/poles exist)
     # - ds['bioMask']: Boolean mask for bio-envelope eligibility
     #--------------------------------------------------------------------------
-    # First, call assign_rewilded_status to ensure the rewilding variables are created
+    # First, build the under-node-treatment variables that feed the later VTK layers.
     print('Ensuring rewilding variables are created in xarray')
-    _, ds = calculate_rewilded_status(treeDF, ds, params)
+    _, ds = calculate_under_node_treatment_status(treeDF, ds, params)
     
     # Now integrate node-based rewilding results into xarray
     print('Integrating node-based rewilding results into xarray')
-    ds = create_rewilded_variable(ds, treeDF)
-    
-    # Always initialize scenario_bioEnvelope as a copy of scenario_rewilded
-    print('Initializing scenario_bioEnvelope as a copy of scenario_rewilded')
+    ds = create_under_node_treatment_variable(ds, treeDF)
+
+    # Always initialize scenario_bioEnvelope as a copy of scenario_under-node-treatment
+    print("Initializing scenario_bioEnvelope as a copy of scenario_under-node-treatment")
     ds['scenario_bioEnvelope'] = xr.DataArray(
-        data=np.array(ds['scenario_rewilded'].values, dtype='O'),
+        data=np.array(ds['scenario_under-node-treatment'].values, dtype='O'),
         dims='voxel'
     )
     
@@ -936,10 +939,10 @@ def generate_vtk(
     if logDF is not None or poleDF is not None:
         ds = create_bioEnvelope_catagories(ds, params)
     else:
-        print('No logs or poles found, using scenario_rewilded values for scenario_bioEnvelope')
+        print("No logs or poles found, using scenario_under-node-treatment values for scenario_bioEnvelope")
 
-    unique_values, counts = np.unique(ds['scenario_rewilded'], return_counts=True)
-    print(f'Unique values and counts for scenario_rewilded: {unique_values}, {counts}')
+    unique_values, counts = np.unique(ds['scenario_under-node-treatment'], return_counts=True)
+    print(f"Unique values and counts for scenario_under-node-treatment: {unique_values}, {counts}")
     
     unique_values, counts = np.unique(ds['scenario_bioEnvelope'], return_counts=True)
     print(f'Unique values and counts for scenario_bioEnvelope: {unique_values}, {counts}')
@@ -1022,12 +1025,12 @@ def generate_vtk(
     # STEP 6: OPTIONAL VISUALIZATION
     # Creates visualization with:
     # - Tree voxels colored by forest_size
-    # - Rewilding voxels colored by scenario_rewilded
+    # - Rewilding voxels colored by scenario_under-node-treatment
     # - Site voxels in white
     # - Tree labels for large, senescing, snag, and fallen trees
     #--------------------------------------------------------------------------
     if enable_visualization:
-        plot_scenario_rewilded(polydata, treeDF, year, site)
+        plot_scenario_under_node_treatment(polydata, treeDF, year, site)
     
     if return_polydata:
         return (str(vtk_file) if vtk_file is not None else None), polydata
@@ -1113,7 +1116,7 @@ if __name__ == "__main__":
     for site in sites:
         print(f"\n===== Processing {site} =====\n")
         # Initialize dataset
-        subsetDS = a_scenario_initialiseDS.initialize_dataset(site, voxel_size)
+        possibility_space_ds = a_scenario_initialiseDS.initialize_dataset(site, voxel_size)
         
         for scenario in scenarios:
             print(f"\n--- Processing {scenario} scenario ---\n")
@@ -1126,7 +1129,17 @@ if __name__ == "__main__":
                 
                 if treeDF is not None:
                     # Generate VTK
-                    generate_vtk(site, scenario, year, voxel_size, subsetDS, treeDF, logDF, poleDF, enable_visualization)
+                    generate_vtk(
+                        site,
+                        scenario,
+                        year,
+                        voxel_size,
+                        possibility_space_ds,
+                        treeDF,
+                        logDF,
+                        poleDF,
+                        enable_visualization,
+                    )
                 else:
                     print(f"Skipping VTK generation for {site}, {scenario}, year {year} - dataframes not found")
                 

@@ -23,9 +23,7 @@ from refactor_code.paths import (
 
 TREE_COLUMNS = [
     "control",
-    "control_realized",
     "control_reached",
-    "rewilded",
     "under-node-treatment",
     "action",
     "replacement_reason",
@@ -33,23 +31,23 @@ TREE_COLUMNS = [
     "proposal-decay_intervention",
     "proposal-release-control_decision",
     "proposal-release-control_intervention",
+    "proposal-release-control_target_years",
+    "proposal-release-control_years",
     "proposal-recruit_decision",
     "proposal-recruit_intervention",
     "proposal-colonise_decision",
     "proposal-colonise_intervention",
-    "lifecycle_decision",
     "lifecycle_state",
     "size",
 ]
 NODE_COLUMNS = [
     "control",
-    "rewilded",
     "under-node-treatment",
     "action",
     "forest_control",
 ]
 VTK_ARRAYS = [
-    "scenario_rewilded",
+    "scenario_under-node-treatment",
     "scenario_bioEnvelope",
     "forest_control",
     "proposal_decayV3",

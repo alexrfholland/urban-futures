@@ -187,7 +187,7 @@ The normal candidate flow is now split into three explicit phases:
    - writes interim `treeDF`
    - writes `logDF` and `poleDF` when those resources exist for the site
 2. `--vtk-only`
-   - rebuilds `subsetDS`
+   - rebuilds `possibility_space_ds`
    - loads saved interim CSVs
    - builds one in-memory polydata per state
    - mutates that same object through search-layer and indicator/proposal enrichment

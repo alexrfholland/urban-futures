@@ -11,7 +11,7 @@ Point-data count in that file:
 ## Status Meanings
 
 - `keep`: keep in the lean final export
-- `drop`: remove at preflight `subsetDS`
+- `drop`: remove at preflight `possibility_space_ds`
 - `drop-before-save`: keep during processing, strip before final VTK save
 
 ## Notes
@@ -62,7 +62,7 @@ sim_averageResistance | keep
 ```text
 scenario_rewildingEnabled | keep
 scenario_rewildingPlantings | keep
-scenario_rewilded | keep
+scenario_under-node-treatment | keep
 scenario_bioEnvelope | keep
 scenario_outputs | keep
 ```

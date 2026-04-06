@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument("--year", type=int, default=180)
     parser.add_argument("--voxel-size", type=int, default=1)
     parser.add_argument("--output-mode", default="validation", choices=["canonical", "validation"])
-    parser.add_argument("--scalar", default="scenario_rewilded")
+    parser.add_argument("--scalar", default="scenario_under-node-treatment")
     parser.add_argument("--screenshot", type=Path, default=None)
     return parser.parse_args()
 

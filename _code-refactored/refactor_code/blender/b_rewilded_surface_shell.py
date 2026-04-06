@@ -13,7 +13,7 @@ EXPLICIT_EXPORT_PRIORITY = (
     "sim_Turns",
     "sim_averageResistance",
     "scenario_bioEnvelope",
-    "scenario_rewilded",
+    "scenario_under-node-treatment",
     "bioMask",
     "maskForRewilding",
 )

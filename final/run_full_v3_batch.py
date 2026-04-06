@@ -129,16 +129,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def _prepare_subset_dataset(site: str, voxel_size: int, *, write_cache: bool = True):
-    subset_ds = a_scenario_initialiseDS.initialize_dataset(site, voxel_size, write_cache=write_cache)
+    possibility_space_ds = a_scenario_initialiseDS.initialize_dataset(site, voxel_size, write_cache=write_cache)
     tree_df, pole_df, log_df = a_scenario_initialiseDS.load_node_dataframes(site, voxel_size)
-    tree_df, subset_ds = a_scenario_initialiseDS.PreprocessData(tree_df, subset_ds, None)
-    subset_ds, _initial_poly = a_scenario_initialiseDS.further_xarray_processing(subset_ds)
+    tree_df, possibility_space_ds = a_scenario_initialiseDS.PreprocessData(tree_df, possibility_space_ds, None)
+    possibility_space_ds, _initial_poly = a_scenario_initialiseDS.further_xarray_processing(possibility_space_ds)
 
     if log_df is not None:
-        log_df = a_scenario_initialiseDS.log_processing(log_df, subset_ds)
+        log_df = a_scenario_initialiseDS.log_processing(log_df, possibility_space_ds)
     if pole_df is not None:
-        pole_df = a_scenario_initialiseDS.pole_processing(pole_df, None, subset_ds)
-    return subset_ds, tree_df, pole_df, log_df
+        pole_df = a_scenario_initialiseDS.pole_processing(pole_df, None, possibility_space_ds)
+    return possibility_space_ds, tree_df, pole_df, log_df
 
 
 def run_site_scenario(
@@ -154,7 +154,7 @@ def run_site_scenario(
 ) -> None:
     print(f"\n===== V3: {site} / {scenario} =====\n")
 
-    subsetDS, treeDF, poleDF, logDF = _prepare_subset_dataset(
+    possibility_space_ds, treeDF, poleDF, logDF = _prepare_subset_dataset(
         site,
         voxel_size,
         write_cache=not (vtk_only or multiple_agent),
@@ -181,7 +181,7 @@ def run_site_scenario(
                 year,
                 voxel_size,
                 current_tree_df,
-                subsetDS,
+                possibility_space_ds,
                 logDF,
                 poleDF,
                 previous_year=previous_year,
@@ -195,7 +195,7 @@ def run_site_scenario(
                 scenario,
                 year,
                 voxel_size,
-                subsetDS.copy(deep=True),
+                possibility_space_ds.copy(deep=True),
                 treeDF_scenario,
                 logDF_scenario,
                 poleDF_scenario,

@@ -237,7 +237,7 @@ REQUIRED_TREE_COLUMNS = [
     "action",
     "size",
     "control",
-    "rewilded",
+    "under-node-treatment",
     "isNewTree",
     "precolonial",
 ]
@@ -246,7 +246,7 @@ REQUIRED_VTK_ARRAYS = [
     "search_bioavailable",
     "search_urban_elements",
     "scenario_outputs",
-    "scenario_rewilded",
+    "scenario_under-node-treatment",
     "scenario_bioEnvelope",
     "forest_control",
     "forest_precolonial",
@@ -632,10 +632,10 @@ def compute_metrics_for_combo(
     log_df = pd.read_csv(log_path) if log_path.exists() else pd.DataFrame()
 
     action = normalize_series(tree_df["action"])
-    rewilded = normalize_series(tree_df["rewilded"])
+    under_node_treatment = normalize_series(tree_df["under-node-treatment"])
     is_new_tree = bool_series(tree_df["isNewTree"])
 
-    scenario_rewilded = vtk_str_array(poly.point_data["scenario_rewilded"])
+    scenario_under_node_treatment = vtk_str_array(poly.point_data["scenario_under-node-treatment"])
     scenario_bio_envelope = vtk_str_array(poly.point_data["scenario_bioEnvelope"])
     scenario_outputs = vtk_str_array(poly.point_data["scenario_outputs"])
     search_bioavailable = vtk_str_array(poly.point_data["search_bioavailable"])
@@ -646,7 +646,7 @@ def compute_metrics_for_combo(
     recruit_indicator = vtk_bool_array(poly.point_data["indicator_Tree_generations_grassland"])
     peeling_indicator = vtk_bool_array(poly.point_data["indicator_Bird_self_peeling"])
 
-    scenario_rewilded_lower = np.char.lower(scenario_rewilded)
+    scenario_under_node_treatment_lower = np.char.lower(scenario_under_node_treatment)
     scenario_bio_envelope_lower = np.char.lower(scenario_bio_envelope)
     scenario_outputs_lower = np.char.lower(scenario_outputs)
     search_bioavailable_lower = np.char.lower(search_bioavailable)
@@ -732,7 +732,7 @@ def compute_metrics_for_combo(
         decay_tree_opp = (~is_new_tree) & action.isin(["AGE-IN-PLACE", "SENESCENT"])
         decay_tree_count = int(decay_tree_opp.sum())
         decay_voxel_opp = np.isin(
-            scenario_rewilded_lower,
+            scenario_under_node_treatment_lower,
             ["exoskeleton", "footprint-depaved", "node-rewilded", "rewilded"],
         )
         decay_voxel_count = int(np.sum(decay_voxel_opp))
@@ -751,7 +751,7 @@ def compute_metrics_for_combo(
         )
 
         if should_include_intervention("Buffer-Feature", intervention_filter):
-            tree_mask = decay_tree_opp & rewilded.isin(list(DECAY_BUFFER_VALUES))
+            tree_mask = decay_tree_opp & under_node_treatment.isin(list(DECAY_BUFFER_VALUES))
             voxel_mask = np.isin(scenario_bio_envelope_lower, list(DECAY_BUFFER_VALUES))
             intervention_rows.append(
                 intervention_row(
@@ -771,7 +771,7 @@ def compute_metrics_for_combo(
             )
 
         if should_include_intervention("Brace-Feature", intervention_filter):
-            tree_mask = decay_tree_opp & (rewilded == "exoskeleton")
+            tree_mask = decay_tree_opp & (under_node_treatment == "exoskeleton")
             voxel_mask = scenario_bio_envelope_lower == "exoskeleton"
             intervention_rows.append(
                 intervention_row(
@@ -1536,7 +1536,7 @@ def compute_tree_only_decay_counts(
         }
 
     tree_df = pd.read_csv(tree_path)
-    required = ["action", "rewilded", "isNewTree"]
+    required = ["action", "under-node-treatment", "isNewTree"]
     missing_cols = [c for c in required if c not in tree_df.columns]
     if missing_cols:
         return {
@@ -1553,12 +1553,12 @@ def compute_tree_only_decay_counts(
         }
 
     action = normalize_series(tree_df["action"])
-    rewilded = normalize_series(tree_df["rewilded"])
+    under_node_treatment = normalize_series(tree_df["under-node-treatment"])
     is_new_tree = bool_series(tree_df["isNewTree"])
 
     decay_tree_opp = (~is_new_tree) & action.isin(["AGE-IN-PLACE", "SENESCENT"])
-    brace_mask = decay_tree_opp & (rewilded == "exoskeleton")
-    buffer_mask = decay_tree_opp & rewilded.isin(["node-rewilded", "footprint-depaved"])
+    brace_mask = decay_tree_opp & (under_node_treatment == "exoskeleton")
+    buffer_mask = decay_tree_opp & under_node_treatment.isin(["node-rewilded", "footprint-depaved"])
 
     return {
         "site": site,

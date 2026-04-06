@@ -223,6 +223,21 @@ def _with_node_type(df: pd.DataFrame | None, node_type: str) -> pd.DataFrame | N
 def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
+    legacy_schema_columns = [
+        "rewilded",
+        "lifecycle_decision",
+        "control_realized",
+        "pruning_target",
+        "pruning_target_years",
+        "autonomy_years",
+    ]
+    present_legacy_columns = [column for column in legacy_schema_columns if column in df.columns]
+    if present_legacy_columns:
+        raise ValueError(
+            "Legacy v3/v2 schema columns are no longer supported. "
+            f"Regenerate the inputs with the renamed fields instead: {present_legacy_columns}"
+        )
+
     if "useful_life_expectency" in df.columns and "useful_life_expectancy" not in df.columns:
         df.rename(columns={"useful_life_expectency": "useful_life_expectancy"}, inplace=True)
     if "fallen_remove_after_years" in df.columns and "fallen_decay_after_years" not in df.columns:
@@ -230,7 +245,6 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
 
     for column, default in {
         "nodeType": "tree",
-        "rewilded": "paved",
         "under-node-treatment": "paved",
         "action": "None",
         "replacement_reason": "none",
@@ -253,12 +267,7 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         "proposal-colonise_intervention": "none",
         "proposal-deploy-structure_decision": "not-assessed",
         "proposal-deploy-structure_intervention": "none",
-        "pruning_target": None,
-        "pruning_target_years": np.nan,
-        "autonomy_years": np.nan,
-        "control_realized": None,
         "control_reached": None,
-        "lifecycle_decision": None,
         "lifecycle_state": None,
         "early_death_at_year": np.nan,
         "became_large_at_year": np.nan,
@@ -278,7 +287,6 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
 
     df["size"] = _as_object_series(df.get("size"), len(df), "small")
     df["control"] = _as_object_series(df.get("control"), len(df), "street-tree")
-    df["rewilded"] = _as_object_series(df.get("rewilded"), len(df), "paved")
     df["under-node-treatment"] = _as_object_series(df.get("under-node-treatment"), len(df), "paved")
     df["action"] = _as_object_series(df.get("action"), len(df), "None")
     df["replacement_reason"] = _as_object_series(df.get("replacement_reason"), len(df), "none")
@@ -298,58 +306,25 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     df["recruit_intervention_type"] = _as_object_series(df.get("recruit_intervention_type"), len(df), "none")
     df["recruit_source_id"] = _as_object_series(df.get("recruit_source_id"), len(df), "none")
 
-    under_node_blank = _blank_like(df["under-node-treatment"], {"paved"})
-    legacy_rewilded_nonblank = ~_blank_like(df["rewilded"], {"paved"})
-    df.loc[under_node_blank & legacy_rewilded_nonblank, "under-node-treatment"] = df.loc[
-        under_node_blank & legacy_rewilded_nonblank, "rewilded"
-    ]
     df["under-node-treatment"] = df["under-node-treatment"].replace({"none": "paved", "None": "paved"})
-    df["rewilded"] = df["under-node-treatment"]
-
-    if df["pruning_target"].isna().any():
-        missing = df["pruning_target"].isna()
-        df.loc[missing, "pruning_target"] = df.loc[missing, "control"].map(_legacy_control_to_target)
-    df["pruning_target"] = _as_object_series(df["pruning_target"], len(df), "standard-pruning")
-
-    if df["control_realized"].isna().any():
-        missing = df["control_realized"].isna()
-        df.loc[missing, "control_realized"] = df.loc[missing, "control"].map(_legacy_control_to_realized)
-    df["control_realized"] = _as_object_series(df["control_realized"], len(df), "street-tree")
     if df["control_reached"].isna().any():
         missing = df["control_reached"].isna()
-        df.loc[missing, "control_reached"] = df.loc[missing, "control_realized"]
+        df.loc[missing, "control_reached"] = df.loc[missing, "control"].map(_legacy_control_to_realized)
     df["control_reached"] = _as_object_series(df["control_reached"], len(df), "street-tree")
-    df["control_realized"] = df["control_reached"]
 
-    if df["autonomy_years"].isna().any():
-        missing = df["autonomy_years"].isna()
-        df.loc[missing, "autonomy_years"] = df.loc[missing, "control"].map(_legacy_control_to_years)
-    if df["pruning_target_years"].isna().any():
-        missing = df["pruning_target_years"].isna()
-        df.loc[missing, "pruning_target_years"] = df.loc[missing, "control"].map(_legacy_control_to_years)
-    if df["proposal-release-control_target_years"].isna().any():
-        missing = df["proposal-release-control_target_years"].isna()
-        df.loc[missing, "proposal-release-control_target_years"] = df.loc[missing, "pruning_target_years"]
-    if df["proposal-release-control_years"].isna().any():
-        missing = df["proposal-release-control_years"].isna()
-        df.loc[missing, "proposal-release-control_years"] = df.loc[missing, "autonomy_years"]
-
+    target_from_control = df["control"].map(_legacy_control_to_target)
     support_map = {
         "standard-pruning": "none",
         "reduce-pruning": "reduce-pruning",
         "eliminate-pruning": "eliminate-pruning",
     }
-    release_intervention_from_target = df["pruning_target"].map(support_map).fillna("none")
-    if "release_control_support" in df.columns:
-        legacy_release_support = _as_object_series(df.get("release_control_support"), len(df), "none")
-        release_intervention_from_target = legacy_release_support.where(
-            legacy_release_support.ne("none"),
-            release_intervention_from_target,
-        )
+    blank_release_intervention = _blank_like(df["proposal-release-control_intervention"], {"not-assessed"})
+    df.loc[blank_release_intervention, "proposal-release-control_intervention"] = target_from_control.map(support_map).fillna("none")[
+        blank_release_intervention
+    ]
     living_mask = df["size"].isin(["small", "medium", "large"])
-    blank_release_intervention = _blank_like(df["proposal-release-control_intervention"], {"not-assessed"}) & living_mask
-    df.loc[blank_release_intervention, "proposal-release-control_intervention"] = (
-        release_intervention_from_target[blank_release_intervention]
+    df["proposal-release-control_intervention"] = _as_object_series(
+        df["proposal-release-control_intervention"], len(df), "none"
     )
     blank_release_decision = _blank_like(df["proposal-release-control_decision"], {"not-assessed"})
     df.loc[blank_release_decision & living_mask, "proposal-release-control_decision"] = np.where(
@@ -358,37 +333,14 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         "proposal-release-control_accepted",
     )
 
-    if df["lifecycle_decision"].isna().any():
-        missing = df["lifecycle_decision"].isna()
-        action_map = {
-            "AGE-IN-PLACE": "age-in-place",
-            "REPLACE": "replace",
-            "SENESCENT": "senescing",
-            "None": "stable",
-        }
-        df.loc[missing, "lifecycle_decision"] = df.loc[missing, "action"].map(action_map).fillna("stable")
-    df["lifecycle_decision"] = _as_object_series(df["lifecycle_decision"], len(df), "stable")
     blank_decay_decision = _blank_like(df["proposal-decay_decision"], {"not-assessed"})
     df.loc[blank_decay_decision, "proposal-decay_decision"] = np.where(
-        df.loc[blank_decay_decision, "lifecycle_decision"].eq("age-in-place")
-        | df.loc[blank_decay_decision, "size"].isin(["senescing", "snag", "fallen", "decayed"]),
+        df.loc[blank_decay_decision, "size"].isin(["senescing", "snag", "fallen", "decayed"]),
         "proposal-decay_accepted",
-        np.where(
-            df.loc[blank_decay_decision, "lifecycle_decision"].eq("replace"),
-            "proposal-decay_rejected",
-            "not-assessed",
-        ),
+        "not-assessed",
     )
     blank_decay_intervention = _blank_like(df["proposal-decay_intervention"], {"not-assessed"})
-    if "decay_support" in df.columns:
-        legacy_decay_support = _as_object_series(df.get("decay_support"), len(df), "none")
-        df.loc[blank_decay_intervention, "proposal-decay_intervention"] = legacy_decay_support[blank_decay_intervention]
     blank_colonise_intervention = _blank_like(df["proposal-colonise_intervention"], {"not-assessed"})
-    if "colonise_support" in df.columns:
-        legacy_colonise_support = _as_object_series(df.get("colonise_support"), len(df), "none")
-        df.loc[blank_colonise_intervention, "proposal-colonise_intervention"] = legacy_colonise_support[
-            blank_colonise_intervention
-        ]
     blank_colonise_decision = _blank_like(df["proposal-colonise_decision"], {"not-assessed"})
     df.loc[blank_colonise_decision, "proposal-colonise_decision"] = np.where(
         df.loc[blank_colonise_decision, "proposal-colonise_intervention"].eq("rewild-ground"),
@@ -396,11 +348,6 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         "proposal-colonise_rejected",
     )
     blank_recruit_intervention = _blank_like(df["proposal-recruit_intervention"], {"not-assessed"})
-    if "recruit_support" in df.columns:
-        legacy_recruit_support = _as_object_series(df.get("recruit_support"), len(df), "none")
-        df.loc[blank_recruit_intervention, "proposal-recruit_intervention"] = legacy_recruit_support[
-            blank_recruit_intervention
-        ]
     blank_recruit_decision = _blank_like(df["proposal-recruit_decision"], {"not-assessed"})
     df.loc[blank_recruit_decision, "proposal-recruit_decision"] = np.where(
         df.loc[blank_recruit_decision, "proposal-recruit_intervention"].eq("none"),
@@ -408,11 +355,6 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         "proposal-recruit_accepted",
     )
     blank_deploy_intervention = _blank_like(df["proposal-deploy-structure_intervention"], {"not-assessed"})
-    if "deploy_structure_support" in df.columns:
-        legacy_deploy_support = _as_object_series(df.get("deploy_structure_support"), len(df), "none")
-        df.loc[blank_deploy_intervention, "proposal-deploy-structure_intervention"] = legacy_deploy_support[
-            blank_deploy_intervention
-        ]
     blank_deploy_decision = _blank_like(df["proposal-deploy-structure_decision"], {"not-assessed"})
     df.loc[blank_deploy_decision, "proposal-deploy-structure_decision"] = np.where(
         df.loc[blank_deploy_decision, "proposal-deploy-structure_intervention"].eq("none"),
@@ -465,16 +407,13 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     df["useful_life_expectancy"] = ule_series.fillna(size_based_ule).fillna(120.0)
 
     df["sim_NodesArea"] = df["sim_NodesArea"].fillna(df["CanopyArea"])
-    df["autonomy_years"] = pd.to_numeric(df["autonomy_years"], errors="coerce").fillna(0.0)
-    df["pruning_target_years"] = pd.to_numeric(df["pruning_target_years"], errors="coerce").fillna(0.0)
+    default_release_years = pd.to_numeric(df["control"].map(_legacy_control_to_years), errors="coerce").fillna(0.0)
     df["proposal-release-control_target_years"] = pd.to_numeric(
         df["proposal-release-control_target_years"], errors="coerce"
-    ).fillna(df["pruning_target_years"])
+    ).fillna(default_release_years)
     df["proposal-release-control_years"] = pd.to_numeric(
         df["proposal-release-control_years"], errors="coerce"
-    ).fillna(df["autonomy_years"])
-    df["pruning_target_years"] = df["proposal-release-control_target_years"]
-    df["autonomy_years"] = df["proposal-release-control_years"]
+    ).fillna(default_release_years)
 
     non_living_mask = ~df["size"].isin(["small", "medium", "large"])
     if non_living_mask.any():
@@ -482,8 +421,6 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         df.loc[non_living_mask, "proposal-release-control_intervention"] = "none"
         df.loc[non_living_mask, "proposal-release-control_target_years"] = 0.0
         df.loc[non_living_mask, "proposal-release-control_years"] = 0.0
-        df.loc[non_living_mask, "pruning_target_years"] = 0.0
-        df.loc[non_living_mask, "autonomy_years"] = 0.0
 
     df["recruit_year"] = pd.to_numeric(df["recruit_year"], errors="coerce")
     df["early_death_at_year"] = pd.to_numeric(df["early_death_at_year"], errors="coerce")
@@ -497,7 +434,6 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     df["became_gone_at_year"] = pd.to_numeric(df["became_gone_at_year"], errors="coerce")
     df["fallen_decay_after_years"] = pd.to_numeric(df["fallen_decay_after_years"], errors="coerce")
     df["decayed_remove_after_years"] = pd.to_numeric(df["decayed_remove_after_years"], errors="coerce")
-
     return df
 
 
@@ -620,11 +556,9 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
 
     df.loc[recruit_mortality_mask, "size"] = "early-tree-death"
     df.loc[recruit_mortality_mask, "lifecycle_state"] = "early-tree-death"
-    df.loc[recruit_mortality_mask, "lifecycle_decision"] = "early-tree-death"
     df.loc[recruit_mortality_mask, "replacement_reason"] = "annual-tree-death"
     df.loc[recruit_mortality_mask, "early_death_at_year"] = int(params["absolute_year"])
     df.loc[recruit_mortality_mask, "action"] = "None"
-    df.loc[recruit_mortality_mask, "rewilded"] = "paved"
     df.loc[recruit_mortality_mask, "under-node-treatment"] = "paved"
     df.loc[recruit_mortality_mask, "proposal-decay_decision"] = "not-assessed"
     df.loc[recruit_mortality_mask, "proposal-decay_intervention"] = "none"
@@ -641,14 +575,13 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
 
     df.loc[existing_dieback_mask, "action"] = "REPLACE"
     df.loc[existing_dieback_mask, "lifecycle_state"] = "standing"
-    df.loc[existing_dieback_mask, "lifecycle_decision"] = "early-dieback-replant"
     df.loc[existing_dieback_mask, "replacement_reason"] = "early-dieback-replant"
     df.loc[existing_dieback_mask, "proposal-decay_decision"] = "not-assessed"
     df.loc[existing_dieback_mask, "proposal-decay_intervention"] = "none"
     return df
 
 
-def determine_lifecycle_decisions(df: pd.DataFrame, params: dict, seed: int = 42) -> pd.DataFrame:
+def determine_proposal_decay(df: pd.DataFrame, params: dict, seed: int = 42) -> pd.DataFrame:
     df = df.copy()
     np.random.seed(seed + int(params["absolute_year"]))
 
@@ -657,37 +590,40 @@ def determine_lifecycle_decisions(df: pd.DataFrame, params: dict, seed: int = 42
     lifecycle_living_mask = living_mask & ~preexisting_replace_mask
     df.loc[lifecycle_living_mask, "action"] = "None"
     df.loc[lifecycle_living_mask, "replacement_reason"] = "none"
-    df.loc[lifecycle_living_mask, "lifecycle_decision"] = "stable"
     df.loc[lifecycle_living_mask, "proposal-decay_decision"] = "not-assessed"
     df.loc[lifecycle_living_mask, "proposal-decay_intervention"] = "none"
 
     if not lifecycle_living_mask.any():
         return df
 
-    senesce_threshold = params["senescingThreshold"]
-    df["senesceChance"] = remap_values(
+    senescing_ramp_start = params["lifecycle_senescing_ramp_start"]
+    df["proposal_decay_chance"] = remap_values(
         df["useful_life_expectancy"].to_numpy(dtype=float),
-        old_min=senesce_threshold,
+        old_min=senescing_ramp_start,
         old_max=0,
         new_min=100,
         new_max=0,
     ).clip(0, 100)
-    df["senesceRoll"] = np.random.uniform(0, 100, len(df))
+    df["proposal_decay_roll"] = np.random.uniform(0, 100, len(df))
 
-    senesce_mask = lifecycle_living_mask & (df["senesceRoll"] < df["senesceChance"])
-    age_in_place_mask = senesce_mask & (df["CanopyResistance"] < params["ageInPlaceThreshold"])
-    replace_mask = senesce_mask & ~age_in_place_mask
+    proposal_decay_mask = lifecycle_living_mask & (df["proposal_decay_roll"] < df["proposal_decay_chance"])
+    age_in_place_mask = proposal_decay_mask & (
+        df["CanopyResistance"] < params["minimal-tree-support-threshold"]
+    )
+    replace_mask = proposal_decay_mask & ~age_in_place_mask
 
     df.loc[age_in_place_mask, "action"] = "AGE-IN-PLACE"
-    df.loc[age_in_place_mask, "lifecycle_decision"] = "age-in-place"
     df.loc[age_in_place_mask, "proposal-decay_decision"] = "proposal-decay_accepted"
     df.loc[replace_mask, "action"] = "REPLACE"
-    df.loc[replace_mask, "lifecycle_decision"] = "replace"
     df.loc[replace_mask, "proposal-decay_decision"] = "proposal-decay_rejected"
     return df
 
 
-def apply_senescence_states(df: pd.DataFrame, params: dict, seed: int = 42) -> pd.DataFrame:
+def apply_proposal_decay_accepted_lifecycle_changes(
+    df: pd.DataFrame,
+    params: dict,
+    seed: int = 42,
+) -> pd.DataFrame:
     df = df.copy()
     np.random.seed(seed + 1000 + int(params["absolute_year"]))
     current_year = int(params["absolute_year"])
@@ -732,7 +668,6 @@ def apply_senescence_states(df: pd.DataFrame, params: dict, seed: int = 42) -> p
     brace_collapse_mask = snag_to_fallen_mask & df["proposal-decay_intervention"].eq("brace-feature")
     df.loc[snag_to_fallen_mask & ~brace_collapse_mask, "size"] = "fallen"
     df.loc[brace_collapse_mask, "action"] = "REPLACE"
-    df.loc[brace_collapse_mask, "lifecycle_decision"] = "replace"
     df.loc[brace_collapse_mask, "replacement_reason"] = "brace-collapse"
 
     state_values = np.where(
@@ -745,7 +680,7 @@ def apply_senescence_states(df: pd.DataFrame, params: dict, seed: int = 42) -> p
     return df
 
 
-def handle_replace_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
+def apply_proposal_decay_rejected_changes(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     df = df.copy()
     replace_mask = df["action"].eq("REPLACE")
     if not replace_mask.any():
@@ -768,7 +703,6 @@ def handle_replace_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     ).astype(str)
     df.loc[replace_mask, "lifecycle_state"] = "standing"
     df.loc[replace_mask, "under-node-treatment"] = "paved"
-    df.loc[replace_mask, "rewilded"] = "paved"
     df.loc[replace_mask, "proposal-decay_decision"] = "not-assessed"
     df.loc[replace_mask, "proposal-decay_intervention"] = "none"
     df.loc[replace_mask, "early_death_at_year"] = np.nan
@@ -794,7 +728,7 @@ def handle_replace_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     return df
 
 
-def assign_decay_support(df: pd.DataFrame, params: dict) -> pd.DataFrame:
+def assign_decay_interventions(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     df = df.copy()
     df["proposal-decay_intervention"] = "none"
     decay_mask = df["proposal-decay_decision"].eq("proposal-decay_accepted")
@@ -805,9 +739,9 @@ def assign_decay_support(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         df.loc[decay_mask, "CanopyResistance"],
         bins=[
             -float("inf"),
-            params["rewildThreshold"],
-            params["plantThreshold"],
-            params["ageInPlaceThreshold"],
+            params["maximum-tree-support-threshold"],
+            params["moderate-tree-support-threshold"],
+            params["minimal-tree-support-threshold"],
             float("inf"),
         ],
         labels=["node-rewilded", "footprint-depaved", "exoskeleton", "None"],
@@ -817,7 +751,6 @@ def assign_decay_support(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     current_treatment = df.loc[decay_mask, "under-node-treatment"].astype(str)
     merged_treatment = _merge_under_node_treatments(current_treatment, proposed_treatment)
     df.loc[decay_mask, "under-node-treatment"] = merged_treatment
-    df.loc[decay_mask, "rewilded"] = merged_treatment
     df.loc[decay_mask, "proposal-decay_intervention"] = merged_treatment.map(DECAY_INTERVENTION_BY_TREATMENT).fillna("none")
     return df
 
@@ -839,15 +772,15 @@ def _target_rank(values: pd.Series) -> pd.Series:
     return values.map(PRUNING_TARGET_ORDER).fillna(0).astype(int)
 
 
-def _realized_control_from_years(pruning_target: str, autonomy_years: float) -> str:
-    if pruning_target == "eliminate-pruning":
-        if autonomy_years >= ELIMINATE_PRUNING_TO_LOW_YEARS:
+def _realized_control_from_years(release_intervention: str, release_years: float) -> str:
+    if release_intervention == "eliminate-pruning":
+        if release_years >= ELIMINATE_PRUNING_TO_LOW_YEARS:
             return LOW_CONTROL_STATE
-        if autonomy_years >= ELIMINATE_PRUNING_TO_PARK_YEARS:
+        if release_years >= ELIMINATE_PRUNING_TO_PARK_YEARS:
             return "park-tree"
         return "street-tree"
-    if pruning_target == "reduce-pruning":
-        if autonomy_years >= REDUCE_PRUNING_TO_PARK_YEARS:
+    if release_intervention == "reduce-pruning":
+        if release_years >= REDUCE_PRUNING_TO_PARK_YEARS:
             return "park-tree"
         return "street-tree"
     return "street-tree"
@@ -866,13 +799,19 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     if living_mask.any():
         proposed_treatment = pd.cut(
             df.loc[living_mask, "CanopyResistance"],
-            bins=[-float("inf"), params["rewildThreshold"], params["plantThreshold"], float("inf")],
+            bins=[
+                -float("inf"),
+                params["maximum-tree-support-threshold"],
+                params["moderate-tree-support-threshold"],
+                float("inf"),
+            ],
             labels=["node-rewilded", "footprint-depaved", "None"],
         )
         proposed_treatment = pd.Series(proposed_treatment, index=df.index[living_mask]).astype("object").fillna("paved")
         proposed_treatment = proposed_treatment.replace({"None": "paved"})
         support_series = proposed_treatment.map(RELEASE_SUPPORT_BY_REWILDING).fillna("none")
-        current_target = df.loc[living_mask, "pruning_target"].fillna("standard-pruning").astype(str)
+        current_intervention = df.loc[living_mask, "proposal-release-control_intervention"].fillna("none").astype(str)
+        current_target = current_intervention.replace({"none": "standard-pruning"})
         proposed_target = support_series.replace({"none": "standard-pruning"})
 
         current_rank = _target_rank(current_target)
@@ -882,10 +821,8 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         new_target = pd.Series(chosen_rank).map(reverse_map).to_numpy()
 
         changed_mask = current_target.to_numpy() != new_target
-        df.loc[living_mask, "pruning_target"] = new_target
-
-        current_target_years = df.loc[living_mask, "pruning_target_years"].to_numpy(dtype=float)
-        autonomy_years = df.loc[living_mask, "autonomy_years"].to_numpy(dtype=float)
+        current_target_years = df.loc[living_mask, "proposal-release-control_target_years"].to_numpy(dtype=float)
+        release_years = df.loc[living_mask, "proposal-release-control_years"].to_numpy(dtype=float)
         step_years = params["step_years"]
 
         new_target_years = np.where(
@@ -897,16 +834,14 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
                 current_target_years + step_years,
             ),
         )
-        new_autonomy_years = np.where(
+        new_release_years = np.where(
             new_target == "standard-pruning",
             0.0,
-            autonomy_years + step_years,
+            release_years + step_years,
         )
 
-        df.loc[living_mask, "pruning_target_years"] = new_target_years
-        df.loc[living_mask, "autonomy_years"] = new_autonomy_years
         df.loc[living_mask, "proposal-release-control_target_years"] = new_target_years
-        df.loc[living_mask, "proposal-release-control_years"] = new_autonomy_years
+        df.loc[living_mask, "proposal-release-control_years"] = new_release_years
         intervention_from_target = pd.Series(new_target, index=df.index[living_mask]).replace({"standard-pruning": "none"})
         df.loc[living_mask, "proposal-release-control_intervention"] = intervention_from_target
         df.loc[living_mask, "proposal-release-control_decision"] = np.where(
@@ -919,7 +854,6 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
             intervention_from_target.map(RELEASE_TREATMENT_BY_INTERVENTION).fillna("paved"),
         )
         df.loc[living_mask, "under-node-treatment"] = merged_treatment
-        df.loc[living_mask, "rewilded"] = merged_treatment
 
     support_from_target = {
         "standard-pruning": "none",
@@ -928,7 +862,7 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     }
     accepted_release_mask = df["proposal-release-control_decision"].eq("proposal-release-control_accepted")
     df.loc[accepted_release_mask, "proposal-release-control_intervention"] = (
-        df.loc[accepted_release_mask, "pruning_target"].map(support_from_target).fillna("none")
+        df.loc[accepted_release_mask, "proposal-release-control_intervention"].replace(support_from_target).fillna("none")
     )
     df.loc[living_mask, "proposal-release-control_intervention"] = df.loc[living_mask, "proposal-release-control_intervention"].fillna("none")
     df.loc[df["proposal-release-control_decision"].ne("proposal-release-control_accepted"), "proposal-release-control_intervention"] = "none"
@@ -938,12 +872,15 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     df.loc[non_living_mask, "proposal-release-control_years"] = 0.0
 
     df["control_reached"] = [
-        _realized_control_from_years(target, years)
-        for target, years in zip(df["pruning_target"], df["autonomy_years"], strict=False)
+        _realized_control_from_years(intervention, years)
+        for intervention, years in zip(
+            df["proposal-release-control_intervention"],
+            df["proposal-release-control_years"],
+            strict=False,
+        )
     ]
     senescent_mask = df["size"].isin(["senescing", "snag", "fallen", "decayed"])
     df.loc[senescent_mask, "control_reached"] = LOW_CONTROL_STATE
-    df["control_realized"] = df["control_reached"]
     df["control"] = [
         _export_control_value(realized, size)
         for realized, size in zip(df["control_reached"], df["size"], strict=False)
@@ -1069,10 +1006,8 @@ def update_fallen_tracking(
     if removable_mask.any():
         df.loc[removable_mask, "size"] = "gone"
         df.loc[removable_mask, "lifecycle_state"] = "gone"
-        df.loc[removable_mask, "lifecycle_decision"] = "gone"
         df.loc[removable_mask & df["became_gone_at_year"].isna(), "became_gone_at_year"] = current_year
         df.loc[removable_mask, "action"] = "None"
-        df.loc[removable_mask, "rewilded"] = "paved"
         df.loc[removable_mask, "under-node-treatment"] = "paved"
         df.loc[removable_mask, "proposal-recruit_decision"] = "not-assessed"
         df.loc[removable_mask, "proposal-recruit_intervention"] = "none"
@@ -1235,7 +1170,6 @@ def _make_new_tree_record(
             "isNewTree": True,
             "isRewildedTree": True,
             "hasbeenReplanted": False,
-            "rewilded": "paved",
             "under-node-treatment": "paved",
             "action": "None",
             "replacement_reason": "none",
@@ -1254,13 +1188,8 @@ def _make_new_tree_record(
             "proposal-colonise_intervention": "none",
             "proposal-deploy-structure_decision": "not-assessed",
             "proposal-deploy-structure_intervention": "none",
-            "pruning_target": "eliminate-pruning",
-            "pruning_target_years": float(ELIMINATE_PRUNING_TO_LOW_YEARS),
-            "autonomy_years": float(ELIMINATE_PRUNING_TO_LOW_YEARS),
-            "control_realized": LOW_CONTROL_STATE,
             "control_reached": LOW_CONTROL_STATE,
             "control": "reserve-tree",
-            "lifecycle_decision": "stable",
             "lifecycle_state": "standing",
             "early_death_at_year": np.nan,
             "became_large_at_year": np.nan,
@@ -1278,7 +1207,7 @@ def _make_new_tree_record(
     return record
 
 
-def calculate_rewilded_status(df: pd.DataFrame, ds: xr.Dataset, params: dict):
+def calculate_under_node_treatment_status(df: pd.DataFrame, ds: xr.Dataset, params: dict):
     ds = ds.copy(deep=True)
     absolute_year = int(params.get("absolute_year", params.get("years_passed", 0)))
     if absolute_year <= 0:
@@ -1666,18 +1595,18 @@ def _run_single_pulse(
     df = _refresh_schema(df)
     df = age_trees(df, params)
     df = apply_annual_tree_mortality(df, params)
-    df = determine_lifecycle_decisions(df, params)
-    df = assign_decay_support(df, params)
-    df = apply_senescence_states(df, params)
+    df = determine_proposal_decay(df, params)
+    df = assign_decay_interventions(df, params)
+    df = apply_proposal_decay_accepted_lifecycle_changes(df, params)
     params = dict(params)
     params["site"] = site
     params["scenario"] = scenario
-    df = handle_replace_trees(df, params)
+    df = apply_proposal_decay_rejected_changes(df, params)
     df = apply_release_control(df, params)
     df = refresh_colonise_support(df)
     df = update_fallen_tracking(df, site, scenario, params["previous_year"], params["absolute_year"], params)
 
-    _, pulse_ds = calculate_rewilded_status(df, ds, params)
+    _, pulse_ds = calculate_under_node_treatment_status(df, ds, params)
     df = apply_recruit(df, pulse_ds, params, telemetry_rows=telemetry_rows)
     df = refresh_colonise_support(df)
     return _refresh_schema(df)
@@ -1706,12 +1635,9 @@ def _year_zero_state(
     tree_df["proposal-deploy-structure_intervention"] = "none"
     tree_df["proposal-release-control_decision"] = "not-assessed"
     tree_df["proposal-release-control_intervention"] = "none"
-    tree_df["lifecycle_decision"] = "stable"
     tree_df["lifecycle_state"] = "standing"
-    tree_df["rewilded"] = "paved"
     tree_df["under-node-treatment"] = "paved"
     tree_df["control_reached"] = tree_df["control"].map(_legacy_control_to_realized)
-    tree_df["control_realized"] = tree_df["control_reached"]
 
     params = get_timestep_params(site, scenario, year, previous_year=0)
     log_df, pole_df = _site_specific_structures(site, log_df, pole_df)
@@ -1741,7 +1667,7 @@ def run_timestep(
     previous_year: int,
     voxel_size: int,
     tree_df: pd.DataFrame,
-    subset_ds: xr.Dataset,
+    possibility_space_ds: xr.Dataset,
     log_df: pd.DataFrame | None = None,
     pole_df: pd.DataFrame | None = None,
     output_mode: str | None = None,
@@ -1757,7 +1683,7 @@ def run_timestep(
         pulse_params = get_timestep_params(site, scenario, pulse_end, pulse_start)
         tree_state = _run_single_pulse(
             tree_state,
-            subset_ds.copy(deep=True),
+            possibility_space_ds.copy(deep=True),
             site,
             scenario,
             pulse_params,
@@ -1793,7 +1719,7 @@ def run_scenario(
     year,
     voxel_size,
     treeDF,
-    subsetDS,
+    possibility_space_ds,
     logDF=None,
     poleDF=None,
     previous_year=None,
@@ -1804,9 +1730,9 @@ def run_scenario(
     previous_year = 0 if previous_year is None else previous_year
 
     if logDF is not None:
-        logDF = a_scenario_initialiseDS.log_processing(logDF, subsetDS)
+        logDF = a_scenario_initialiseDS.log_processing(logDF, possibility_space_ds)
     if poleDF is not None:
-        poleDF = a_scenario_initialiseDS.pole_processing(poleDF, None, subsetDS)
+        poleDF = a_scenario_initialiseDS.pole_processing(poleDF, None, possibility_space_ds)
 
     return run_timestep(
         site=site,
@@ -1815,7 +1741,7 @@ def run_scenario(
         previous_year=previous_year,
         voxel_size=voxel_size,
         tree_df=treeDF,
-        subset_ds=subsetDS,
+        possibility_space_ds=possibility_space_ds,
         log_df=logDF,
         pole_df=poleDF,
         output_mode=output_mode,

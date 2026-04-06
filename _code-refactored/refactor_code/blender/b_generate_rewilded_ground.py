@@ -38,7 +38,7 @@ SCENARIOS = ["positive", "trending"]
 VOXEL_SIZE = 1
 YEARS = [10, 30, 60, 180]
 OUTPUT_SUBDIR = "ply"
-REQUIRED_ATTRS = ["scenario_rewilded", "sim_Turns", "sim_averageResistance"]
+REQUIRED_ATTRS = ["scenario_under-node-treatment", "sim_Turns", "sim_averageResistance"]
 
 
 def resolve_scenario_vtk_path(site: str, voxel_size: int, year: int, scenario: str | None = None) -> Path:
@@ -72,8 +72,8 @@ def select_ground_points(poly: pv.PolyData) -> pv.PolyData:
         mask = poly.point_data["maskForRewilding"].astype(bool)
         print(f"Using maskForRewilding for ground selection: {mask.sum()} points")
     else:
-        mask = poly.point_data["scenario_rewilded"] != "none"
-        print(f"Using scenario_rewilded fallback mask: {mask.sum()} points")
+        mask = poly.point_data["scenario_under-node-treatment"] != "none"
+        print(f"Using scenario_under-node-treatment fallback mask: {mask.sum()} points")
 
     return poly.extract_points(mask)
 
@@ -160,7 +160,7 @@ def main():
                 print(f"No ground output for year {year} and {scenario}")
                 continue
 
-            attributes = ["scenario_rewilded", "sim_Turns"]
+            attributes = ["scenario_under-node-treatment", "sim_Turns"]
             if "sim_averageResistance" in shell_points.point_data:
                 attributes.append("sim_averageResistance")
 

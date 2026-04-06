@@ -43,20 +43,20 @@ def getDataSubest(ds):
     if not a_helper_functions.export_all_pointdata_variables():
         variables = [name for name in variables if name not in LEAN_SUBSET_DROP_VARIABLES]
 
-    subsetDS = a_helper_functions.create_subset_dataset(ds, variables, attributes)
+    possibility_space_ds = a_helper_functions.create_subset_dataset(ds, variables, attributes)
 
-    print(subsetDS.variables)
+    print(possibility_space_ds.variables)
 
     if a_helper_functions.export_all_pointdata_variables():
-        subsetDS['envelopeIsBrownRoof'] = xr.full_like(subsetDS['node_CanopyID'], -1)
-        brownRoofMask = subsetDS['envelope_roofType'] == 'brown roof'
-        subsetDS['envelopeIsBrownRoof'][brownRoofMask] = 1
-    print(subsetDS.attrs['bounds'])
+        possibility_space_ds['envelopeIsBrownRoof'] = xr.full_like(possibility_space_ds['node_CanopyID'], -1)
+        brownRoofMask = possibility_space_ds['envelope_roofType'] == 'brown roof'
+        possibility_space_ds['envelopeIsBrownRoof'][brownRoofMask] = 1
+    print(possibility_space_ds.attrs['bounds'])
 
-    #poly = a_helper_functions.convert_xarray_into_polydata(subsetDS)
+    #poly = a_helper_functions.convert_xarray_into_polydata(possibility_space_ds)
     #poly.plot(scalars='site_building_element', cmap='Set1')
 
-    return subsetDS
+    return possibility_space_ds
 
 def further_xarray_processing(ds):
     """
@@ -280,8 +280,52 @@ def PreprocessData(treeDF, ds, extraTreeDF):
     print(f"Number of missing values after: {nan_after}")
     print("Filling completed.")
 
+    # Base trees without canopy footprints can still inherit support values from their own voxel.
+    voxel_index = pd.to_numeric(treeDF["voxel_index"], errors="coerce")
+    valid_voxel_mask = voxel_index.notna()
+    valid_voxel_index = voxel_index.loc[valid_voxel_mask].astype(int)
+
+    if "CanopyResistance" not in treeDF.columns:
+        treeDF["CanopyResistance"] = np.nan
+    missing_canopy_resistance = valid_voxel_mask & treeDF["CanopyResistance"].isna()
+    if missing_canopy_resistance.any():
+        treeDF.loc[missing_canopy_resistance, "CanopyResistance"] = (
+            ds["analysis_combined_resistance"].values[
+                voxel_index.loc[missing_canopy_resistance].astype(int)
+            ]
+        )
+
+    if "sim_averageResistance" not in treeDF.columns:
+        treeDF["sim_averageResistance"] = np.nan
+    missing_sim_average_resistance = valid_voxel_mask & treeDF["sim_averageResistance"].isna()
+    if missing_sim_average_resistance.any():
+        resistance_source = (
+            ds["sim_averageResistance"]
+            if "sim_averageResistance" in ds.variables
+            else ds["analysis_combined_resistance"]
+        )
+        treeDF.loc[missing_sim_average_resistance, "sim_averageResistance"] = (
+            resistance_source.values[
+                voxel_index.loc[missing_sim_average_resistance].astype(int)
+            ]
+        )
+
+    if "sim_Turns" not in treeDF.columns:
+        treeDF["sim_Turns"] = np.nan
+    missing_sim_turns = valid_voxel_mask & treeDF["sim_Turns"].isna()
+    if missing_sim_turns.any():
+        treeDF.loc[missing_sim_turns, "sim_Turns"] = (
+            ds["sim_Turns"].values[
+                voxel_index.loc[missing_sim_turns].astype(int)
+            ]
+        )
+
+    print(f"Final NaN count in treeDF['CanopyResistance']: {treeDF['CanopyResistance'].isna().sum()}")
+    print(f"Final NaN count in treeDF['sim_averageResistance']: {treeDF['sim_averageResistance'].isna().sum()}")
+    print(f"Final NaN count in treeDF['sim_Turns']: {treeDF['sim_Turns'].isna().sum()}")
+
     # Initialize rewilding column as paved
-    treeDF['rewilded'] = 'paved'
+    treeDF['under-node-treatment'] = 'paved'
     treeDF['isNewTree'] = False
     treeDF['isRewildedTree'] = False
     treeDF['hasbeenReplanted'] = False
@@ -303,9 +347,9 @@ def initialize_dataset(site, voxel_size, *, write_cache: bool = True):
 
     if not write_cache and os.path.exists(subset_path):
         try:
-            subsetDS = xr.open_dataset(subset_path)
+            possibility_space_ds = xr.open_dataset(subset_path)
             print(f'Loaded existing subset dataset from {subset_path}')
-            return subsetDS
+            return possibility_space_ds
         except Exception as exc:
             print(f'Failed to load existing subset dataset from {subset_path}: {exc}')
             print('Rebuilding subset dataset in-memory without writing cache.')
@@ -315,12 +359,12 @@ def initialize_dataset(site, voxel_size, *, write_cache: bool = True):
     print("Variables in xarray_dataset:")
     print(xarray_dataset.variables)
     
-    subsetDS = getDataSubest(xarray_dataset)
+    possibility_space_ds = getDataSubest(xarray_dataset)
     if write_cache:
-        subsetDS.to_netcdf(subset_path)
+        possibility_space_ds.to_netcdf(subset_path)
     print('Loaded and subsetted xarray data')
     
-    return subsetDS
+    return possibility_space_ds
 
 def load_node_dataframes(site, voxel_size):
     filePATH = f'data/revised/final/{site}'
@@ -348,7 +392,7 @@ def load_extra_node_dataframes(site):
 def initialize_scenario_data(site, voxel_size):
     """Main function to initialize all data needed for scenarios"""
     # Load and initialize xarray dataset
-    subsetDS = initialize_dataset(site, voxel_size)
+    possibility_space_ds = initialize_dataset(site, voxel_size)
     
     # Load tree, pole, and log dataframes
     treeDF, poleDF, logDF = load_node_dataframes(site, voxel_size)
@@ -358,22 +402,22 @@ def initialize_scenario_data(site, voxel_size):
     
     # Preprocess the data
     print('Preprocessing tree dataframe')
-    treeDF, subsetDS = PreprocessData(treeDF, subsetDS, extraTreeDF)
+    treeDF, possibility_space_ds = PreprocessData(treeDF, possibility_space_ds, extraTreeDF)
     
     # Further process the xarray dataset
-    subsetDS, initialPoly = further_xarray_processing(subsetDS)
+    possibility_space_ds, initialPoly = further_xarray_processing(possibility_space_ds)
     
     # Save initial polydata for visualization
     filePATH = f'data/revised/final/{site}'
     initialPoly.save(f'{filePATH}/{site}_{voxel_size}_scenarioInitialPoly.vtk')
     
     # Process log and pole dataframes
-    logDF = log_processing(logDF, subsetDS)
-    poleDF = pole_processing(poleDF, extraPoleDF, subsetDS)
+    logDF = log_processing(logDF, possibility_space_ds)
+    poleDF = pole_processing(poleDF, extraPoleDF, possibility_space_ds)
     
     print(f'poleDF has headings: {poleDF.columns}')
     
-    return treeDF, poleDF, logDF, subsetDS
+    return treeDF, poleDF, logDF, possibility_space_ds
 
 if __name__ == "__main__":
     # Get site and voxel size from user
@@ -381,6 +425,6 @@ if __name__ == "__main__":
     voxel_size = int(input("Please enter the voxel size (default 1): ") or "1")
     
     # Initialize all data needed for scenarios
-    treeDF, poleDF, logDF, subsetDS = initialize_scenario_data(site, voxel_size)
+    treeDF, poleDF, logDF, possibility_space_ds = initialize_scenario_data(site, voxel_size)
     
     print("Initialization complete. Data is ready for scenario generation.") 

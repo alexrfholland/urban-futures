@@ -238,9 +238,9 @@ def create_bioavailablity_layer(scenario_vtk):
         low_vegetation_mask |= (scenario_vtk.point_data['scenario_rewildingPlantings'] > 0)
     
     # Check for rewilded areas
-    if 'scenario_rewilded' in scenario_vtk.point_data:
-        bioavailable_mask |= (scenario_vtk.point_data['scenario_rewilded'] != 'none')
-        low_vegetation_mask |= (scenario_vtk.point_data['scenario_rewilded'] != 'none')
+    if 'scenario_under-node-treatment' in scenario_vtk.point_data:
+        bioavailable_mask |= (scenario_vtk.point_data['scenario_under-node-treatment'] != 'none')
+        low_vegetation_mask |= (scenario_vtk.point_data['scenario_under-node-treatment'] != 'none')
     
     # Check for bio envelope
     if 'scenario_bioEnvelope' in scenario_vtk.point_data:
@@ -302,9 +302,9 @@ def create_design_action_layer(scenario_vtk):
         search_design_action[mask] = 'rewilded'
     
     # Override with specific rewilded types
-    if 'scenario_rewilded' in scenario_vtk.point_data:
-        mask = scenario_vtk.point_data['scenario_rewilded'] != 'none'
-        search_design_action[mask] = scenario_vtk.point_data['scenario_rewilded'][mask]
+    if 'scenario_under-node-treatment' in scenario_vtk.point_data:
+        mask = scenario_vtk.point_data['scenario_under-node-treatment'] != 'none'
+        search_design_action[mask] = scenario_vtk.point_data['scenario_under-node-treatment'][mask]
     
     # Override with bio envelope types
     if 'scenario_bioEnvelope' in scenario_vtk.point_data:

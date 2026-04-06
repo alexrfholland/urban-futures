@@ -83,11 +83,11 @@ def parse_args() -> argparse.Namespace:
 
 
 def _prepare_subset_dataset(site: str, voxel_size: int):
-    subset_ds = a_scenario_initialiseDS.initialize_dataset(site, voxel_size, write_cache=False)
+    possibility_space_ds = a_scenario_initialiseDS.initialize_dataset(site, voxel_size, write_cache=False)
     tree_df, _pole_df, _log_df = a_scenario_initialiseDS.load_node_dataframes(site, voxel_size)
-    tree_df, subset_ds = a_scenario_initialiseDS.PreprocessData(tree_df, subset_ds, None)
-    subset_ds, _ = a_scenario_initialiseDS.further_xarray_processing(subset_ds)
-    return subset_ds
+    tree_df, possibility_space_ds = a_scenario_initialiseDS.PreprocessData(tree_df, possibility_space_ds, None)
+    possibility_space_ds, _ = a_scenario_initialiseDS.further_xarray_processing(possibility_space_ds)
+    return possibility_space_ds
 
 
 def run_saved_site_scenario(
@@ -100,7 +100,7 @@ def run_saved_site_scenario(
     save_raw_vtk: bool = False,
 ) -> None:
     print(f"\n===== Saved V3 VTKs: {site} / {scenario} =====\n")
-    subset_ds = _prepare_subset_dataset(site, voxel_size)
+    possibility_space_ds = _prepare_subset_dataset(site, voxel_size)
 
     for year in years:
         print(f"\n----- Saved V3 VTKs: {site} / {scenario} / yr{year} -----\n")
@@ -114,7 +114,7 @@ def run_saved_site_scenario(
             scenario,
             year,
             voxel_size,
-            subset_ds.copy(deep=True),
+            possibility_space_ds.copy(deep=True),
             tree_df,
             log_df,
             pole_df,
