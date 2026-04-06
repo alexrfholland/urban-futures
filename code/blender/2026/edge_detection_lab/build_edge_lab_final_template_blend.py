@@ -651,8 +651,8 @@ def build_base_outputs_group() -> bpy.types.NodeTree:
     add_interface_socket(group, "base_rgb", "OUTPUT", "NodeSocketColor")
     add_interface_socket(group, "base_white_render", "OUTPUT", "NodeSocketFloat")
     add_interface_socket(group, "base_outlines", "OUTPUT", "NodeSocketColor")
-    add_interface_socket(group, "base_sim-turns", "OUTPUT", "NodeSocketFloat")
-    add_interface_socket(group, "base_sim-nodes", "OUTPUT", "NodeSocketFloat")
+    add_interface_socket(group, "base_sim-turns", "OUTPUT", "NodeSocketColor")
+    add_interface_socket(group, "base_sim-nodes", "OUTPUT", "NodeSocketColor")
     add_interface_socket(group, "base_sim-turns_ripple-effect", "OUTPUT", "NodeSocketColor")
     for spec in BASE_DEPTH_VARIANT_SPECS:
         add_interface_socket(group, str(spec["name"]), "OUTPUT", "NodeSocketColor")
@@ -678,38 +678,73 @@ def build_base_outputs_group() -> bpy.types.NodeTree:
     links.new(depth_norm.outputs[0], outlines.inputs["Image"])
 
     sim_turns_norm = nodes.new("CompositorNodeNormalize")
-    sim_turns_norm.name = "base_sim_turns"
-    sim_turns_norm.label = "base_sim-turns"
     sim_turns_norm.location = (-880.0, -300.0)
     links.new(group_in.outputs["world_sim_turns"], sim_turns_norm.inputs[0])
 
     sim_nodes_norm = nodes.new("CompositorNodeNormalize")
-    sim_nodes_norm.name = "base_sim_nodes"
-    sim_nodes_norm.label = "base_sim-nodes"
     sim_nodes_norm.location = (-880.0, -520.0)
     links.new(group_in.outputs["world_sim_nodes"], sim_nodes_norm.inputs[0])
 
-    turns_divide = nodes.new("CompositorNodeMath")
-    turns_divide.name = "world_sim_turns_to_unit"
-    turns_divide.label = "Turns to 0-1"
-    turns_divide.operation = "DIVIDE"
-    turns_divide.inputs[1].default_value = 100.0
-    turns_divide.location = (-1180.0, -780.0)
-    links.new(group_in.outputs["world_sim_turns"], turns_divide.inputs[0])
+    base_activation = nodes.new("CompositorNodeMath")
+    base_activation.operation = "GREATER_THAN"
+    base_activation.inputs[1].default_value = 0.0
+    base_activation.location = (-1180.0, -120.0)
+    links.new(group_in.outputs["world_sim_turns"], base_activation.inputs[0])
+
+    base_activation_reroute = nodes.new("NodeReroute")
+    base_activation_reroute.name = "mask_base-activated"
+    base_activation_reroute.label = "mask_base-activated"
+    base_activation_reroute.location = (-900.0, -120.0)
+    links.new(base_activation.outputs[0], base_activation_reroute.inputs[0])
+
+    sim_turns_rgba = nodes.new("CompositorNodeSetAlpha")
+    sim_turns_rgba.location = (-600.0, -300.0)
+    sim_turns_rgba.mode = "APPLY"
+    links.new(sim_turns_norm.outputs[0], sim_turns_rgba.inputs["Image"])
+    links.new(base_activation_reroute.outputs[0], sim_turns_rgba.inputs["Alpha"])
+
+    sim_nodes_rgba = nodes.new("CompositorNodeSetAlpha")
+    sim_nodes_rgba.location = (-600.0, -520.0)
+    sim_nodes_rgba.mode = "APPLY"
+    links.new(sim_nodes_norm.outputs[0], sim_nodes_rgba.inputs["Image"])
+    links.new(base_activation_reroute.outputs[0], sim_nodes_rgba.inputs["Alpha"])
 
     turns_spread = nodes.new("CompositorNodeMath")
-    turns_spread.name = "world_sim_turns_spread"
-    turns_spread.label = "Distribution spread"
-    turns_spread.operation = "POWER"
+    turns_spread.operation = "ADD"
     turns_spread.inputs[1].default_value = 0.35
     turns_spread.location = (-900.0, -780.0)
-    links.new(turns_divide.outputs[0], turns_spread.inputs[0])
+    links.new(group_in.outputs["world_sim_turns"], turns_spread.inputs[0])
+
+    turns_norm = nodes.new("CompositorNodeNormalize")
+    turns_norm.location = (-600.0, -780.0)
+    links.new(turns_spread.outputs[0], turns_norm.inputs[0])
 
     turns_ramp = nodes.new("CompositorNodeValToRGB")
-    turns_ramp.name = "world_sim_turns_greyscale"
     turns_ramp.label = "Greyscale ramp"
-    turns_ramp.location = (-600.0, -780.0)
-    links.new(turns_spread.outputs[0], turns_ramp.inputs["Fac"])
+    turns_ramp.location = (-300.0, -780.0)
+    links.new(turns_norm.outputs[0], turns_ramp.inputs["Fac"])
+    ramp = turns_ramp.color_ramp
+    while len(ramp.elements) > 2:
+        ramp.elements.remove(ramp.elements[-1])
+    ramp.elements[0].position = 0.0
+    ramp.elements[0].color = (0.0, 0.0, 0.0, 1.0)
+    ramp.elements[1].position = 1.0
+    ramp.elements[1].color = (0.0, 0.0, 0.0, 1.0)
+    for position, color in (
+        (0.15625, (1.0, 1.0, 1.0, 1.0)),
+        (0.326136, (0.0, 0.0, 0.0, 1.0)),
+        (0.475, (1.0, 1.0, 1.0, 1.0)),
+        (0.620455, (0.0, 0.0, 0.0, 1.0)),
+        (0.786364, (1.0, 1.0, 1.0, 1.0)),
+    ):
+        element = ramp.elements.new(position)
+        element.color = color
+
+    turns_rgba = nodes.new("CompositorNodeSetAlpha")
+    turns_rgba.location = (20.0, -780.0)
+    turns_rgba.mode = "APPLY"
+    links.new(turns_ramp.outputs["Image"], turns_rgba.inputs["Image"])
+    links.new(base_activation_reroute.outputs[0], turns_rgba.inputs["Alpha"])
 
     ground_mask = nodes.new("CompositorNodeIDMask")
     ground_mask.name = "base_depth_ground_mask"
@@ -777,9 +812,9 @@ def build_base_outputs_group() -> bpy.types.NodeTree:
     links.new(group_in.outputs["Existing Image"], group_out.inputs["base_rgb"])
     links.new(group_in.outputs["Existing AO"], group_out.inputs["base_white_render"])
     links.new(outlines.outputs["Image"], group_out.inputs["base_outlines"])
-    links.new(sim_turns_norm.outputs[0], group_out.inputs["base_sim-turns"])
-    links.new(sim_nodes_norm.outputs[0], group_out.inputs["base_sim-nodes"])
-    links.new(turns_ramp.outputs["Image"], group_out.inputs["base_sim-turns_ripple-effect"])
+    links.new(sim_turns_rgba.outputs["Image"], group_out.inputs["base_sim-turns"])
+    links.new(sim_nodes_rgba.outputs["Image"], group_out.inputs["base_sim-nodes"])
+    links.new(turns_rgba.outputs["Image"], group_out.inputs["base_sim-turns_ripple-effect"])
 
     return group
 

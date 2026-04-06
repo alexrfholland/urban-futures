@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 """
-PyVista render settings for the `engine3-proposals` custom v3 proposal render.
+PyVista render settings for the custom v3 proposal renders.
+
+Used by:
+- `engine3-proposals_interventions`
+- `engine3-proposals`
 """
 
 from typing import Final

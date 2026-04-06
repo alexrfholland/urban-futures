@@ -259,6 +259,79 @@ Scene update order:
 10. render multilayer EXRs from the heavy scene
 11. open or build the lightweight EXR compositor scene and produce the final images
 
+## 4.1. Edge Lab Handoff 2026-04-05
+
+Edge Lab compositor work is currently centered in:
+
+- [`data/blender/2026/edge_detection_lab`](../../data/blender/2026/edge_detection_lab)
+
+Current cleaned compositor working file:
+
+- [`data/blender/2026/edge_detection_lab/edge_lab_final_template_safe_rebuild_20260405.blend`](../../data/blender/2026/edge_detection_lab/edge_lab_final_template_safe_rebuild_20260405.blend)
+
+Proposal compositor:
+
+- [`data/blender/2026/edge_detection_lab/compositor_proposal_masks.blend`](../../data/blender/2026/edge_detection_lab/compositor_proposal_masks.blend)
+
+Simple mist debug compositor:
+
+- [`data/blender/2026/edge_detection_lab/mist_pathway_kirsch_simple.blend`](../../data/blender/2026/edge_detection_lab/mist_pathway_kirsch_simple.blend)
+
+Remote EXR rule for Edge Lab:
+
+- always use the latest Mediaflux-backed EXRs under:
+  - [`data/blender/2026/edge_detection_lab/inputs/LATEST_REMOTE_EXRS/city_timeline`](../../data/blender/2026/edge_detection_lab/inputs/LATEST_REMOTE_EXRS/city_timeline)
+- do not trust older local copies just because they exist
+
+Important incident on 2026-04-05:
+
+- the local `LATEST_REMOTE_EXRS/city_timeline` folder had stale/corrupt files
+- Mediaflux checksum check reported `8` content mismatches out of `9`
+- this caused broken proposal renders, including partial-frame outputs such as `proposal-colonise-enrich-envelope_0001.png`
+- the stale local folder was moved aside to:
+  - [`data/blender/2026/edge_detection_lab/inputs/LATEST_REMOTE_EXRS/city_timeline_stale_backup_20260405_1926`](../../data/blender/2026/edge_detection_lab/inputs/LATEST_REMOTE_EXRS/city_timeline_stale_backup_20260405_1926)
+- the `city_timeline` folder was then redownloaded cleanly from Mediaflux
+- after redownload, Mediaflux check passed:
+  - `9 assets passed`
+  - `0 missing`
+  - `0 content mismatch`
+
+Current known-good latest remote EXR sizes:
+
+- `city_timeline__positive_state__8k64s.exr`: `419,445,513`
+- `city_timeline__positive_priority_state__8k64s.exr`: `411,449,301`
+- `city_timeline__trending_state__8k64s.exr`: `408,498,976`
+- `city_timeline__existing_condition_positive__8k64s.exr`: `397,193,340`
+- `city_timeline__bioenvelope_positive__8k64s.exr`: `383,300,298`
+- `city_timeline__bioenvelope_trending__8k64s.exr`: `389,948,650`
+
+Bioenvelope mapping rule:
+
+- before cleanup, the trusted compositor files showed:
+  - `Current BioEnvelope :: EXR BioEnvelope` -> `city_timeline__bioenvelope_positive__8k64s.exr`
+  - `Current BioEnvelope :: EXR Trending` -> `city_timeline__bioenvelope_trending__8k64s.exr`
+- `Current BioEnvelope :: EXR Trending` is not the ordinary `trending_state` EXR
+- if rerendering current bioenvelope outputs, preserve that mapping
+
+Code patch already made:
+
+- [`code/blender/2026/edge_detection_lab/render_edge_lab_current_bioenvelopes.py`](../../code/blender/2026/edge_detection_lab/render_edge_lab_current_bioenvelopes.py)
+- this was updated to:
+  - support the cleaned single-node bioenvelope output layout
+  - use a separate trending bioenvelope EXR input instead of ordinary trending state
+
+Output hygiene rule:
+
+- bad latest-remote output roots from the stale EXRs were deleted before rerender
+- if outputs look spatially clipped or obviously partial, check the EXR input first before blaming compositor node logic
+
+Restart-safe next step:
+
+1. rerender the latest-remote proposal outputs from [`compositor_proposal_masks.blend`](../../data/blender/2026/edge_detection_lab/compositor_proposal_masks.blend)
+2. rerender the latest-remote cleaned `Current` suite from [`edge_lab_final_template_safe_rebuild_20260405.blend`](../../data/blender/2026/edge_detection_lab/edge_lab_final_template_safe_rebuild_20260405.blend)
+3. rerender the simple mist debug PNG from [`mist_pathway_kirsch_simple.blend`](../../data/blender/2026/edge_detection_lab/mist_pathway_kirsch_simple.blend)
+4. confirm outputs after rerender; interrupted earlier runs were not treated as valid final output
+
 Baseline work follows the same pattern, but uses the baseline inputs and helpers from section 5.
 
 ## 5. Scripts, Files, And References

@@ -32,6 +32,10 @@ BIOENVELOPE_EXR = env_path(
     "EDGE_LAB_BIOENVELOPE_EXR",
     "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-city_bioenvelope.exr",
 )
+BIOENVELOPE_TRENDING_EXR = env_path(
+    "EDGE_LAB_BIOENVELOPE_TRENDING_EXR",
+    os.environ.get("EDGE_LAB_BIOENVELOPE_TRENDING", str(TRENDING_EXR)),
+)
 SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
 
 
@@ -63,6 +67,14 @@ def require_node(node_tree: bpy.types.NodeTree, name: str) -> bpy.types.Node:
     return node
 
 
+def require_any_node(node_tree: bpy.types.NodeTree, names: list[str]) -> bpy.types.Node:
+    for name in names:
+        node = node_tree.nodes.get(name)
+        if node is not None:
+            return node
+    raise ValueError(f"Missing node from candidates: {names}")
+
+
 def require_node_by_type(node_tree: bpy.types.NodeTree, bl_idname: str) -> bpy.types.Node:
     for node in node_tree.nodes:
         if node.bl_idname == bl_idname:
@@ -82,6 +94,14 @@ def require_node_by_label(
             continue
         return node
     raise ValueError(f"Missing node with label: {label}")
+
+
+def find_workflow_output_node(node_tree: bpy.types.NodeTree) -> bpy.types.Node | None:
+    for name in ("Current BioEnvelope ::Outputs", "Current BioEnvelope::Outputs"):
+        node = node_tree.nodes.get(name)
+        if node is not None and node.bl_idname == "CompositorNodeOutputFile":
+            return node
+    return None
 
 
 def repath_exr_node(node: bpy.types.Node, filepath: Path) -> None:
@@ -134,6 +154,15 @@ def move_from_fallback_dir(fallback_path: Path, final_path: Path) -> Path:
     return final_path
 
 
+def rename_family_outputs(output_dir: Path) -> None:
+    for rendered_path in sorted(output_dir.glob("*_0001.png")):
+        final_path = rendered_path.with_name(rendered_path.name.replace("_0001", ""))
+        if final_path.exists():
+            final_path.unlink()
+        rendered_path.replace(final_path)
+        log(f"Renamed {rendered_path.name} -> {final_path.name}")
+
+
 def render_socket_to_png(
     scene: bpy.types.Scene,
     node_tree: bpy.types.NodeTree,
@@ -166,12 +195,12 @@ def main() -> None:
     node_tree = scene.node_tree
     set_standard_view(scene)
 
-    existing = require_node(node_tree, "AO::EXR Existing")
+    existing = require_any_node(node_tree, ["Current BioEnvelope :: EXR Existing", "AO::EXR Existing"])
     exr_bio = require_node(node_tree, "Current BioEnvelope :: EXR BioEnvelope")
     exr_trending = require_node(node_tree, "Current BioEnvelope :: EXR Trending")
     repath_exr_node(existing, EXISTING_EXR)
     repath_exr_node(exr_bio, BIOENVELOPE_EXR)
-    repath_exr_node(exr_trending, TRENDING_EXR)
+    repath_exr_node(exr_trending, BIOENVELOPE_TRENDING_EXR)
 
     palette_suffixes = (
         "full-image",
@@ -192,15 +221,6 @@ def main() -> None:
             "bioenvelope_outlines-simple",
         ]
     )
-    outputs = []
-    for stem in stems:
-        outputs.append(
-            (
-                require_node_by_label(node_tree, stem, "NodeReroute"),
-                OUTPUT_DIR / f"{stem}.png",
-            )
-        )
-
     for node in node_tree.nodes:
         if node.bl_idname == "CompositorNodeOutputFile":
             node.mute = True
@@ -222,6 +242,47 @@ def main() -> None:
     set_standard_view(scene)
 
     bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
+    workflow_output = find_workflow_output_node(node_tree)
+    if workflow_output is not None:
+        workflow_group = require_any_node(
+            node_tree,
+            [
+                "Current BioEnvelope :: Workflow Group",
+                "Current BioEnvelope::Workflow Group",
+            ],
+        )
+        workflow_output.base_path = str(OUTPUT_DIR)
+        workflow_output.format.file_format = "PNG"
+        workflow_output.format.color_mode = "RGBA"
+        workflow_output.format.color_depth = "8"
+        workflow_output.mute = False
+        scene.render.filepath = str(OUTPUT_DIR / "_discard_render.png")
+        bpy.ops.render.render(write_still=True, scene=scene.name)
+        rename_family_outputs(OUTPUT_DIR)
+        for slot in workflow_output.file_slots:
+            stem = slot.path.rstrip("_")
+            out_path = OUTPUT_DIR / f"{stem}.png"
+            # Blender sometimes skips newly added workflow slots on this node tree.
+            # Fall back to a direct socket render so the saved blend stays the source of truth.
+            if not out_path.exists():
+                source_socket = workflow_group.outputs.get(stem) or workflow_group.outputs.get(
+                    stem.replace("-", "_")
+                )
+                if source_socket is not None:
+                    render_socket_to_png(scene, node_tree, source_socket, out_path)
+            if out_path.exists():
+                log(f"Wrote {out_path}")
+        return
+
+    outputs = []
+    for stem in stems:
+        outputs.append(
+            (
+                require_node_by_label(node_tree, stem, "NodeReroute"),
+                OUTPUT_DIR / f"{stem}.png",
+            )
+        )
+
     final_paths = []
     for node, output_path in outputs:
         render_socket_to_png(scene, node_tree, node.outputs[0], output_path)

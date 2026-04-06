@@ -60,6 +60,14 @@ def require_node(node_tree: bpy.types.NodeTree, name: str) -> bpy.types.Node:
     return node
 
 
+def require_any_node(node_tree: bpy.types.NodeTree, names: list[str]) -> bpy.types.Node:
+    for name in names:
+        node = node_tree.nodes.get(name)
+        if node is not None:
+            return node
+    raise ValueError(f"Missing node from candidates: {names}")
+
+
 def require_node_by_type(node_tree: bpy.types.NodeTree, bl_idname: str) -> bpy.types.Node:
     for node in node_tree.nodes:
         if node.bl_idname == bl_idname:
@@ -170,7 +178,7 @@ def main() -> None:
     node_tree = scene.node_tree
     set_standard_view(scene)
 
-    existing = require_node(node_tree, "AO::EXR Existing")
+    existing = require_any_node(node_tree, ["Current Base Outputs :: EXR Existing", "AO::EXR Existing"])
     repath_exr_node(existing, EXISTING_EXR)
     base_group = require_node(node_tree, "Current Base Outputs :: Group")
     reconnect_group_input(node_tree, base_group, "Existing Image", exr_image_socket(existing))

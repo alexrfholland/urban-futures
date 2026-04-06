@@ -119,6 +119,9 @@ Those wrappers currently depend on refactored core modules:
   - validation render views
 - [_code-refactored/refactor_code/scenario/render_custom_proposal_schema_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_custom_proposal_schema_v3.py)
   - custom proposal-schema renders
+  - writes:
+    - `engine3-proposals_interventions`
+    - `engine3-proposals`
 
 So the practical rule is:
 
@@ -142,6 +145,13 @@ Statistics:
 Validation / visualisation:
 
 - render outputs and timing logs in [temp/validation](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/simv3-5/temp/validation)
+- default visualisation set:
+  - `engine3-proposals_interventions_with-legend`
+  - `engine3-proposals`
+- non-default / opt-in visualisation variants:
+  - `engine3-proposals_interventions`
+  - `engine3-proposals_with-legend`
+  - the older validation views from `render_forest_size_views.py`
 - render scripts:
   - [_code-refactored/refactor_code/scenario/render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_forest_size_views.py)
   - [_code-refactored/refactor_code/scenario/render_custom_proposal_schema_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_custom_proposal_schema_v3.py)
@@ -179,6 +189,10 @@ Use the flow below in order.
 6. Run validation renders.
    - Use the final `state_with_indicators.vtk` files, not interim CSVs.
    - Write render outputs and logs into `temp/validation`.
+   - Default visual QA should use:
+     - `engine3-proposals_interventions_with-legend`
+     - `engine3-proposals`
+   - Other render variants are opt-in.
 
 The important split is:
 

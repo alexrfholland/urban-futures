@@ -72,6 +72,14 @@ def require_node(node_tree: bpy.types.NodeTree, name: str) -> bpy.types.Node:
     return node
 
 
+def require_any_node(node_tree: bpy.types.NodeTree, names: list[str]) -> bpy.types.Node:
+    for name in names:
+        node = node_tree.nodes.get(name)
+        if node is not None:
+            return node
+    raise ValueError(f"Missing node from candidates: {names}")
+
+
 def require_node_by_type(node_tree: bpy.types.NodeTree, bl_idname: str) -> bpy.types.Node:
     for node in node_tree.nodes:
         if node.bl_idname == bl_idname:
@@ -163,6 +171,32 @@ def mute_all_output_nodes(node_tree: bpy.types.NodeTree) -> None:
             node.mute = True
 
 
+def configure_output_nodes(output_nodes: list[bpy.types.Node], output_dir: Path) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for node in output_nodes:
+        node.base_path = str(output_dir)
+        node.format.file_format = "PNG"
+        node.format.color_mode = "RGBA"
+        node.format.color_depth = "8"
+        node.mute = False
+
+
+def rename_family_outputs(output_dir: Path) -> None:
+    for rendered_path in sorted(output_dir.glob("*_0001.png")):
+        final_path = rendered_path.with_name(rendered_path.name.replace("_0001", ""))
+        if final_path.exists():
+            final_path.unlink()
+        rendered_path.replace(final_path)
+        log(f"Renamed {rendered_path.name} -> {final_path.name}")
+
+
+def keep_only_filtered_outputs(output_dir: Path, allowed_stems: set[str]) -> None:
+    for path in output_dir.glob("*.png"):
+        if path.stem not in allowed_stems:
+            path.unlink()
+            log(f"Removed filtered-out output {path.name}")
+
+
 def render_socket_to_png(
     scene: bpy.types.Scene,
     node_tree: bpy.types.NodeTree,
@@ -186,14 +220,10 @@ def output_nodes(node_tree: bpy.types.NodeTree) -> list[bpy.types.Node]:
     nodes = [
         node
         for node in node_tree.nodes
-        if node.bl_idname == "CompositorNodeOutputFile" and node.name.startswith("Sizes::Output :: ")
+        if node.bl_idname == "CompositorNodeOutputFile" and node.name.startswith("Sizes::")
     ]
     if not nodes:
         raise ValueError("No Sizes output nodes found")
-    if OUTPUT_FILTER:
-        nodes = [node for node in nodes if output_stem(node) in OUTPUT_FILTER]
-        if not nodes:
-            raise ValueError(f"No Sizes outputs matched EDGE_LAB_OUTPUT_FILTER={sorted(OUTPUT_FILTER)}")
     return sorted(nodes, key=lambda node: node.name)
 
 
@@ -209,6 +239,45 @@ def linked_source_socket(node: bpy.types.Node):
     return node.inputs[0].links[0].from_socket
 
 
+def selected_slots(node: bpy.types.Node) -> list[tuple[int, str]]:
+    slots = [(index, slot.path.rstrip("_")) for index, slot in enumerate(node.file_slots)]
+    if not OUTPUT_FILTER:
+        return slots
+    selected = [(index, stem) for index, stem in slots if stem in OUTPUT_FILTER]
+    if not selected:
+        raise ValueError(f"No Sizes outputs matched EDGE_LAB_OUTPUT_FILTER={sorted(OUTPUT_FILTER)}")
+    return selected
+
+
+def linked_source_socket_for_slot(node: bpy.types.Node, index: int):
+    input_socket = node.inputs[index]
+    if not input_socket.links:
+        raise ValueError(f"Output node '{node.name}' slot {index} is not linked")
+    return input_socket.links[0].from_socket
+
+
+def filtered_output_nodes(nodes: list[bpy.types.Node]) -> list[bpy.types.Node]:
+    if not OUTPUT_FILTER:
+        return nodes
+    filtered = [node for node in nodes if output_stem(node) in OUTPUT_FILTER]
+    if filtered:
+        return filtered
+    if len(nodes) == 1:
+        slot_stems = {slot.path.rstrip("_") for slot in nodes[0].file_slots}
+        matched = slot_stems & OUTPUT_FILTER
+        if matched:
+            return nodes
+    raise ValueError(f"No Sizes outputs matched EDGE_LAB_OUTPUT_FILTER={sorted(OUTPUT_FILTER)}")
+
+
+def allowed_output_stems(nodes: list[bpy.types.Node]) -> set[str]:
+    stems: set[str] = set()
+    for node in nodes:
+        for slot in node.file_slots:
+            stems.add(slot.path.rstrip("_"))
+    return stems
+
+
 def main() -> None:
     if not BLEND_PATH.exists():
         raise FileNotFoundError(BLEND_PATH)
@@ -220,10 +289,10 @@ def main() -> None:
         raise ValueError(f"Scene '{SCENE_NAME}' not found in {BLEND_PATH}")
 
     node_tree = scene.node_tree
-    existing = require_node(node_tree, "AO::EXR Existing")
-    pathway = require_node(node_tree, "AO::EXR Pathway")
-    priority = require_node(node_tree, "AO::EXR Priority")
-    trending = require_node(node_tree, "Resources::EXR Trending")
+    existing = require_any_node(node_tree, ["Sizes::EXR Existing", "AO::EXR Existing"])
+    pathway = require_any_node(node_tree, ["Sizes::EXR Pathway", "AO::EXR Pathway"])
+    priority = require_any_node(node_tree, ["Sizes::EXR Priority", "AO::EXR Priority"])
+    trending = require_any_node(node_tree, ["Sizes::EXR Trending", "Resources::EXR Trending"])
 
     repath_exr_node(existing, EXISTING_EXR)
     repath_exr_node(pathway, PATHWAY_EXR)
@@ -241,14 +310,24 @@ def main() -> None:
     )
     mute_all_output_nodes(node_tree)
 
+    all_output_nodes = output_nodes(node_tree)
+    selected_output_nodes = filtered_output_nodes(all_output_nodes)
     bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
-    for node in output_nodes(node_tree):
-        render_socket_to_png(
-            scene,
-            node_tree,
-            linked_source_socket(node),
-            OUTPUT_DIR / f"{output_stem(node)}.png",
-        )
+    if len(all_output_nodes) == 1:
+        # Sizes file outputs do not render reliably as compositor sinks, even pre-consolidation.
+        # Keep the consolidated node for layout/organization, but render each linked slot directly.
+        node = selected_output_nodes[0]
+        for index, stem in selected_slots(node):
+            render_socket_to_png(
+                scene,
+                node_tree,
+                linked_source_socket_for_slot(node, index),
+                OUTPUT_DIR / f"{stem}.png",
+            )
+    else:
+        configure_output_nodes(selected_output_nodes, OUTPUT_DIR)
+        bpy.ops.render.render(write_still=False, scene=scene.name)
+        rename_family_outputs(OUTPUT_DIR)
 
 
 if __name__ == "__main__":

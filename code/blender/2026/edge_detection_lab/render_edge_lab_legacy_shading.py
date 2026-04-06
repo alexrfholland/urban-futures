@@ -32,20 +32,32 @@ EXISTING_EXR = env_path(
     "EDGE_LAB_EXISTING_EXR",
     "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-existing_condition.exr",
 )
+EXISTING_TRENDING_EXR = env_path(
+    "EDGE_LAB_EXISTING_TRENDING_EXR",
+    os.environ.get("EDGE_LAB_EXISTING_TRENDING", str(EXISTING_EXR)),
+)
+BIOENVELOPE_EXR = env_path(
+    "EDGE_LAB_BIOENVELOPE_EXR",
+    os.environ.get("EDGE_LAB_BIOENVELOPE", str(EXISTING_EXR)),
+)
+BIOENVELOPE_TRENDING_EXR = env_path(
+    "EDGE_LAB_BIOENVELOPE_TRENDING_EXR",
+    os.environ.get("EDGE_LAB_BIOENVELOPE_TRENDING", str(BIOENVELOPE_EXR)),
+)
 SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Legacy")
 NODE_PREFIX = os.environ.get("EDGE_LAB_NODE_PREFIX", "Template Shading :: ")
 TREE_ID = 3
 PATHWAY_NODE_CANDIDATES = os.environ.get(
     "EDGE_LAB_PATHWAY_NODE_CANDIDATES",
-    "EXR :: pathway_state|City EXR :: pathway_state",
+    "Current Shading :: EXR Pathway|EXR :: pathway_state|City EXR :: pathway_state|AO::EXR Pathway",
 ).split("|")
 PRIORITY_NODE_CANDIDATES = os.environ.get(
     "EDGE_LAB_PRIORITY_NODE_CANDIDATES",
-    "EXR :: priority|EXR :: city_priority|City EXR :: city_priority",
+    "Current Shading :: EXR Priority|EXR :: priority|EXR :: city_priority|City EXR :: city_priority|AO::EXR Priority",
 ).split("|")
 EXISTING_NODE_CANDIDATES = os.environ.get(
     "EDGE_LAB_EXISTING_NODE_CANDIDATES",
-    "EXR :: existing_condition|City EXR :: existing_condition",
+    "Current Shading :: EXR Existing|EXR :: existing_condition|City EXR :: existing_condition|AO::EXR Existing",
 ).split("|")
 
 
@@ -104,6 +116,15 @@ def rename_output(rendered_path: Path) -> Path:
     return final_path
 
 
+def rename_family_outputs(output_dir: Path) -> None:
+    for rendered_path in sorted(output_dir.glob("*_0001.png")):
+        final_path = rendered_path.with_name(rendered_path.name.replace("_0001", ""))
+        if final_path.exists():
+            final_path.unlink()
+        rendered_path.replace(final_path)
+        log(f"Renamed {rendered_path.name} -> {final_path.name}")
+
+
 def file_output_node(
     node_tree: bpy.types.NodeTree,
     image_socket,
@@ -144,6 +165,14 @@ def set_standard_view(scene: bpy.types.Scene) -> None:
         pass
     scene.view_settings.exposure = 0.0
     scene.view_settings.gamma = 1.0
+
+
+def find_workflow_output_node(node_tree: bpy.types.NodeTree) -> bpy.types.Node | None:
+    for name in ("Current Shading ::Outputs", "Current Shading::Outputs"):
+        node = node_tree.nodes.get(name)
+        if node is not None and node.bl_idname == "CompositorNodeOutputFile":
+            return node
+    return None
 
 
 def ensure_ao_shading_output_name(node_tree: bpy.types.NodeTree) -> bpy.types.NodeTree:
@@ -366,6 +395,45 @@ def main() -> None:
     scene.frame_end = 1
     scene.frame_current = 1
     set_standard_view(scene)
+
+    workflow_output = find_workflow_output_node(node_tree)
+    if workflow_output is not None and SCENE_NAME == "Current":
+        if helper_existing := node_tree.nodes.get("Current Shading :: BioEnvelope Helper :: EXR Existing Positive"):
+            repath_exr_node(helper_existing, EXISTING_EXR)
+        if helper_existing_trending := node_tree.nodes.get("Current Shading :: BioEnvelope Helper :: EXR Existing Trending"):
+            repath_exr_node(helper_existing_trending, EXISTING_TRENDING_EXR)
+        if helper_bio := node_tree.nodes.get("Current BioEnvelope :: EXR BioEnvelope"):
+            repath_exr_node(helper_bio, BIOENVELOPE_EXR)
+        if helper_bio_trending := node_tree.nodes.get("Current BioEnvelope :: EXR Trending"):
+            repath_exr_node(helper_bio_trending, BIOENVELOPE_TRENDING_EXR)
+
+        previous_mute_states = {}
+        for node in node_tree.nodes:
+            if node.bl_idname == "CompositorNodeOutputFile":
+                previous_mute_states[node.name] = node.mute
+                node.mute = True
+        workflow_output.base_path = str(OUTPUT_DIR)
+        workflow_output.format.file_format = "PNG"
+        workflow_output.format.color_mode = "RGBA"
+        workflow_output.format.color_depth = "8"
+        workflow_output.mute = False
+
+        bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
+        scene.render.filepath = str(OUTPUT_DIR / "_discard_render.png")
+        bpy.ops.render.render(write_still=True, scene=scene.name)
+        rename_family_outputs(OUTPUT_DIR)
+
+        for node in node_tree.nodes:
+            if node.bl_idname == "CompositorNodeOutputFile" and node.name in previous_mute_states:
+                node.mute = previous_mute_states[node.name]
+
+        bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
+        for slot in workflow_output.file_slots:
+            stem = slot.path.rstrip("_")
+            out_path = OUTPUT_DIR / f"{stem}.png"
+            if out_path.exists():
+                log(f"Wrote {out_path}")
+        return
 
     bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
     bpy.ops.render.render(write_still=False, scene=scene.name)

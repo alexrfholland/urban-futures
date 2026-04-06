@@ -40,8 +40,16 @@ EXR_ROOT = env_path(
 PATHWAY_EXR = env_path("EDGE_LAB_PATHWAY_EXR", EXR_ROOT / "city-pathway_state.exr")
 PRIORITY_EXR = env_path("EDGE_LAB_PRIORITY_EXR", EXR_ROOT / "city-city_priority.exr")
 EXISTING_EXR = env_path("EDGE_LAB_EXISTING_EXR", EXR_ROOT / "city-existing_condition.exr")
+EXISTING_TRENDING_EXR = env_path(
+    "EDGE_LAB_EXISTING_TRENDING_EXR",
+    EXISTING_EXR,
+)
 TRENDING_EXR = env_path("EDGE_LAB_TRENDING_EXR", EXR_ROOT / "city-trending_state.exr")
 BIOENVELOPE_EXR = env_path("EDGE_LAB_BIOENVELOPE_EXR", EXR_ROOT / "city-city_bioenvelope.exr")
+BIOENVELOPE_TRENDING_EXR = env_path(
+    "EDGE_LAB_BIOENVELOPE_TRENDING_EXR",
+    TRENDING_EXR,
+)
 
 
 def log(message: str) -> None:
@@ -116,9 +124,12 @@ def run_current_shading() -> None:
             "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
             "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
             "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
-            "EDGE_LAB_PATHWAY_NODE_CANDIDATES": "AO::EXR Pathway",
-            "EDGE_LAB_PRIORITY_NODE_CANDIDATES": "AO::EXR Priority",
-            "EDGE_LAB_EXISTING_NODE_CANDIDATES": "AO::EXR Existing",
+            "EDGE_LAB_EXISTING_TRENDING_EXR": str(EXISTING_TRENDING_EXR),
+            "EDGE_LAB_BIOENVELOPE_EXR": str(BIOENVELOPE_EXR),
+            "EDGE_LAB_BIOENVELOPE_TRENDING_EXR": str(BIOENVELOPE_TRENDING_EXR),
+            "EDGE_LAB_PATHWAY_NODE_CANDIDATES": "Current Shading :: EXR Pathway|AO::EXR Pathway",
+            "EDGE_LAB_PRIORITY_NODE_CANDIDATES": "Current Shading :: EXR Priority|AO::EXR Priority",
+            "EDGE_LAB_EXISTING_NODE_CANDIDATES": "Current Shading :: EXR Existing|AO::EXR Existing",
         },
     )
 
@@ -134,6 +145,7 @@ def run_current_bioenvelopes() -> None:
             "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
             "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
             "EDGE_LAB_BIOENVELOPE_EXR": str(BIOENVELOPE_EXR),
+            "EDGE_LAB_BIOENVELOPE_TRENDING_EXR": str(BIOENVELOPE_TRENDING_EXR),
         },
     )
 

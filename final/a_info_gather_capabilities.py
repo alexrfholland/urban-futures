@@ -404,8 +404,38 @@ def _string_point_data(polydata, name, default):
     return cleaned.astype(PROPOSAL_LABEL_DTYPE)
 
 
+def _has_precomputed_proposal_labels(polydata):
+    required = {
+        "proposal_decay",
+        "proposal_release_control",
+        "proposal_recruit",
+        "proposal_colonise",
+        "proposal_deploy_structure",
+    }
+    return required.issubset(polydata.point_data.keys())
+
+
+def _has_precomputed_v3_proposals(polydata):
+    required = {
+        "proposal_decayV3",
+        "proposal_release_controlV3",
+        "proposal_coloniseV3",
+        "proposal_recruitV3",
+        "proposal_deploy_structureV3",
+        "proposal_decayV3_intervention",
+        "proposal_release_controlV3_intervention",
+        "proposal_coloniseV3_intervention",
+        "proposal_recruitV3_intervention",
+        "proposal_deploy_structureV3_intervention",
+    }
+    return required.issubset(polydata.point_data.keys())
+
+
 def add_proposal_point_data(polydata):
     """Add manuscript proposal/intervention categorical layers to the augmented VTK."""
+    if _has_precomputed_proposal_labels(polydata):
+        return polydata
+
     n_points = polydata.n_points
     required_arrays = {
         "scenario_rewilded",
@@ -531,6 +561,12 @@ def add_proposal_point_data(polydata):
 
 
 def ensure_v3_proposal_point_data(polydata):
+    if _has_precomputed_v3_proposals(polydata):
+        blender_point_arrays = build_blender_proposal_framebuffer_arrays(polydata.point_data)
+        for name, values in blender_point_arrays.items():
+            polydata.point_data[name] = values
+        return polydata
+
     n_points = polydata.n_points
     proposal_decay = _empty_v3_decisions(n_points)
     proposal_release_control = _empty_v3_decisions(n_points)

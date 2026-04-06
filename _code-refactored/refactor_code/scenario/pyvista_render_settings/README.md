@@ -15,6 +15,12 @@ Current named schemas:
 - `engine3-proposals`
   - `point_size = 4.0`
   - `render_points_as_spheres = False`
+  - default outputs:
+    - `engine3-proposals_interventions_with-legend`
+    - `engine3-proposals`
+  - opt-in extra variants:
+    - `engine3-proposals_interventions`
+    - `engine3-proposals_with-legend`
 
 Registry:
 

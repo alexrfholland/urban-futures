@@ -16,6 +16,7 @@ Output point-data arrays:
 - blender_proposal-deploy-structure
 
 General encoding pattern:
+- -1 = accepted with no intervention allocated yet
 - 0 = not-assessed
 - 1 = rejected
 - higher values = accepted intervention variants for that proposal family
@@ -78,6 +79,8 @@ def build_blender_proposal_framebuffer_arrays(values_by_name) -> dict[str, np.nd
 
         active_intervention_mask = accepted_mask & (interventions != "none")
         combined[active_intervention_mask] = interventions[active_intervention_mask]
+        accepted_none_mask = accepted_mask & (interventions == "none")
+        combined[accepted_none_mask] = "accepted-no-intervention"
 
         rejected_or_unset_with_intervention = (rejected_mask | not_assessed_mask) & (interventions != "none")
         if rejected_or_unset_with_intervention.any():
@@ -92,7 +95,7 @@ def build_blender_proposal_framebuffer_arrays(values_by_name) -> dict[str, np.nd
             raise ValueError(f"Unexpected unmapped {family} framebuffer states: {missing_states}")
         output[DEFAULT_OUTPUT_COLUMNS[family]] = np.fromiter(
             (mapping[state] for state in combined),
-            dtype=np.uint8,
+            dtype=np.int16,
             count=point_count,
         )
 

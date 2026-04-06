@@ -26,11 +26,15 @@ for import_root in (CODE_ROOT, FINAL_DIR):
 import a_helper_functions  # noqa: E402
 import a_resource_distributor_dataframes  # noqa: E402
 
+from refactor_code.blender.proposal_framebuffers import build_blender_proposal_framebuffer_columns  # noqa: E402
+from refactor_code.blender.proposal_framebuffers_vtk import build_blender_proposal_framebuffer_arrays  # noqa: E402
 from refactor_code.paths import (  # noqa: E402
+    engine_output_nodedf_path,
     engine_output_baseline_terrain_vtk_path,
     engine_output_baseline_trees_csv_path,
     engine_output_root,
     format_voxel_size,
+    scenario_node_df_path,
     scenario_output_root,
     scenario_baseline_combined_vtk_path,
     scenario_baseline_resources_vtk_path,
@@ -63,6 +67,19 @@ DEFAULT_DEADWOOD_DBH_CM = 80.0
 BASE_TEMPLATE_GEOMETRY_STEP_M = 0.1
 BASE_TEMPLATE_LOOKUP_FILENAME = "template-edits_base_geometry_volume_lookup.csv"
 BASELINE_RANDOM_SEED = 42
+BASELINE_NODE_SCENARIO = "baseline"
+BASELINE_NODE_YEAR = -180
+ACTIVE_TREE_SIZES = {"small", "medium", "large", "senescing"}
+DECAY_ACCEPTED_SIZES = {"senescing", "snag", "fallen", "decayed"}
+RELEASE_ACCEPTED_SIZES = {"small", "medium", "large"}
+DEPLOY_ACCEPTED_SIZES = {"fallen", "decayed"}
+PROPOSAL_FAMILY_SPECS = [
+    ("proposal-decay", "proposal_decay", "proposal_decayV3"),
+    ("proposal-release-control", "proposal_release_control", "proposal_release_controlV3"),
+    ("proposal-recruit", "proposal_recruit", "proposal_recruitV3"),
+    ("proposal-colonise", "proposal_colonise", "proposal_coloniseV3"),
+    ("proposal-deploy-structure", "proposal_deploy_structure", "proposal_deploy_structureV3"),
+]
 
 
 @dataclass(frozen=True)
@@ -106,6 +123,8 @@ class GeneratedBaselineArtifacts:
     combined_vtk_path: Path
     refactored_trees_csv_path: Path
     refactored_terrain_vtk_path: Path
+    legacy_nodedf_path: Path
+    refactored_nodedf_path: Path
     allocation_csv_path: Path
     metadata_json_path: Path
     candidate_csv_path: Path
@@ -571,6 +590,178 @@ def _combine_polydata(resource_poly: pv.PolyData, terrain_poly: pv.PolyData) -> 
     return combined_poly
 
 
+def _proposal_alias_column(name: str) -> str:
+    return name.replace("-", "_")
+
+
+def _append_proposal_alias_columns(df: pd.DataFrame) -> pd.DataFrame:
+    aliased = df.copy()
+    for family, _, _ in PROPOSAL_FAMILY_SPECS:
+        for suffix in ("decision", "intervention"):
+            source = f"{family}_{suffix}"
+            aliased[_proposal_alias_column(source)] = aliased[source]
+    return aliased
+
+
+def _apply_baseline_proposal_rules(baseline_tree_df: pd.DataFrame, site_dataset: xr.Dataset) -> pd.DataFrame:
+    df = baseline_tree_df.copy()
+    size_lower = df["size"].astype(str).str.lower()
+
+    resistance = (
+        site_dataset["analysis_combined_resistance"].values
+        if "analysis_combined_resistance" in site_dataset
+        else None
+    )
+    if resistance is not None:
+        voxel_ids = pd.to_numeric(df["voxelID"], errors="coerce").fillna(-1).astype(int).to_numpy()
+        canopy_resistance = np.full(len(df), np.nan, dtype=float)
+        valid_mask = (voxel_ids >= 0) & (voxel_ids < len(resistance))
+        canopy_resistance[valid_mask] = resistance[voxel_ids[valid_mask]]
+        df["CanopyResistance"] = canopy_resistance
+    elif "CanopyResistance" not in df.columns:
+        df["CanopyResistance"] = np.nan
+
+    df["CanopyArea"] = 1.0
+    df["sim_NodesVoxels"] = 1.0
+    df["sim_NodesArea"] = 1.0
+    df["rewilded"] = "paved"
+    df["isNewTree"] = False
+    df["isRewildedTree"] = False
+    df["hasbeenReplanted"] = False
+    df["unmanagedCount"] = 0
+    df["action"] = "None"
+    df["nodeType"] = "tree"
+    df["under-node-treatment"] = "none"
+    df["replacement_reason"] = "none"
+    df["pruning_target"] = "none"
+    df["pruning_target_years"] = 0
+    df["autonomy_years"] = 0
+    df["control_realized"] = df["control"].astype(str)
+    df["control_reached"] = False
+    df["lifecycle_decision"] = np.where(size_lower.isin(DECAY_ACCEPTED_SIZES), "age-in-place", "none")
+    df["lifecycle_state"] = size_lower.to_numpy()
+    df["fallen_since_year"] = -1
+    df["fallen_decay_after_years"] = -1
+    df["decayed_since_year"] = -1
+    df["decayed_remove_after_years"] = -1
+    df["nodeTypeInt"] = 0
+
+    df["proposal-decay_decision"] = np.where(
+        size_lower.isin(DECAY_ACCEPTED_SIZES),
+        "proposal-decay_accepted",
+        "not-assessed",
+    )
+    df["proposal-release-control_decision"] = np.where(
+        size_lower.isin(RELEASE_ACCEPTED_SIZES),
+        "proposal-release-control_accepted",
+        "not-assessed",
+    )
+    df["proposal-recruit_decision"] = "not-assessed"
+    df["proposal-colonise_decision"] = "not-assessed"
+    df["proposal-deploy-structure_decision"] = np.where(
+        size_lower.isin(DEPLOY_ACCEPTED_SIZES),
+        "proposal-deploy-structure_accepted",
+        "not-assessed",
+    )
+
+    for family, _, _ in PROPOSAL_FAMILY_SPECS:
+        df[f"{family}_intervention"] = "none"
+
+    return df
+
+
+def _build_baseline_node_df(baseline_tree_df: pd.DataFrame, site_dataset: xr.Dataset) -> pd.DataFrame:
+    node_df = _apply_baseline_proposal_rules(baseline_tree_df, site_dataset)
+    node_df = _append_proposal_alias_columns(node_df)
+    blender_columns = build_blender_proposal_framebuffer_columns(node_df)
+    for column_name in blender_columns.columns:
+        node_df[column_name] = blender_columns[column_name]
+    return node_df
+
+
+def _proposal_label_values(decisions: np.ndarray, family_name: str) -> np.ndarray:
+    values = np.full(len(decisions), "none", dtype="<U64")
+    accepted_mask = np.char.find(np.char.lower(decisions.astype(str)), "_accepted") >= 0
+    values[accepted_mask] = f"{family_name}-other"
+    return values
+
+
+def _annotate_baseline_combined_polydata(
+    combined_poly: pv.PolyData,
+    *,
+    node_df: pd.DataFrame,
+    resource_df: pd.DataFrame,
+    terrain_poly: pv.PolyData,
+) -> pv.PolyData:
+    combined_poly = combined_poly.copy(deep=True)
+    resource_count = len(resource_df)
+    terrain_count = terrain_poly.n_points
+    total_points = combined_poly.n_points
+
+    if resource_count + terrain_count != total_points:
+        raise ValueError(
+            "Baseline combined polydata size mismatch: "
+            f"{resource_count} resource + {terrain_count} terrain != {total_points} total"
+        )
+
+    proposal_lookup = node_df.set_index("tree_number")[
+        [f"{family}_decision" for family, _, _ in PROPOSAL_FAMILY_SPECS]
+        + [f"{family}_intervention" for family, _, _ in PROPOSAL_FAMILY_SPECS]
+    ]
+    annotated_resource_df = resource_df.merge(
+        proposal_lookup,
+        left_on="tree_number",
+        right_index=True,
+        how="left",
+    )
+
+    terrain_start = resource_count
+    terrain_end = total_points
+    terrain_points = terrain_poly.points
+
+    active_tree_df = node_df.loc[node_df["size"].astype(str).str.lower().isin(ACTIVE_TREE_SIZES), ["x", "y", "z"]]
+    if active_tree_df.empty:
+        recruit_terrain_mask = np.ones(terrain_count, dtype=bool)
+    else:
+        active_tree = cKDTree(active_tree_df.to_numpy(dtype=float))
+        distances, _ = active_tree.query(terrain_points, k=1)
+        recruit_terrain_mask = distances > 1.5
+
+    colonise_terrain_mask = np.ones(terrain_count, dtype=bool)
+
+    for family, family_alias, family_v3 in PROPOSAL_FAMILY_SPECS:
+        decision_column = f"{family}_decision"
+        intervention_column = f"{family}_intervention"
+        decisions = np.full(total_points, "not-assessed", dtype="<U64")
+        interventions = np.full(total_points, "none", dtype="<U64")
+
+        decisions[:resource_count] = annotated_resource_df[decision_column].astype(str).to_numpy()
+        interventions[:resource_count] = annotated_resource_df[intervention_column].astype(str).to_numpy()
+
+        if family == "proposal-recruit":
+            terrain_decisions = decisions[terrain_start:terrain_end].copy()
+            terrain_decisions[recruit_terrain_mask] = "proposal-recruit_accepted"
+            decisions[terrain_start:terrain_end] = terrain_decisions
+        elif family == "proposal-colonise":
+            terrain_decisions = decisions[terrain_start:terrain_end].copy()
+            terrain_decisions[colonise_terrain_mask] = "proposal-colonise_accepted"
+            decisions[terrain_start:terrain_end] = terrain_decisions
+
+        combined_poly.point_data[f"forest_{decision_column}"] = decisions.copy()
+        combined_poly.point_data[f"forest_{intervention_column}"] = interventions.copy()
+        combined_poly.point_data[_proposal_alias_column(decision_column)] = decisions.copy()
+        combined_poly.point_data[_proposal_alias_column(intervention_column)] = interventions.copy()
+        combined_poly.point_data[family_alias] = _proposal_label_values(decisions, family_alias.replace("proposal_", "").replace("_", "-"))
+        combined_poly.point_data[family_v3] = decisions.copy()
+        combined_poly.point_data[f"{family_v3}_intervention"] = interventions.copy()
+
+    blender_arrays = build_blender_proposal_framebuffer_arrays(combined_poly.point_data)
+    for name, values in blender_arrays.items():
+        combined_poly.point_data[name] = values
+
+    return combined_poly
+
+
 def _build_live_baseline_tree_df(area_ha: float) -> pd.DataFrame:
     baseline_densities = pd.read_csv(BASELINE_DENSITY_CSV).rename(columns={"Size": "diameter_breast_height"})
     rows: list[pd.DataFrame] = []
@@ -891,6 +1082,8 @@ def generate_baseline(
     baseline_tree_df = _assign_positions(baseline_tree_df, terrain_df, seed=BASELINE_RANDOM_SEED)
     baseline_tree_df = assign_baseline_tree_structure_ids(baseline_tree_df, site=site)
     baseline_tree_df = _calculate_useful_life_expectancy(baseline_tree_df)
+    baseline_node_df = _build_baseline_node_df(baseline_tree_df, site_dataset)
+    baseline_tree_df = baseline_node_df.copy()
 
     baseline_tree_df, resource_df = a_resource_distributor_dataframes.process_all_trees(
         baseline_tree_df,
@@ -905,6 +1098,12 @@ def generate_baseline(
 
     terrain_output_poly = _get_terrain_polydata(terrain_df)
     combined_poly = _combine_polydata(resource_poly, terrain_output_poly)
+    combined_poly = _annotate_baseline_combined_polydata(
+        combined_poly,
+        node_df=baseline_tree_df,
+        resource_df=resource_df,
+        terrain_poly=terrain_output_poly,
+    )
 
     resource_vtk_path = scenario_baseline_resources_vtk_path(site, voxel_size)
     trees_csv_path = scenario_baseline_trees_csv_path(site)
@@ -912,11 +1111,15 @@ def generate_baseline(
     combined_vtk_path = scenario_baseline_combined_vtk_path(site, voxel_size)
     refactored_trees_csv_path = engine_output_baseline_trees_csv_path(site)
     refactored_terrain_vtk_path = engine_output_baseline_terrain_vtk_path(site, voxel_size)
+    legacy_nodedf_path = scenario_node_df_path(site, BASELINE_NODE_SCENARIO, BASELINE_NODE_YEAR, voxel_size)
+    refactored_nodedf_path = engine_output_nodedf_path(site, BASELINE_NODE_SCENARIO, BASELINE_NODE_YEAR, voxel_size)
 
     resource_vtk_path.parent.mkdir(parents=True, exist_ok=True)
     resource_poly.save(resource_vtk_path)
     baseline_tree_df.to_csv(trees_csv_path, index=False)
     baseline_tree_df.to_csv(refactored_trees_csv_path, index=False)
+    baseline_tree_df.to_csv(legacy_nodedf_path, index=False)
+    baseline_tree_df.to_csv(refactored_nodedf_path, index=False)
     terrain_output_poly.save(terrain_vtk_path)
     terrain_output_poly.save(refactored_terrain_vtk_path)
     combined_poly.save(combined_vtk_path)
@@ -935,6 +1138,10 @@ def generate_baseline(
         "baseline_density_csv": str(BASELINE_DENSITY_CSV),
         "scenario_output_root": str(preflight.scenario_output_root),
         "engine_output_root": str(preflight.engine_output_root),
+        "baseline_node_scenario": BASELINE_NODE_SCENARIO,
+        "baseline_node_year": BASELINE_NODE_YEAR,
+        "legacy_nodedf_path": str(legacy_nodedf_path),
+        "refactored_nodedf_path": str(refactored_nodedf_path),
         "targets": asdict(preflight.targets),
         "shares": {
             "senescing_share": senescing_share,
@@ -969,6 +1176,8 @@ def generate_baseline(
         combined_vtk_path=combined_vtk_path,
         refactored_trees_csv_path=refactored_trees_csv_path,
         refactored_terrain_vtk_path=refactored_terrain_vtk_path,
+        legacy_nodedf_path=legacy_nodedf_path,
+        refactored_nodedf_path=refactored_nodedf_path,
         allocation_csv_path=allocation_csv_path,
         metadata_json_path=metadata_json_path,
         candidate_csv_path=preflight.candidate_csv_path,

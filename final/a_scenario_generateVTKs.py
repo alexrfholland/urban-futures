@@ -540,7 +540,11 @@ def create_bioEnvelope_catagories(ds, params):
     turnThreshold = params['sim_TurnsThreshold']
     resistanceThreshold = params.get('sim_averageResistance', 0)
 
-    bioMask = (ds['sim_Turns'] <= turnThreshold) & (ds['sim_averageResistance'] <= resistanceThreshold) & (ds['sim_Turns'] >= 0)
+    bioMask = (
+        (ds['sim_Turns'] <= turnThreshold)
+        & (ds['sim_averageResistance'] <= resistanceThreshold)
+        & (ds['sim_Turns'] >= 0)
+    )
     ds['bioMask'] = bioMask
 
     #--------------------------------------------------------------------------
@@ -549,18 +553,20 @@ def create_bioEnvelope_catagories(ds, params):
     #--------------------------------------------------------------------------
     # Note: scenario_bioEnvelope is already initialized as a copy of scenario_rewilded in generate_vtk
     
-    # Assign 'otherGround' to scenario_bioEnvelope where bioMask is true and scenario_bioEnvelope is 'none'
+    # Assign 'otherGround' to bio-envelope-eligible voxels that remain unlabeled
     otherground_mask = bioMask & (ds['scenario_bioEnvelope'] == 'none')
     ds['scenario_bioEnvelope'].loc[otherground_mask] = 'otherGround'
 
     # Assign 'livingFacade' to scenario_bioEnvelope where site_building_element == 'facade' and bioMask is True
     ds['scenario_bioEnvelope'].loc[(ds['site_building_element'] == 'facade') & bioMask] = 'livingFacade'
 
-    # Assign 'greenRoof' to scenario_bioEnvelope where envelope_roofType == 'green roof' and bioMask is True
+    # Assign 'greenRoof' to explicit green-roof voxels
     ds['scenario_bioEnvelope'].loc[(ds['envelope_roofType'] == 'green roof') & bioMask] = 'greenRoof'
 
-    # Assign 'brownRoof' to scenario_bioEnvelope where envelope_roofType == 'brown roof' and bioMask is True
-    ds['scenario_bioEnvelope'].loc[(ds['envelope_roofType'] == 'brown roof') & bioMask] = 'brownRoof'
+    # Treat all remaining roof voxels as brown-roof opportunity
+    ds['scenario_bioEnvelope'].loc[
+        (ds['site_building_element'] == 'roof') & (ds['envelope_roofType'] != 'green roof') & bioMask
+    ] = 'brownRoof'
 
     """poly = a_helper_functions.convert_xarray_into_polydata(ds)
     poly.plot(scalars='scenario_bioEnvelope', cmap='Set1')"""

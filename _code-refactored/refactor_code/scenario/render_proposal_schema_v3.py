@@ -3,8 +3,11 @@ from __future__ import annotations
 """
 Source-of-truth constants for the custom v3 proposal render schema.
 
-This schema is for the validation-style proposal renders built from the
-`blender_proposal-*` integer framebuffer arrays plus `forest_size`.
+This schema is for the intervention-focused validation proposal renders built
+from the `blender_proposal-*` integer framebuffer arrays plus `forest_size`.
+
+The companion proposal-only render reuses the same family ordering but treats
+any framebuffer value except `0` and `1` as visible proposal presence.
 
 Composition, from highest to lowest priority:
 

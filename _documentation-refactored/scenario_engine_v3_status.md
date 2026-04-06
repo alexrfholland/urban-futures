@@ -107,6 +107,12 @@ Required env/config record:
 - v3 proposal arrays are derived on the final enriched state artifact in [a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_gather_capabilities.py)
 - v3 proposal render view: [render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_forest_size_views.py)
 - custom v3 proposal render schema: [_documentation-refactored/scenario_engine_v3_render_schema.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_render_schema.md)
+- default custom renderer outputs:
+  - `engine3-proposals_interventions_with-legend`
+  - `engine3-proposals`
+- opt-in extra custom renderer outputs:
+  - `engine3-proposals_interventions`
+  - `engine3-proposals_with-legend`
 
 ## Schema Additions
 

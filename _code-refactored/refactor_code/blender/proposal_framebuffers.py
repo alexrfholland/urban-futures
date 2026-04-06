@@ -18,6 +18,7 @@ Output columns:
 - blender_proposal-deploy-structure
 
 General encoding pattern:
+- -1 = accepted with no intervention allocated yet
 - 0 = not-assessed
 - 1 = rejected
 - higher values = accepted intervention variants for that proposal family
@@ -53,24 +54,28 @@ DEFAULT_OUTPUT_COLUMNS = {
 
 FRAMEBUFFER_STATE_MAPPINGS = {
     "proposal-decay": {
+        "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
         "buffer-feature": 2,
         "brace-feature": 3,
     },
     "proposal-release-control": {
+        "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
         "reduce-pruning": 2,
         "eliminate-pruning": 3,
     },
     "proposal-recruit": {
+        "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
         "buffer-feature": 2,
         "rewild-ground": 3,
     },
     "proposal-colonise": {
+        "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
         "rewild-ground": 2,
@@ -78,6 +83,7 @@ FRAMEBUFFER_STATE_MAPPINGS = {
         "roughen-envelope": 4,
     },
     "proposal-deploy-structure": {
+        "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
         "adapt-utility-pole": 2,
@@ -125,6 +131,9 @@ def _combine_family_states(
         replacement_reasons = _normalized_series(df, "replacement_reason", "none")
         legacy_brace_collapse_mask = accepted_none_mask & replacement_reasons.eq("brace-collapse")
         combined.loc[legacy_brace_collapse_mask] = "rejected"
+        accepted_none_mask = accepted_none_mask & ~legacy_brace_collapse_mask
+
+    combined.loc[accepted_none_mask] = "accepted-no-intervention"
 
     rejected_or_unset_with_intervention = (rejected_mask | not_assessed_mask) & interventions.ne("none")
     if rejected_or_unset_with_intervention.any():
@@ -200,7 +209,7 @@ def build_blender_proposal_framebuffer_columns(
         if encoded.isna().any():
             unknown = sorted(state_df.loc[encoded.isna(), output_column].astype(str).unique().tolist())
             raise ValueError(f"Unexpected unmapped {family} framebuffer states: {unknown}")
-        output[output_column] = encoded.astype("uint8")
+        output[output_column] = encoded.astype("int16")
     return pd.DataFrame(output, index=df.index)
 
 

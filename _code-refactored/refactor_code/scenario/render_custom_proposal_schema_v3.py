@@ -17,8 +17,19 @@ It uses:
         eye_dome_lighting = True
 
 Outputs:
+    - {site}_{scenario}_yr{year}_engine3-proposals_interventions_with-legend.png
     - {site}_{scenario}_yr{year}_engine3-proposals.png
+Optional extra variants:
+    - {site}_{scenario}_yr{year}_engine3-proposals_interventions.png
     - {site}_{scenario}_yr{year}_engine3-proposals_with-legend.png
+
+Meaning:
+    - default:
+      - `engine3-proposals_interventions_with-legend`
+      - `engine3-proposals`
+    - `engine3-proposals_interventions` shows intervention-specific accepted states
+    - `engine3-proposals` shows proposal presence only
+      any framebuffer value except `0` (not-assessed) and `1` (rejected)
 """
 
 import argparse
@@ -35,7 +46,11 @@ CODE_ROOT = Path(__file__).resolve().parents[2]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
-from refactor_code.paths import engine_output_state_vtk_path, engine_output_validation_dir
+from refactor_code.paths import (
+    engine_output_baseline_state_vtk_path,
+    engine_output_state_vtk_path,
+    engine_output_validation_dir,
+)
 from refactor_code.scenario.render_forest_size_views import CAMERAS
 from refactor_code.scenario.render_proposal_schema_v3 import (
     CUSTOM_RENDER_SETTINGS,
@@ -50,7 +65,8 @@ from refactor_code.scenario.render_proposal_schema_v3 import (
 )
 
 
-BASE_OUTPUT_STEM = "engine3-proposals"
+INTERVENTIONS_OUTPUT_STEM = "engine3-proposals_interventions"
+PROPOSALS_ONLY_OUTPUT_STEM = "engine3-proposals"
 TITLE_TEXT_TEMPLATE = "{site} {scenario} yr{year}"
 
 
@@ -60,7 +76,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scenario", default="positive", help="Scenario key or 'all'.")
     parser.add_argument("--years", nargs="*", type=int, default=[180], help="Years to render.")
     parser.add_argument("--output-mode", default="validation", choices=["canonical", "validation"])
-    parser.add_argument("--with-legend", action="store_true", help="Also compose a titled legend image.")
+    parser.add_argument(
+        "--all-variants",
+        action="store_true",
+        help="Also write the plain interventions image and the proposal-only image with legend.",
+    )
+    parser.add_argument(
+        "--with-legend",
+        action="store_true",
+        help="Deprecated alias for --all-variants.",
+    )
     return parser.parse_args()
 
 
@@ -74,6 +99,13 @@ DEADWOOD_BASE_RGB = {key: _hex_rgb(value) for key, value in DEADWOOD_BASE_HEX.it
 PROPOSAL_RGB = {
     array_name: {state: _hex_rgb(hex_value) for state, hex_value in state_map.items()}
     for array_name, state_map in PROPOSAL_HEX.items()
+}
+PROPOSALS_ONLY_RGB = {
+    "blender_proposal-deploy-structure": _hex_rgb("#C05E5E"),
+    "blender_proposal-decay": _hex_rgb("#B83B6B"),
+    "blender_proposal-recruit": _hex_rgb("#5CB85C"),
+    "blender_proposal-colonise": _hex_rgb("#8CCC4F"),
+    "blender_proposal-release-control": _hex_rgb("#D4882B"),
 }
 
 
@@ -103,7 +135,7 @@ def _release_control_rgb(forest_size: str, state: int) -> tuple[int, int, int] |
     return (round(rr * 255), round(gg * 255), round(bb * 255))
 
 
-def custom_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
+def interventions_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
     required_arrays = set(PROPOSAL_LAYER_ORDER_BOTTOM_TO_TOP)
     missing_arrays = [name for name in required_arrays if name not in mesh.point_data]
     if missing_arrays:
@@ -144,7 +176,32 @@ def custom_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
     return rgb
 
 
-def render_png(mesh: pv.PolyData, site: str, output_path: Path) -> None:
+def proposals_only_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
+    required_arrays = set(PROPOSAL_LAYER_ORDER_BOTTOM_TO_TOP)
+    missing_arrays = [name for name in required_arrays if name not in mesh.point_data]
+    if missing_arrays:
+        raise KeyError(f"Missing required proposal framebuffer arrays: {sorted(missing_arrays)}")
+
+    rgb = _rgb_to_uint8_array(WHITE_RGB, mesh.n_points)
+    forest_size = _normalize_str_array(mesh["forest_size"]) if "forest_size" in mesh.point_data else np.full(mesh.n_points, "", dtype="<U32")
+
+    for label, color in DEADWOOD_BASE_RGB.items():
+        rgb[forest_size == label] = np.asarray(color, dtype=np.uint8)
+
+    for array_name in PROPOSAL_LAYER_ORDER_BOTTOM_TO_TOP:
+        values = np.asarray(mesh.point_data[array_name]).astype(int)
+        proposal_mask = (values != 0) & (values != 1)
+        if not np.any(proposal_mask):
+            continue
+        color = PROPOSALS_ONLY_RGB.get(array_name)
+        if color is None:
+            continue
+        rgb[proposal_mask] = np.asarray(color, dtype=np.uint8)
+
+    return rgb
+
+
+def render_png(mesh: pv.PolyData, site: str, output_path: Path, rgb_values: np.ndarray) -> None:
     settings = CUSTOM_RENDER_SETTINGS
     camera = CAMERAS[site]
     plotter = pv.Plotter(
@@ -154,7 +211,7 @@ def render_png(mesh: pv.PolyData, site: str, output_path: Path) -> None:
     plotter.set_background(str(settings["background"]))
     plotter.add_mesh(
         mesh,
-        scalars=custom_schema_rgb(mesh),
+        scalars=rgb_values,
         rgb=True,
         render_points_as_spheres=bool(settings["render_points_as_spheres"]),
         point_size=float(settings["point_size"]),
@@ -173,7 +230,7 @@ def render_png(mesh: pv.PolyData, site: str, output_path: Path) -> None:
     plotter.close()
 
 
-def _legend_sections() -> list[tuple[str, list[tuple[str, tuple[int, int, int]]]]]:
+def _interventions_legend_sections() -> list[tuple[str, list[tuple[str, tuple[int, int, int]]]]]:
     return [
         (
             "Deploy-Structure",
@@ -203,6 +260,28 @@ def _legend_sections() -> list[tuple[str, list[tuple[str, tuple[int, int, int]]]
                 ("Rewild-Ground", PROPOSAL_RGB["blender_proposal-colonise"][2]),
                 ("Enrich-Envelope", PROPOSAL_RGB["blender_proposal-colonise"][3]),
                 ("Roughen-Envelope", PROPOSAL_RGB["blender_proposal-colonise"][4]),
+            ],
+        ),
+        (
+            "Deadwood Base",
+            [
+                ("Fallen", DEADWOOD_BASE_RGB["fallen"]),
+                ("Decayed", DEADWOOD_BASE_RGB["decayed"]),
+            ],
+        ),
+    ]
+
+
+def _proposals_only_legend_sections() -> list[tuple[str, list[tuple[str, tuple[int, int, int]]]]]:
+    return [
+        (
+            "Proposal Families",
+            [
+                ("Deploy-Structure", PROPOSALS_ONLY_RGB["blender_proposal-deploy-structure"]),
+                ("Decay", PROPOSALS_ONLY_RGB["blender_proposal-decay"]),
+                ("Recruit", PROPOSALS_ONLY_RGB["blender_proposal-recruit"]),
+                ("Colonise", PROPOSALS_ONLY_RGB["blender_proposal-colonise"]),
+                ("Release-Control", PROPOSALS_ONLY_RGB["blender_proposal-release-control"]),
             ],
         ),
         (
@@ -256,7 +335,16 @@ def _draw_release_control_matrix(
     return y
 
 
-def compose_with_legend(base_image_path: Path, site: str, scenario: str, year: int, output_path: Path) -> None:
+def compose_with_legend(
+    base_image_path: Path,
+    site: str,
+    scenario: str,
+    year: int,
+    output_path: Path,
+    *,
+    legend_sections: list[tuple[str, list[tuple[str, tuple[int, int, int]]]]],
+    include_release_control_matrix: bool,
+) -> None:
     base = Image.open(base_image_path).convert("RGB")
     title_font = _load_font(36)
     section_font = _load_font(22)
@@ -276,7 +364,7 @@ def compose_with_legend(base_image_path: Path, site: str, scenario: str, year: i
 
     x0 = base.width + 16
     y = title_height + 20
-    for section_name, entries in _legend_sections():
+    for section_name, entries in legend_sections:
         draw.text((x0, y), section_name, fill=(0, 0, 0), font=section_font)
         y += 30
         for label, color in entries:
@@ -285,8 +373,9 @@ def compose_with_legend(base_image_path: Path, site: str, scenario: str, year: i
             y += swatch + row_gap
         y += section_gap
 
-    y = _draw_release_control_matrix(draw, x0, y, section_font, label_font)
-    y += section_gap
+    if include_release_control_matrix:
+        y = _draw_release_control_matrix(draw, x0, y, section_font, label_font)
+        y += section_gap
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(output_path)
@@ -294,12 +383,19 @@ def compose_with_legend(base_image_path: Path, site: str, scenario: str, year: i
 
 def iter_targets(args: argparse.Namespace):
     sites = list(CAMERAS.keys()) if args.site == "all" else [args.site]
-    scenarios = ["positive", "trending"] if args.scenario == "all" else [args.scenario]
+    scenarios = ["positive", "trending", "baseline"] if args.scenario == "all" else [args.scenario]
 
     for site in sites:
         if site not in CAMERAS:
             raise KeyError(f"Unknown site camera preset: {site}")
         for scenario in scenarios:
+            if scenario == "baseline":
+                vtk_path = engine_output_baseline_state_vtk_path(site, 1, args.output_mode)
+                if vtk_path.exists():
+                    yield site, scenario, 0, vtk_path
+                else:
+                    print(f"Skipping missing VTK: {vtk_path}")
+                continue
             for year in args.years:
                 vtk_path = engine_output_state_vtk_path(site, scenario, year, 1, args.output_mode)
                 if vtk_path.exists():
@@ -308,24 +404,57 @@ def iter_targets(args: argparse.Namespace):
                     print(f"Skipping missing VTK: {vtk_path}")
 
 
-def render_target(site: str, scenario: str, year: int, vtk_path: Path, output_mode: str, with_legend: bool) -> list[Path]:
+def render_target(site: str, scenario: str, year: int, vtk_path: Path, output_mode: str, all_variants: bool) -> list[Path]:
     mesh = pv.read(vtk_path)
     render_root = engine_output_validation_dir(output_mode) / "renders" / "custom"
-    stem = f"{site}_{scenario}_yr{year}_{BASE_OUTPUT_STEM}"
-    base_path = render_root / f"{stem}.png"
-    render_png(mesh, site, base_path)
-    outputs = [base_path]
-    if with_legend:
-        legend_path = render_root / f"{stem}_with-legend.png"
-        compose_with_legend(base_path, site, scenario, year, legend_path)
-        outputs.append(legend_path)
+    outputs: list[Path] = []
+
+    interventions_stem = f"{site}_{scenario}_yr{year}_{INTERVENTIONS_OUTPUT_STEM}"
+    interventions_rgb = interventions_schema_rgb(mesh)
+    interventions_legend_path = render_root / f"{interventions_stem}_with-legend.png"
+    interventions_base_for_legend = render_root / f"{interventions_stem}.__temp__.png"
+    render_png(mesh, site, interventions_base_for_legend, interventions_rgb)
+    compose_with_legend(
+        interventions_base_for_legend,
+        site,
+        scenario,
+        year,
+        interventions_legend_path,
+        legend_sections=_interventions_legend_sections(),
+        include_release_control_matrix=True,
+    )
+    outputs.append(interventions_legend_path)
+    interventions_base_for_legend.unlink(missing_ok=True)
+    if all_variants:
+        interventions_base_path = render_root / f"{interventions_stem}.png"
+        render_png(mesh, site, interventions_base_path, interventions_rgb)
+        outputs.append(interventions_base_path)
+
+    proposals_only_stem = f"{site}_{scenario}_yr{year}_{PROPOSALS_ONLY_OUTPUT_STEM}"
+    proposals_only_base_path = render_root / f"{proposals_only_stem}.png"
+    proposals_only_rgb = proposals_only_schema_rgb(mesh)
+    render_png(mesh, site, proposals_only_base_path, proposals_only_rgb)
+    outputs.append(proposals_only_base_path)
+    if all_variants:
+        proposals_only_legend_path = render_root / f"{proposals_only_stem}_with-legend.png"
+        compose_with_legend(
+            proposals_only_base_path,
+            site,
+            scenario,
+            year,
+            proposals_only_legend_path,
+            legend_sections=_proposals_only_legend_sections(),
+            include_release_control_matrix=False,
+        )
+        outputs.append(proposals_only_legend_path)
     return outputs
 
 
 def main() -> None:
     args = parse_args()
+    all_variants = args.all_variants or args.with_legend
     for site, scenario, year, vtk_path in iter_targets(args):
-        for output in render_target(site, scenario, year, vtk_path, args.output_mode, args.with_legend):
+        for output in render_target(site, scenario, year, vtk_path, args.output_mode, all_variants):
             print(output)
 
 

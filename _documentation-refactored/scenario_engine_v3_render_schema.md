@@ -3,7 +3,37 @@
 Source of truth:
 
 - [_code-refactored/refactor_code/scenario/render_proposal_schema_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_proposal_schema_v3.py)
+- [_code-refactored/refactor_code/scenario/render_custom_proposal_schema_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_custom_proposal_schema_v3.py)
 - [_code-refactored/refactor_code/scenario/pyvista_render_settings/README.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/pyvista_render_settings/README.md)
+
+This renderer now writes two related products:
+
+- default outputs:
+  - `engine3-proposals_interventions_with-legend`
+  - `engine3-proposals`
+- opt-in extra variants:
+  - `engine3-proposals_interventions`
+  - `engine3-proposals_with-legend`
+
+- `engine3-proposals_interventions`
+  - intervention-focused view
+  - only accepted intervention states are visible
+- `engine3-proposals`
+  - proposal-presence view
+  - a proposal counts as visible when its framebuffer value is anything except:
+    - `0` = `not-assessed`
+    - `1` = `rejected`
+  - so this includes:
+    - `-1` = accepted with no intervention allocated yet
+    - any accepted intervention state `> 1`
+
+## `engine3-proposals_interventions`
+
+This is not part of the default visualisation set.
+
+The default intervention-facing image is:
+
+- `engine3-proposals_interventions_with-legend`
 
 Layer priority, top to bottom:
 
@@ -101,3 +131,50 @@ Render settings:
 Named PyVista settings schema:
 
 - `engine3-proposals`
+
+## `engine3-proposals`
+
+This is the proposal-only companion image.
+
+This is part of the default visualisation set.
+
+It uses the same layer priority:
+
+1. `proposal-deploy-structure`
+2. `proposal-decay`
+3. `proposal-recruit`
+4. `proposal-colonise`
+5. `proposal-release-control`
+6. deadwood base
+7. white
+
+But it ignores intervention identity within a family.
+
+Visibility rule:
+
+- visible if framebuffer value is not `0` and not `1`
+- hidden if framebuffer value is:
+  - `0` = `not-assessed`
+  - `1` = `rejected`
+
+So this view shows both:
+
+- `-1` accepted with no intervention allocated
+- `2+` accepted with a specific intervention
+
+Family colours:
+
+- `proposal-deploy-structure` -> `#C05E5E`
+- `proposal-decay` -> `#B83B6B`
+- `proposal-recruit` -> `#5CB85C`
+- `proposal-colonise` -> `#8CCC4F`
+- `proposal-release-control` -> `#D4882B`
+
+Deadwood base:
+
+- `fallen` -> `#8F89BF`
+- `decayed` -> `#5F867E`
+
+White fallback:
+
+- `#FFFFFF`
