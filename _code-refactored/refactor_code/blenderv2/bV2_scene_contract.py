@@ -179,6 +179,22 @@ GLOBAL_RULES: Final[dict[str, object]] = {
     "bioenvelope_material": MATERIAL_NAMES["bioenvelope"],
 }
 
+TIMELINE_MIST_PROFILE: Final[dict[str, object]] = {
+    "profile": "timeline_shared",
+    "use_mist": True,
+    "start": 560.0,
+    "depth": 320.0,
+    "falloff": "QUADRATIC",
+}
+
+CITY_SINGLE_STATE_HERO_MIST_PROFILE: Final[dict[str, object]] = {
+    "profile": "city_single_state_hero",
+    "use_mist": False,
+    "start": 60.0,
+    "depth": 420.0,
+    "falloff": "LINEAR",
+}
+
 
 def _assert_supported(value: str, supported: tuple[str, ...], kind: str) -> str:
     if value not in supported:
@@ -311,11 +327,58 @@ def get_timeline_camera_name(site: str) -> str:
     return str(get_site_contract(site)["cameras"]["timeline"])
 
 
+def get_default_camera_name(
+    site: str,
+    mode: str,
+    year: int | str | None = None,
+) -> str:
+    """Return the default active camera for a built scene."""
+
+    site = ensure_supported_site(site)
+    mode = ensure_supported_mode(mode)
+    cameras = dict(get_site_contract(site)["cameras"])
+    if site == "city" and mode == "single_state" and "hero" in cameras:
+        return str(cameras["hero"])
+    return str(cameras["timeline"])
+
+
+def get_expected_camera_names(
+    site: str,
+    mode: str,
+    year: int | str | None = None,
+) -> tuple[str, ...]:
+    """Return the acceptable camera names for validation."""
+
+    default_name = get_default_camera_name(site, mode, year)
+    timeline_name = get_timeline_camera_name(site)
+    if default_name == timeline_name:
+        return (default_name,)
+    return (default_name, timeline_name)
+
+
 def get_alternate_camera_names(site: str) -> tuple[str, ...]:
     """Return any non-timeline cameras for a site."""
 
     cameras = dict(get_site_contract(site)["cameras"])
     return tuple(name for role, name in cameras.items() if role != "timeline")
+
+
+def get_default_mist_profile(
+    site: str,
+    mode: str,
+    year: int | str | None = None,
+    camera_name: str | None = None,
+) -> dict[str, object]:
+    """Return the default mist profile for a site/mode/camera combination."""
+
+    site = ensure_supported_site(site)
+    mode = ensure_supported_mode(mode)
+    cameras = dict(get_site_contract(site)["cameras"])
+    resolved_camera_name = str(camera_name or get_default_camera_name(site, mode, year))
+    hero_name = str(cameras.get("hero", "")).strip()
+    if hero_name and resolved_camera_name == hero_name:
+        return dict(CITY_SINGLE_STATE_HERO_MIST_PROFILE)
+    return dict(TIMELINE_MIST_PROFILE)
 
 
 def get_instancer_families(site: str) -> tuple[str, ...]:

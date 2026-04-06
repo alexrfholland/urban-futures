@@ -68,6 +68,7 @@ trash/
 rhino/
 output_with_kde.nc
 blender_compositor_cmaps.zip
+/.exr
 
 draft/
 documentation/figures/

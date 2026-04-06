@@ -8,8 +8,8 @@ from typing import Iterable
 
 
 _TRUTHY = {"1", "true", "yes", "on"}
-_DEFAULT_TEMP_LOCAL_ROOT = r"E:\2026 Arboreal Futures\blenderv2\inputs\v3-5"
-_DEFAULT_REMOTE_REPO_ROOT = r"Z:\MF 2026 Arboreal Futures\blender\inputs\v3-5"
+_DEFAULT_TEMP_LOCAL_ROOT = r"E:\2026 Arboreal Futures\blenderv2\inputs\simv3-7"
+_DEFAULT_REMOTE_REPO_ROOT = r"Z:\MF 2026 Arboreal Futures\blenderV2\input\simv3-7"
 _LEGACY_BUNDLE_ROOTS = (
     Path(r"E:\2026 Arboreal Futures\blender\inputs\v3 tests\simv3recruitanddecaytweaks"),
     Path(r"D:\2026 Arboreal Futures\urban-futures\_data-refactored\v3engine_outputs"),

@@ -16,7 +16,8 @@ except ImportError:
 
 
 SOURCE_INFO_FILENAME = "_bV2_source.txt"
-REQUIRED_CHILDREN = ("feature-locations", "vtks", "bioenvelopes")
+REQUIRED_CHILDREN = ("feature-locations", "vtks")
+OPTIONAL_CHILDREN = ("bioenvelopes",)
 
 
 def write_source_info() -> Path:
@@ -44,6 +45,15 @@ def sync_inputs_from_remote() -> Path:
         remote_child = BLENDER_REPO_ROOT / child_name
         if not remote_child.exists():
             raise FileNotFoundError(f"Remote bundle is missing required folder: {remote_child}")
+        local_child = TEMP_LOCAL_ROOT / child_name
+        if local_child.exists():
+            shutil.rmtree(local_child)
+        shutil.copytree(remote_child, local_child)
+
+    for child_name in OPTIONAL_CHILDREN:
+        remote_child = BLENDER_REPO_ROOT / child_name
+        if not remote_child.exists():
+            continue
         local_child = TEMP_LOCAL_ROOT / child_name
         if local_child.exists():
             shutil.rmtree(local_child)

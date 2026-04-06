@@ -26,6 +26,7 @@ try:
         TOP_LEVEL_COLLECTIONS,
         get_aov_names,
         get_alternate_camera_names,
+        get_default_camera_name,
         get_source_world_objects,
         get_timeline_camera_name,
         get_view_layer_names,
@@ -45,6 +46,7 @@ except ImportError:
         TOP_LEVEL_COLLECTIONS,
         get_aov_names,
         get_alternate_camera_names,
+        get_default_camera_name,
         get_source_world_objects,
         get_timeline_camera_name,
         get_view_layer_names,
@@ -385,13 +387,15 @@ def init_scene(
         ",".join(sorted(second_level.keys())),
     )
 
-    log("INIT_POPULATE_SITE_SOURCES_START", "site=", site, "mode=", mode)
+    resolved_camera_name = camera_name or get_default_camera_name(site, mode, year)
+
+    log("INIT_POPULATE_SITE_SOURCES_START", "site=", site, "mode=", mode, "camera=", resolved_camera_name)
     cloned_world, cloned_cameras = populate_site_sources(
         site=site,
         mode=mode,
         second_level=second_level,
         cameras_collection=top_level["cameras"],
-        camera_name=camera_name,
+        camera_name=resolved_camera_name,
     )
     log(
         "INIT_POPULATE_SITE_SOURCES_DONE",
@@ -432,7 +436,7 @@ def init_scene(
     write_scene_metadata(scene, site=site, mode=mode, year=year)
     log("INIT_WRITE_METADATA_DONE")
 
-    active_camera_name = camera_name or get_timeline_camera_name(site)
+    active_camera_name = resolved_camera_name
     log("INIT_ASSIGN_CAMERA_START", active_camera_name)
     scene.camera = cloned_cameras.get(active_camera_name)
     log("INIT_ASSIGN_CAMERA_DONE", "scene_camera=", scene.camera.name if scene.camera else "None")

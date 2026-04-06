@@ -14,6 +14,7 @@
 
 - reusable code lives under [\_code-refactored](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored)
 - reusable docs live under [\_documentation-refactored/blenderv2](/d:/2026%20Arboreal%20Futures/urban-futures/_documentation-refactored/blenderv2)
+- the current production EXR / AOV contract note is [bV2_exr_aov_contract.md](/d:/2026%20Arboreal%20Futures/urban-futures/_documentation-refactored/blenderv2/bV2_exr_aov_contract.md)
 - reusable template/data assets live under [\_data-refactored](/d:/2026%20Arboreal%20Futures/urban-futures/_data-refactored)
 - temporary scripts should live in a clearly named temporary area, not mixed with the reusable pipeline
 - generated outputs can live on `E:` when that is safer for disk space
@@ -109,7 +110,9 @@ Outputs currently live under:
 - use a GUI-safe `load_ui=False` resave when needed for inspection
 - verify the Blender process is still alive after launch before claiming a GUI open succeeded
 - the model cache currently shares imported mesh datablocks across states, but state collections still hold separate object instances
-- bioenvelope build, world rebuild, render setup, and validation are still to be implemented as `bV2_*` scripts
+- `trimmed-parade` timeline produced zero-alpha seam columns in some production EXRs when rendered with Cycles `OPTIX`
+- a full rerender on `2026-04-06` using Cycles `CUDA` removed those seam columns
+- treat that as a backend-specific render artifact; if `trimmed-parade` seams reappear, rerender that site on `CUDA`
 
 ## Current bV2 TODOs
 
