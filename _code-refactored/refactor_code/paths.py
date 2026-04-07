@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 
 
+# 1. Versioning
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LEGACY_DATA_ROOT = REPO_ROOT / "data"
 REFACTORED_DATA_ROOT = REPO_ROOT / "_data-refactored"
@@ -128,6 +130,8 @@ def _engine_output_write_path(relpath: str | Path, output_mode: str | None = Non
     return output_path
 
 
+# 2. Site Information
+
 def scenario_site_dir(site: str, output_mode: str | None = None) -> Path:
     return _scenario_write_path(site, output_mode)
 
@@ -176,30 +180,17 @@ def scenario_node_df_path(
     return _scenario_write_path(Path(site) / f"{site}_{scenario}_{voxel}_nodeDF_{year}.csv", output_mode)
 
 
-def scenario_state_vtk_path(
-    site: str,
-    scenario: str,
-    year: int,
-    voxel_size: float | int = 1,
-    output_mode: str | None = None,
-) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return _scenario_write_path(Path(site) / f"{site}_{scenario}_{voxel}_scenarioYR{year}.vtk", output_mode)
+def legacy_world_reference_vtk_path(site: str, kind: str) -> Path:
+    suffix_map = {
+        "site": f"{site}-siteVoxels-masked.vtk",
+        "road": f"{site}-roadVoxels-coloured.vtk",
+    }
+    if kind not in suffix_map:
+        raise ValueError(f"Unknown world reference kind: {kind}")
+    return LEGACY_DATA_ROOT / "revised" / "final" / suffix_map[kind]
 
 
-def scenario_urban_features_vtk_path(
-    site: str,
-    scenario: str,
-    year: int,
-    voxel_size: float | int = 1,
-    output_mode: str | None = None,
-) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return _scenario_write_path(
-        Path(site) / f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features.vtk",
-        output_mode,
-    )
-
+# 3. Baselines
 
 def scenario_baseline_dir(output_mode: str | None = None) -> Path:
     return _scenario_write_path("baselines", output_mode)
@@ -251,6 +242,121 @@ def scenario_baseline_urban_features_vtk_path(
     )
 
 
+def engine_output_baseline_state_vtk_path(
+    site: str,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _engine_output_write_path(
+        Path("vtks") / site / f"{site}_baseline_{voxel}_state_with_indicators.vtk",
+        output_mode,
+    )
+
+
+def engine_output_baseline_indicator_counts_path(
+    site: str,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _engine_output_write_path(
+        Path("stats") / "per-state" / site / f"{site}_baseline_{voxel}_indicator_counts.csv",
+        output_mode,
+    )
+
+
+def engine_output_baseline_action_counts_path(
+    site: str,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _engine_output_write_path(
+        Path("stats") / "per-state" / site / f"{site}_baseline_{voxel}_action_counts.csv",
+        output_mode,
+    )
+
+
+def engine_output_baseline_trees_csv_path(site: str, output_mode: str | None = None) -> Path:
+    return _engine_output_write_path(Path("baselines") / site / f"{site}_baseline_trees.csv", output_mode)
+
+
+def engine_output_baseline_terrain_vtk_path(
+    site: str,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _engine_output_write_path(
+        Path("baselines") / site / f"{site}_baseline_terrain_{voxel}.vtk",
+        output_mode,
+    )
+
+
+def hook_baseline_state_vtk_path(site: str, voxel_size: float | int = 1) -> Path:
+    return engine_output_baseline_state_vtk_path(site, voxel_size, output_mode="canonical")
+
+
+def hook_baseline_trees_csv_path(site: str) -> Path:
+    return engine_output_baseline_trees_csv_path(site, output_mode="canonical")
+
+
+def hook_baseline_terrain_vtk_path(site: str, voxel_size: float | int = 1) -> Path:
+    return engine_output_baseline_terrain_vtk_path(site, voxel_size, output_mode="canonical")
+
+
+def hook_baseline_terrain_ply_path(site: str, voxel_size: float | int = 1) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return refactored_data_write_path(
+        Path("final-hooks")
+        / "baselines"
+        / site
+        / f"{site}_baseline_terrain_{voxel}.ply"
+    )
+
+
+# 4. Tree Library
+
+def hook_tree_ply_library_dir() -> Path:
+    output_dir = FINAL_HOOKS_ROOT / "feature-libraries" / "treePlyLibrary"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir
+
+
+def hook_log_ply_library_dir() -> Path:
+    output_dir = FINAL_HOOKS_ROOT / "feature-libraries" / "logPlyLibrary"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir
+
+
+# 5. Model Outputs
+
+def scenario_state_vtk_path(
+    site: str,
+    scenario: str,
+    year: int,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _scenario_write_path(Path(site) / f"{site}_{scenario}_{voxel}_scenarioYR{year}.vtk", output_mode)
+
+
+def scenario_urban_features_vtk_path(
+    site: str,
+    scenario: str,
+    year: int,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _scenario_write_path(
+        Path(site) / f"{site}_{scenario}_{voxel}_scenarioYR{year}_urban_features.vtk",
+        output_mode,
+    )
+
+
 def engine_output_state_vtk_path(
     site: str,
     scenario: str,
@@ -261,18 +367,6 @@ def engine_output_state_vtk_path(
     voxel = format_voxel_size(voxel_size)
     return _engine_output_write_path(
         Path("vtks") / site / f"{site}_{scenario}_{voxel}_yr{year}_state_with_indicators.vtk",
-        output_mode,
-    )
-
-
-def engine_output_baseline_state_vtk_path(
-    site: str,
-    voxel_size: float | int = 1,
-    output_mode: str | None = None,
-) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return _engine_output_write_path(
-        Path("vtks") / site / f"{site}_baseline_{voxel}_state_with_indicators.vtk",
         output_mode,
     )
 
@@ -298,6 +392,34 @@ def engine_output_validation_dir(output_mode: str | None = None) -> Path:
         return unified_root
     return _engine_output_write_path("validation", output_mode)
 
+
+def engine_output_bioenvelope_ply_path(
+    site: str,
+    scenario: str,
+    year: int,
+    voxel_size: float | int = 1,
+    output_mode: str | None = None,
+) -> Path:
+    voxel = format_voxel_size(voxel_size)
+    return _engine_output_write_path(
+        Path("bioenvelopes") / site / f"{site}_{scenario}_{voxel}_envelope_scenarioYR{year}.ply",
+        output_mode,
+    )
+
+
+def hook_state_vtk_latest_path(site: str, scenario: str, year: int, voxel_size: float | int = 1) -> Path:
+    return engine_output_state_vtk_path(site, scenario, year, voxel_size, output_mode="canonical")
+
+
+def hook_state_nodedf_path(site: str, scenario: str, year: int, voxel_size: float | int = 1) -> Path:
+    return engine_output_nodedf_path(site, scenario, year, voxel_size, output_mode="canonical")
+
+
+def hook_bioenvelope_ply_path(site: str, scenario: str, year: int, voxel_size: float | int = 1) -> Path:
+    return engine_output_bioenvelope_ply_path(site, scenario, year, voxel_size, output_mode="canonical")
+
+
+# 6. Statistics
 
 def engine_output_state_indicator_counts_path(
     site: str,
@@ -327,83 +449,7 @@ def engine_output_state_action_counts_path(
     )
 
 
-def engine_output_baseline_indicator_counts_path(
-    site: str,
-    voxel_size: float | int = 1,
-    output_mode: str | None = None,
-) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return _engine_output_write_path(
-        Path("stats") / "per-state" / site / f"{site}_baseline_{voxel}_indicator_counts.csv",
-        output_mode,
-    )
-
-
-def engine_output_baseline_action_counts_path(
-    site: str,
-    voxel_size: float | int = 1,
-    output_mode: str | None = None,
-) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return _engine_output_write_path(
-        Path("stats") / "per-state" / site / f"{site}_baseline_{voxel}_action_counts.csv",
-        output_mode,
-    )
-
-
-def engine_output_bioenvelope_ply_path(
-    site: str,
-    scenario: str,
-    year: int,
-    voxel_size: float | int = 1,
-    output_mode: str | None = None,
-) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return _engine_output_write_path(
-        Path("bioenvelopes") / site / f"{site}_{scenario}_{voxel}_envelope_scenarioYR{year}.ply",
-        output_mode,
-    )
-
-
-def engine_output_baseline_trees_csv_path(site: str, output_mode: str | None = None) -> Path:
-    return _engine_output_write_path(Path("baselines") / site / f"{site}_baseline_trees.csv", output_mode)
-
-
-def engine_output_baseline_terrain_vtk_path(
-    site: str,
-    voxel_size: float | int = 1,
-    output_mode: str | None = None,
-) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return _engine_output_write_path(
-        Path("baselines") / site / f"{site}_baseline_terrain_{voxel}.vtk",
-        output_mode,
-    )
-
-
-def hook_state_vtk_latest_path(site: str, scenario: str, year: int, voxel_size: float | int = 1) -> Path:
-    return engine_output_state_vtk_path(site, scenario, year, voxel_size, output_mode="canonical")
-
-
-def hook_baseline_state_vtk_path(site: str, voxel_size: float | int = 1) -> Path:
-    return engine_output_baseline_state_vtk_path(site, voxel_size, output_mode="canonical")
-
-
-def hook_state_nodedf_path(site: str, scenario: str, year: int, voxel_size: float | int = 1) -> Path:
-    return engine_output_nodedf_path(site, scenario, year, voxel_size, output_mode="canonical")
-
-
-def hook_tree_ply_library_dir() -> Path:
-    output_dir = FINAL_HOOKS_ROOT / "feature-libraries" / "treePlyLibrary"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir
-
-
-def hook_log_ply_library_dir() -> Path:
-    output_dir = FINAL_HOOKS_ROOT / "feature-libraries" / "logPlyLibrary"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir
-
+# 7. Blender
 
 def hook_world_buildings_ply_path(site: str) -> Path:
     return refactored_data_write_path(
@@ -421,35 +467,3 @@ def hook_world_road_ply_path(site: str) -> Path:
         / site
         / f"{site}_road.ply"
     )
-
-
-def hook_bioenvelope_ply_path(site: str, scenario: str, year: int, voxel_size: float | int = 1) -> Path:
-    return engine_output_bioenvelope_ply_path(site, scenario, year, voxel_size, output_mode="canonical")
-
-
-def hook_baseline_trees_csv_path(site: str) -> Path:
-    return engine_output_baseline_trees_csv_path(site, output_mode="canonical")
-
-
-def hook_baseline_terrain_vtk_path(site: str, voxel_size: float | int = 1) -> Path:
-    return engine_output_baseline_terrain_vtk_path(site, voxel_size, output_mode="canonical")
-
-
-def hook_baseline_terrain_ply_path(site: str, voxel_size: float | int = 1) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return refactored_data_write_path(
-        Path("final-hooks")
-        / "baselines"
-        / site
-        / f"{site}_baseline_terrain_{voxel}.ply"
-    )
-
-
-def legacy_world_reference_vtk_path(site: str, kind: str) -> Path:
-    suffix_map = {
-        "site": f"{site}-siteVoxels-masked.vtk",
-        "road": f"{site}-roadVoxels-coloured.vtk",
-    }
-    if kind not in suffix_map:
-        raise ValueError(f"Unknown world reference kind: {kind}")
-    return LEGACY_DATA_ROOT / "revised" / "final" / suffix_map[kind]
