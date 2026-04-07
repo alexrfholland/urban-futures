@@ -19,7 +19,7 @@ The working tree was not clean when this note was written.
 
 Modified files already present at this checkpoint:
 
-- `_code-refactored/refactor_code/scenario/engine_v3.py`
+- `_code-refactored/refactor_code/sim/generate_state/engine_v3.py`
 - `_code-refactored/refactor_code/tree_processing/build_tree_variants.py`
 - `_documentation-refactored/appendix/appendix-g/recruit and mortality notes.md`
 
@@ -107,7 +107,7 @@ Runtime / builder references:
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/aa_tree_helper_functions.py`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/combined_voxelise_dfs.py`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/combine_resource_treeMeshGenerator.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender_export/vtk_to_ply.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/bexport/vtk_to_ply.py`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/stanislav/predictions.py`
 
 Documentation references also exist and must be updated after the code/path migration.

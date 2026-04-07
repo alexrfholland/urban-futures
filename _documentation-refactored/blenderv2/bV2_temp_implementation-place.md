@@ -3,7 +3,7 @@
 Path note after the v4 restructure:
 
 - active `blenderv2` code now lives under `_code-refactored/refactor_code/blenderv2`
-- older references in this note to `final/_code-refactored/blender/timeline` are pre-v4 paths for the same code now under `_code-refactored/refactor_code/blenderv2/timeline`
+- older references in this note to `final/_code-refactored/blender/timeline` are pre-v4 paths for the same code now under `_code-refactored/refactor_code/blender/blenderv2/timeline`
 
 ## bV2 conventions
 
@@ -70,11 +70,11 @@ The `bV2_*` scripts should:
 
 ### Implemented now
 
-- [bV2_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blenderv2/bV2_scene_contract.py)
+- [bV2_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_scene_contract.py)
   - canonical names, materials, node groups, view layers, AOVs, site contracts, and naming helpers
-- [bV2_init_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blenderv2/bV2_init_scene.py)
+- [bV2_init_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_init_scene.py)
   - scene shell creation, source asset cloning, view-layer creation, AOV reset, scene metadata, and semantic collection exclusion
-- [bV2_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blenderv2/bV2_build_instancers.py)
+- [bV2_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_build_instancers.py)
   - single-state and timeline instancer build
   - timeline dataframe clipping/splicing before translation
   - `source-year` stamping
@@ -102,7 +102,7 @@ Outputs currently live under:
 
 ### Important current implementation notes
 
-- timeline strip spacing is controlled by `TIMELINE_OFFSET_STEP = 5.0` in [bV2_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blenderv2/bV2_build_instancers.py)
+- timeline strip spacing is controlled by `TIMELINE_OFFSET_STEP = 5.0` in [bV2_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_build_instancers.py)
 - timeline dataframe assembly is done in pandas before Blender object creation
 - `city` and `trimmed-parade` currently offset on `Y`
 - `uni` currently offsets on `X`
@@ -449,11 +449,11 @@ The important practical point for `blenderv2` is that v1.5 is not a clean from-s
 ### Current bV2 bundle preference
 
 - `blenderv2` should read from the local temp bundle root, not directly from the network share
-- shared settings now live in [bV2_paths.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blenderv2/bV2_paths.py):
+- shared settings now live in [bV2_paths.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_paths.py):
   - `BLENDER_USE_REMOTE`
   - `BLENDER_TEMP_REPO`
   - `BLENDER_REPO_ROOT`
-- sync helper now lives in [bV2_sync_inputs.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blenderv2/bV2_sync_inputs.py)
+- sync helper now lives in [bV2_sync_inputs.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_sync_inputs.py)
 - current intended flow:
   - copy from `BLENDER_REPO_ROOT` (currently the mapped `Z:` drive location)
   - into `BLENDER_TEMP_REPO`
