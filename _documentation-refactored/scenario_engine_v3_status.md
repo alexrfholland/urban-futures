@@ -80,7 +80,7 @@ The main scripts involved are:
 - builder:
   - [_code-refactored/refactor_code/tree_processing/build_tree_variants.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/build_tree_variants.py)
 - runtime template loader:
-  - [final/a_resource_distributor_dataframes.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_resource_distributor_dataframes.py)
+  - [_code-refactored/refactor_code/tree_processing/a_resource_distributor_dataframes.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/a_resource_distributor_dataframes.py)
 - v3 baseline helper:
   - [_code-refactored/refactor_code/scenario/baseline_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/baseline_v3.py)
 
@@ -97,14 +97,15 @@ Required env/config record:
 ## Runtime Split
 
 - v3 engine runtime: [_code-refactored/refactor_code/scenario/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v3.py)
-- scenario runner now imports v3: [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py)
+- live runtime package: [_code-refactored/refactor_code/scenario/runtime](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime)
+- batch runner: [_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py)
 - the normal per-state chain is now:
   - interim `treeDF` / `logDF` / `poleDF`
   - in-memory polydata enrichment through search layers and indicator/proposal arrays
   - final `state_with_indicators.vtk`
   - final integrated `nodeDF`
 - normal v3 candidate runs do not write intermediate `urban_features.vtk` files
-- v3 proposal arrays are derived on the final enriched state artifact in [a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_gather_capabilities.py)
+- v3 proposal arrays are derived on the final enriched state artifact in [_code-refactored/refactor_code/scenario/runtime/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_info_gather_capabilities.py)
 - v3 proposal render view: [render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_forest_size_views.py)
 - custom v3 proposal render schema: [_documentation-refactored/scenario_engine_v3_render_schema.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_render_schema.md)
 - default custom renderer outputs:

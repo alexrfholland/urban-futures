@@ -15,33 +15,21 @@ from scipy.spatial import cKDTree
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-TREE_PROCESSING_DIR = REPO_ROOT / "final" / "tree_processing"
+TREE_PROCESSING_DIR = Path(__file__).resolve().parent
 if str(TREE_PROCESSING_DIR) not in sys.path:
     sys.path.insert(0, str(TREE_PROCESSING_DIR))
 
-import aa_tree_helper_functions  # noqa: E402
-import combine_resource_treeMeshGenerator  # noqa: E402
-import combined_redoSnags  # noqa: E402
-import combined_tree_manager  # noqa: E402
-import combined_voxelise_dfs  # noqa: E402
+from refactor_code.tree_processing import aa_tree_helper_functions  # noqa: E402
+from refactor_code.tree_processing import combine_resource_treeMeshGenerator  # noqa: E402
+from refactor_code.tree_processing import combined_redoSnags  # noqa: E402
+from refactor_code.tree_processing import combined_tree_manager  # noqa: E402
+from refactor_code.tree_processing import combined_voxelise_dfs  # noqa: E402
+from refactor_code.paths import tree_template_base_root, tree_template_variants_root  # noqa: E402
 
 
-TREE_DATA_ROOT = REPO_ROOT / "data" / "revised" / "trees"
-BASE_TREE_LIBRARY_ROOT = Path(
-    os.environ.get(
-        "TREE_TEMPLATE_BASE_ROOT",
-        os.environ.get(
-            "BASE_TREE_TEMPLATES_ROOT",
-            str(REPO_ROOT / "_data-refactored" / "model-inputs" / "tree_libraries" / "base" / "trees"),
-        ),
-    )
-).expanduser()
-VARIANT_ROOT = Path(
-    os.environ.get(
-        "TREE_TEMPLATE_VARIANTS_ROOT",
-        str(REPO_ROOT / "_data-refactored" / "model-inputs" / "tree_variants"),
-    )
-).expanduser()
+TREE_DATA_ROOT = tree_template_base_root()
+BASE_TREE_LIBRARY_ROOT = tree_template_base_root()
+VARIANT_ROOT = tree_template_variants_root()
 
 
 RESOURCE_COLORS = {

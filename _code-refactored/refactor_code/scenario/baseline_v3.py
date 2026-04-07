@@ -18,13 +18,14 @@ from scipy.spatial import cKDTree
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CODE_ROOT = REPO_ROOT / "_code-refactored"
 FINAL_DIR = REPO_ROOT / "final"
+TREE_PROCESSING_DIR = CODE_ROOT / "refactor_code" / "tree_processing"
 
-for import_root in (CODE_ROOT, FINAL_DIR):
+for import_root in (TREE_PROCESSING_DIR, CODE_ROOT, FINAL_DIR):
     if str(import_root) not in sys.path:
         sys.path.insert(0, str(import_root))
 
 import a_helper_functions  # noqa: E402
-import a_resource_distributor_dataframes  # noqa: E402
+from refactor_code.tree_processing import a_resource_distributor_dataframes  # noqa: E402
 
 from refactor_code.blender.proposal_framebuffers import build_blender_proposal_framebuffer_columns  # noqa: E402
 from refactor_code.blender.proposal_framebuffers_vtk import build_blender_proposal_framebuffer_arrays  # noqa: E402
@@ -34,6 +35,8 @@ from refactor_code.paths import (  # noqa: E402
     engine_output_baseline_trees_csv_path,
     engine_output_root,
     format_voxel_size,
+    site_subset_dataset_path,
+    site_world_reference_vtk_path,
     scenario_node_df_path,
     scenario_output_root,
     scenario_baseline_combined_vtk_path,
@@ -167,12 +170,11 @@ def _template_base_root() -> Path:
 
 
 def _input_subset_path(site: str, voxel_size: float | int) -> Path:
-    voxel = format_voxel_size(voxel_size)
-    return REPO_ROOT / "data" / "revised" / "final" / site / f"{site}_{voxel}_subsetForScenarios.nc"
+    return site_subset_dataset_path(site, voxel_size)
 
 
 def _input_terrain_vtk_path(site: str) -> Path:
-    return REPO_ROOT / "data" / "revised" / "final" / f"{site}-roadVoxels-coloured.vtk"
+    return site_world_reference_vtk_path(site, "road")
 
 
 def _baseline_support_dir(site: str) -> Path:

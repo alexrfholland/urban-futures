@@ -1,5 +1,10 @@
 # bV2 Temporary Implementation Place
 
+Path note after the v4 restructure:
+
+- active `blenderv2` code now lives under `_code-refactored/refactor_code/blenderv2`
+- older references in this note to `final/_code-refactored/blender/timeline` are pre-v4 paths for the same code now under `_code-refactored/refactor_code/blenderv2/timeline`
+
 ## bV2 conventions
 
 ### 1. Naming and versioning

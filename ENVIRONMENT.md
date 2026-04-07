@@ -19,16 +19,17 @@ uv sync --extra world-construction --extra visuals --extra blender --extra rhino
 Run commands through the repo environment:
 
 ```bash
-uv run python final/run_full_v3_batch.py --help
-uv run python final/run_saved_v3_vtks.py --help
+PYTHONPATH=_code-refactored uv run python _code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py --help
+PYTHONPATH=_code-refactored uv run python _code-refactored/refactor_code/scenario/runtime/run_saved_v3_vtks.py --help
 ```
 
 In VS Code, select the interpreter from the repo `.venv`.
 
-The current import layout is unchanged:
+The active import layout is now:
 
 - repo packages come from the repo `.venv`
-- `refactor_code.*` still resolves from `_code-refactored`
+- active simulation, tree-library, and Blender-export code lives under `_code-refactored/refactor_code`
+- old `final/` locations are no longer the live entrypoint surface
 
 ## Deferred legacy native packages
 

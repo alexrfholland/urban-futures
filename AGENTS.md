@@ -129,7 +129,7 @@ If you are working on v3:
 
 The main non-interactive batch runner is:
 
-- [final/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/run_full_v3_batch.py)
+- [_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py)
 
 Default behavior:
 
@@ -246,7 +246,7 @@ Always verify:
 
 Completed.
 
-High amount of release control in trending because `reduce_control_of_trees(...)` in [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py#L204) assigns trees in positive to `street-tree`.
+High amount of release control in trending because `reduce_control_of_trees(...)` in [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_runscenario.py#L204) assigns trees in positive to `street-tree`.
 
 Specifics:
 
@@ -264,9 +264,9 @@ After the year-0 run:
 
 Why this happens:
 
-- both scenarios start from the same base treeDF via [a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_initialiseDS.py#L325)
-- then year `0` still runs `run_scenario(...)` via [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py#L648)
-- in `reduce_control_of_trees(...)` via [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py#L204), any non-senescent tree that falls under the rewild/depave mask gets its control reassigned from `unmanagedCount`
+- both scenarios start from the same base treeDF via [a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_initialiseDS.py#L325)
+- then year `0` still runs `run_scenario(...)` via [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_runscenario.py#L648)
+- in `reduce_control_of_trees(...)` via [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_runscenario.py#L204), any non-senescent tree that falls under the rewild/depave mask gets its control reassigned from `unmanagedCount`
 - at year `0`, `unmanagedCount` is `0`, so that reassignment lands in `street-tree`
 
 Why positive gets hit much harder:

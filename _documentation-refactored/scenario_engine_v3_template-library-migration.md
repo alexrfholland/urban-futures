@@ -82,7 +82,7 @@ The migration is now applied in the current working tree:
 
 Primary runtime loader:
 
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_resource_distributor_dataframes.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/a_resource_distributor_dataframes.py`
 
 Current load order there is:
 
@@ -100,14 +100,14 @@ Primary variant builder:
 
 Runtime / builder references:
 
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_resource_distributor_dataframes.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/a_resource_distributor_dataframes.py`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/build_tree_variants.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/tree_processing/combined_tree_manager.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/tree_processing/combine_edit_individual_trees.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/tree_processing/aa_tree_helper_functions.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/tree_processing/combined_voxelise_dfs.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/tree_processing/combine_resource_treeMeshGenerator.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/_blender/a_vtk_to_ply.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/combined_tree_manager.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/combine_edit_individual_trees.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/aa_tree_helper_functions.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/combined_voxelise_dfs.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/combine_resource_treeMeshGenerator.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender_export/vtk_to_ply.py`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/stanislav/predictions.py`
 
 Documentation references also exist and must be updated after the code/path migration.

@@ -1,5 +1,10 @@
 # Blender Agent Guide
 
+Path note after the v4 restructure:
+
+- active Blender-export prep code now lives under `_code-refactored/refactor_code/blender_export`
+- active Blender v2 scene code now lives under `_code-refactored/refactor_code/blenderv2`
+
 ## Generation Note
 
 This is the older Blender `v1` rewrite/reference note.
@@ -104,10 +109,10 @@ Baseline generator:
 
 Outputs include:
 
-- `data/revised/final/baselines/{site}_baseline_trees.csv`
-- `data/revised/final/baselines/{site}_baseline_resources_{voxel_size}.vtk`
-- `data/revised/final/baselines/{site}_baseline_terrain_{voxel_size}.vtk`
-- `data/revised/final/baselines/{site}_baseline_combined_{voxel_size}.vtk`
+- `data/revised/final-v3/baselines/{site}_baseline_trees.csv`
+- `data/revised/final-v3/baselines/{site}_baseline_resources_{voxel_size}.vtk`
+- `data/revised/final-v3/baselines/{site}_baseline_terrain_{voxel_size}.vtk`
+- `data/revised/final-v3/baselines/{site}_baseline_combined_{voxel_size}.vtk`
 
 ### 2.2. Tree / Log / Pole PLY Libraries
 
@@ -140,8 +145,8 @@ If the source VTK already has the binary resource columns, the exporter preserve
 
 Primary folders are:
 
-- `data/revised/final/treeMeshesPly`
-- `data/revised/final/logMeshesPly`
+- `_data-refactored/model-inputs/tree_library_exports/treeMeshesPly`
+- `_data-refactored/model-inputs/tree_library_exports/logMeshesPly`
 
 In the 2026 instancer, `treeMeshesPly` also contains the pole / artificial-support templates used by `nodeType == pole`.
 

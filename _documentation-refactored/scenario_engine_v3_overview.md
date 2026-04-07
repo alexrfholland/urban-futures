@@ -53,7 +53,7 @@ Current standard voxel size:
 
 Main batch runner:
 
-- [final/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/run_full_v3_batch.py)
+- [_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py)
 
 The normal flow is:
 
@@ -81,31 +81,24 @@ The important simplification is:
 
 ## Dependencies
 
-The current v3 stack is partly refactored, but the top-level entrypoints still live in `final/`.
+The active v3 stack now lives directly under `_code-refactored/`.
 
-Use this distinction:
+Core runtime modules:
 
-- `final/`
-  - stable entrypoints and orchestration
-- `_code-refactored/`
-  - current simulation core, path routing, baseline core, and render tooling
-
-Current production flow still starts from older wrapper scripts:
-
-- [final/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/run_full_v3_batch.py)
+- [_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py)
   - main batch entrypoint
-- [final/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_initialiseDS.py)
+- [_code-refactored/refactor_code/scenario/runtime/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_initialiseDS.py)
   - dataset and source-data preparation
-- [final/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py)
-  - scenario wrapper around the v3 engine
-- [final/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_generateVTKs.py)
+- [_code-refactored/refactor_code/scenario/runtime/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_runscenario.py)
+  - scenario runner around the v3 engine
+- [_code-refactored/refactor_code/scenario/runtime/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_generateVTKs.py)
   - integrated `nodeDF` generation and base polydata build
-- [final/a_scenario_urban_elements_count.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_urban_elements_count.py)
+- [_code-refactored/refactor_code/scenario/runtime/a_scenario_urban_elements_count.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_urban_elements_count.py)
   - urban-feature point-data enrichment
-- [final/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_gather_capabilities.py)
+- [_code-refactored/refactor_code/scenario/runtime/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_info_gather_capabilities.py)
   - indicator and proposal enrichment, final `state_with_indicators.vtk`, and stats
 
-Those wrappers currently depend on refactored core modules:
+Shared refactored modules:
 
 - [_code-refactored/refactor_code/scenario/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v3.py)
   - canonical v3 simulation logic
@@ -125,9 +118,9 @@ Those wrappers currently depend on refactored core modules:
 
 So the practical rule is:
 
-- run the batch through `final/run_full_v3_batch.py`
-- treat the real simulation core and output routing as living in `_code-refactored/`
-- expect the remaining `final/` scripts to shrink over time into thinner wrappers
+- run the batch through `_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py`
+- treat `_code-refactored/` as the only live code surface for the active v3 stack
+- treat old `final/` references in historical notes as pre-v4 locations
 
 ## Outputs
 

@@ -86,19 +86,19 @@ Core engine / schema:
 
 Scenario prep / batch / VTK:
 
-- [final/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_initialiseDS.py)
-- [final/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/run_full_v3_batch.py)
-- [final/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_generateVTKs.py)
+- [_code-refactored/refactor_code/scenario/runtime/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_initialiseDS.py)
+- [_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/run_full_v3_batch.py)
+- [_code-refactored/refactor_code/scenario/runtime/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_scenario_generateVTKs.py)
 
 Stats / proposal readers:
 
-- [final/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_gather_capabilities.py)
-- [final/a_info_proposal_interventions.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_proposal_interventions.py)
+- [_code-refactored/refactor_code/scenario/runtime/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_info_gather_capabilities.py)
+- [_code-refactored/refactor_code/scenario/runtime/a_info_proposal_interventions.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/runtime/a_info_proposal_interventions.py)
 
 Direct VTK / Blender helpers:
 
-- [_code-refactored/refactor_code/blender/b_generate_rewilded_ground.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/b_generate_rewilded_ground.py)
-- [_code-refactored/refactor_code/blender/b_rewilded_surface_shell.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/b_rewilded_surface_shell.py)
+- [_code-refactored/refactor_code/blender_export/export_rewilded_ground.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender_export/export_rewilded_ground.py)
+- [_code-refactored/refactor_code/blender_export/rewilded_surface_shell.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender_export/rewilded_surface_shell.py)
 - [_code-refactored/refactor_code/scenario/inspect_vtk.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/inspect_vtk.py)
 
 ## Deliberate Non-Goals
