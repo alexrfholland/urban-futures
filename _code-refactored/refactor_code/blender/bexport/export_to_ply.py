@@ -11,7 +11,7 @@ if str(CODE_ROOT) not in sys.path:
 
 from refactor_code.blender.bexport import bexport_f_vtk_to_ply_surfaces as f_vtk_to_ply_surfaces
 from refactor_code.paths import scenario_tree_df_path, site_world_reference_vtk_path
-from refactor_code.tree_processing import a_resource_distributor_dataframes
+from refactor_code.input_processing.tree_processing import a_resource_distributor_dataframes
 
 def get_scenario_polydata(site, voxelSize, resolution, year):
     # Assuming processedDF is already loaded with tree instance data

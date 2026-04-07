@@ -7,7 +7,7 @@ REPO_ROOT = CODE_ROOT.parent
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
-from refactor_code.sim.generate_state.engine_v3 import calculate_under_node_treatment_status, run_scenario, run_timestep
+from refactor_code.sim.generate_interim_state_data.engine_v3 import calculate_under_node_treatment_status, run_scenario, run_timestep
 
 
 if __name__ == "__main__":

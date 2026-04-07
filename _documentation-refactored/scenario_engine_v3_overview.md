@@ -89,18 +89,18 @@ Core runtime modules:
   - main batch entrypoint
 - [_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py)
   - dataset and source-data preparation
-- [_code-refactored/refactor_code/sim/generate_state/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_state/a_scenario_runscenario.py)
+- [_code-refactored/refactor_code/sim/generate_interim_state_data/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_interim_state_data/a_scenario_runscenario.py)
   - scenario runner around the v3 engine
-- [_code-refactored/refactor_code/sim/generate_vtk/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk/a_scenario_generateVTKs.py)
+- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py)
   - integrated `nodeDF` generation and base polydata build
-- [_code-refactored/refactor_code/sim/generate_vtk/a_scenario_urban_elements_count.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk/a_scenario_urban_elements_count.py)
+- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py)
   - urban-feature point-data enrichment
-- [_code-refactored/refactor_code/sim/generate_vtk/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk/a_info_gather_capabilities.py)
+- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py)
   - indicator and proposal enrichment, final `state_with_indicators.vtk`, and stats
 
 Shared refactored modules:
 
-- [_code-refactored/refactor_code/sim/generate_state/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_state/engine_v3.py)
+- [_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py)
   - canonical v3 simulation logic
 - [_code-refactored/refactor_code/sim/setup/params_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/setup/params_v3.py)
   - canonical v3 parameters and timesteps

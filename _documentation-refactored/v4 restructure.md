@@ -38,8 +38,8 @@ New roots:
 
 - `_code-refactored/refactor_code/sim/run/`
 - `_code-refactored/refactor_code/sim/setup/`
-- `_code-refactored/refactor_code/sim/generate_state/`
-- `_code-refactored/refactor_code/sim/generate_vtk/`
+- `_code-refactored/refactor_code/sim/generate_interim_state_data/`
+- `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/`
 - `_code-refactored/refactor_code/sim/baseline/`
 - `_code-refactored/refactor_code/sim/voxel/`
 - `_code-refactored/refactor_code/outputs/stats/`
@@ -51,12 +51,12 @@ Moved live files:
 - `final/run_saved_v3_vtks.py` -> `_code-refactored/refactor_code/sim/run/run_saved_v3_vtks.py`
 - `final/run_all_simulations.py` -> `_code-refactored/refactor_code/sim/run/run_all_simulations.py`
 - `final/a_scenario_initialiseDS.py` -> `_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py`
-- `final/a_scenario_runscenario.py` -> `_code-refactored/refactor_code/sim/generate_state/a_scenario_runscenario.py`
-- `final/a_scenario_generateVTKs.py` -> `_code-refactored/refactor_code/sim/generate_vtk/a_scenario_generateVTKs.py`
-- `final/a_scenario_urban_elements_count.py` -> `_code-refactored/refactor_code/sim/generate_vtk/a_scenario_urban_elements_count.py`
+- `final/a_scenario_runscenario.py` -> `_code-refactored/refactor_code/sim/generate_interim_state_data/a_scenario_runscenario.py`
+- `final/a_scenario_generateVTKs.py` -> `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
+- `final/a_scenario_urban_elements_count.py` -> `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py`
 - `final/a_scenario_get_baselines.py` -> `_code-refactored/refactor_code/sim/baseline/a_scenario_get_baselines.py`
 - `final/a_scenario_manager.py` -> `_code-refactored/refactor_code/sim/run/a_scenario_manager.py`
-- `final/a_info_gather_capabilities.py` -> `_code-refactored/refactor_code/sim/generate_vtk/a_info_gather_capabilities.py`
+- `final/a_info_gather_capabilities.py` -> `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py`
 - `final/a_info_proposal_interventions.py` -> `_code-refactored/refactor_code/outputs/report/a_info_proposal_interventions.py`
 - `final/a_info_pathway_tracking_graphs.py` -> `_code-refactored/refactor_code/outputs/report/a_info_pathway_tracking_graphs.py`
 - `final/a_info_output_capabilities.py` -> `_code-refactored/refactor_code/outputs/stats/a_info_output_capabilities.py`
@@ -69,7 +69,8 @@ Moved live files:
 
 Current note:
 
-- `tree_processing` was intentionally left in `_code-refactored/refactor_code/tree_processing/` for the next cleanup pass
+- `tree_processing` now lives in `_code-refactored/refactor_code/input_processing/tree_processing/`
+- the dedicated cleanup pass for that area still remains to be done
 
 ### Tree Library And Template Runtime
 
@@ -80,22 +81,22 @@ Old roots:
 
 New root:
 
-- `_code-refactored/refactor_code/tree_processing/`
+- `_code-refactored/refactor_code/input_processing/tree_processing/`
 
 Moved live files:
 
-- `final/a_resource_distributor_dataframes.py` -> `_code-refactored/refactor_code/tree_processing/a_resource_distributor_dataframes.py`
-- `final/tree_processing/aa_tree_helper_functions.py` -> `_code-refactored/refactor_code/tree_processing/aa_tree_helper_functions.py`
-- `final/tree_processing/aa_io.py` -> `_code-refactored/refactor_code/tree_processing/aa_io.py`
-- `final/tree_processing/adTree_AssignResources.py` -> `_code-refactored/refactor_code/tree_processing/adTree_AssignResources.py`
-- `final/tree_processing/combine_edit_individual_trees.py` -> `_code-refactored/refactor_code/tree_processing/combine_edit_individual_trees.py`
-- `final/tree_processing/combine_resource_treeMeshGenerator.py` -> `_code-refactored/refactor_code/tree_processing/combine_resource_treeMeshGenerator.py`
-- `final/tree_processing/combined_generateResourceDict.py` -> `_code-refactored/refactor_code/tree_processing/combined_generateResourceDict.py`
-- `final/tree_processing/combined_redoSnags.py` -> `_code-refactored/refactor_code/tree_processing/combined_redoSnags.py`
-- `final/tree_processing/combined_tree_manager.py` -> `_code-refactored/refactor_code/tree_processing/combined_tree_manager.py`
-- `final/tree_processing/combined_voxelise_dfs.py` -> `_code-refactored/refactor_code/tree_processing/combined_voxelise_dfs.py`
-- `final/tree_processing/b_generate_utility_pole_and_artificial_tree.py` -> `_code-refactored/refactor_code/tree_processing/b_generate_utility_pole_and_artificial_tree.py`
-- `final/tree_processing/a_log_mesh_generator.py` -> `_code-refactored/refactor_code/tree_processing/a_log_mesh_generator.py`
+- `final/a_resource_distributor_dataframes.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/a_resource_distributor_dataframes.py`
+- `final/tree_processing/aa_tree_helper_functions.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/aa_tree_helper_functions.py`
+- `final/tree_processing/aa_io.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/aa_io.py`
+- `final/tree_processing/adTree_AssignResources.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/adTree_AssignResources.py`
+- `final/tree_processing/combine_edit_individual_trees.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combine_edit_individual_trees.py`
+- `final/tree_processing/combine_resource_treeMeshGenerator.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combine_resource_treeMeshGenerator.py`
+- `final/tree_processing/combined_generateResourceDict.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combined_generateResourceDict.py`
+- `final/tree_processing/combined_redoSnags.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combined_redoSnags.py`
+- `final/tree_processing/combined_tree_manager.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combined_tree_manager.py`
+- `final/tree_processing/combined_voxelise_dfs.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combined_voxelise_dfs.py`
+- `final/tree_processing/b_generate_utility_pole_and_artificial_tree.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/b_generate_utility_pole_and_artificial_tree.py`
+- `final/tree_processing/a_log_mesh_generator.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/a_log_mesh_generator.py`
 
 ### Tree Library Export Data
 
@@ -184,11 +185,11 @@ The canonical v3 roots are now the default source of truth in `paths.py`.
 
 The current live code structure after this pass is:
 
-- `tree_processing`
+- `input_processing/tree_processing`
 - `sim/run`
 - `sim/setup`
-- `sim/generate_state`
-- `sim/generate_vtk`
+- `sim/generate_interim_state_data`
+- `sim/generate_vtk_and_nodeDFs`
 - `sim/voxel`
 - `sim/baseline`
 - `outputs/stats`
@@ -198,19 +199,19 @@ The current live code structure after this pass is:
 
 Meaning:
 
-- `tree_processing`
+- `input_processing/tree_processing`
   - tree-template and tree-library preparation code
-  - intentionally left in place for the next cleanup pass
+  - still the next cleanup target
 - `sim/run`
   - entrypoints and orchestration scripts
 - `sim/setup`
   - scenario-ready dataset loading and normalization
-- `sim/generate_state`
+- `sim/generate_interim_state_data`
   - scenario engine and interim state-table generation
-- `sim/generate_vtk`
+- `sim/generate_vtk_and_nodeDFs`
   - integrated `nodeDF` generation and final enriched VTK generation
 - `sim/voxel`
-  - low-level voxel/resource/rotation/helper machinery used by `sim/generate_vtk`
+  - low-level voxel/resource/rotation/helper machinery used by `sim/generate_vtk_and_nodeDFs`
 - `sim/baseline`
   - baseline generation branch
 - `outputs/stats`

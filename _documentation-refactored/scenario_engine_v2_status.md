@@ -451,7 +451,7 @@ Current read:
 
 ## Non-Destructive Tree Variant Builder
 
-A new refactor-side variant builder now exists at [build_tree_variants.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/build_tree_variants.py).
+A new refactor-side variant builder now exists at [build_tree_variants.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/build_tree_variants.py).
 
 Purpose:
 

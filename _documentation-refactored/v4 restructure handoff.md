@@ -17,8 +17,8 @@ Use this together with:
 - active sim code is now grouped under:
   - `sim/run`
   - `sim/setup`
-  - `sim/generate_state`
-  - `sim/generate_vtk`
+  - `sim/generate_interim_state_data`
+  - `sim/generate_vtk_and_nodeDFs`
   - `sim/baseline`
   - `sim/voxel`
   - `outputs/stats`
@@ -33,7 +33,7 @@ Use this together with:
 - active Blender export helper was moved out of `final/` into:
   - `blender/bexport/bexport_f_vtk_to_ply_surfaces.py`
 - imports were updated so the live sim runtime no longer depends on `final/` for active execution
-- `tree_processing` was intentionally left in `_code-refactored/refactor_code/tree_processing`
+- `tree_processing` now lives in `_code-refactored/refactor_code/input_processing/tree_processing`
 
 ## Confirmed Runtime Facts
 
@@ -52,8 +52,8 @@ Use this together with:
 Confirmed in:
 
 - `_code-refactored/refactor_code/sim/run/run_full_v3_batch.py`
-- `_code-refactored/refactor_code/sim/generate_vtk/a_scenario_generateVTKs.py`
-- `_code-refactored/refactor_code/sim/generate_state/engine_v3.py`
+- `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
+- `_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py`
 - `AGENTS.md`
 
 ### `nodeDF` vs `treeDF` / `logDF` / `poleDF`
@@ -103,11 +103,11 @@ Observed result:
 
 - `sim/run`
 - `sim/setup`
-- `sim/generate_state`
-- `sim/generate_vtk`
+- `sim/generate_interim_state_data`
+- `sim/generate_vtk_and_nodeDFs`
 - `sim/baseline`
 - `sim/voxel`
-- `tree_processing`
+- `input_processing/tree_processing`
 - `outputs/stats`
 - `outputs/report`
 - `blender/bexport`
@@ -115,13 +115,13 @@ Observed result:
 
 ## Next Steps
 
-1. Do the dedicated `tree_processing` cleanup pass.
+1. Do the dedicated `input_processing/tree_processing` cleanup pass.
 2. Simplify the tree-variant / template structure now that the sim and Blender runtime paths are stable.
 3. Keep updating docs that still mention `scenario/` or the old Blender folders.
 4. Keep using `uv` with explicit `TREE_TEMPLATE_ROOT` and `REFACTOR_RUN_OUTPUT_ROOT` for any further validation runs.
 
 ## Recommended Prompt For Next Session
 
-- focus on `tree_processing`
+- focus on `input_processing/tree_processing`
 - keep the current `sim/*`, `outputs/*`, and `blender/*` structure stable unless there is a strong reason to move it again
 - continue preferring direct moves over wrappers or duplicate live paths

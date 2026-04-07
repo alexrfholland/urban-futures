@@ -14,7 +14,7 @@ if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
 from refactor_code.sim.voxel import voxel_a_helper_functions as a_helper_functions
-from refactor_code.tree_processing import a_resource_distributor_dataframes
+from refactor_code.input_processing.tree_processing import a_resource_distributor_dataframes
 
 from refactor_code.paths import (
     engine_output_baseline_terrain_vtk_path,
@@ -556,7 +556,7 @@ def generate_baseline(site, voxel_size=1, output_folder=None, visualize=False):
 
     # Build the baseline urban-features VTK directly from the in-memory combined state
     # so the pipeline does not have to save and reload the same VTK immediately after.
-    from refactor_code.sim.generate_vtk import a_scenario_urban_elements_count
+    from refactor_code.sim.generate_vtk_and_nodeDFs import a_scenario_urban_elements_count
 
     baseline_urban_features_path = scenario_baseline_urban_features_vtk_path(site, voxel_size)
     a_scenario_urban_elements_count.process_baseline_polydata(

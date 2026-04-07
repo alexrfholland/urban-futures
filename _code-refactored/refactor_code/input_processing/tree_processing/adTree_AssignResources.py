@@ -14,7 +14,7 @@ import aa_tree_helper_functions
 import sys
 from pathlib import Path
 
-CODE_ROOT = Path(__file__).resolve().parents[3] / "_code-refactored"
+CODE_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent.name == "_code-refactored")
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 

@@ -11,7 +11,7 @@ CODE_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent
 REPO_ROOT = CODE_ROOT.parent
 BLENDER_EXPORT_DIR = Path(__file__).resolve().parent
 FINAL_DIR = REPO_ROOT / "final"
-TREE_PROCESSING_DIR = CODE_ROOT / "refactor_code" / "tree_processing"
+TREE_PROCESSING_DIR = CODE_ROOT / "refactor_code" / "input_processing" / "tree_processing"
 
 for import_root in (BLENDER_EXPORT_DIR, TREE_PROCESSING_DIR, FINAL_DIR, CODE_ROOT):
     import_root_str = str(import_root)

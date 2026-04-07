@@ -21,7 +21,7 @@ if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
 from refactor_code.sim.voxel import voxel_a_helper_functions as a_helper_functions  # noqa: E402
-from refactor_code.tree_processing import a_resource_distributor_dataframes  # noqa: E402
+from refactor_code.input_processing.tree_processing import a_resource_distributor_dataframes  # noqa: E402
 
 from refactor_code.blender.bexport.proposal_framebuffers import build_blender_proposal_framebuffer_columns  # noqa: E402
 from refactor_code.blender.bexport.proposal_framebuffers_vtk import build_blender_proposal_framebuffer_arrays  # noqa: E402

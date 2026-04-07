@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 TREE_PROCESSING_DIR = Path(__file__).resolve().parent
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent.name == "_code-refactored").parent
 CODE_ROOT = REPO_ROOT / "_code-refactored"
 BLENDER_EXPORT_DIR = CODE_ROOT / "refactor_code" / "blender" / "bexport"
 FINAL_DIR = REPO_ROOT / "final"

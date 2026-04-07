@@ -79,7 +79,7 @@ document are used directly.
 
 Core engine / schema:
 
-- [_code-refactored/refactor_code/sim/generate_state/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_state/engine_v3.py)
+- [_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py)
 - [_code-refactored/refactor_code/sim/setup/params_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/setup/params_v3.py)
 - [_code-refactored/refactor_code/sim/baseline/baseline_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/baseline/baseline_v3.py)
 - [_code-refactored/refactor_code/outputs/stats/validation.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/stats/validation.py)
@@ -88,11 +88,11 @@ Scenario prep / batch / VTK:
 
 - [_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py)
 - [_code-refactored/refactor_code/sim/run/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/run/run_full_v3_batch.py)
-- [_code-refactored/refactor_code/sim/generate_vtk/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk/a_scenario_generateVTKs.py)
+- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py)
 
 Stats / proposal readers:
 
-- [_code-refactored/refactor_code/sim/generate_vtk/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk/a_info_gather_capabilities.py)
+- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py)
 - [_code-refactored/refactor_code/outputs/report/a_info_proposal_interventions.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/report/a_info_proposal_interventions.py)
 
 Direct VTK / Blender helpers:

@@ -19,7 +19,7 @@ REPO_ROOT = CODE_ROOT.parent
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
-from refactor_code.sim.generate_state.engine_v3 import calculate_under_node_treatment_status
+from refactor_code.sim.generate_interim_state_data.engine_v3 import calculate_under_node_treatment_status
 from refactor_code.sim.setup import params_v3
 from refactor_code.sim.voxel import voxel_a_helper_functions as a_helper_functions
 from refactor_code.sim.voxel import voxel_a_voxeliser as a_voxeliser

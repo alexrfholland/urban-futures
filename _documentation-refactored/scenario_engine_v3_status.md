@@ -78,9 +78,9 @@ To decide the variant, we currently select between:
 The main scripts involved are:
 
 - builder:
-  - [_code-refactored/refactor_code/tree_processing/build_tree_variants.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/build_tree_variants.py)
+  - [_code-refactored/refactor_code/input_processing/tree_processing/build_tree_variants.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/build_tree_variants.py)
 - runtime template loader:
-  - [_code-refactored/refactor_code/tree_processing/a_resource_distributor_dataframes.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/tree_processing/a_resource_distributor_dataframes.py)
+  - [_code-refactored/refactor_code/input_processing/tree_processing/a_resource_distributor_dataframes.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/a_resource_distributor_dataframes.py)
 - v3 baseline helper:
   - [_code-refactored/refactor_code/sim/baseline/baseline_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/baseline/baseline_v3.py)
 
@@ -96,7 +96,7 @@ Required env/config record:
 
 ## Runtime Split
 
-- v3 engine runtime: [_code-refactored/refactor_code/sim/generate_state/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_state/engine_v3.py)
+- v3 engine runtime: [_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py)
 - live runtime package: [_code-refactored/refactor_code/sim/run](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/run)
 - batch runner: [_code-refactored/refactor_code/sim/run/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/run/run_full_v3_batch.py)
 - the normal per-state chain is now:
@@ -105,7 +105,7 @@ Required env/config record:
   - final `state_with_indicators.vtk`
   - final integrated `nodeDF`
 - normal v3 candidate runs do not write intermediate `urban_features.vtk` files
-- v3 proposal arrays are derived on the final enriched state artifact in [_code-refactored/refactor_code/sim/generate_vtk/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk/a_info_gather_capabilities.py)
+- v3 proposal arrays are derived on the final enriched state artifact in [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py)
 - v3 proposal render view: [render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/report/render_forest_size_views.py)
 - custom v3 proposal render schema: [_documentation-refactored/scenario_engine_v3_render_schema.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_render_schema.md)
 - default custom renderer outputs:
@@ -146,7 +146,7 @@ In the current v3 path, the proposal families are:
 - `proposal-colonise`
 - `proposal-deploy-structure`
 
-In the dataframe, each of those exists as a `*_decision` and `*_intervention` pair in [engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_state/engine_v3.py):
+In the dataframe, each of those exists as a `*_decision` and `*_intervention` pair in [engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py):
 
 - `proposal-decay_decision`
 - `proposal-decay_intervention`

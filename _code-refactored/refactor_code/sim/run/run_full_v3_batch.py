@@ -29,8 +29,8 @@ if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
 from refactor_code.sim.baseline import baseline_v3
-from refactor_code.sim.generate_state import a_scenario_runscenario
-from refactor_code.sim.generate_vtk import (
+from refactor_code.sim.generate_interim_state_data import a_scenario_runscenario
+from refactor_code.sim.generate_vtk_and_nodeDFs import (
     a_info_gather_capabilities,
     a_scenario_generateVTKs,
     a_scenario_urban_elements_count,

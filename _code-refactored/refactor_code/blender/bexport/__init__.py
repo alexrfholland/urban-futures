@@ -8,7 +8,7 @@ BLENDER_EXPORT_DIR = Path(__file__).resolve().parent
 CODE_ROOT = next(parent for parent in BLENDER_EXPORT_DIR.parents if parent.name == "_code-refactored")
 REPO_ROOT = CODE_ROOT.parent
 FINAL_DIR = REPO_ROOT / "final"
-TREE_PROCESSING_DIR = CODE_ROOT / "refactor_code" / "tree_processing"
+TREE_PROCESSING_DIR = CODE_ROOT / "refactor_code" / "input_processing" / "tree_processing"
 
 for import_root in (BLENDER_EXPORT_DIR, TREE_PROCESSING_DIR, FINAL_DIR, CODE_ROOT):
     import_root_str = str(import_root)

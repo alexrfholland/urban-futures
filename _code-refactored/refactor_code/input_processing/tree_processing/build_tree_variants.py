@@ -14,16 +14,16 @@ import pyvista as pv
 from scipy.spatial import cKDTree
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent.name == "_code-refactored").parent
 TREE_PROCESSING_DIR = Path(__file__).resolve().parent
 if str(TREE_PROCESSING_DIR) not in sys.path:
     sys.path.insert(0, str(TREE_PROCESSING_DIR))
 
-from refactor_code.tree_processing import aa_tree_helper_functions  # noqa: E402
-from refactor_code.tree_processing import combine_resource_treeMeshGenerator  # noqa: E402
-from refactor_code.tree_processing import combined_redoSnags  # noqa: E402
-from refactor_code.tree_processing import combined_tree_manager  # noqa: E402
-from refactor_code.tree_processing import combined_voxelise_dfs  # noqa: E402
+from refactor_code.input_processing.tree_processing import aa_tree_helper_functions  # noqa: E402
+from refactor_code.input_processing.tree_processing import combine_resource_treeMeshGenerator  # noqa: E402
+from refactor_code.input_processing.tree_processing import combined_redoSnags  # noqa: E402
+from refactor_code.input_processing.tree_processing import combined_tree_manager  # noqa: E402
+from refactor_code.input_processing.tree_processing import combined_voxelise_dfs  # noqa: E402
 from refactor_code.paths import tree_template_base_root, tree_template_variants_root  # noqa: E402
 
 
