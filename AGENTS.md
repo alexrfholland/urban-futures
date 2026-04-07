@@ -1,5 +1,14 @@
 # AGENTS
 
+## Environment Rule
+
+Always use `uv` and the repo-local `.venv`.
+
+- use `uv run python ...` for project Python commands
+- if invoking the interpreter directly, use `./.venv/bin/python`
+- do not use the system `python` / `python3` for this repo unless there is a specific reason and it is stated explicitly
+- treat the local `.venv` as the canonical Python environment for shell work, validation runs, and debugging
+
 ## Current Simulation Stack
 
 There are multiple generations of the simulation core and multiple tree-template libraries in this repo.
@@ -363,3 +372,19 @@ To do:
 - simplify the tree variant data structure
 - remove unnecessary duplicated derivative files where possible
 - reduce legacy test/debug artifacts stored alongside live inputs
+
+#### Ticket 6. Remove Old Proposal Layers
+
+Open.
+
+Current issue:
+
+- both the older proposal point-data layers and the later `V3` proposal/intervention layers still exist in the codebase
+- the older proposal layer creation still logs during VTK generation even though the downstream validation / Blender path is keyed to the `V3` arrays
+- this makes the proposal pipeline harder to read and easier to misinterpret during validation runs
+
+To do:
+
+- confirm which old non-`V3` proposal arrays are no longer used downstream
+- remove the old proposal layer generation path
+- keep the `V3` proposal/intervention arrays as the canonical path if they are the only live downstream dependency
