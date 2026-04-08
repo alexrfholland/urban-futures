@@ -2,11 +2,23 @@
 Extract V4 indicator voxel counts from yr-180 VTKs.
 Reads baseline + positive + trending for each site, computes all V4 indicators.
 """
+import sys
 import numpy as np
 import pyvista as pv
 from pathlib import Path
 
-ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/v4-proposal-broadcast")
+CODE_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent.name == "_code-refactored")
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+
+from refactor_code.sim.setup.constants import (
+    RECRUIT_FULL,
+    RECRUIT_PARTIAL,
+    RELEASECONTROL_FULL,
+    RELEASECONTROL_PARTIAL,
+)
+
+ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/v4updatedterms")
 VTK_DIR = ROOT / "output" / "vtks"
 
 SITES = ["trimmed-parade", "city", "uni"]
@@ -70,8 +82,8 @@ def compute_indicators(vtk, is_baseline=False):
     results["Lizard.reproduce"] = int(np.sum(nurse | fallen_tree))
 
     # Tree.acquire
-    moderated = release == "reduce-pruning"
-    autonomous = release == "eliminate-pruning"
+    moderated = release == RELEASECONTROL_PARTIAL
+    autonomous = release == RELEASECONTROL_FULL
     results["Tree.acquire.moderated"] = int(np.sum(moderated))
     results["Tree.acquire.autonomous"] = int(np.sum(autonomous))
     results["Tree.acquire"] = int(np.sum(moderated | autonomous))
@@ -86,8 +98,8 @@ def compute_indicators(vtk, is_baseline=False):
     results["Tree.communicate"] = int(np.sum(snag | fallen | decayed))
 
     # Tree.reproduce
-    smaller = recruit == "buffer-feature"
-    larger = recruit == "rewild-ground"
+    smaller = recruit == RECRUIT_PARTIAL
+    larger = recruit == RECRUIT_FULL
     results["Tree.reproduce.smaller-patches-rewild"] = int(np.sum(smaller))
     results["Tree.reproduce.larger-patches-rewild"] = int(np.sum(larger))
     results["Tree.reproduce"] = int(np.sum(smaller | larger))
@@ -173,23 +185,33 @@ def print_site_table(site, baseline_counts, pos_counts, trend_counts):
         is_agg = ind in AGGREGATES
         bold = "**" if is_agg else ""
 
+        # If trending is 0, substitute ~1% of baseline for comparison columns
+        t_display = t
+        t_substituted = False
+        if t == 0 and b > 0:
+            t_display = max(1, round(b * 0.01))
+            t_substituted = True
+        star = "*" if t_substituted else ""
+
         pct_b_pos = pct_baseline(p, b)
         pct_b_trend = pct_baseline(t, b)
 
         if b > 0:
             pos_str = f"{pct_b_pos} of baseline ({fmt(p)})"
-            trend_str = f"{pct_b_trend} of baseline ({fmt(t)})"
+            trend_str = f"~1% of baseline (~{fmt(t_display)}){star}" if t_substituted else f"{pct_b_trend} of baseline ({fmt(t)})"
         else:
             pos_str = f"n/a ({fmt(p)})"
             trend_str = f"n/a ({fmt(t)})"
 
-        r = ratio(p, t)
-        tp = trend_pct_pos(p, t)
+        r = ratio(p, t_display)
+        tp = trend_pct_pos(p, t_display)
+        r_str = f"{r}{star}"
+        tp_str = f"{tp}{star}"
 
         # measure column - use vtk query syntax
         measure = get_measure(ind)
 
-        print(f"| {bold}{ind}{bold} | {bold}{measure}{bold} | {bold}{fmt(b)}{bold} | {bold}{pos_str}{bold} | {bold}{trend_str}{bold} | {bold}{r}{bold} | {bold}{tp}{bold} |")
+        print(f"| {bold}{ind}{bold} | {bold}{measure}{bold} | {bold}{fmt(b)}{bold} | {bold}{pos_str}{bold} | {bold}{trend_str}{bold} | {bold}{r_str}{bold} | {bold}{tp_str}{bold} |")
 
 
 MEASURES = {
@@ -204,15 +226,15 @@ MEASURES = {
     "Lizard.reproduce.nurse-log": '`vtk["stat_fallen log"] > 0`',
     "Lizard.reproduce.fallen-tree": '`vtk["forest_size"] in fallen|decayed`',
     "Lizard.reproduce": "union",
-    "Tree.acquire.moderated": '`vtk["proposal_release_controlV4_intervention"] == "reduce-pruning"`',
-    "Tree.acquire.autonomous": '`vtk["proposal_release_controlV4_intervention"] == "eliminate-pruning"`',
+    "Tree.acquire.moderated": f'`vtk["proposal_release_controlV4_intervention"] == "{RELEASECONTROL_PARTIAL}"`',
+    "Tree.acquire.autonomous": f'`vtk["proposal_release_controlV4_intervention"] == "{RELEASECONTROL_FULL}"`',
     "Tree.acquire": "union",
     "Tree.communicate.snag": '`vtk["forest_size"] == "snag"`',
     "Tree.communicate.fallen": '`vtk["forest_size"] == "fallen"`',
     "Tree.communicate.decayed": '`vtk["forest_size"] == "decayed"`',
     "Tree.communicate": '`vtk["forest_size"] in snag|fallen|decayed`',
-    "Tree.reproduce.smaller-patches-rewild": '`vtk["proposal_recruitV4_intervention"] == "buffer-feature"`',
-    "Tree.reproduce.larger-patches-rewild": '`vtk["proposal_recruitV4_intervention"] == "rewild-ground"`',
+    "Tree.reproduce.smaller-patches-rewild": f'`vtk["proposal_recruitV4_intervention"] == "{RECRUIT_PARTIAL}"`',
+    "Tree.reproduce.larger-patches-rewild": f'`vtk["proposal_recruitV4_intervention"] == "{RECRUIT_FULL}"`',
     "Tree.reproduce": "union",
 }
 

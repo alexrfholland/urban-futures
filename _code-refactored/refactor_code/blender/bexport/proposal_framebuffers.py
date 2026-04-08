@@ -1,5 +1,27 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+CODE_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent.name == "_code-refactored")
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+
+from refactor_code.sim.setup.constants import (
+    COLONISE_FULL_ENVELOPE,
+    COLONISE_FULL_GROUND,
+    COLONISE_PARTIAL_ENVELOPE,
+    DECAY_FULL,
+    DECAY_PARTIAL,
+    DEPLOY_FULL_LOG,
+    DEPLOY_FULL_POLE,
+    DEPLOY_FULL_UPGRADE,
+    RECRUIT_FULL,
+    RECRUIT_PARTIAL,
+    RELEASECONTROL_FULL,
+    RELEASECONTROL_PARTIAL,
+)
+
 """
 Build Blender-ready proposal framebuffer columns from a scenario node dataframe.
 
@@ -34,7 +56,6 @@ Important note:
 
 import argparse
 import json
-from pathlib import Path
 
 import pandas as pd
 
@@ -57,38 +78,38 @@ FRAMEBUFFER_STATE_MAPPINGS = {
         "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
-        "buffer-feature": 2,
-        "brace-feature": 3,
+        DECAY_FULL: 2,
+        DECAY_PARTIAL: 3,
     },
     "proposal-release-control": {
         "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
-        "reduce-pruning": 2,
-        "eliminate-pruning": 3,
+        RELEASECONTROL_PARTIAL: 2,
+        RELEASECONTROL_FULL: 3,
     },
     "proposal-recruit": {
         "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
-        "buffer-feature": 2,
-        "rewild-ground": 3,
+        RECRUIT_PARTIAL: 2,
+        RECRUIT_FULL: 3,
     },
     "proposal-colonise": {
         "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
-        "rewild-ground": 2,
-        "enrich-envelope": 3,
-        "roughen-envelope": 4,
+        COLONISE_FULL_GROUND: 2,
+        COLONISE_FULL_ENVELOPE: 3,
+        COLONISE_PARTIAL_ENVELOPE: 4,
     },
     "proposal-deploy-structure": {
         "accepted-no-intervention": -1,
         "not-assessed": 0,
         "rejected": 1,
-        "adapt-utility-pole": 2,
-        "translocated-log": 3,
-        "upgrade-feature": 4,
+        DEPLOY_FULL_POLE: 2,
+        DEPLOY_FULL_LOG: 3,
+        DEPLOY_FULL_UPGRADE: 4,
     },
 }
 

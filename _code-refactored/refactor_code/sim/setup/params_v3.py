@@ -47,7 +47,7 @@ def get_interpolated_param(param_dict, year):
 def generate_timesteps(base_timesteps=None, interval=None):
     """Generate assessed years, optionally adding regular sub-timesteps."""
     if base_timesteps is None:
-        base_timesteps = [0, 10, 30, 60, 180]
+        base_timesteps = [0, 1, 10, 30, 60, 180]
 
     if interval is None or interval <= 0:
         return sorted(base_timesteps)
@@ -82,12 +82,16 @@ def get_params_for_year(site, scenario, year):
 def get_scenario_parameters():
     """Return raw parameter dictionaries keyed by (site, scenario)."""
     senescing_duration_years = triangular_duration(10, 90, 200)
-    snag_duration_years = triangular_duration(0, 50, 100)
+    snag_duration_years = triangular_duration(0, 40, 100)
     fallen_duration_years = triangular_duration(10, 40, 100)
     decayed_duration_years = triangular_duration(30, 40, 75)
 
     params_parade_positive = {
         "growth_factor_range": [0.37, 0.51],
+        "growth_model": "split",
+        "growth_model_precolonial": "fischer",
+        "growth_model_colonial": "ulmus",
+        "mortality_model": "flat",
         "plantingDensity": 50,
         "annual_tree_death_urban": 0.06,
         "annual_tree_death_nature-reserves": 0.03,
@@ -111,6 +115,10 @@ def get_scenario_parameters():
 
     params_parade_trending = {
         "growth_factor_range": [0.37, 0.51],
+        "growth_model": "split",
+        "growth_model_precolonial": "fischer",
+        "growth_model_colonial": "ulmus",
+        "mortality_model": "flat",
         "plantingDensity": 50,
         "annual_tree_death_urban": 0.06,
         "annual_tree_death_nature-reserves": 0.03,
@@ -134,6 +142,10 @@ def get_scenario_parameters():
 
     params_city_positive = {
         "growth_factor_range": [0.37, 0.51],
+        "growth_model": "split",
+        "growth_model_precolonial": "fischer",
+        "growth_model_colonial": "ulmus",
+        "mortality_model": "flat",
         "plantingDensity": 50,
         "annual_tree_death_urban": 0.06,
         "annual_tree_death_nature-reserves": 0.03,
@@ -164,6 +176,10 @@ def get_scenario_parameters():
 
     params_city_trending = {
         "growth_factor_range": [0.37, 0.51],
+        "growth_model": "split",
+        "growth_model_precolonial": "fischer",
+        "growth_model_colonial": "ulmus",
+        "mortality_model": "flat",
         "plantingDensity": 50,
         "annual_tree_death_urban": 0.06,
         "annual_tree_death_nature-reserves": 0.03,
@@ -194,6 +210,10 @@ def get_scenario_parameters():
 
     params_uni_positive = {
         "growth_factor_range": [0.37, 0.51],
+        "growth_model": "split",
+        "growth_model_precolonial": "fischer",
+        "growth_model_colonial": "ulmus",
+        "mortality_model": "flat",
         "plantingDensity": 50,
         "annual_tree_death_urban": 0.06,
         "annual_tree_death_nature-reserves": 0.03,
@@ -224,6 +244,10 @@ def get_scenario_parameters():
 
     params_uni_trending = {
         "growth_factor_range": [0.37, 0.51],
+        "growth_model": "split",
+        "growth_model_precolonial": "fischer",
+        "growth_model_colonial": "ulmus",
+        "mortality_model": "flat",
         "plantingDensity": 50,
         "annual_tree_death_urban": 0.06,
         "annual_tree_death_nature-reserves": 0.03,

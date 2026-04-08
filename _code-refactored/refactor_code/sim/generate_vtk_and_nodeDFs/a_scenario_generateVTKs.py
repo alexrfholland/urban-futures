@@ -21,6 +21,19 @@ if str(CODE_ROOT) not in sys.path:
 
 from refactor_code.sim.generate_interim_state_data.engine_v3 import calculate_under_node_treatment_status
 from refactor_code.sim.setup import params_v3
+from refactor_code.sim.setup.constants import (
+    COLONISE_FULL_ENVELOPE,
+    COLONISE_FULL_GROUND,
+    COLONISE_PARTIAL_ENVELOPE,
+    DECAY_FULL,
+    DECAY_PARTIAL,
+    DEPLOY_FULL_POLE,
+    DEPLOY_FULL_UPGRADE,
+    RECRUIT_FULL,
+    RECRUIT_PARTIAL,
+    RELEASECONTROL_FULL,
+    RELEASECONTROL_PARTIAL,
+)
 from refactor_code.sim.voxel import voxel_a_helper_functions as a_helper_functions
 from refactor_code.sim.voxel import voxel_a_voxeliser as a_voxeliser
 
@@ -38,18 +51,18 @@ from refactor_code.blender.bexport.proposal_framebuffers_vtk import build_blende
 VTK_PROPOSAL_LABEL_DTYPE = "<U64"
 BUILDING_URBAN_VALUES = {"facade", "green roof", "brown roof"}
 
-# --- Proposal intervention string constants ----------------------------------
-PROPOSAL_DECAY_BUFFER_INTERVENTION = "buffer-feature"
-PROPOSAL_DECAY_BRACE_INTERVENTION = "brace-feature"
-PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION = "reduce-pruning"
-PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION = "eliminate-pruning"
-PROPOSAL_COLONISE_REWILD_INTERVENTION = "rewild-ground"
-PROPOSAL_COLONISE_ENRICH_INTERVENTION = "enrich-envelope"
-PROPOSAL_COLONISE_ROUGHEN_INTERVENTION = "roughen-envelope"
-PROPOSAL_RECRUIT_BUFFER_INTERVENTION = "buffer-feature"
-PROPOSAL_RECRUIT_REWILD_INTERVENTION = "rewild-ground"
-PROPOSAL_DEPLOY_STRUCTURE_ADAPT_INTERVENTION = "adapt-utility-pole"
-PROPOSAL_DEPLOY_STRUCTURE_UPGRADE_INTERVENTION = "upgrade-feature"
+# --- Proposal intervention string constants (imported from constants.py) ------
+PROPOSAL_DECAY_BUFFER_INTERVENTION = DECAY_FULL
+PROPOSAL_DECAY_BRACE_INTERVENTION = DECAY_PARTIAL
+PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION = RELEASECONTROL_PARTIAL
+PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION = RELEASECONTROL_FULL
+PROPOSAL_COLONISE_REWILD_INTERVENTION = COLONISE_FULL_GROUND
+PROPOSAL_COLONISE_ENRICH_INTERVENTION = COLONISE_FULL_ENVELOPE
+PROPOSAL_COLONISE_ROUGHEN_INTERVENTION = COLONISE_PARTIAL_ENVELOPE
+PROPOSAL_RECRUIT_BUFFER_INTERVENTION = RECRUIT_PARTIAL
+PROPOSAL_RECRUIT_REWILD_INTERVENTION = RECRUIT_FULL
+PROPOSAL_DEPLOY_STRUCTURE_ADAPT_INTERVENTION = DEPLOY_FULL_POLE
+PROPOSAL_DEPLOY_STRUCTURE_UPGRADE_INTERVENTION = DEPLOY_FULL_UPGRADE
 
 # --- Proposal intervention value sets ----------------------------------------
 # scenario_bioEnvelope values that trigger each decay intervention
@@ -71,8 +84,8 @@ PROPOSAL_COLONISE_ENRICH_INTERVENTION_VALUES = {"greenroof"}
 PROPOSAL_COLONISE_ROUGHEN_INTERVENTION_VALUES = {"brownroof", "livingfacade"}
 
 # scenario_bioEnvelope values that trigger recruit interventions
-PROPOSAL_RECRUIT_BUFFER_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved"}
-PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES = {"otherground", "rewilded"}
+PROPOSAL_RECRUIT_BUFFER_INTERVENTION_VALUES = {"footprint-depaved"}
+PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES = {"node-rewilded", "otherground", "rewilded"}
 PROPOSAL_RECRUIT_DISTANCE_M = 20.0
 
 # forest_control values that trigger release-control interventions
@@ -690,9 +703,9 @@ def assign_v4_proposals_from_bioenvelope(ds):
         colonise_roughen = unset & np.isin(bio_envelope, ["brownroof", "livingfacade"])
 
         colonise_decision[colonise_rewild | colonise_enrich | colonise_roughen] = "proposal-colonise_accepted"
-        colonise_intervention[colonise_rewild] = "rewild-ground"
-        colonise_intervention[colonise_enrich] = "enrich-envelope"
-        colonise_intervention[colonise_roughen] = "roughen-envelope"
+        colonise_intervention[colonise_rewild] = COLONISE_FULL_GROUND
+        colonise_intervention[colonise_enrich] = COLONISE_FULL_ENVELOPE
+        colonise_intervention[colonise_roughen] = COLONISE_PARTIAL_ENVELOPE
 
         ds['proposal_coloniseV4'].values[:] = colonise_decision
         ds['proposal_coloniseV4_intervention'].values[:] = colonise_intervention
@@ -704,12 +717,12 @@ def assign_v4_proposals_from_bioenvelope(ds):
         recruit_intervention = np.asarray(ds['proposal_recruitV4_intervention'].values).astype('<U64')
         unset = recruit_decision == 'not-assessed'
 
-        recruit_buffer = unset & np.isin(bio_envelope, ["node-rewilded", "footprint-depaved"])
-        recruit_rewild = unset & np.isin(bio_envelope, ["otherground", "rewilded"])
+        recruitInterventionPARTIAL = unset & np.isin(bio_envelope, list(PROPOSAL_RECRUIT_BUFFER_INTERVENTION_VALUES))
+        recruitInterventionFULL = unset & np.isin(bio_envelope, list(PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES))
 
-        recruit_decision[recruit_buffer | recruit_rewild] = "proposal-recruit_accepted"
-        recruit_intervention[recruit_buffer] = "buffer-feature"
-        recruit_intervention[recruit_rewild] = "rewild-ground"
+        recruit_decision[recruitInterventionPARTIAL | recruitInterventionFULL] = "proposal-recruit_accepted"
+        recruit_intervention[recruitInterventionPARTIAL] = RECRUIT_PARTIAL
+        recruit_intervention[recruitInterventionFULL] = RECRUIT_FULL
 
         # Reject recruit-accepted voxels within 1.5m of existing trees
         forest_size = _normalize_str_array(ds['forest_size'].values) if 'forest_size' in ds.variables else None
@@ -728,7 +741,7 @@ def assign_v4_proposals_from_bioenvelope(ds):
 
         ds['proposal_recruitV4'].values[:] = recruit_decision
         ds['proposal_recruitV4_intervention'].values[:] = recruit_intervention
-        print(f"V4 recruit from bioenvelope: {int(recruit_buffer.sum())} buffer-feature, {int(recruit_rewild.sum())} rewild-ground")
+        print(f"V4 recruit from bioenvelope: {int(recruitInterventionFULL.sum())} FULL (rewild-larger-patch), {int(recruitInterventionPARTIAL.sum())} PARTIAL (rewild-smaller-patch)")
 
     return ds
 

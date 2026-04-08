@@ -850,6 +850,109 @@ This is where `colonise` and `recruit` are derived, and where
 - Once all three categories are handled, rename V4 -> proposal (drop version
   suffix).
 
+### Allometric Growth And Flat Mortality (2026-04-08)
+
+Replaced the constant growth rate (0.44 cm/yr) with empirically-derived,
+size-dependent allometric growth curves and added a switchable mortality model.
+
+#### Growth Model
+
+Set in `params_v3.py` on all six site/scenario parameter dicts:
+
+```python
+"growth_model": "split",
+"growth_model_precolonial": "fischer",
+"growth_model_colonial": "ulmus",
+```
+
+`split` routes by the `precolonial` column in the tree dataframe:
+
+- **Precolonial trees** (`precolonial == True`): `fischer` — Fischer et al.
+  2010 SI equation calibrated on *Eucalyptus melliodora* (yellow box).
+  `Age = 0.0197135 × π × (DBH/2)²`. Same equation Le Roux et al. 2014 use
+  for their demographic model, so growth and mortality are internally
+  consistent.
+- **Colonial trees** (`precolonial == False`): `ulmus` — McPherson et al. 2016
+  USFS Urban Tree Database, *Ulmus americana* Pacific Northwest.
+  `DBH = -0.707 + 1.817×Age - 0.005×Age²`. Proxy for the English and Dutch
+  elms common in the study sites, following Croeser et al. 2025.
+
+Other available models (switchable via `growth_model`): `constant`, `banks`,
+`sideroxylon`. See `_documentation-refactored/appendix/appendix-g/growth allometry notes.md`
+for full equations, species, regions, and comparison tables.
+
+All models use a virtual-age round-trip: current DBH → infer implied age →
+advance age by step duration → compute new DBH. No age column is tracked.
+
+#### Mortality Model
+
+```python
+"mortality_model": "flat",
+```
+
+- `flat` — raw Le Roux per-cohort rates: 0.06/yr urban, 0.03/yr
+  nature-reserve. Applied uniformly regardless of DBH size class.
+- `shaped` — multiplies the anchor rate by a DBH-cohort adjustment factor
+  (the original v3 behaviour).
+
+Switch by changing `"mortality_model"` in the param dicts.
+
+#### REPLACE Action Fix
+
+Three changes in `engine_v3.py` to fix the death spiral where replaced trees
+were trapped at DBH 2.0:
+
+1. `action` cleared to `"None"` after replanting (was persisting as
+   `"REPLACE"` across pulses, causing `determine_proposal_decay` to skip
+   the tree).
+2. `under-node-treatment` preserved on replace (ground improvement survives
+   the tree).
+3. All stale proposal/intervention state cleared on replaced trees
+   (`proposal-release-control_*`, `proposal-recruit_*`,
+   `proposal-colonise_*`, `recruit_intervention_type`, `recruit_source_id`).
+
+#### Large Tree Mortality (2026-04-08)
+
+Extended annual mortality to include `large` trees (previously only `small` and
+`medium`). Le Roux's original model uses density-dependent mortality across all
+DBH cohorts; our prior restriction to small/medium was an implementation choice,
+not a data constraint. With flat mortality at 0.06/yr, large trees now decline
+unless replenished through the growth pipeline.
+
+#### Snag Duration (2026-04-08)
+
+Changed snag stage duration mode from 50 to 40 years:
+`triangular_duration(0, 40, 100)`.
+
+Lifecycle stage durations (all triangular distributions):
+
+| Stage | Min | Mode | Max |
+|---|---:|---:|---:|
+| senescing | 10 | 90 | 200 |
+| snag | 0 | 40 | 100 |
+| fallen | 10 | 40 | 100 |
+| decayed | 30 | 40 | 75 |
+
+#### Decay Rejection Tracking (2026-04-08)
+
+Added `_decay_rejected_this_state` boolean column to accumulate decay rejections
+across all pulses within a timestep. Previously, `proposal-decay_decision` was
+reset to `not-assessed` each pulse and cleared on replaced trees, losing the
+rejection signal. Now:
+
+- `_decay_rejected_this_state = False` initialised before the pulse loop
+- Set to `True` on any tree that triggers REPLACE during any pulse
+- After all pulses, mask is applied to stamp `proposal-decay_rejected` into the
+  saved output, then the tracking column is dropped
+
+#### Run Root
+
+```
+REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/v4
+```
+
+Run with `REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/v4`. All sites, all scenarios, years 0–180 including yr 1.
+
 ## Naming Rule For Active Legacy Dependencies
 
 When active legacy dependency scripts are moved into the live structure:

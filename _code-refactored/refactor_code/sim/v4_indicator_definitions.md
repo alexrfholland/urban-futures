@@ -80,15 +80,15 @@ V4 indicators use the `acquire`/`communicate`/`reproduce` capability naming.
 | Lizard.reproduce.nurse-log | Lizard | reproduce | `stat_fallen log > 0` | |
 | Lizard.reproduce.fallen-tree | Lizard | reproduce | `forest_size in fallen\|decayed` | |
 | Lizard.reproduce | Lizard | reproduce | Union of nurse-log + fallen-tree | Aggregate |
-| Tree.acquire.moderated | Tree | acquire | `proposal_release_controlV4_intervention == "reduce-pruning"` | Park trees with reduced pruning |
-| Tree.acquire.autonomous | Tree | acquire | `proposal_release_controlV4_intervention == "eliminate-pruning"` | Reserve/improved trees with pruning eliminated |
+| Tree.acquire.moderated | Tree | acquire | `proposal_release_controlV4_intervention == "reduce-canopy-pruning"` | Park trees with reduced pruning |
+| Tree.acquire.autonomous | Tree | acquire | `proposal_release_controlV4_intervention == "eliminate-canopy-pruning"` | Reserve/improved trees with pruning eliminated |
 | Tree.acquire | Tree | acquire | Union of moderated + autonomous | Total autonomous growth |
 | Tree.communicate.snag | Tree | communicate | `forest_size == "snag"` | |
 | Tree.communicate.fallen | Tree | communicate | `forest_size == "fallen"` | |
 | Tree.communicate.decayed | Tree | communicate | `forest_size == "decayed"` | |
 | Tree.communicate | Tree | communicate | `forest_size in snag\|fallen\|decayed` | Drops `senescing` from V3 |
-| Tree.reproduce.smaller-patches-rewild | Tree | reproduce | `proposal_recruitV4_intervention == "buffer-feature"` | node-rewilded, footprint-depaved |
-| Tree.reproduce.larger-patches-rewild | Tree | reproduce | `proposal_recruitV4_intervention == "rewild-ground"` | otherground, rewilded |
+| Tree.reproduce.smaller-patches-rewild | Tree | reproduce | `proposal_recruitV4_intervention == "rewild-smaller-patch"` | node-rewilded, footprint-depaved |
+| Tree.reproduce.larger-patches-rewild | Tree | reproduce | `proposal_recruitV4_intervention == "rewild-larger-patch"` | otherground, rewilded |
 | Tree.reproduce | Tree | reproduce | Union of smaller + larger patches | Baseline borrowed from `indicator_Tree_generations_grassland` |
 
 > **TODO:** Baseline recruit also includes saplings — consider whether to do this or not.

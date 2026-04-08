@@ -29,6 +29,19 @@ if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
 from refactor_code.sim.setup import params_v3
+from refactor_code.sim.setup.constants import (
+    COLONISE_FULL_ENVELOPE,
+    COLONISE_FULL_GROUND,
+    COLONISE_PARTIAL_ENVELOPE,
+    DECAY_FULL,
+    DECAY_PARTIAL,
+    DEPLOY_FULL_POLE,
+    DEPLOY_FULL_UPGRADE,
+    RECRUIT_FULL,
+    RECRUIT_PARTIAL,
+    RELEASECONTROL_FULL,
+    RELEASECONTROL_PARTIAL,
+)
 from refactor_code.sim.voxel import voxel_a_helper_functions as a_helper_functions
 
 from refactor_code.paths import (
@@ -260,18 +273,18 @@ URBAN_ELEMENTS = [
 REWILDING_TYPES = ['footprint-depaved', 'exoskeleton', 'node-rewilded', 'none']
 PROPOSAL_LABEL_DTYPE = "<U64"
 
-# --- Proposal intervention string constants ----------------------------------
-PROPOSAL_DECAY_BUFFER_INTERVENTION = "buffer-feature"
-PROPOSAL_DECAY_BRACE_INTERVENTION = "brace-feature"
-PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION = "reduce-pruning"
-PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION = "eliminate-pruning"
-PROPOSAL_COLONISE_REWILD_INTERVENTION = "rewild-ground"
-PROPOSAL_COLONISE_ENRICH_INTERVENTION = "enrich-envelope"
-PROPOSAL_COLONISE_ROUGHEN_INTERVENTION = "roughen-envelope"
-PROPOSAL_RECRUIT_BUFFER_INTERVENTION = "buffer-feature"
-PROPOSAL_RECRUIT_REWILD_INTERVENTION = "rewild-ground"
-PROPOSAL_DEPLOY_STRUCTURE_ADAPT_INTERVENTION = "adapt-utility-pole"
-PROPOSAL_DEPLOY_STRUCTURE_UPGRADE_INTERVENTION = "upgrade-feature"
+# --- Proposal intervention string constants (imported from constants.py) ------
+PROPOSAL_DECAY_BUFFER_INTERVENTION = DECAY_FULL
+PROPOSAL_DECAY_BRACE_INTERVENTION = DECAY_PARTIAL
+PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION = RELEASECONTROL_PARTIAL
+PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION = RELEASECONTROL_FULL
+PROPOSAL_COLONISE_REWILD_INTERVENTION = COLONISE_FULL_GROUND
+PROPOSAL_COLONISE_ENRICH_INTERVENTION = COLONISE_FULL_ENVELOPE
+PROPOSAL_COLONISE_ROUGHEN_INTERVENTION = COLONISE_PARTIAL_ENVELOPE
+PROPOSAL_RECRUIT_BUFFER_INTERVENTION = RECRUIT_PARTIAL
+PROPOSAL_RECRUIT_REWILD_INTERVENTION = RECRUIT_FULL
+PROPOSAL_DEPLOY_STRUCTURE_ADAPT_INTERVENTION = DEPLOY_FULL_POLE
+PROPOSAL_DEPLOY_STRUCTURE_UPGRADE_INTERVENTION = DEPLOY_FULL_UPGRADE
 
 # --- Proposal intervention value sets ----------------------------------------
 PROPOSAL_DECAY_BUFFER_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved"}
@@ -1103,7 +1116,7 @@ def assign_v4_proposals_per_voxel(polydata):
     if upgrade_mask.any():
         deploy_decision[upgrade_mask] = "proposal-deploy-structure_accepted"
         deploy_intervention = np.asarray(polydata.point_data["proposal_deploy_structureV4_intervention"]).astype("<U64")
-        deploy_intervention[upgrade_mask] = "upgrade-feature"
+        deploy_intervention[upgrade_mask] = DEPLOY_FULL_UPGRADE
         polydata.point_data["proposal_deploy_structureV4"] = deploy_decision
         polydata.point_data["proposal_deploy_structureV4_intervention"] = deploy_intervention
         print(f"V4 deploy-structure per-voxel: {int(upgrade_mask.sum())} upgrade-feature")

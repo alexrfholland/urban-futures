@@ -41,6 +41,12 @@ from refactor_code.paths import (  # noqa: E402
     scenario_baseline_trees_csv_path,
 )
 from refactor_code.sim.setup.structure_ids import assign_baseline_tree_structure_ids  # noqa: E402
+from refactor_code.sim.setup.constants import (  # noqa: E402
+    COLONISE_FULL_GROUND,
+    DECAY_FULL,
+    RECRUIT_FULL,
+    RELEASECONTROL_FULL,
+)
 
 
 APPROVED_CANONICAL_TEMPLATE_ROOT = (
@@ -147,12 +153,10 @@ def require_tree_template_root(template_root: str | Path | None = None) -> Path:
 
     configured = os.environ.get("TREE_TEMPLATE_ROOT")
     if not configured:
-        raise ValueError(
-            "TREE_TEMPLATE_ROOT must be set for v3 baseline work. "
-            f"Approved canonical root: {APPROVED_CANONICAL_TEMPLATE_ROOT}"
-        )
-
-    resolved = Path(configured).resolve()
+        from refactor_code.paths import tree_template_root
+        resolved = tree_template_root().resolve()
+    else:
+        resolved = Path(configured).resolve()
     if not resolved.exists():
         raise FileNotFoundError(f"TREE_TEMPLATE_ROOT does not exist: {resolved}")
     return resolved
@@ -736,22 +740,22 @@ def _annotate_baseline_combined_polydata(
     decay_decision = np.full(total_points, "not-assessed", dtype="<U64")
     decay_intervention = np.full(total_points, "none", dtype="<U64")
     decay_decision[decay_mask] = "proposal-decay_accepted"
-    decay_intervention[decay_mask] = "buffer-feature"
+    decay_intervention[decay_mask] = DECAY_FULL
 
     release_decision = np.full(total_points, "not-assessed", dtype="<U64")
     release_intervention = np.full(total_points, "none", dtype="<U64")
     release_decision[release_control_mask] = "proposal-release-control_accepted"
-    release_intervention[release_control_mask] = "eliminate-pruning"
+    release_intervention[release_control_mask] = RELEASECONTROL_FULL
 
     recruit_decision = np.full(total_points, "not-assessed", dtype="<U64")
     recruit_intervention = np.full(total_points, "none", dtype="<U64")
     recruit_decision[recruit_mask] = "proposal-recruit_accepted"
-    recruit_intervention[recruit_mask] = "rewild-ground"
+    recruit_intervention[recruit_mask] = RECRUIT_FULL
 
     colonise_decision = np.full(total_points, "not-assessed", dtype="<U64")
     colonise_intervention = np.full(total_points, "none", dtype="<U64")
     colonise_decision[colonise_mask] = "proposal-colonise_accepted"
-    colonise_intervention[colonise_mask] = "rewild-ground"
+    colonise_intervention[colonise_mask] = COLONISE_FULL_GROUND
 
     combined_poly.point_data["proposal_decayV4"] = decay_decision
     combined_poly.point_data["proposal_decayV4_intervention"] = decay_intervention

@@ -16,6 +16,17 @@ if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
 from refactor_code.sim.setup import a_scenario_initialiseDS, params_v3  # noqa: E402
+from refactor_code.sim.setup.constants import (  # noqa: E402
+    COLONISE_FULL_GROUND,
+    DECAY_FULL,
+    DECAY_PARTIAL,
+    DEPLOY_FULL_LOG,
+    DEPLOY_FULL_POLE,
+    RECRUIT_FULL,
+    RECRUIT_PARTIAL,
+    RELEASECONTROL_FULL,
+    RELEASECONTROL_PARTIAL,
+)
 
 from refactor_code.paths import (  # noqa: E402
     scenario_log_df_path,
@@ -45,8 +56,8 @@ ELIMINATE_PRUNING_TO_PARK_YEARS = 20
 ELIMINATE_PRUNING_TO_LOW_YEARS = 40
 PRUNING_TARGET_ORDER = {
     "standard-pruning": 0,
-    "reduce-pruning": 1,
-    "eliminate-pruning": 2,
+    RELEASECONTROL_PARTIAL: 1,
+    RELEASECONTROL_FULL: 2,
 }
 UNDER_NODE_TREATMENT_ORDER = {
     "paved": 0,
@@ -57,17 +68,17 @@ UNDER_NODE_TREATMENT_ORDER = {
     "node-rewilded": 3,
 }
 RELEASE_SUPPORT_BY_REWILDING = {
-    "node-rewilded": "eliminate-pruning",
-    "footprint-depaved": "reduce-pruning",
+    "node-rewilded": RELEASECONTROL_FULL,
+    "footprint-depaved": RELEASECONTROL_PARTIAL,
 }
 DECAY_INTERVENTION_BY_TREATMENT = {
-    "node-rewilded": "buffer-feature",
-    "footprint-depaved": "buffer-feature",
-    "exoskeleton": "brace-feature",
+    "node-rewilded": DECAY_FULL,
+    "footprint-depaved": DECAY_FULL,
+    "exoskeleton": DECAY_PARTIAL,
 }
 RELEASE_TREATMENT_BY_INTERVENTION = {
-    "reduce-pruning": "footprint-depaved",
-    "eliminate-pruning": "node-rewilded",
+    RELEASECONTROL_PARTIAL: "footprint-depaved",
+    RELEASECONTROL_FULL: "node-rewilded",
     "standard-pruning": "paved",
     "none": "paved",
 }
@@ -136,9 +147,9 @@ def _merge_under_node_treatments(current: pd.Series, proposed: pd.Series) -> pd.
 
 def _legacy_control_to_target(control_value: str) -> str:
     if control_value == "park-tree":
-        return "reduce-pruning"
+        return RELEASECONTROL_PARTIAL
     if control_value in {"reserve-tree", "improved-tree"}:
-        return "eliminate-pruning"
+        return RELEASECONTROL_FULL
     return "standard-pruning"
 
 
@@ -303,6 +314,7 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         df[column] = _as_object_series(df.get(column), len(df), default)
     df["recruit_intervention_type"] = _as_object_series(df.get("recruit_intervention_type"), len(df), "none")
     df["recruit_source_id"] = _as_object_series(df.get("recruit_source_id"), len(df), "none")
+    df["recruit_mechanism"] = _as_object_series(df.get("recruit_mechanism"), len(df), "none")
 
     df["under-node-treatment"] = df["under-node-treatment"].replace({"none": "paved", "None": "paved"})
     if df["control_reached"].isna().any():
@@ -322,7 +334,7 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     blank_colonise_intervention = _blank_like(df["proposal-colonise_intervention"], {"not-assessed"})
     blank_colonise_decision = _blank_like(df["proposal-colonise_decision"], {"not-assessed"})
     df.loc[blank_colonise_decision, "proposal-colonise_decision"] = np.where(
-        df.loc[blank_colonise_decision, "proposal-colonise_intervention"].eq("rewild-ground"),
+        df.loc[blank_colonise_decision, "proposal-colonise_intervention"].eq(COLONISE_FULL_GROUND),
         "proposal-colonise_accepted",
         "proposal-colonise_rejected",
     )
@@ -437,18 +449,106 @@ def split_window_into_pulses(previous_year: int, absolute_year: int, max_pulse_y
     return pulses
 
 
+def _grow_dbh_constant(dbh: np.ndarray, step_years: float, params: dict) -> np.ndarray:
+    """Original constant growth: mean of growth_factor_range per year."""
+    growth_factor = np.mean(params["growth_factor_range"])
+    return dbh + growth_factor * step_years
+
+
+def _grow_dbh_fischer(dbh: np.ndarray, step_years: float, _params: dict) -> np.ndarray:
+    """Fischer SI (yellow box): Age = 0.0197135 * pi * (DBH/2)^2.
+
+    Virtual-age round-trip: DBH -> age -> advance -> new DBH.
+    Used by Le Roux for their cohort model.
+    """
+    k = 0.0197135 * np.pi / 4.0  # 0.01548
+    virtual_age = k * dbh ** 2
+    new_age = virtual_age + step_years
+    return np.sqrt(new_age / k)
+
+
+def _grow_dbh_sideroxylon(dbh: np.ndarray, step_years: float, _params: dict) -> np.ndarray:
+    """E. sideroxylon (USFS InlEmp): DBH = 4.85 + 1.82*Age - 0.011*Age^2.
+
+    Quadratic, valid to ~80 cm DBH.  R^2 = 0.963.
+    """
+    a, b, c = 4.85016, 1.82135, -0.01093
+    disc = b ** 2 - 4 * (-c) * (dbh - a)
+    disc = np.maximum(disc, 0.0)
+    virtual_age = (b - np.sqrt(disc)) / (2 * (-c))
+    virtual_age = np.maximum(virtual_age, 0.0)
+    new_age = virtual_age + step_years
+    new_dbh = a + b * new_age + c * new_age ** 2
+    return np.maximum(new_dbh, dbh)  # never shrink
+
+
+def _grow_dbh_banks(dbh: np.ndarray, step_years: float, _params: dict) -> np.ndarray:
+    """Banks power law (yellow box): DBH = 4.50 * Age^0.6.
+
+    Empirical fit to Canberra yellow box cohorts.
+    """
+    coeff, exp = 4.50, 0.6
+    virtual_age = (dbh / coeff) ** (1.0 / exp)
+    new_age = virtual_age + step_years
+    return coeff * new_age ** exp
+
+
+def _grow_dbh_ulmus(dbh: np.ndarray, step_years: float, _params: dict) -> np.ndarray:
+    """Ulmus americana (USFS PacfNW): DBH = -0.707 + 1.817*Age - 0.005*Age^2.
+
+    Quadratic, valid to ~138 cm DBH.  R^2 = 0.982.
+    """
+    a, b, c = -0.70738, 1.81652, -0.00501
+    disc = b ** 2 - 4 * (-c) * (dbh - a)
+    disc = np.maximum(disc, 0.0)
+    virtual_age = (b - np.sqrt(disc)) / (2 * (-c))
+    virtual_age = np.maximum(virtual_age, 0.0)
+    new_age = virtual_age + step_years
+    new_dbh = a + b * new_age + c * new_age ** 2
+    return np.maximum(new_dbh, dbh)  # never shrink
+
+
+GROWTH_MODELS = {
+    "constant": _grow_dbh_constant,
+    "fischer": _grow_dbh_fischer,
+    "sideroxylon": _grow_dbh_sideroxylon,
+    "banks": _grow_dbh_banks,
+    "ulmus": _grow_dbh_ulmus,
+}
+
+
 def age_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     df = df.copy()
     step_years = params["step_years"]
     if step_years <= 0:
         return df
 
-    growth_factor_per_year = np.mean(params["growth_factor_range"])
+    growth_model = params.get("growth_model", "constant")
     living_mask = df["size"].isin(["small", "medium", "large"])
     previous_size = df["size"].copy()
-    df.loc[living_mask, "diameter_breast_height"] = (
-        df.loc[living_mask, "diameter_breast_height"] + (growth_factor_per_year * step_years)
-    )
+    dbh = df.loc[living_mask, "diameter_breast_height"].values.astype(float)
+
+    # Per-tree growth noise: each tree experiences ±15% variation in effective
+    # growing time, representing natural variation in site conditions.
+    seed = int(params.get("seed", 42))
+    growth_rng = np.random.default_rng(seed + 6000 + int(params["absolute_year"]))
+    n_living = int(living_mask.sum())
+    effective_step = step_years * growth_rng.uniform(0.85, 1.15, size=n_living)
+
+    if growth_model == "split":
+        # Colonial trees use elm curve, precolonial use eucalypt curve
+        euc_model = params.get("growth_model_precolonial", "fischer")
+        elm_model = params.get("growth_model_colonial", "ulmus")
+        precol = df.loc[living_mask, "precolonial"].values.astype(bool)
+        new_dbh = dbh.copy()
+        if precol.any():
+            new_dbh[precol] = GROWTH_MODELS[euc_model](dbh[precol], effective_step[precol], params)
+        if (~precol).any():
+            new_dbh[~precol] = GROWTH_MODELS[elm_model](dbh[~precol], effective_step[~precol], params)
+        df.loc[living_mask, "diameter_breast_height"] = new_dbh
+    else:
+        grow_fn = GROWTH_MODELS[growth_model]
+        df.loc[living_mask, "diameter_breast_height"] = grow_fn(dbh, effective_step, params)
 
     growth_mask = df["size"].isin(["small", "medium"])
     df.loc[growth_mask, "size"] = pd.cut(
@@ -467,8 +567,7 @@ def age_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
 def _mortality_dbh_cohorts(dbh_values: pd.Series) -> pd.Series:
     """Return 10 cm DBH cohort indices for mortality thinning."""
     dbh = _numeric_series(dbh_values, default=0.0).clip(lower=0.0)
-    cohort_index = np.floor(dbh / 10.0).astype(int)
-    cohort_index = cohort_index.clip(lower=0, upper=7)
+    cohort_index = np.floor(dbh / 10.0).astype(int).clip(lower=0)
     return pd.Series(cohort_index, index=dbh_values.index, dtype="int64")
 
 
@@ -479,6 +578,11 @@ def _annual_mortality_rate_for_cohort(cohort: int, *, reserve_like: bool, params
             0.03 if reserve_like else 0.06,
         )
     )
+    mortality_model = params.get("mortality_model", "shaped")
+    if mortality_model == "flat":
+        # Flat Le Roux: same anchor rate for all cohorts.
+        return float(np.clip(anchor, 0.0, 1.0))
+    # Default shaped: anchor × cohort-specific factor.
     factors = RESERVE_MORTALITY_CURVE_FACTORS if reserve_like else URBAN_MORTALITY_CURVE_FACTORS
     cohort_idx = int(np.clip(cohort, 0, len(factors) - 1))
     return float(np.clip(anchor * factors[cohort_idx], 0.0, 1.0))
@@ -490,20 +594,20 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
     if step_years <= 0:
         return df
 
-    candidate_mask = df["size"].isin(["small", "medium"])
+    candidate_mask = df["size"].isin(["small", "medium", "large"])
     if not candidate_mask.any():
         return df
 
     reserve_like_mask = candidate_mask & (
-        df["proposal-recruit_intervention"].eq("rewild-ground")
-        | df["recruit_intervention_type"].eq("rewild-ground")
+        df["proposal-recruit_intervention"].eq(RECRUIT_FULL)
+        | df["recruit_intervention_type"].eq(RECRUIT_FULL)
     )
     dbh_cohorts = _mortality_dbh_cohorts(df["diameter_breast_height"])
     rng = np.random.default_rng(seed + 2000 + int(params["absolute_year"]))
     mortality_mask = pd.Series(False, index=df.index, dtype=bool)
 
-    # Thin small/medium trees by DBH cohort so each cohort retains a stable
-    # surviving proportion, rather than rolling every row independently.
+    # Thin small/medium/large trees by DBH cohort so each cohort retains a
+    # stable surviving proportion, rather than rolling every row independently.
     for is_reserve_like in (False, True):
         context_mask = candidate_mask & reserve_like_mask.eq(is_reserve_like)
         if not context_mask.any():
@@ -517,6 +621,9 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
                 continue
 
             annual_rate = _annual_mortality_rate_for_cohort(int(cohort), reserve_like=is_reserve_like, params=params)
+            # Large trees (cohort 8+ = 80cm+) get half the mortality rate
+            if cohort >= 8:
+                annual_rate *= 0.5
             step_death_probability = 1.0 - np.power(1.0 - annual_rate, step_years)
             survivor_count = int(np.rint(cohort_size * (1.0 - step_death_probability)))
             survivor_count = max(0, min(cohort_size, survivor_count))
@@ -595,6 +702,7 @@ def determine_proposal_decay(df: pd.DataFrame, params: dict, seed: int = 42) -> 
     df.loc[age_in_place_mask, "proposal-decay_decision"] = "proposal-decay_accepted"
     df.loc[replace_mask, "action"] = "REPLACE"
     df.loc[replace_mask, "proposal-decay_decision"] = "proposal-decay_rejected"
+    df.loc[replace_mask, "_decay_rejected_this_state"] = True
     return df
 
 
@@ -644,7 +752,7 @@ def apply_proposal_decay_accepted_lifecycle_changes(
         & df["snag_duration_years"].notna()
         & ((current_year - df["became_snag_at_year"]) >= df["snag_duration_years"])
     )
-    brace_collapse_mask = snag_to_fallen_mask & df["proposal-decay_intervention"].eq("brace-feature")
+    brace_collapse_mask = snag_to_fallen_mask & df["proposal-decay_intervention"].eq(DECAY_PARTIAL)
     df.loc[snag_to_fallen_mask & ~brace_collapse_mask, "size"] = "fallen"
     df.loc[brace_collapse_mask, "action"] = "REPLACE"
     df.loc[brace_collapse_mask, "replacement_reason"] = "brace-collapse"
@@ -669,9 +777,17 @@ def apply_proposal_decay_rejected_changes(df: pd.DataFrame, params: dict) -> pd.
     growth_factor = np.mean(params["growth_factor_range"])
     current_ule = df.loc[replace_mask, "useful_life_expectancy"].to_numpy(dtype=float)
     replacement_growth_years = np.clip(-np.minimum(0, current_ule), 0, step_years)
-    replacement_dbh = 2 + (growth_factor * replacement_growth_years)
+    # Stagger replant DBH using Fischer growth with random arrival within pulse.
+    fischer_k = 0.0197135 * np.pi / 4.0
+    seed = int(params.get("seed", 42))
+    replant_rng = np.random.default_rng(seed + 5000 + int(params["absolute_year"]))
+    arrival_offset = replant_rng.uniform(0, step_years, size=replace_mask.sum())
+    growth_time = np.maximum(replacement_growth_years, step_years - arrival_offset)
+    start_age = fischer_k * 4.0  # 2cm start
+    replacement_dbh = np.sqrt((start_age + growth_time) / fischer_k)
 
-    df.loc[replace_mask, "diameter_breast_height"] = replacement_dbh
+    df.loc[replace_mask, "diameter_breast_height"] = np.round(replacement_dbh, 1)
+    df.loc[replace_mask, "action"] = "None"
     df.loc[replace_mask, "precolonial"] = True
     df.loc[replace_mask, "useful_life_expectancy"] = 120 - replacement_growth_years
     df.loc[replace_mask, "hasbeenReplanted"] = True
@@ -681,9 +797,23 @@ def apply_proposal_decay_rejected_changes(df: pd.DataFrame, params: dict) -> pd.
         labels=["small", "medium", "large"],
     ).astype(str)
     df.loc[replace_mask, "lifecycle_state"] = "standing"
-    df.loc[replace_mask, "under-node-treatment"] = "paved"
+    # Ground treatment persists — the site improvement survives the tree.
+    # under-node-treatment is NOT reset to "paved".
     df.loc[replace_mask, "proposal-decay_decision"] = "not-assessed"
     df.loc[replace_mask, "proposal-decay_intervention"] = "none"
+    # Clear release-control accumulators so the new sapling starts fresh,
+    # but the ground treatment (under-node-treatment) is inherited.
+    df.loc[replace_mask, "proposal-release-control_decision"] = "not-assessed"
+    df.loc[replace_mask, "proposal-release-control_intervention"] = "none"
+    df.loc[replace_mask, "proposal-release-control_target_years"] = 0.0
+    df.loc[replace_mask, "proposal-release-control_years"] = 0.0
+    # Clear recruit/colonise state — new tree, fresh assessment.
+    df.loc[replace_mask, "proposal-recruit_decision"] = "not-assessed"
+    df.loc[replace_mask, "proposal-recruit_intervention"] = "none"
+    df.loc[replace_mask, "recruit_intervention_type"] = "none"
+    df.loc[replace_mask, "recruit_source_id"] = "none"
+    df.loc[replace_mask, "proposal-colonise_decision"] = "not-assessed"
+    df.loc[replace_mask, "proposal-colonise_intervention"] = "none"
     df.loc[replace_mask, "early_death_at_year"] = np.nan
     df.loc[replace_mask, "became_large_at_year"] = np.nan
     df.loc[replace_mask, "became_senescing_at_year"] = np.nan
@@ -738,7 +868,7 @@ def refresh_colonise_support(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["proposal-colonise_intervention"] = "none"
     ground_mask = df["under-node-treatment"].isin(["node-rewilded", "footprint-depaved"])
-    df.loc[ground_mask, "proposal-colonise_intervention"] = "rewild-ground"
+    df.loc[ground_mask, "proposal-colonise_intervention"] = COLONISE_FULL_GROUND
     df["proposal-colonise_decision"] = np.where(
         ground_mask.to_numpy(dtype=bool),
         "proposal-colonise_accepted",
@@ -752,13 +882,13 @@ def _target_rank(values: pd.Series) -> pd.Series:
 
 
 def _realized_control_from_years(release_intervention: str, release_years: float) -> str:
-    if release_intervention == "eliminate-pruning":
+    if release_intervention == RELEASECONTROL_FULL:
         if release_years >= ELIMINATE_PRUNING_TO_LOW_YEARS:
             return LOW_CONTROL_STATE
         if release_years >= ELIMINATE_PRUNING_TO_PARK_YEARS:
             return "park-tree"
         return "street-tree"
-    if release_intervention == "reduce-pruning":
+    if release_intervention == RELEASECONTROL_PARTIAL:
         if release_years >= REDUCE_PRUNING_TO_PARK_YEARS:
             return "park-tree"
         return "street-tree"
@@ -836,8 +966,8 @@ def apply_release_control(df: pd.DataFrame, params: dict) -> pd.DataFrame:
 
     support_from_target = {
         "standard-pruning": "none",
-        "reduce-pruning": "reduce-pruning",
-        "eliminate-pruning": "eliminate-pruning",
+        RELEASECONTROL_PARTIAL: RELEASECONTROL_PARTIAL,
+        RELEASECONTROL_FULL: RELEASECONTROL_FULL,
     }
     accepted_release_mask = df["proposal-release-control_decision"].eq("proposal-release-control_accepted")
     df.loc[accepted_release_mask, "proposal-release-control_intervention"] = (
@@ -1125,6 +1255,8 @@ def _make_new_tree_record(
     recruit_intervention_type: str,
     recruit_source_id: str,
     recruit_year: int,
+    under_node_treatment: str = "none",
+    recruit_mechanism: str = "none",
 ) -> dict:
     record = dict(df_template)
     x, y, z = position
@@ -1149,13 +1281,14 @@ def _make_new_tree_record(
             "isNewTree": True,
             "isRewildedTree": True,
             "hasbeenReplanted": False,
-            "under-node-treatment": "paved",
+            "under-node-treatment": under_node_treatment,
+            "recruit_mechanism": recruit_mechanism,
             "action": "None",
             "replacement_reason": "none",
             "proposal-decay_decision": "not-assessed",
             "proposal-decay_intervention": "none",
             "proposal-release-control_decision": "proposal-release-control_accepted",
-            "proposal-release-control_intervention": "eliminate-pruning",
+            "proposal-release-control_intervention": RELEASECONTROL_FULL,
             "proposal-release-control_target_years": float(ELIMINATE_PRUNING_TO_LOW_YEARS),
             "proposal-release-control_years": float(ELIMINATE_PRUNING_TO_LOW_YEARS),
             "proposal-recruit_decision": "proposal-recruit_accepted",
@@ -1275,9 +1408,13 @@ def apply_recruit(
     node_telemetry: dict[str, dict[str, object]] = {}
     existing_mask = (~df["isNewTree"].fillna(False)) & (~df["size"].isin(ABSENT_TREE_SIZES))
     node_support_mask = existing_mask & df["under-node-treatment"].isin(["node-rewilded", "footprint-depaved"])
+    node_rewilded_mask = node_support_mask & df["under-node-treatment"].eq("node-rewilded")
+    footprint_depaved_mask = node_support_mask & df["under-node-treatment"].eq("footprint-depaved")
     df.loc[node_support_mask, "proposal-recruit_decision"] = "proposal-recruit_accepted"
-    df.loc[node_support_mask, "proposal-recruit_intervention"] = "buffer-feature"
-    node_occupancy = _recruit_occupancy_counts(df, "buffer-feature")
+    df.loc[node_rewilded_mask, "proposal-recruit_intervention"] = RECRUIT_FULL
+    df.loc[footprint_depaved_mask, "proposal-recruit_intervention"] = RECRUIT_PARTIAL
+    node_occupancy_full = _recruit_occupancy_counts(df, RECRUIT_FULL)
+    node_occupancy_partial = _recruit_occupancy_counts(df, RECRUIT_PARTIAL)
     if node_support_mask.any():
         temp_area = np.where(
             df.loc[node_support_mask, "under-node-treatment"].eq("node-rewilded"),
@@ -1294,6 +1431,9 @@ def apply_recruit(
                 fallback="unknown",
             )
             source_treatment = str(parent_row.get("under-node-treatment", "none"))
+            is_node_rewilded = source_treatment == "node-rewilded"
+            recruit_type = RECRUIT_FULL if is_node_rewilded else RECRUIT_PARTIAL
+            node_occupancy = node_occupancy_full if is_node_rewilded else node_occupancy_partial
             parent_position = (
                 float(parent_row["x"]),
                 float(parent_row["y"]),
@@ -1309,7 +1449,7 @@ def apply_recruit(
                     "assessed_year": absolute_year,
                     "pulse_start_year": int(params["previous_year"]),
                     "pulse_end_year": absolute_year,
-                    "recruit_type": "buffer-feature",
+                    "recruit_type": recruit_type,
                     "source_id": source_id,
                     "source_treatment": source_treatment,
                     "candidate_count": 0,
@@ -1367,10 +1507,12 @@ def apply_recruit(
                         ds=ds,
                         voxel_index=voxel_index,
                         position=candidate_position,
-                        recruit_intervention="buffer-feature",
-                        recruit_intervention_type="buffer-feature",
+                        recruit_intervention=recruit_type,
+                        recruit_intervention_type=recruit_type,
                         recruit_source_id=source_id,
                         recruit_year=absolute_year,
+                        under_node_treatment=source_treatment,
+                        recruit_mechanism="node",
                     )
                 )
                 accepted_positions.append(candidate_position)
@@ -1415,10 +1557,12 @@ def apply_recruit(
                             ds=ds,
                             voxel_index=voxel_index,
                             position=candidate_position,
-                            recruit_intervention="buffer-feature",
-                            recruit_intervention_type="buffer-feature",
+                            recruit_intervention=recruit_type,
+                            recruit_intervention_type=recruit_type,
                             recruit_source_id=source_id,
                             recruit_year=absolute_year,
+                            under_node_treatment=source_treatment,
+                            recruit_mechanism="node",
                         )
                     )
                     accepted_positions.append(candidate_position)
@@ -1451,7 +1595,7 @@ def apply_recruit(
             )
             ground_source_to_voxels.setdefault(source_id, []).append(int(voxel_index))
 
-        ground_occupancy = _recruit_occupancy_counts(df, "rewild-ground")
+        ground_occupancy = _recruit_occupancy_counts(df, RECRUIT_FULL)
         voxel_area_sqm = ds.attrs["voxel_size"] * ds.attrs["voxel_size"]
 
         for source_id, voxel_indices in ground_source_to_voxels.items():
@@ -1467,7 +1611,7 @@ def apply_recruit(
                     "assessed_year": absolute_year,
                     "pulse_start_year": int(params["previous_year"]),
                     "pulse_end_year": absolute_year,
-                    "recruit_type": "rewild-ground",
+                    "recruit_type": RECRUIT_FULL,
                     "source_id": source_id,
                     "source_treatment": "scenario_rewildingPlantings",
                     "candidate_count": int(len(voxel_indices)),
@@ -1507,10 +1651,12 @@ def apply_recruit(
                         ds=ds,
                         voxel_index=int(voxel_index),
                         position=candidate_position,
-                        recruit_intervention="rewild-ground",
-                        recruit_intervention_type="rewild-ground",
+                        recruit_intervention=RECRUIT_FULL,
+                        recruit_intervention_type=RECRUIT_FULL,
                         recruit_source_id=source_id,
                         recruit_year=absolute_year,
+                        under_node_treatment="scenario-rewilded",
+                        recruit_mechanism="ground",
                     )
                 )
                 accepted_positions.append(candidate_position)
@@ -1519,7 +1665,22 @@ def apply_recruit(
             telemetry["unfilled"] += max(0, source_quota - ground_occupancy.get(source_id, 0))
 
     if node_candidates or turn_candidates:
-        df = pd.concat([df, pd.DataFrame(node_candidates + turn_candidates)], ignore_index=True)
+        new_trees = pd.DataFrame(node_candidates + turn_candidates)
+        # Stagger recruit DBH by simulating random arrival times within the pulse.
+        # Each recruit arrives at a uniform random point in [0, step_years] and
+        # pre-grows from 2cm using Fischer for the remaining time in the pulse.
+        n_new = len(new_trees)
+        if n_new > 0 and step_years > 0:
+            fischer_k = 0.0197135 * np.pi / 4.0
+            start_dbh = 2.0
+            stagger_rng = np.random.default_rng(seed + 4000 + int(params["absolute_year"]))
+            arrival_offset = stagger_rng.uniform(0, step_years, size=n_new)
+            growth_time = step_years - arrival_offset
+            start_age = fischer_k * start_dbh ** 2
+            new_trees["diameter_breast_height"] = np.round(
+                np.sqrt((start_age + growth_time) / fischer_k), 1
+            )
+        df = pd.concat([df, new_trees], ignore_index=True)
 
     if telemetry_rows is not None:
         telemetry_rows.extend(node_telemetry.values())
@@ -1542,7 +1703,7 @@ def assign_logs(log_df: pd.DataFrame | None, params: dict) -> pd.DataFrame | Non
         "proposal-deploy-structure_accepted",
         "not-assessed",
     )
-    log_df["proposal-deploy-structure_intervention"] = np.where(mask, "translocated-log", "none")
+    log_df["proposal-deploy-structure_intervention"] = np.where(mask, DEPLOY_FULL_LOG, "none")
     return log_df[log_df["isEnabled"]].copy()
 
 
@@ -1559,7 +1720,7 @@ def assign_poles(pole_df: pd.DataFrame | None, params: dict) -> pd.DataFrame | N
         "proposal-deploy-structure_accepted",
         "not-assessed",
     )
-    pole_df["proposal-deploy-structure_intervention"] = np.where(mask, "adapt-utility-pole", "none")
+    pole_df["proposal-deploy-structure_intervention"] = np.where(mask, DEPLOY_FULL_POLE, "none")
     return pole_df[pole_df["isEnabled"]].copy()
 
 
@@ -1616,6 +1777,7 @@ def _year_zero_state(
     tree_df["proposal-release-control_intervention"] = "none"
     tree_df["lifecycle_state"] = "standing"
     tree_df["under-node-treatment"] = "paved"
+    tree_df["recruit_mechanism"] = "none"
     tree_df["control_reached"] = tree_df["control"].map(_legacy_control_to_realized)
 
     params = get_timestep_params(site, scenario, year, previous_year=0)
@@ -1657,6 +1819,7 @@ def run_timestep(
         return _year_zero_state(site, scenario, year, voxel_size, tree_df, log_df, pole_df, output_mode)
 
     tree_state = _refresh_schema(tree_df)
+    tree_state["_decay_rejected_this_state"] = False
     recruit_telemetry_rows: list[dict[str, object]] = []
     for pulse_start, pulse_end in split_window_into_pulses(previous_year, year):
         pulse_params = get_timestep_params(site, scenario, pulse_end, pulse_start)
@@ -1668,6 +1831,12 @@ def run_timestep(
             pulse_params,
             telemetry_rows=recruit_telemetry_rows,
         )
+
+    # Integrate decay rejections accumulated across all pulses in this state.
+    # A tree rejected in an earlier pulse (then replanted) still shows as rejected in output.
+    rejected_mask = tree_state["_decay_rejected_this_state"]
+    tree_state.loc[rejected_mask, "proposal-decay_decision"] = "proposal-decay_rejected"
+    tree_state = tree_state.drop(columns=["_decay_rejected_this_state"])
 
     final_params = get_timestep_params(site, scenario, year, previous_year)
     log_df, pole_df = _site_specific_structures(site, log_df, pole_df)

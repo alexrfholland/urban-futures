@@ -608,10 +608,8 @@ def process_single_tree(row, tree_templates_df):
 
 
 def _template_root() -> Path:
-    override = os.environ.get("TREE_TEMPLATE_ROOT")
-    if override:
-        return Path(override)
-    return _canonical_base_template_root()
+    from refactor_code.paths import tree_template_root
+    return tree_template_root()
 
 
 def _canonical_base_template_root() -> Path:
