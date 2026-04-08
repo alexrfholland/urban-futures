@@ -243,3 +243,48 @@ represented in all three places:
 - `bV2_scene_contract.py`
 - the live material / GN path that actually writes it
 - this document
+
+## Library asset EXR variant
+
+For isolated tree / log library renders, use:
+
+- `_code-refactored/refactor_code/blenderv2/bV2_render_ply_library_assets.py`
+
+This is a reduced contract for one-asset-per-EXR library export, not the full
+state-scene contract.
+
+Current intended outputs for that library path:
+
+- one Workbench PNG preview per asset
+- one multilayer EXR per asset
+- shared orthographic isometric camera fit derived from the asset with the
+  largest required spatial isometric footprint in the selected library set,
+  not from file size
+
+The library-face EXR path intentionally excludes instancer-level AOVs such as:
+
+- `size`
+- `control`
+- `node_id`
+- `instanceID`
+- `improvement`
+- `canopy_resistance`
+- proposal AOVs
+
+The reduced face/material AOV set for that path is:
+
+- `resource`
+- `resource_tree_mask`
+- `resource_colour`
+- `resource_none_mask`
+- `resource_dead_branch_mask`
+- `resource_peeling_bark_mask`
+- `resource_perch_branch_mask`
+- `resource_epiphyte_mask`
+- `resource_fallen_log_mask`
+- `resource_hollow_mask`
+
+Optional geometry flags can also be enabled for that path when needed:
+
+- `isSenescent`
+- `isTerminal`
