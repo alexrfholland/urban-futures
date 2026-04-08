@@ -131,7 +131,8 @@ FAMILY_TO_PLY_ROOT_ROLE = {
     "poles": "tree",
 }
 
-IGNORED_TREE_SIZES = {"decayed", "gone", "early-tree-death"}
+IGNORED_TREE_SIZES = {"gone", "early-tree-death"}
+PLY_SIZE_REMAP = {"decayed": "fallen"}
 PRIORITY_TREE_SIZES = {"senescing", "snag", "fallen"}
 POLE_FALLBACK_PLY = "artificial_precolonial.False_size.snag_control.improved-tree_id.10.ply"
 HIDE_IMPORTED_MODEL_OBJECTS = True
@@ -365,6 +366,7 @@ def convert_size(value) -> pd.Series:
         "senescing": 4,
         "snag": 5,
         "fallen": 6,
+        "decayed": 7,
     }
     return pd.Series(value).fillna("").astype(str).str.lower().map(size_map).fillna(-1).astype(np.int32)
 
@@ -564,6 +566,8 @@ def choose_stable_match(matches: pd.DataFrame, needed: pd.Series) -> str:
 
 def build_filename_requests(df: pd.DataFrame, family: str) -> pd.DataFrame:
     adjusted = df.copy()
+    if PLY_SIZE_REMAP and "size" in adjusted.columns:
+        adjusted["size"] = adjusted["size"].fillna("").astype(str).str.lower().replace(PLY_SIZE_REMAP)
     if family in {"trees", "poles"}:
         adjusted["filename"] = (
             "precolonial."
@@ -1108,12 +1112,26 @@ def build_family_state_instancer(
     }
 
 
+def initialise_fake_baseline_data(
+    baseline_df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Create fake trending and priority dataframes for baseline scenario.
+
+    Baseline has no separate trending scenario, so we reuse the baseline data
+    as trending and derive priority from it as usual.
+    """
+    trending_df = baseline_df.copy()
+    priority_df = derive_priority_dataframe(baseline_df)
+    return trending_df, priority_df
+
+
 def build_instancers(
     scene: bpy.types.Scene | None = None,
     *,
     site: str | None = None,
     mode: str | None = None,
     year: int | None = None,
+    scenario: str | None = None,
 ) -> dict[str, object]:
     scene = scene or get_active_scene()
     runtime = get_runtime_config(scene)
@@ -1121,20 +1139,32 @@ def build_instancers(
     mode = mode or str(runtime["mode"])
     if year is None:
         year = runtime["year"]  # type: ignore[assignment]
+    if scenario is None:
+        scenario = str(scene.get("bV2_scenario", "")).strip() or None
 
-    log(f"Building bV2 instancers for scene={scene.name}, site={site}, mode={mode}, year={year}")
+    is_baseline = scenario == "baseline"
 
-    log("BUILD_INSTANCERS_LOAD_POSITIVE_START")
-    positive_df = drop_ignored_tree_sizes(load_scenario_dataframe(site, "positive", mode, year))
-    log("BUILD_INSTANCERS_LOAD_POSITIVE_DONE", "rows=", len(positive_df))
+    log(f"Building bV2 instancers for scene={scene.name}, site={site}, mode={mode}, year={year}, scenario={scenario}")
 
-    log("BUILD_INSTANCERS_LOAD_TRENDING_START")
-    trending_df = drop_ignored_tree_sizes(load_scenario_dataframe(site, "trending", mode, year))
-    log("BUILD_INSTANCERS_LOAD_TRENDING_DONE", "rows=", len(trending_df))
+    if is_baseline:
+        log("BUILD_INSTANCERS_LOAD_BASELINE_START")
+        baseline_df = drop_ignored_tree_sizes(load_scenario_dataframe(site, "baseline", mode, year))
+        log("BUILD_INSTANCERS_LOAD_BASELINE_DONE", "rows=", len(baseline_df))
 
-    log("BUILD_INSTANCERS_DERIVE_PRIORITY_START")
-    priority_df = derive_priority_dataframe(positive_df)
-    log("BUILD_INSTANCERS_DERIVE_PRIORITY_DONE", "rows=", len(priority_df))
+        positive_df = baseline_df
+        trending_df, priority_df = initialise_fake_baseline_data(baseline_df)
+    else:
+        log("BUILD_INSTANCERS_LOAD_POSITIVE_START")
+        positive_df = drop_ignored_tree_sizes(load_scenario_dataframe(site, "positive", mode, year))
+        log("BUILD_INSTANCERS_LOAD_POSITIVE_DONE", "rows=", len(positive_df))
+
+        log("BUILD_INSTANCERS_LOAD_TRENDING_START")
+        trending_df = drop_ignored_tree_sizes(load_scenario_dataframe(site, "trending", mode, year))
+        log("BUILD_INSTANCERS_LOAD_TRENDING_DONE", "rows=", len(trending_df))
+
+        log("BUILD_INSTANCERS_DERIVE_PRIORITY_START")
+        priority_df = derive_priority_dataframe(positive_df)
+        log("BUILD_INSTANCERS_DERIVE_PRIORITY_DONE", "rows=", len(priority_df))
 
     frames_by_state = {
         "positive": split_family_dataframes(positive_df, site),
