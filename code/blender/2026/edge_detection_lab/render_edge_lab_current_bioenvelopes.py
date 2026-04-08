@@ -214,11 +214,15 @@ def main() -> None:
     )
     stems = (
         [f"base_bioenvelope_{suffix}" for suffix in palette_suffixes]
-        + [f"bioenvelope_{suffix}" for suffix in palette_suffixes]
+        + [f"positive_bioenvelope_{suffix}" for suffix in palette_suffixes]
         + [f"trending_bioenvelope_{suffix}" for suffix in palette_suffixes]
         + [
-            "bioenvelope_outlines-depth",
-            "bioenvelope_outlines-simple",
+            "positive_bioenvelope_outlines-depth",
+            "positive_bioenvelope_outlines-simple",
+            "base_bioenvelope_outlines-depth",
+            "base_bioenvelope_outlines-simple",
+            "trending_bioenvelope_outlines-depth",
+            "trending_bioenvelope_outlines-simple",
         ]
     )
     for node in node_tree.nodes:

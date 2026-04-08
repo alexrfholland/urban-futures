@@ -552,7 +552,12 @@ def rename_non_resource_columns(voxelised_resource_df):
     """
     resource_prefix = 'resource_'
     stat_prefix = 'stat_'
-    exception_list = ['nodeType', 'nodeTypeInt']
+    exception_list = [
+        'nodeType', 'nodeTypeInt',
+        'proposal_decayV4', 'proposal_decayV4_intervention',
+        'proposal_release_controlV4', 'proposal_release_controlV4_intervention',
+        'proposal_deploy_structureV4', 'proposal_deploy_structureV4_intervention',
+    ]
     
     non_resource_cols = [col for col in voxelised_resource_df.columns 
                         if not col.startswith(resource_prefix) and 
@@ -689,7 +694,11 @@ def prepare_new_voxel_dataframe(dfSparse, ds, voxel_size):
             elif dtype == bool:
                 new_voxel_df[var] = False  # Initialize boolean variables to False
             elif dtype == 'O' or dtype.kind in ['U', 'S']:  # Object or string dtype
-                new_voxel_df[var] = 'none'  # Initialize string variables to 'none'
+                # V4 proposal decision arrays default to 'not-assessed', not 'none'
+                if var.endswith('V4') and 'proposal_' in var:
+                    new_voxel_df[var] = 'not-assessed'
+                else:
+                    new_voxel_df[var] = 'none'
             else:
                 logger.warning(f"Unknown dtype {dtype} for variable {var}, initializing with 'none'")
                 new_voxel_df[var] = 'none'  # Default to 'none' for unknown types

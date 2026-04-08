@@ -115,11 +115,10 @@ def run_legacy_shading() -> None:
 def run_current_shading() -> None:
     shading_root = OUTPUT_ROOT / "current" / "shading"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_legacy_shading.py",
+        CODE_ROOT / "render_edge_lab_current_shading.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_SCENE_NAME": "Current",
-            "EDGE_LAB_NODE_PREFIX": "Current Shading :: ",
             "EDGE_LAB_OUTPUT_DIR": str(shading_root),
             "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
             "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
@@ -127,9 +126,6 @@ def run_current_shading() -> None:
             "EDGE_LAB_EXISTING_TRENDING_EXR": str(EXISTING_TRENDING_EXR),
             "EDGE_LAB_BIOENVELOPE_EXR": str(BIOENVELOPE_EXR),
             "EDGE_LAB_BIOENVELOPE_TRENDING_EXR": str(BIOENVELOPE_TRENDING_EXR),
-            "EDGE_LAB_PATHWAY_NODE_CANDIDATES": "Current Shading :: EXR Pathway|AO::EXR Pathway",
-            "EDGE_LAB_PRIORITY_NODE_CANDIDATES": "Current Shading :: EXR Priority|AO::EXR Priority",
-            "EDGE_LAB_EXISTING_NODE_CANDIDATES": "Current Shading :: EXR Existing|AO::EXR Existing",
         },
     )
 

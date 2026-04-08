@@ -6,6 +6,11 @@ Reference docs:
 - [WORKFLOW_REGISTRY.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/WORKFLOW_REGISTRY.md)
 - [OUTPUT_SUITE_SPEC.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/OUTPUT_SUITE_SPEC.md)
 - [ARBOREAL_RESOURCE_COLOURS.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/ARBOREAL_RESOURCE_COLOURS.md)
+- [SCHEMA_FOR_ORGANISING_COMPOSITOR_GRAPHS.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/SCHEMA_FOR_ORGANISING_COMPOSITOR_GRAPHS.md)
+- [EDGE_LAB_FILE_SCHEMA.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/EDGE_LAB_FILE_SCHEMA.md)
+- [COMPOSITOR_TEMPLATE_CONTRACT.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/COMPOSITOR_TEMPLATE_CONTRACT.md)
+- [COMPOSITOR_REFACTOR_PLAN.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/COMPOSITOR_REFACTOR_PLAN.md)
+- [SCRIPT_STATUS.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/code/blender/2026/edge_detection_lab/SCRIPT_STATUS.md)
 
 Layout:
 - `code/blender/2026/edge_detection_lab/` contains the runnable Blender Python script.
