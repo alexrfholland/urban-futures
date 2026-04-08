@@ -7,6 +7,21 @@ from pathlib import Path
 
 import bpy
 
+REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
+COMPOSITOR_ROOT = REPO_ROOT / "_code-refactored" / "refactor_code" / "blender" / "compositor"
+CANONICAL_ROOT = COMPOSITOR_ROOT / "canonical_templates"
+OUTPUT_BASE = REPO_ROOT / "_data-refactored" / "compositor" / "outputs"
+DEFAULT_DATASET_ROOT = (
+    REPO_ROOT
+    / "data"
+    / "blender"
+    / "2026"
+    / "edge_detection_lab"
+    / "inputs"
+    / "LATEST_REMOTE_EXRS"
+    / "simv3-7_20260405_8k64s_simv3-7"
+    / "city_timeline"
+)
 
 def env_path(name: str, default: str) -> Path:
     return Path(os.environ.get(name, default)).expanduser()
@@ -14,41 +29,30 @@ def env_path(name: str, default: str) -> Path:
 
 BLEND_PATH = env_path(
     "EDGE_LAB_BLEND_PATH",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/edge_lab_final_template_safe_rebuild_20260405.blend",
+    str(CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend"),
 )
 OUTPUT_DIR = env_path(
     "EDGE_LAB_OUTPUT_DIR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_current_shading",
+    str(OUTPUT_BASE / "edge_lab_final_template" / "current" / "outlines_mist"),
 )
 PATHWAY_EXR = env_path(
     "EDGE_LAB_PATHWAY_EXR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-pathway_state.exr",
+    str(DEFAULT_DATASET_ROOT / "city_timeline__positive_state__8k64s.exr"),
 )
 PRIORITY_EXR = env_path(
     "EDGE_LAB_PRIORITY_EXR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-city_priority.exr",
+    str(DEFAULT_DATASET_ROOT / "city_timeline__positive_priority_state__8k64s.exr"),
 )
-EXISTING_EXR = env_path(
-    "EDGE_LAB_EXISTING_EXR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-existing_condition.exr",
+TRENDING_EXR = env_path(
+    "EDGE_LAB_TRENDING_EXR",
+    str(DEFAULT_DATASET_ROOT / "city_timeline__trending_state__8k64s.exr"),
 )
-EXISTING_TRENDING_EXR = env_path(
-    "EDGE_LAB_EXISTING_TRENDING_EXR",
-    os.environ.get("EDGE_LAB_EXISTING_TRENDING", str(EXISTING_EXR)),
-)
-BIOENVELOPE_EXR = env_path(
-    "EDGE_LAB_BIOENVELOPE_EXR",
-    os.environ.get("EDGE_LAB_BIOENVELOPE", str(EXISTING_EXR)),
-)
-BIOENVELOPE_TRENDING_EXR = env_path(
-    "EDGE_LAB_BIOENVELOPE_TRENDING_EXR",
-    os.environ.get("EDGE_LAB_BIOENVELOPE_TRENDING", str(BIOENVELOPE_EXR)),
-)
+MIST_EXR = env_path("EDGE_LAB_MIST_EXR", str(PATHWAY_EXR))
 SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
 
 
 def log(message: str) -> None:
-    print(f"[render_edge_lab_current_shading] {message}")
+    print(f"[render_edge_lab_current_mist] {message}")
 
 
 def require_any_node(node_tree: bpy.types.NodeTree, names: list[str]) -> bpy.types.Node:
@@ -154,55 +158,29 @@ def main() -> None:
     node_tree = scene.node_tree
     set_standard_view(scene)
 
-    pathway = require_any_node(node_tree, ["Current Shading :: EXR Pathway", "AO::EXR Pathway"])
-    priority = require_any_node(node_tree, ["Current Shading :: EXR Priority", "AO::EXR Priority"])
-    existing = require_any_node(node_tree, ["Current Shading :: EXR Existing", "AO::EXR Existing"])
-    helper_existing = require_any_node(
-        node_tree,
-        ["Current Shading :: BioEnvelope Helper :: EXR Existing Positive"],
-    )
-    helper_existing_trending = require_any_node(
-        node_tree,
-        ["Current Shading :: BioEnvelope Helper :: EXR Existing Trending"],
-    )
-    helper_bio = require_any_node(node_tree, ["Current BioEnvelope :: EXR BioEnvelope"])
-    helper_bio_trending = require_any_node(node_tree, ["Current BioEnvelope :: EXR Trending"])
-    workflow_output = require_any_node(
-        node_tree,
-        ["Current Shading ::Outputs", "Current Shading::Outputs"],
-    )
+    workflow_output = require_any_node(node_tree, ["MistOutlines::Outputs"])
+    single_input = node_tree.nodes.get("MistOutlines::EXR Input") is not None
 
-    repath_exr_node(pathway, PATHWAY_EXR)
-    repath_exr_node(priority, PRIORITY_EXR)
-    repath_exr_node(existing, EXISTING_EXR)
-    repath_exr_node(helper_existing, EXISTING_EXR)
-    repath_exr_node(helper_existing_trending, EXISTING_TRENDING_EXR)
-    repath_exr_node(helper_bio, BIOENVELOPE_EXR)
-    repath_exr_node(helper_bio_trending, BIOENVELOPE_TRENDING_EXR)
+    if single_input:
+        mist_input = require_any_node(node_tree, ["MistOutlines::EXR Input"])
+        repath_exr_node(mist_input, MIST_EXR)
+        exr_paths = [MIST_EXR]
+        images = [mist_input.image]
+    else:
+        pathway = require_any_node(node_tree, ["MistOutlines::EXR Pathway"])
+        priority = require_any_node(node_tree, ["MistOutlines::EXR Priority"])
+        trending = require_any_node(node_tree, ["MistOutlines::EXR Trending"])
+        repath_exr_node(pathway, PATHWAY_EXR)
+        repath_exr_node(priority, PRIORITY_EXR)
+        repath_exr_node(trending, TRENDING_EXR)
+        exr_paths = [PATHWAY_EXR, PRIORITY_EXR, TRENDING_EXR]
+        images = [pathway.image, priority.image, trending.image]
 
     scene.render.use_compositing = True
     scene.render.use_sequencer = False
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
-    width, height = detect_resolution(
-        [
-            PATHWAY_EXR,
-            PRIORITY_EXR,
-            EXISTING_EXR,
-            EXISTING_TRENDING_EXR,
-            BIOENVELOPE_EXR,
-            BIOENVELOPE_TRENDING_EXR,
-        ],
-        [
-            pathway.image,
-            priority.image,
-            existing.image,
-            helper_existing.image,
-            helper_existing_trending.image,
-            helper_bio.image,
-            helper_bio_trending.image,
-        ],
-    )
+    width, height = detect_resolution(exr_paths, images)
     scene.render.resolution_x = width
     scene.render.resolution_y = height
     scene.render.resolution_percentage = 100
@@ -227,6 +205,10 @@ def main() -> None:
     bpy.ops.render.render(write_still=True, scene=scene.name)
     rename_family_outputs(OUTPUT_DIR)
 
+    # Mist's saved file output node is structurally correct now, but Blender
+    # still intermittently skips writing these slots. Fall back to direct
+    # socket renders from the saved template contract when needed.
+    workflow_output.mute = True
     for index, slot in enumerate(workflow_output.file_slots):
         stem = slot.path.rstrip("_")
         out_path = OUTPUT_DIR / f"{stem}.png"
@@ -237,6 +219,11 @@ def main() -> None:
                 workflow_output.inputs[index].links[0].from_socket,
                 out_path,
             )
+
+    rename_family_outputs(OUTPUT_DIR)
+    discard_path = OUTPUT_DIR / "_discard_render.png"
+    if discard_path.exists():
+        discard_path.unlink()
 
     for node in node_tree.nodes:
         if node.bl_idname == "CompositorNodeOutputFile" and node.name in previous_mute_states:

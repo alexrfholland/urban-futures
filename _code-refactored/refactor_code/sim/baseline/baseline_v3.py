@@ -673,12 +673,6 @@ def _build_baseline_node_df(baseline_tree_df: pd.DataFrame, site_dataset: xr.Dat
     return node_df
 
 
-def _proposal_label_values(decisions: np.ndarray, family_name: str) -> np.ndarray:
-    values = np.full(len(decisions), "none", dtype="<U64")
-    accepted_mask = np.char.find(np.char.lower(decisions.astype(str)), "_accepted") >= 0
-    values[accepted_mask] = f"{family_name}-other"
-    return values
-
 
 def _annotate_baseline_combined_polydata(
     combined_poly: pv.PolyData,
@@ -698,57 +692,79 @@ def _annotate_baseline_combined_polydata(
             f"{resource_count} resource + {terrain_count} terrain != {total_points} total"
         )
 
-    proposal_lookup = node_df.set_index("tree_number")[
-        [f"{family}_decision" for family, _, _ in PROPOSAL_FAMILY_SPECS]
-        + [f"{family}_intervention" for family, _, _ in PROPOSAL_FAMILY_SPECS]
-    ]
-    annotated_resource_df = resource_df.merge(
-        proposal_lookup,
-        left_on="tree_number",
-        right_index=True,
-        how="left",
-    )
+    # --- read forest_size from the combined polydata ---
+    forest_size = np.asarray(combined_poly.point_data.get("forest_size", np.full(total_points, "nan", dtype="<U20")), dtype="<U20")
+    forest_size_lower = np.char.lower(forest_size)
 
-    terrain_start = resource_count
-    terrain_end = total_points
-    terrain_points = terrain_poly.points
+    # --- terrain mask (terrain points are appended after resource points) ---
+    terrain_mask = np.zeros(total_points, dtype=bool)
+    terrain_mask[resource_count:] = True
 
-    active_tree_df = node_df.loc[node_df["size"].astype(str).str.lower().isin(ACTIVE_TREE_SIZES), ["x", "y", "z"]]
-    if active_tree_df.empty:
-        recruit_terrain_mask = np.ones(terrain_count, dtype=bool)
+    # --- build masks ---
+    decay_mask_arboreal = np.isin(forest_size_lower, ["senescing", "snag", "fallen", "decayed"])
+    decay_arboreal_points = combined_poly.points[decay_mask_arboreal]
+    if len(decay_arboreal_points) > 0:
+        decay_tree = cKDTree(decay_arboreal_points[:, :2])
+        terrain_xy = combined_poly.points[terrain_mask, :2]
+        decay_distances, _ = decay_tree.query(terrain_xy, k=1)
+        decay_mask_ground = np.zeros(total_points, dtype=bool)
+        decay_mask_ground[terrain_mask] = decay_distances <= 2.0
     else:
-        active_tree = cKDTree(active_tree_df.to_numpy(dtype=float))
-        distances, _ = active_tree.query(terrain_points, k=1)
-        recruit_terrain_mask = distances > 1.5
+        decay_mask_ground = np.zeros(total_points, dtype=bool)
+    decay_mask = decay_mask_arboreal | decay_mask_ground
 
-    colonise_terrain_mask = np.ones(terrain_count, dtype=bool)
+    release_control_mask = np.isin(forest_size_lower, ["small", "medium", "large"])
 
-    for family, family_alias, family_v3 in PROPOSAL_FAMILY_SPECS:
-        decision_column = f"{family}_decision"
-        intervention_column = f"{family}_intervention"
-        decisions = np.full(total_points, "not-assessed", dtype="<U64")
-        interventions = np.full(total_points, "none", dtype="<U64")
+    canopy_feature_mask = (forest_size_lower != "nan") & (forest_size_lower != "none") & (forest_size_lower != "")
+    if "stat_fallen log" in combined_poly.point_data:
+        fl = np.asarray(combined_poly.point_data["stat_fallen log"])
+        if np.issubdtype(fl.dtype, np.number):
+            canopy_feature_mask = canopy_feature_mask | (fl > 0)
+    canopy_feature_points = combined_poly.points[canopy_feature_mask]
+    if len(canopy_feature_points) > 0:
+        canopy_tree = cKDTree(canopy_feature_points[:, :2])
+        terrain_xy = combined_poly.points[terrain_mask, :2]
+        recruit_distances, _ = canopy_tree.query(terrain_xy, k=1)
+        recruit_mask = np.zeros(total_points, dtype=bool)
+        recruit_mask[terrain_mask] = recruit_distances > 1.5
+    else:
+        recruit_mask = terrain_mask.copy()
 
-        decisions[:resource_count] = annotated_resource_df[decision_column].astype(str).to_numpy()
-        interventions[:resource_count] = annotated_resource_df[intervention_column].astype(str).to_numpy()
+    colonise_mask = terrain_mask
 
-        if family == "proposal-recruit":
-            terrain_decisions = decisions[terrain_start:terrain_end].copy()
-            terrain_decisions[recruit_terrain_mask] = "proposal-recruit_accepted"
-            decisions[terrain_start:terrain_end] = terrain_decisions
-        elif family == "proposal-colonise":
-            terrain_decisions = decisions[terrain_start:terrain_end].copy()
-            terrain_decisions[colonise_terrain_mask] = "proposal-colonise_accepted"
-            decisions[terrain_start:terrain_end] = terrain_decisions
+    # --- build numpy arrays, then assign to point_data in one shot ---
+    decay_decision = np.full(total_points, "not-assessed", dtype="<U64")
+    decay_intervention = np.full(total_points, "none", dtype="<U64")
+    decay_decision[decay_mask] = "proposal-decay_accepted"
+    decay_intervention[decay_mask] = "buffer-feature"
 
-        combined_poly.point_data[f"forest_{decision_column}"] = decisions.copy()
-        combined_poly.point_data[f"forest_{intervention_column}"] = interventions.copy()
-        combined_poly.point_data[_proposal_alias_column(decision_column)] = decisions.copy()
-        combined_poly.point_data[_proposal_alias_column(intervention_column)] = interventions.copy()
-        combined_poly.point_data[family_alias] = _proposal_label_values(decisions, family_alias.replace("proposal_", "").replace("_", "-"))
-        combined_poly.point_data[family_v3] = decisions.copy()
-        combined_poly.point_data[f"{family_v3}_intervention"] = interventions.copy()
+    release_decision = np.full(total_points, "not-assessed", dtype="<U64")
+    release_intervention = np.full(total_points, "none", dtype="<U64")
+    release_decision[release_control_mask] = "proposal-release-control_accepted"
+    release_intervention[release_control_mask] = "eliminate-pruning"
 
+    recruit_decision = np.full(total_points, "not-assessed", dtype="<U64")
+    recruit_intervention = np.full(total_points, "none", dtype="<U64")
+    recruit_decision[recruit_mask] = "proposal-recruit_accepted"
+    recruit_intervention[recruit_mask] = "rewild-ground"
+
+    colonise_decision = np.full(total_points, "not-assessed", dtype="<U64")
+    colonise_intervention = np.full(total_points, "none", dtype="<U64")
+    colonise_decision[colonise_mask] = "proposal-colonise_accepted"
+    colonise_intervention[colonise_mask] = "rewild-ground"
+
+    combined_poly.point_data["proposal_decayV4"] = decay_decision
+    combined_poly.point_data["proposal_decayV4_intervention"] = decay_intervention
+    combined_poly.point_data["proposal_release_controlV4"] = release_decision
+    combined_poly.point_data["proposal_release_controlV4_intervention"] = release_intervention
+    combined_poly.point_data["proposal_recruitV4"] = recruit_decision
+    combined_poly.point_data["proposal_recruitV4_intervention"] = recruit_intervention
+    combined_poly.point_data["proposal_coloniseV4"] = colonise_decision
+    combined_poly.point_data["proposal_coloniseV4_intervention"] = colonise_intervention
+    combined_poly.point_data["proposal_deploy_structureV4"] = np.full(total_points, "not-assessed", dtype="<U64")
+    combined_poly.point_data["proposal_deploy_structureV4_intervention"] = np.full(total_points, "none", dtype="<U64")
+
+    # --- blender framebuffers ---
     blender_arrays = build_blender_proposal_framebuffer_arrays(combined_poly.point_data)
     for name, values in blender_arrays.items():
         combined_poly.point_data[name] = values

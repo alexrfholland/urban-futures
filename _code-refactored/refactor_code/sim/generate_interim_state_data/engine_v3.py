@@ -310,26 +310,7 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         df.loc[missing, "control_reached"] = df.loc[missing, "control"].map(_legacy_control_to_realized)
     df["control_reached"] = _as_object_series(df["control_reached"], len(df), "street-tree")
 
-    target_from_control = df["control"].map(_legacy_control_to_target)
-    support_map = {
-        "standard-pruning": "none",
-        "reduce-pruning": "reduce-pruning",
-        "eliminate-pruning": "eliminate-pruning",
-    }
-    blank_release_intervention = _blank_like(df["proposal-release-control_intervention"], {"not-assessed"})
-    df.loc[blank_release_intervention, "proposal-release-control_intervention"] = target_from_control.map(support_map).fillna("none")[
-        blank_release_intervention
-    ]
     living_mask = df["size"].isin(["small", "medium", "large"])
-    df["proposal-release-control_intervention"] = _as_object_series(
-        df["proposal-release-control_intervention"], len(df), "none"
-    )
-    blank_release_decision = _blank_like(df["proposal-release-control_decision"], {"not-assessed"})
-    df.loc[blank_release_decision & living_mask, "proposal-release-control_decision"] = np.where(
-        df.loc[blank_release_decision & living_mask, "proposal-release-control_intervention"].eq("none"),
-        "proposal-release-control_rejected",
-        "proposal-release-control_accepted",
-    )
 
     blank_decay_decision = _blank_like(df["proposal-decay_decision"], {"not-assessed"})
     df.loc[blank_decay_decision, "proposal-decay_decision"] = np.where(

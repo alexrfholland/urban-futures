@@ -34,24 +34,29 @@ Primary compositor in active use:
   - renders the saved `Current Shading ::Outputs` node
   - does not create helper nodes or own shading graph logic
 
+### Current Depth Outliner
+
+- `render_edge_lab_current_depth_outliner.py`
+  - thin current-only depth renderer
+  - repaths the saved depth EXRs
+  - renders the saved `DepthOutliner::Outputs` node
+  - does not create scratch scenes or delegate depth graph logic
+
+### Current Mist
+
+- `render_edge_lab_current_mist.py`
+  - thin current-only mist renderer
+  - repaths the saved mist EXRs
+  - renders the saved `MistOutlines::Outputs` node
+  - falls back to direct socket renders from the saved template contract if Blender skips file-output slots
+  - does not create scratch scenes or delegate mist graph logic
+
 ### Template Runner With Bad Name
 
 - `render_edge_lab_legacy_shading.py`
   - now should be treated as the legacy-scene renderer only
   - name is still bad
   - should eventually be renamed or replaced
-
-### Wrapper Around Legacy Logic
-
-- `render_edge_lab_current_mist.py`
-  - opens the template
-  - but actual mist generation is delegated to legacy scripted mist logic on a scratch scene
-  - not yet template-native
-
-- `render_edge_lab_current_depth_outliner.py`
-  - opens the template
-  - but actual depth outliner generation is delegated to legacy scripted depth logic on a scratch scene
-  - not yet template-native
 
 ### Suite Orchestrator
 
@@ -74,9 +79,8 @@ Primary compositor in active use:
 
 The main architectural cleanup target is:
 
-1. mist
-2. depth outliner
-3. shading naming cleanup
+1. any remaining shading naming/output cleanup
+2. any cleanup needed to remove mist file-output fallback if Blender behavior becomes reliable
 
 because those are the places where runtime script ownership and template
 ownership are still blurred.
@@ -99,6 +103,10 @@ Confirmed working through the instantiation path:
 
 Not yet clean through the instantiation path:
 
+- none of the current template-owned families above are blocked on legacy scratch-scene logic
+
+Validated separately as thin current-only renderers:
+
 - `shading`
-  - moved to a dedicated current-only renderer
-  - should now be revalidated through the instantiation path
+- `depth_outliner`
+- `mist`

@@ -150,7 +150,7 @@ def get_scenario_parameters():
             0: 0,
             10: 300,
             30: 1249.75,
-            60: 4999,
+            60: 4000,
             180: 5000,
         },
         "sim_averageResistance": {
@@ -210,7 +210,7 @@ def get_scenario_parameters():
             0: 0,
             10: 300,
             30: 1249.75,
-            60: 4999,
+            60: 4000,
             180: 5000,
         },
         "sim_averageResistance": {

@@ -7,8 +7,12 @@ from pathlib import Path
 
 
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
-CODE_ROOT = REPO_ROOT / "code" / "blender" / "2026" / "edge_detection_lab"
-DATA_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab"
+COMPOSITOR_ROOT = REPO_ROOT / "_code-refactored" / "refactor_code" / "blender" / "compositor"
+SCRIPT_ROOT = COMPOSITOR_ROOT / "scripts"
+CANONICAL_ROOT = COMPOSITOR_ROOT / "canonical_templates"
+DATA_ROOT = REPO_ROOT / "_data-refactored" / "compositor"
+LEGACY_CODE_ROOT = REPO_ROOT / "code" / "blender" / "2026" / "edge_detection_lab"
+LEGACY_DATA_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab"
 BLENDER_BIN = Path("/Applications/Blender.app/Contents/MacOS/Blender")
 
 
@@ -18,37 +22,37 @@ def env_path(name: str, default: Path) -> Path:
 
 FINAL_TEMPLATE_BLEND = env_path(
     "EDGE_LAB_FINAL_TEMPLATE_BLEND",
-    DATA_ROOT / "edge_lab_final_template.blend",
+    CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend",
 )
 CURRENT_SOURCE_BLEND = env_path(
     "EDGE_LAB_CURRENT_SOURCE_BLEND",
-    DATA_ROOT / "edge_lab_output_suite_combined.blend",
+    LEGACY_DATA_ROOT / "edge_lab_output_suite_combined.blend",
 )
 LEGACY_SOURCE_BLEND = env_path(
     "EDGE_LAB_LEGACY_SOURCE_BLEND",
-    DATA_ROOT / "city_exr_compositor_lightweight_city_final.blend",
+    LEGACY_DATA_ROOT / "city_exr_compositor_lightweight_city_final.blend",
 )
 OUTPUT_ROOT = env_path(
     "EDGE_LAB_OUTPUT_ROOT",
-    DATA_ROOT / "outputs" / "edge_lab_final_template_city_20260329",
+    DATA_ROOT / "outputs" / "edge_lab_final_template",
 )
 EXR_ROOT = env_path(
     "EDGE_LAB_EXR_ROOT",
-    REPO_ROOT / "data" / "blender" / "2026" / "2026 futures heroes6-city",
+    LEGACY_DATA_ROOT / "inputs" / "LATEST_REMOTE_EXRS" / "simv3-7_20260405_8k64s_simv3-7" / "city_timeline",
 )
 
-PATHWAY_EXR = env_path("EDGE_LAB_PATHWAY_EXR", EXR_ROOT / "city-pathway_state.exr")
-PRIORITY_EXR = env_path("EDGE_LAB_PRIORITY_EXR", EXR_ROOT / "city-city_priority.exr")
-EXISTING_EXR = env_path("EDGE_LAB_EXISTING_EXR", EXR_ROOT / "city-existing_condition.exr")
+PATHWAY_EXR = env_path("EDGE_LAB_PATHWAY_EXR", EXR_ROOT / "city_timeline__positive_state__8k64s.exr")
+PRIORITY_EXR = env_path("EDGE_LAB_PRIORITY_EXR", EXR_ROOT / "city_timeline__positive_priority_state__8k64s.exr")
+EXISTING_EXR = env_path("EDGE_LAB_EXISTING_EXR", EXR_ROOT / "city_timeline__existing_condition_positive__8k64s.exr")
 EXISTING_TRENDING_EXR = env_path(
     "EDGE_LAB_EXISTING_TRENDING_EXR",
-    EXISTING_EXR,
+    EXR_ROOT / "city_timeline__existing_condition_trending__8k64s.exr",
 )
-TRENDING_EXR = env_path("EDGE_LAB_TRENDING_EXR", EXR_ROOT / "city-trending_state.exr")
-BIOENVELOPE_EXR = env_path("EDGE_LAB_BIOENVELOPE_EXR", EXR_ROOT / "city-city_bioenvelope.exr")
+TRENDING_EXR = env_path("EDGE_LAB_TRENDING_EXR", EXR_ROOT / "city_timeline__trending_state__8k64s.exr")
+BIOENVELOPE_EXR = env_path("EDGE_LAB_BIOENVELOPE_EXR", EXR_ROOT / "city_timeline__bioenvelope_positive__8k64s.exr")
 BIOENVELOPE_TRENDING_EXR = env_path(
     "EDGE_LAB_BIOENVELOPE_TRENDING_EXR",
-    TRENDING_EXR,
+    EXR_ROOT / "city_timeline__bioenvelope_trending__8k64s.exr",
 )
 
 
@@ -69,9 +73,9 @@ def run_blender_python(script_path: Path, env: dict[str, str]) -> None:
 
 def build_template() -> None:
     run_blender_python(
-        CODE_ROOT / "build_edge_lab_final_template_blend.py",
+        LEGACY_CODE_ROOT / "build_edge_lab_final_template_blend.py",
         {
-            "EDGE_LAB_CURRENT_SOURCE_BLEND": str(DATA_ROOT / "edge_lab_output_suite_refined.blend"),
+            "EDGE_LAB_CURRENT_SOURCE_BLEND": str(LEGACY_DATA_ROOT / "edge_lab_output_suite_refined.blend"),
             "EDGE_LAB_LEGACY_SOURCE_BLEND": str(LEGACY_SOURCE_BLEND),
             "EDGE_LAB_FINAL_TEMPLATE_BLEND": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_PROPOSAL_PATHWAY_EXR": str(PATHWAY_EXR),
@@ -84,7 +88,7 @@ def build_template() -> None:
 def run_current_outputs() -> None:
     current_root = OUTPUT_ROOT / "current"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_current_core_outputs.py",
+        SCRIPT_ROOT / "render_edge_lab_current_core_outputs.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_SCENE_NAME": "Current",
@@ -100,7 +104,7 @@ def run_current_outputs() -> None:
 def run_legacy_shading() -> None:
     shading_root = OUTPUT_ROOT / "legacy_shading"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_legacy_shading.py",
+        LEGACY_CODE_ROOT / "render_edge_lab_legacy_shading.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_SCENE_NAME": "Legacy",
@@ -115,7 +119,7 @@ def run_legacy_shading() -> None:
 def run_current_shading() -> None:
     shading_root = OUTPUT_ROOT / "current" / "shading"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_current_shading.py",
+        SCRIPT_ROOT / "render_edge_lab_current_shading.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_SCENE_NAME": "Current",
@@ -133,7 +137,7 @@ def run_current_shading() -> None:
 def run_current_bioenvelopes() -> None:
     bio_root = OUTPUT_ROOT / "current" / "bioenvelope"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_current_bioenvelopes.py",
+        SCRIPT_ROOT / "render_edge_lab_current_bioenvelopes.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_SCENE_NAME": "Current",
@@ -149,7 +153,7 @@ def run_current_bioenvelopes() -> None:
 def run_current_mist() -> None:
     mist_root = OUTPUT_ROOT / "current" / "outlines_mist"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_current_mist.py",
+        SCRIPT_ROOT / "render_edge_lab_current_mist.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_SCENE_NAME": "Current",
@@ -164,7 +168,7 @@ def run_current_mist() -> None:
 def run_current_depth_outliner() -> None:
     depth_root = OUTPUT_ROOT / "current" / "depth_outliner"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_current_depth_outliner.py",
+        SCRIPT_ROOT / "render_edge_lab_current_depth_outliner.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_OUTPUT_DIR": str(depth_root),
@@ -178,7 +182,7 @@ def run_current_depth_outliner() -> None:
 def run_current_base() -> None:
     base_root = OUTPUT_ROOT / "current" / "base"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_current_base.py",
+        SCRIPT_ROOT / "render_edge_lab_current_base.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_SCENE_NAME": "Current",
@@ -191,7 +195,7 @@ def run_current_base() -> None:
 def run_current_sizes() -> None:
     sizes_root = OUTPUT_ROOT / "current" / "sizes"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_current_sizes.py",
+        SCRIPT_ROOT / "render_edge_lab_current_sizes.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_SCENE_NAME": "Current",
@@ -207,7 +211,7 @@ def run_current_sizes() -> None:
 def run_current_proposals() -> None:
     proposals_root = OUTPUT_ROOT / "current" / "proposals"
     run_blender_python(
-        CODE_ROOT / "render_edge_lab_current_proposals.py",
+        SCRIPT_ROOT / "render_edge_lab_current_proposals.py",
         {
             "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
             "EDGE_LAB_SCENE_NAME": "Current",

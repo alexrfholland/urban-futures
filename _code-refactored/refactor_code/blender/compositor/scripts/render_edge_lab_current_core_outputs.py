@@ -7,6 +7,21 @@ from pathlib import Path
 
 import bpy
 
+REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
+COMPOSITOR_ROOT = REPO_ROOT / "_code-refactored" / "refactor_code" / "blender" / "compositor"
+CANONICAL_ROOT = COMPOSITOR_ROOT / "canonical_templates"
+OUTPUT_BASE = REPO_ROOT / "_data-refactored" / "compositor" / "outputs"
+DEFAULT_DATASET_ROOT = (
+    REPO_ROOT
+    / "data"
+    / "blender"
+    / "2026"
+    / "edge_detection_lab"
+    / "inputs"
+    / "LATEST_REMOTE_EXRS"
+    / "simv3-7_20260405_8k64s_simv3-7"
+    / "city_timeline"
+)
 
 def env_path(name: str, default: str) -> Path:
     return Path(os.environ.get(name, default)).expanduser()
@@ -14,30 +29,30 @@ def env_path(name: str, default: str) -> Path:
 
 BLEND_PATH = env_path(
     "EDGE_LAB_BLEND_PATH",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/edge_lab_final_template.blend",
+    str(CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend"),
 )
 OUTPUT_ROOT = env_path(
     "EDGE_LAB_OUTPUT_ROOT",
     os.environ.get(
         "EDGE_LAB_OUTPUT_DIR",
-        "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/outputs/edge_lab_final_template_city_20260329/current",
+        str(OUTPUT_BASE / "edge_lab_final_template" / "current"),
     ),
 )
 PATHWAY_EXR = env_path(
     "EDGE_LAB_PATHWAY_EXR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-pathway_state.exr",
+    str(DEFAULT_DATASET_ROOT / "city_timeline__positive_state__8k64s.exr"),
 )
 PRIORITY_EXR = env_path(
     "EDGE_LAB_PRIORITY_EXR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-city_priority.exr",
+    str(DEFAULT_DATASET_ROOT / "city_timeline__positive_priority_state__8k64s.exr"),
 )
 EXISTING_EXR = env_path(
     "EDGE_LAB_EXISTING_EXR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-existing_condition.exr",
+    str(DEFAULT_DATASET_ROOT / "city_timeline__existing_condition_positive__8k64s.exr"),
 )
 TRENDING_EXR = env_path(
     "EDGE_LAB_TRENDING_EXR",
-    "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/2026 futures heroes6-city/city-trending_state.exr",
+    str(DEFAULT_DATASET_ROOT / "city_timeline__trending_state__8k64s.exr"),
 )
 SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
 FAMILY_FILTER = {

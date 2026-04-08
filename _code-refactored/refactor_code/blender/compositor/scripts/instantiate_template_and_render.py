@@ -7,8 +7,11 @@ from pathlib import Path
 
 
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
-CODE_ROOT = REPO_ROOT / "code" / "blender" / "2026" / "edge_detection_lab"
-DATA_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab"
+COMPOSITOR_ROOT = REPO_ROOT / "_code-refactored" / "refactor_code" / "blender" / "compositor"
+SCRIPT_ROOT = COMPOSITOR_ROOT / "scripts"
+CANONICAL_ROOT = COMPOSITOR_ROOT / "canonical_templates"
+DATA_ROOT = REPO_ROOT / "_data-refactored" / "compositor"
+LEGACY_INPUT_ROOT = REPO_ROOT / "data" / "blender" / "2026" / "edge_detection_lab"
 BLENDER_BIN = Path("/Applications/Blender.app/Contents/MacOS/Blender")
 
 
@@ -18,11 +21,11 @@ def env_path(name: str, default: Path) -> Path:
 
 CANONICAL_BLEND = env_path(
     "EDGE_LAB_CANONICAL_BLEND",
-    DATA_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend",
+    CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend",
 )
 DATASET_ROOT = env_path(
     "EDGE_LAB_DATASET_ROOT",
-    DATA_ROOT
+    LEGACY_INPUT_ROOT
     / "inputs"
     / "LATEST_REMOTE_EXRS"
     / "simv3-7_20260405_8k64s_simv3-7"
@@ -116,11 +119,11 @@ def run_selected_families(paths: dict[str, Path]) -> None:
     if core_requested:
         env = family_env(common_env, current_root)
         env["EDGE_LAB_FAMILIES"] = ",".join(sorted(core_requested))
-        run_blender_python(CODE_ROOT / "render_edge_lab_current_core_outputs.py", env)
+        run_blender_python(SCRIPT_ROOT / "render_edge_lab_current_core_outputs.py", env)
 
     if "shading" in FAMILY_FILTER:
         run_blender_python(
-            CODE_ROOT / "render_edge_lab_current_shading.py",
+            SCRIPT_ROOT / "render_edge_lab_current_shading.py",
             {
                 **family_env(common_env, current_root / "shading"),
             },
@@ -128,19 +131,19 @@ def run_selected_families(paths: dict[str, Path]) -> None:
 
     if "bioenvelope" in FAMILY_FILTER:
         run_blender_python(
-            CODE_ROOT / "render_edge_lab_current_bioenvelopes.py",
+            SCRIPT_ROOT / "render_edge_lab_current_bioenvelopes.py",
             family_env(common_env, current_root / "bioenvelope"),
         )
 
     if "sizes" in FAMILY_FILTER:
         run_blender_python(
-            CODE_ROOT / "render_edge_lab_current_sizes.py",
+            SCRIPT_ROOT / "render_edge_lab_current_sizes.py",
             family_env(common_env, current_root / "sizes"),
         )
 
     if "base" in FAMILY_FILTER:
         run_blender_python(
-            CODE_ROOT / "render_edge_lab_current_base.py",
+            SCRIPT_ROOT / "render_edge_lab_current_base.py",
             family_env(common_env, current_root / "base"),
         )
 

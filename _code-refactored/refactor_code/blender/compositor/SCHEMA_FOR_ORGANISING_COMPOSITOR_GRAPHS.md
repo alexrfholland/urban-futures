@@ -43,6 +43,48 @@ Examples:
   - `bioenvelope_outlines-depth`
   - `mist_normalized_visible`
 
+## Standard Mask Definitions
+
+Use a consistent semantic mask vocabulary across workflows.
+
+For arboreal masks:
+
+- `arboreal_positive_mask`
+  - visible arboreal mask for the positive / pathway state
+- `arboreal_priority_mask`
+  - visible arboreal mask for the priority state
+- `arboreal_trending_mask`
+  - visible arboreal mask for the trending state
+
+For standalone single-input workflow blends:
+
+- if the blend is semantically tied to one state, expose the specific mask name
+- example:
+  - a positive-only mist or depth blend should expose `arboreal_positive_mask`
+- avoid falling back to a vague local label like `arboreal_mask` when the state is already fixed by the workflow contract
+
+For bioenvelope masks:
+
+- `bioenvelope_positive_mask`
+  - the positive bioenvelope domain mask used for positive bioenvelope workflows
+- `bioenvelope_trending_mask`
+  - the trending bioenvelope domain mask used for trending bioenvelope workflows
+
+Mask labels should describe the semantic domain, not the node implementation.
+
+Examples:
+
+- use `arboreal_positive_mask`, not `mask_visible-arboreal_pathway`
+- use `bioenvelope_positive_mask`, not `mask_rewilded_bioenvel`
+
+If a workflow needs a local implementation detail, keep that detail inside the group or local node chain, then expose a named reroute with the standard semantic label.
+
+When a mask is used repeatedly in a workflow family:
+
+- build it once
+- expose it with a standard reroute name
+- feed that reroute into the repeated group instances
+
 - Use node labels sparingly.
 - Reserve explicit naming for:
   - workflow frames
