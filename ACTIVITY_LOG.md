@@ -127,22 +127,22 @@ Total commits in period: **40**
 
 ## Summary by Day
 
-| Date       | Day | Hrs | Branch    | Files | Lines +  | Focus |
-|------------|-----|-----|-----------|-------|----------|-------|
-| Mar 20 Thu |  1  |  ~4 | master    |    38 |   2,553  | Archiving legacy scripts |
-| Mar 26 Thu |  2  |  ~8 | master    |    98 |  26,975  | Blender edge detection lab pipeline |
-| Mar 28 Sat |  3  |  ~4 | master    |    31 |   5,057  | Baseline Blender workflows |
-| Mar 29 Sun |  4  |  ~8 | master    |    72 |   7,062  | Major restructure, edge lab, pathway tracking |
-| Mar 30 Mon |  5  |  ~6 | master    |    29 |   4,784  | Pathway tracking graphs, AGENTS.md, edge lab |
-| Mar 31 Tue |  6  |  ~8 | master    |    95 |  11,373  | v2 engine, decayed deadwood, v3 planning |
-| Apr 1  Wed |  7  |  ~8 | master→v3 |    90 |  17,207  | v3 engine launch, Blender timeline bundle |
-| Apr 2  Thu |  8  |  ~3 | v3        |     5 |     277  | Proposal AOVs, timeline EXR renders |
-| Apr 3  Fri |  9  |  ~8 | v3        |    99 |  13,719  | v3 pipeline refactor, instancer scaffolding |
-| Apr 4  Sat | 10  |  ~7 | v3        |    89 |  11,927  | uv env, cohort mortality, bioenvelope helpers |
-| Apr 5  Sun | 11  |  ~4 | v3        |    25 |     316  | Fix proposal release-control for dying trees |
-| Apr 6  Mon | 12  |  ~6 | v3        |    58 |   5,160  | v3 schema rename, canopy resistance, blenderv2 |
-| Apr 7  Tue | 13  |  ~9 | v3→v4     |   331 |   4,518  | v4 restructure, proposal broadcast |
-| Apr 8  Wed | 14  |  ~8 | v4        |    78 |   6,533  | v4 sim, recruit mortality, allometric growth |
-| Apr 9  Thu | 15  |  ~4 | v4        |    24 |   2,839  | v4 flat mortality tuning, recruit metadata |
+| Date       | Day | Est Hrs | Timestamps    | Branch    | Files | Lines +  | Focus |
+|------------|-----|---------|---------------|-----------|-------|----------|-------|
+| Mar 20 Thu |  1  |      ~4 | 19:46         | master    |    38 |   2,553  | Archiving legacy scripts |
+| Mar 26 Thu |  2  |      ~8 | 15:12         | master    |    98 |  26,975  | Blender edge detection lab pipeline |
+| Mar 28 Sat |  3  |      ~4 | 17:01–17:57   | master    |    31 |   5,057  | Baseline Blender workflows |
+| Mar 29 Sun |  4  |      ~8 | 14:39–22:23   | master    |    72 |   7,062  | Major restructure, edge lab, pathway tracking |
+| Mar 30 Mon |  5  |      ~6 | 19:02         | master    |    29 |   4,784  | Pathway tracking graphs, AGENTS.md, edge lab |
+| Mar 31 Tue |  6  |      ~8 | 11:41–16:00   | master    |    95 |  11,373  | v2 engine, decayed deadwood, v3 planning |
+| Apr 1  Wed |  7  |      ~8 | 16:26–23:27   | master→v3 |    90 |  17,207  | v3 engine launch, Blender timeline bundle |
+| Apr 2  Thu |  8  |      ~3 | 11:59         | v3        |     5 |     277  | Proposal AOVs, timeline EXR renders |
+| Apr 3  Fri |  9  |      ~8 | 21:55–23:21   | v3        |    99 |  13,719  | v3 pipeline refactor, instancer scaffolding |
+| Apr 4  Sat | 10  |      ~7 | 17:41–22:37   | v3        |    89 |  11,927  | uv env, cohort mortality, bioenvelope helpers |
+| Apr 5  Sun | 11  |      ~4 | 15:18         | v3        |    25 |     316  | Fix proposal release-control for dying trees |
+| Apr 6  Mon | 12  |      ~6 | 14:19–20:07   | v3        |    58 |   5,160  | v3 schema rename, canopy resistance, blenderv2 |
+| Apr 7  Tue | 13  |      ~9 | 11:09–20:03   | v3→v4     |   331 |   4,518  | v4 restructure, proposal broadcast |
+| Apr 8  Wed | 14  |      ~8 | 07:10–17:08   | v4        |    78 |   6,533  | v4 sim, recruit mortality, allometric growth |
+| Apr 9  Thu | 15  |      ~4 | 07:10         | v4        |    24 |   2,839  | v4 flat mortality tuning, recruit metadata |
 
 **Total: ~95 hours across 15 active days over 3 weeks**
