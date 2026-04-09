@@ -625,6 +625,334 @@ This stage writes:
 - final enriched VTK
   - `output/vtks/{site}/{site}_{scenario}_1_yr{year}_state_with_indicators.vtk`
 
+## Claude Code Changes
+
+### V4 Proposal Broadcast (2026-04-07)
+
+Three coordinated changes to broadcast node-level proposal/intervention values
+directly into V4 arrays during voxel integration, bypassing the broken
+`forest_proposal-*` middleman path.
+
+#### 1. `initialise_and_translate_tree()` — add proposal columns
+
+File: `_code-refactored/refactor_code/input_processing/tree_processing/a_resource_distributor_dataframes.py`
+
+Previously this function only copied `precolonial`, `size`, `control`, `tree_id`,
+etc. from the node row onto template voxels. Now it also copies the 6
+proposal/intervention columns, mapped to V4 array names:
+
+- `row[proposal-decay_decision]` -> `proposal_decayV4`
+- `row[proposal-decay_intervention]` -> `proposal_decayV4_intervention`
+- `row[proposal-release-control_decision]` -> `proposal_release_controlV4`
+- `row[proposal-release-control_intervention]` -> `proposal_release_controlV4_intervention`
+- `row[proposal-deploy-structure_decision]` -> `proposal_deploy_structureV4`
+- `row[proposal-deploy-structure_intervention]` -> `proposal_deploy_structureV4_intervention`
+
+Falls back to `"not-assessed"` / `"none"` if the column is absent on the row.
+
+#### 2. `rename_non_resource_columns()` — exception list
+
+File: `_code-refactored/refactor_code/sim/voxel/voxel_a_voxeliser.py`
+
+Added all 6 V4 proposal array names to the exception list so they pass through
+without getting the `forest_` prefix. They land on `ds` with their V4 names.
+
+#### 3. `generate_vtk()` — pre-initialize V4 arrays on ds
+
+File: `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
+
+Before `integrate_resources_into_xarray(...)`, all 10 V4 arrays are initialized
+on `ds` with default values (`"not-assessed"` / `"none"`), split into two groups:
+
+Node-broadcast proposals (6 arrays — overwritten with real values during
+voxel integration):
+
+- `proposal_decayV4` / `proposal_decayV4_intervention`
+- `proposal_release_controlV4` / `proposal_release_controlV4_intervention`
+- `proposal_deploy_structureV4` / `proposal_deploy_structureV4_intervention`
+
+Derived proposals (4 arrays — do not depend on node df broadcast, populated
+later from scenario/search/indicator context):
+
+- `proposal_recruitV4` / `proposal_recruitV4_intervention`
+- `proposal_coloniseV4` / `proposal_coloniseV4_intervention`
+
+This ensures:
+
+- `update_existing_voxels()` can overwrite tree-owned voxels with real values
+- `prepare_new_voxel_dataframe()` initializes non-tree voxels to the correct
+  defaults
+
+#### What this fixes
+
+The V3 proposal logic in `create_v3_proposal_point_data(ds)` reads
+`ds[forest_proposal-release-control_decision]` etc., but those fields were never
+populated because `initialise_and_translate_tree()` never copied proposal columns
+from the node row. This caused `release-control`, `deploy-structure`, and
+`recruit` (node-level path) to be dead in current runs.
+
+### V4 Proposal Assignment Architecture (2026-04-07)
+
+V4 replaces the broken V3 voxel-level proposal assignment with three assignment
+categories that directly map engine node-level decisions onto voxels. The V3
+`create_v3_proposal_point_data()` and `ensure_v3_proposal_point_data()` calls
+are removed. V4 framebuffers read from the `proposal_*V4` arrays.
+
+#### Category 1: Node Broadcast (canopy/owned voxels)
+
+Where: `initialise_and_translate_tree()` in
+`a_resource_distributor_dataframes.py`, called during
+`integrate_resources_into_xarray()`.
+
+Each tree/pole template voxel receives its owning node row's proposal decisions
+and interventions directly:
+
+- `proposal_decayV4` / `proposal_decayV4_intervention`
+- `proposal_release_controlV4` / `proposal_release_controlV4_intervention`
+- `proposal_deploy_structureV4` / `proposal_deploy_structureV4_intervention`
+
+Log rows also broadcast `proposal_deploy_structureV4` via
+`process_single_log()`.
+
+This handles: all tree-canopy voxels for decay, release-control, and
+deploy-structure (poles via adapt-utility-pole, logs via translocated-log).
+
+#### Category 1A/1B: Under-Canopy and Under-Node (decay only)
+
+Where: `assign_v4_proposals_under_canopy_and_nodes(ds, df)` in
+`a_scenario_generateVTKs.py`, called after `integrate_resources_into_xarray()`.
+
+Decay is the only proposal that needs node-level matching here because
+release-control trees also set `under-node-treatment` but must not trigger
+decay proposals. This function loops through each node row, checks its actual
+`proposal-decay_decision`, and stamps matching voxels via:
+
+- `ds[node_CanopyID] == NodeID` for under-canopy voxels
+- Only voxels still marked `not-assessed` are touched
+
+Colonise and recruit do NOT need this node matching — they use bioEnvelope
+instead (Category 2).
+
+#### Category 2: BioEnvelope-Based (colonise and recruit)
+
+Where: `assign_v4_proposals_from_bioenvelope(ds)` in
+`a_scenario_generateVTKs.py`, called after the under-canopy function.
+
+Both colonise and recruit can use `scenario_bioEnvelope` because the engine
+assigns them to any tree with matching treatment (node-rewilded or
+footprint-depaved), regardless of whether it is a decay or release-control
+tree.
+
+Colonise interventions:
+
+- `node-rewilded`, `footprint-depaved`, `rewilded`, `otherground` -> `rewild-ground`
+- `greenroof` -> `enrich-envelope`
+- `brownroof`, `livingfacade` -> `roughen-envelope`
+
+Recruit interventions:
+
+- `node-rewilded`, `footprint-depaved` -> `buffer-feature`
+- `otherground`, `rewilded` -> `rewild-ground`
+
+Recruit also applies a 1.5m proximity rejection: voxels within 1.5m of
+existing medium/large/senescing trees are marked `proposal-recruit_rejected`.
+
+#### Per-Voxel Indicator-Based (deploy-structure upgrade-feature)
+
+Where: `assign_v4_proposals_per_voxel(polydata)` in
+`a_info_gather_capabilities.py`, called after `apply_indicators()`.
+
+Deploy-structure upgrade-feature depends on per-voxel indicators only available
+after indicator assignment:
+
+- `~forest_precolonial` AND `indicator_Bird_self_peeling` -> `upgrade-feature`
+- Only on voxels still `not-assessed` (poles/logs already set by Category 1)
+
+#### Framebuffer Build
+
+Where: `build_blender_proposal_framebuffer_arrays()` in
+`proposal_framebuffers_vtk.py`, called in `process_polydata()`.
+
+Reads the V4 arrays directly:
+
+- `proposal_decayV4` / `proposal_decayV4_intervention`
+- `proposal_release_controlV4` / `proposal_release_controlV4_intervention`
+- `proposal_recruitV4` / `proposal_recruitV4_intervention`
+- `proposal_coloniseV4` / `proposal_coloniseV4_intervention`
+- `proposal_deploy_structureV4` / `proposal_deploy_structureV4_intervention`
+
+Produces integer-coded `blender_proposal-*` arrays using the same
+`FRAMEBUFFER_STATE_MAPPINGS` as before.
+
+The V4 broadcast path seeds proposal values directly into V4 arrays during
+voxel integration so they are available for downstream proposal logic.
+
+#### Validated
+
+- `proposal_release_controlV4` confirmed working on trimmed-parade / positive /
+  yr10:
+  - `proposal-release-control_accepted`: 231,037 voxels
+  - `proposal-release-control_rejected`: 56,972 voxels
+  - `not-assessed`: 238,871 voxels
+  - `eliminate-pruning`: 152,011 voxels
+  - `reduce-pruning`: 79,026 voxels
+- compared to the broken run where release-control was all `not-assessed` / `none`
+
+#### Three categories of V4 proposal voxel assignment
+
+The V4 broadcast so far only handles category 1. Categories 2 and 3 still need
+to be wired.
+
+**1. Canopy voxel assignment (done)**
+
+Template-owned voxels. Each tree/log/pole template voxel receives its node
+row's proposal values during `initialise_and_translate_tree()`. This is what
+the three changes above implement.
+
+**2. Under-canopy and under-node voxels (not yet done)**
+
+Voxels mapped to a node by spatial ID, not by template ownership:
+
+- `ds[node_CanopyID] == df[NodeID]` — under-canopy voxels linked to a tree.
+  Used for `exoskeleton` and `footprint-depaved` treatments.
+- `ds[sim_Nodes] == df[NodeID]` — larger simulated growth region from each
+  node. Used for `node-rewilded` treatment.
+
+The mapping already happens in `create_under_node_treatment_variable(ds, df)`
+in `a_scenario_generateVTKs.py`, which broadcasts `df[under-node-treatment]`
+onto voxels using those two ID maps, then fills remaining enabled rewilding
+space as generic `rewilded`.
+
+This is where decay currently gets `buffer-feature` / `brace-feature` from
+`scenario_bioEnvelope`:
+
+- `node-rewilded` or `footprint-depaved` -> `proposal-decay_accepted` /
+  `buffer-feature`
+- `exoskeleton` -> `proposal-decay_accepted` / `brace-feature`
+
+**3. Non-node voxels (not yet done)**
+
+Voxels assigned outside nodes or their under-canopy / under-node regions.
+Driven by `sim_Turns`, `scenario_rewildingPlantings`, `scenario_outputs`,
+`search_bioavailable`, `search_urban_elements`, and indicator layers.
+
+This is where `colonise` and `recruit` are derived, and where
+`deploy-structure` gets voxel-level `adapt-utility-pole` / `upgrade-feature`.
+
+#### Not yet done
+
+- `create_v3_proposal_point_data(ds)` is commented out. The V3 fallback path
+  in `ensure_v3_proposal_point_data(polydata)` still runs using the old
+  `forest_proposal-*` reads and writes V3 arrays. It does not touch V4 arrays.
+- Categories 2 and 3 above need to be wired into V4 arrays.
+- `recruit` and `colonise` are purely derived from scenario/search context and
+  do not need node broadcast (category 3 only).
+- Once all three categories are handled, rename V4 -> proposal (drop version
+  suffix).
+
+### Allometric Growth And Flat Mortality (2026-04-08)
+
+Replaced the constant growth rate (0.44 cm/yr) with empirically-derived,
+size-dependent allometric growth curves and added a switchable mortality model.
+
+#### Growth Model
+
+Set in `params_v3.py` on all six site/scenario parameter dicts:
+
+```python
+"growth_model": "split",
+"growth_model_precolonial": "fischer",
+"growth_model_colonial": "ulmus",
+```
+
+`split` routes by the `precolonial` column in the tree dataframe:
+
+- **Precolonial trees** (`precolonial == True`): `fischer` — Fischer et al.
+  2010 SI equation calibrated on *Eucalyptus melliodora* (yellow box).
+  `Age = 0.0197135 × π × (DBH/2)²`. Same equation Le Roux et al. 2014 use
+  for their demographic model, so growth and mortality are internally
+  consistent.
+- **Colonial trees** (`precolonial == False`): `ulmus` — McPherson et al. 2016
+  USFS Urban Tree Database, *Ulmus americana* Pacific Northwest.
+  `DBH = -0.707 + 1.817×Age - 0.005×Age²`. Proxy for the English and Dutch
+  elms common in the study sites, following Croeser et al. 2025.
+
+Other available models (switchable via `growth_model`): `constant`, `banks`,
+`sideroxylon`. See `_documentation-refactored/appendix/appendix-g/growth allometry notes.md`
+for full equations, species, regions, and comparison tables.
+
+All models use a virtual-age round-trip: current DBH → infer implied age →
+advance age by step duration → compute new DBH. No age column is tracked.
+
+#### Mortality Model
+
+```python
+"mortality_model": "flat",
+```
+
+- `flat` — raw Le Roux per-cohort rates: 0.06/yr urban, 0.03/yr
+  nature-reserve. Applied uniformly regardless of DBH size class.
+- `shaped` — multiplies the anchor rate by a DBH-cohort adjustment factor
+  (the original v3 behaviour).
+
+Switch by changing `"mortality_model"` in the param dicts.
+
+#### REPLACE Action Fix
+
+Three changes in `engine_v3.py` to fix the death spiral where replaced trees
+were trapped at DBH 2.0:
+
+1. `action` cleared to `"None"` after replanting (was persisting as
+   `"REPLACE"` across pulses, causing `determine_proposal_decay` to skip
+   the tree).
+2. `under-node-treatment` preserved on replace (ground improvement survives
+   the tree).
+3. All stale proposal/intervention state cleared on replaced trees
+   (`proposal-release-control_*`, `proposal-recruit_*`,
+   `proposal-colonise_*`, `recruit_intervention_type`, `recruit_source_id`).
+
+#### Large Tree Mortality (2026-04-08)
+
+Extended annual mortality to include `large` trees (previously only `small` and
+`medium`). Le Roux's original model uses density-dependent mortality across all
+DBH cohorts; our prior restriction to small/medium was an implementation choice,
+not a data constraint. With flat mortality at 0.06/yr, large trees now decline
+unless replenished through the growth pipeline.
+
+#### Snag Duration (2026-04-08)
+
+Changed snag stage duration mode from 50 to 40 years:
+`triangular_duration(0, 40, 100)`.
+
+Lifecycle stage durations (all triangular distributions):
+
+| Stage | Min | Mode | Max |
+|---|---:|---:|---:|
+| senescing | 10 | 90 | 200 |
+| snag | 0 | 40 | 100 |
+| fallen | 10 | 40 | 100 |
+| decayed | 30 | 40 | 75 |
+
+#### Decay Rejection Tracking (2026-04-08)
+
+Added `_decay_rejected_this_state` boolean column to accumulate decay rejections
+across all pulses within a timestep. Previously, `proposal-decay_decision` was
+reset to `not-assessed` each pulse and cleared on replaced trees, losing the
+rejection signal. Now:
+
+- `_decay_rejected_this_state = False` initialised before the pulse loop
+- Set to `True` on any tree that triggers REPLACE during any pulse
+- After all pulses, mask is applied to stamp `proposal-decay_rejected` into the
+  saved output, then the tracking column is dropped
+
+#### Run Root
+
+```
+REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/v4
+```
+
+Run with `REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/v4`. All sites, all scenarios, years 0–180 including yr 1.
+
 ## Naming Rule For Active Legacy Dependencies
 
 When active legacy dependency scripts are moved into the live structure:

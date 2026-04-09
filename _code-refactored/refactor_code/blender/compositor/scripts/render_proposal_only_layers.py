@@ -5,23 +5,39 @@ from pathlib import Path
 
 import bpy
 
+REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
+COMPOSITOR_ROOT = REPO_ROOT / "_code-refactored" / "refactor_code" / "blender" / "compositor"
+CANONICAL_ROOT = COMPOSITOR_ROOT / "canonical_templates"
+OUTPUT_BASE = REPO_ROOT / "_data-refactored" / "compositor" / "outputs"
+DEFAULT_EXR = (
+    REPO_ROOT
+    / "data"
+    / "blender"
+    / "2026"
+    / "edge_detection_lab"
+    / "inputs"
+    / "LATEST_REMOTE_EXRS"
+    / "simv3-7_20260405_8k64s_simv3-7"
+    / "parade_timeline"
+    / "parade_timeline__positive_state__8k64s.exr"
+)
 
 EXR_PATH = Path(
     os.environ.get(
         "EDGE_LAB_PROPOSAL_ONLY_EXR",
-        "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/inputs/LATEST_REMOTE_EXRS/simv3-7_20260405_8k64s_simv3-7/parade_timeline/parade_timeline__positive_state__8k64s.exr",
+        str(DEFAULT_EXR),
     )
 ).expanduser()
 OUTPUT_DIR = Path(
     os.environ.get(
         "EDGE_LAB_PROPOSAL_ONLY_OUTPUT_DIR",
-        "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/outputs/proposal_only_layers",
+        str(OUTPUT_BASE / "proposal_only_layers"),
     )
 ).expanduser()
 BLEND_PATH = Path(
     os.environ.get(
         "EDGE_LAB_PROPOSAL_ONLY_BLEND",
-        "/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/blender/2026/edge_detection_lab/proposal_only_layers.blend",
+        str(CANONICAL_ROOT / "proposal_only_layers.blend"),
     )
 ).expanduser()
 

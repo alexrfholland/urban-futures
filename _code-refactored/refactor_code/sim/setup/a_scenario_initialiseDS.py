@@ -287,18 +287,53 @@ def PreprocessData(treeDF, ds, extraTreeDF):
     treeDF['size'] = treeDF['size'].astype(str)
     treeDF['control'] = treeDF['control'].astype(str)
 
-    # Fill NaN values in 'diameter_breast_height' based on the 'size' column
+    # Fill NaN values in 'diameter_breast_height' using triangular distributions
     print("Checking for missing values in 'diameter_breast_height' and filling them based on 'size' column...")
     nan_before = treeDF['diameter_breast_height'].isna().sum()
-    treeDF['diameter_breast_height'] = treeDF['diameter_breast_height'].fillna(
-        treeDF['size'].map({'small': 10, 'medium': 40, 'large': 80})
-    )
+    dbh_distributions = {
+        'small':  {'left': 0,  'mode': 15, 'right': 40},
+        'medium': {'left': 40, 'mode': 55, 'right': 80},
+        'large':  {'left': 80, 'mode': 95, 'right': 110},
+    }
+    rng = np.random.default_rng(seed=42)
+    nan_mask = treeDF['diameter_breast_height'].isna()
+    for size_class, params in dbh_distributions.items():
+        size_nan_mask = nan_mask & treeDF['size'].eq(size_class)
+        n = size_nan_mask.sum()
+        if n > 0:
+            values = rng.triangular(params['left'], params['mode'], params['right'], size=n)
+            treeDF.loc[size_nan_mask, 'diameter_breast_height'] = np.round(values, 1)
+            print(f"  Filled {n} {size_class} trees: range {values.min():.1f}-{values.max():.1f}cm, mean {values.mean():.1f}cm")
     nan_after = treeDF['diameter_breast_height'].isna().sum()
 
     # Print the number of NaNs filled
     print(f"Number of missing values before: {nan_before}")
     print(f"Number of missing values after: {nan_after}")
     print("Filling completed.")
+
+    # Distribute trees sharing identical DBH values using Fischer growth spread.
+    # For each duplicate DBH, compute ±5 years of growth to get a natural range,
+    # then spread trees uniformly across it. Wider for small (fast-growing) trees,
+    # narrower for large (slow-growing) trees.
+    fischer_k = 0.0197135 * np.pi / 4.0  # Fischer SI constant
+    spread_years = 5
+    min_group = 2  # only spread groups of 2+
+    living_mask = treeDF['size'].isin(['small', 'medium', 'large'])
+    spread_rng = np.random.default_rng(seed=123)
+    total_spread = 0
+    for dbh_val, group in treeDF.loc[living_mask].groupby('diameter_breast_height'):
+        if len(group) < min_group:
+            continue
+        virtual_age = fischer_k * dbh_val ** 2
+        age_lo = max(0, virtual_age - spread_years)
+        age_hi = virtual_age + spread_years
+        dbh_lo = np.sqrt(age_lo / fischer_k)
+        dbh_hi = np.sqrt(age_hi / fischer_k)
+        spread_values = spread_rng.uniform(dbh_lo, dbh_hi, size=len(group))
+        treeDF.loc[group.index, 'diameter_breast_height'] = np.round(spread_values, 1)
+        total_spread += len(group)
+    if total_spread > 0:
+        print(f"Spread {total_spread} trees with duplicate DBH values using ±{spread_years}yr Fischer growth range")
 
     # Base trees without canopy footprints can still inherit support values from their own voxel.
     voxel_index = pd.to_numeric(treeDF["voxel_index"], errors="coerce")
@@ -364,25 +399,25 @@ def initialize_dataset(site, voxel_size, *, write_cache: bool = True):
     filepath = site_rewilding_voxel_array_path(site, voxel_size)
     subset_path = site_subset_dataset_path(site, voxel_size)
 
-    if not write_cache and subset_path.exists():
+    if subset_path.exists() and subset_path.stat().st_size > 0:
         try:
             possibility_space_ds = xr.open_dataset(subset_path)
             print(f'Loaded existing subset dataset from {subset_path}')
             return possibility_space_ds
         except Exception as exc:
             print(f'Failed to load existing subset dataset from {subset_path}: {exc}')
-            print('Rebuilding subset dataset in-memory without writing cache.')
+            print('Rebuilding subset dataset.')
 
     xarray_dataset = xr.open_dataset(filepath)
 
     print("Variables in xarray_dataset:")
     print(xarray_dataset.variables)
-    
+
     possibility_space_ds = getDataSubest(xarray_dataset)
     if write_cache:
         possibility_space_ds.to_netcdf(subset_path)
     print('Loaded and subsetted xarray data')
-    
+
     return possibility_space_ds
 
 def load_node_dataframes(site, voxel_size):

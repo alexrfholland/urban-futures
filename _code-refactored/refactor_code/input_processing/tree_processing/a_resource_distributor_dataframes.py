@@ -322,7 +322,17 @@ def process_single_log(row, log_templates):
     for col in metadata_columns:
         if col in row:
             result_df[col] = row[col]
-    
+
+    # Broadcast deploy-structure proposal from the log's df row onto template voxels
+    _deploy_dec = row.get('proposal-deploy-structure_decision', 'not-assessed')
+    _deploy_int = row.get('proposal-deploy-structure_intervention', 'none')
+    if _deploy_dec is None or str(_deploy_dec) in ('None', 'nan', ''):
+        _deploy_dec = 'not-assessed'
+    if _deploy_int is None or str(_deploy_int) in ('None', 'nan', ''):
+        _deploy_int = 'none'
+    result_df['proposal_deploy_structureV4'] = _deploy_dec
+    result_df['proposal_deploy_structureV4_intervention'] = _deploy_int
+
     return result_df
 
 def create_log_resource_df(logLocationsDF, logLibraryDF, voxel_size=None):
@@ -479,6 +489,30 @@ def initialise_and_translate_tree(tree_template, row):
     if 'isNewTree' in row:
         tree_template_copy['isNewTree'] = row['isNewTree']
 
+    # Broadcast node-level proposal/intervention values directly into V4 arrays.
+    # These are excluded from the forest_* rename step so they land on ds with
+    # their V4 names, ready for the proposal logic in a_info_gather_capabilities.
+    _proposal_map = {
+        'proposal_decayV4': 'proposal-decay_decision',
+        'proposal_decayV4_intervention': 'proposal-decay_intervention',
+        'proposal_release_controlV4': 'proposal-release-control_decision',
+        'proposal_release_controlV4_intervention': 'proposal-release-control_intervention',
+        'proposal_deploy_structureV4': 'proposal-deploy-structure_decision',
+        'proposal_deploy_structureV4_intervention': 'proposal-deploy-structure_intervention',
+    }
+    _proposal_defaults = {
+        'proposal_decayV4': 'not-assessed',
+        'proposal_decayV4_intervention': 'none',
+        'proposal_release_controlV4': 'not-assessed',
+        'proposal_release_controlV4_intervention': 'none',
+        'proposal_deploy_structureV4': 'not-assessed',
+        'proposal_deploy_structureV4_intervention': 'none',
+    }
+    for v4_col, node_col in _proposal_map.items():
+        val = row[node_col] if node_col in row.index else None
+        if val is None or (isinstance(val, float) and pd.isna(val)) or str(val) in ('None', 'nan', ''):
+            val = _proposal_defaults[v4_col]
+        tree_template_copy[v4_col] = val
 
     return tree_template_copy
 
@@ -574,10 +608,8 @@ def process_single_tree(row, tree_templates_df):
 
 
 def _template_root() -> Path:
-    override = os.environ.get("TREE_TEMPLATE_ROOT")
-    if override:
-        return Path(override)
-    return _canonical_base_template_root()
+    from refactor_code.paths import tree_template_root
+    return tree_template_root()
 
 
 def _canonical_base_template_root() -> Path:

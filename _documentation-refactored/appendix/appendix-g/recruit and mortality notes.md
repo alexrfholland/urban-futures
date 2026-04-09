@@ -13,14 +13,14 @@ We use `annual_tree_death_urban` by default and `annual_tree_death_nature-reserv
 
 In the current v3 implementation, we follow Le Roux's cohort-thinning logic, keep their standard `0.06` urban and `0.03` nature-reserve annual mortality values as anchors, and apply DBH-cohort survival curves based on their assessments of tree survival across successive cohorts.
 
-In the current v3 implementation, `buffer-feature` recruits use the urban mortality rate and `rewild-ground` recruits use the nature-reserve mortality rate. Other `small` and `medium` trees also use the urban mortality rate by default.
+In the current v3 implementation, `buffer-feature` recruits use the urban mortality rate and `rewild-ground` recruits use the nature-reserve mortality rate. Other `small`, `medium`, and `large` trees also use the urban mortality rate by default.
 
 - adds annual_tree_death_urban = 0.06
 - adds annual_tree_death_nature-reserves = 0.03
-- applies this only to small and medium trees
+- applies this to small, medium, and large trees (v4: extended to large; v3 applied only to small and medium)
 - uses rewild-ground recruits as the lower-mortality case
 - uses buffer-feature recruits as the urban-rate case
-- uses the urban rate for other small / medium trees by default
+- uses the urban rate for other small / medium / large trees by default
 
 Definitions for the current implementation:
 

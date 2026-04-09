@@ -29,6 +29,19 @@ if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
 from refactor_code.sim.setup import params_v3
+from refactor_code.sim.setup.constants import (
+    COLONISE_FULL_ENVELOPE,
+    COLONISE_FULL_GROUND,
+    COLONISE_PARTIAL_ENVELOPE,
+    DECAY_FULL,
+    DECAY_PARTIAL,
+    DEPLOY_FULL_POLE,
+    DEPLOY_FULL_UPGRADE,
+    RECRUIT_FULL,
+    RECRUIT_PARTIAL,
+    RELEASECONTROL_FULL,
+    RELEASECONTROL_PARTIAL,
+)
 from refactor_code.sim.voxel import voxel_a_helper_functions as a_helper_functions
 
 from refactor_code.paths import (
@@ -259,7 +272,25 @@ URBAN_ELEMENTS = [
 # Rewilding status types
 REWILDING_TYPES = ['footprint-depaved', 'exoskeleton', 'node-rewilded', 'none']
 PROPOSAL_LABEL_DTYPE = "<U64"
-COLONISE_PROPOSAL_VALUES = {
+
+# --- Proposal intervention string constants (imported from constants.py) ------
+PROPOSAL_DECAY_BUFFER_INTERVENTION = DECAY_FULL
+PROPOSAL_DECAY_BRACE_INTERVENTION = DECAY_PARTIAL
+PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION = RELEASECONTROL_PARTIAL
+PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION = RELEASECONTROL_FULL
+PROPOSAL_COLONISE_REWILD_INTERVENTION = COLONISE_FULL_GROUND
+PROPOSAL_COLONISE_ENRICH_INTERVENTION = COLONISE_FULL_ENVELOPE
+PROPOSAL_COLONISE_ROUGHEN_INTERVENTION = COLONISE_PARTIAL_ENVELOPE
+PROPOSAL_RECRUIT_BUFFER_INTERVENTION = RECRUIT_PARTIAL
+PROPOSAL_RECRUIT_REWILD_INTERVENTION = RECRUIT_FULL
+PROPOSAL_DEPLOY_STRUCTURE_ADAPT_INTERVENTION = DEPLOY_FULL_POLE
+PROPOSAL_DEPLOY_STRUCTURE_UPGRADE_INTERVENTION = DEPLOY_FULL_UPGRADE
+
+# --- Proposal intervention value sets ----------------------------------------
+PROPOSAL_DECAY_BUFFER_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved"}
+PROPOSAL_DECAY_BRACE_INTERVENTION_VALUES = {"exoskeleton"}
+
+PROPOSAL_COLONISE_OPPORTUNITY_VALUES = {
     "brownroof",
     "greenroof",
     "livingfacade",
@@ -268,12 +299,16 @@ COLONISE_PROPOSAL_VALUES = {
     "otherground",
     "rewilded",
 }
-COLONISE_REWILD_VALUES = {"node-rewilded", "footprint-depaved", "rewilded"}
-COLONISE_ENRICH_VALUES = {"greenroof"}
-COLONISE_ROUGHEN_VALUES = {"brownroof", "livingfacade"}
-DECAY_BUFFER_VALUES = {"node-rewilded", "footprint-depaved"}
-RECRUIT_BUFFER_VALUES = {"node-rewilded", "footprint-depaved"}
-RECRUIT_REWILD_VALUES = {"otherground", "rewilded"}
+PROPOSAL_COLONISE_REWILD_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved", "rewilded"}
+PROPOSAL_COLONISE_ENRICH_INTERVENTION_VALUES = {"greenroof"}
+PROPOSAL_COLONISE_ROUGHEN_INTERVENTION_VALUES = {"brownroof", "livingfacade"}
+
+PROPOSAL_RECRUIT_BUFFER_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved"}
+PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES = {"otherground", "rewilded"}
+PROPOSAL_RECRUIT_DISTANCE_M = 20.0
+
+PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION_VALUES = {"park-tree", "park tree"}
+PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION_VALUES = {"reserve-tree", "reserve tree", "improved-tree", "improved tree"}
 
 
 # =============================================================================
@@ -479,7 +514,7 @@ def add_proposal_point_data(polydata):
     recruit_opportunity = get_points_within_distance(
         polydata,
         get_distance_reference_mask(polydata, "canopy-feature"),
-        20.0,
+        PROPOSAL_RECRUIT_DISTANCE_M,
     ) & (~get_building_mask(polydata))
 
     proposal_decay = _assign_proposal_labels(
@@ -489,8 +524,8 @@ def add_proposal_point_data(polydata):
             ["exoskeleton", "footprint-depaved", "node-rewilded", "rewilded"],
         ),
         [
-            ("buffer-feature", np.isin(scenario_bio_envelope_lower, list(DECAY_BUFFER_VALUES))),
-            ("brace-feature", scenario_bio_envelope_lower == "exoskeleton"),
+            (PROPOSAL_DECAY_BUFFER_INTERVENTION, np.isin(scenario_bio_envelope_lower, list(PROPOSAL_DECAY_BUFFER_INTERVENTION_VALUES))),
+            (PROPOSAL_DECAY_BRACE_INTERVENTION, np.isin(scenario_bio_envelope_lower, list(PROPOSAL_DECAY_BRACE_INTERVENTION_VALUES))),
         ],
         "decay",
     )
@@ -500,12 +535,12 @@ def add_proposal_point_data(polydata):
         recruit_opportunity,
         [
             (
-                "buffer-feature",
-                recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_BUFFER_VALUES)),
+                PROPOSAL_RECRUIT_BUFFER_INTERVENTION,
+                recruit_indicator & np.isin(scenario_bio_envelope_lower, list(PROPOSAL_RECRUIT_BUFFER_INTERVENTION_VALUES)),
             ),
             (
-                "rewild-ground",
-                recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_REWILD_VALUES)),
+                PROPOSAL_RECRUIT_REWILD_INTERVENTION,
+                recruit_indicator & np.isin(scenario_bio_envelope_lower, list(PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES)),
             ),
         ],
         "recruit",
@@ -517,29 +552,29 @@ def add_proposal_point_data(polydata):
         release_opportunity,
         [
             (
-                "eliminate-pruning",
+                PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION,
                 release_opportunity
                 & np.isin(
                     forest_control_lower,
-                    ["reserve-tree", "reserve tree", "improved-tree", "improved tree"],
+                    list(PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION_VALUES),
                 ),
             ),
             (
-                "reduce-pruning",
-                release_opportunity & np.isin(forest_control_lower, ["park-tree", "park tree"]),
+                PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION,
+                release_opportunity & np.isin(forest_control_lower, list(PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION_VALUES)),
             ),
         ],
         "release-control",
     )
 
-    colonise_opportunity = np.isin(scenario_outputs_lower, list(COLONISE_PROPOSAL_VALUES))
+    colonise_opportunity = np.isin(scenario_outputs_lower, list(PROPOSAL_COLONISE_OPPORTUNITY_VALUES))
     proposal_colonise = _assign_proposal_labels(
         _empty_proposal_labels(n_points),
         colonise_opportunity,
         [
-            ("rewild-ground", colonise_opportunity & np.isin(scenario_outputs_lower, list(COLONISE_REWILD_VALUES))),
-            ("enrich-envelope", colonise_opportunity & np.isin(scenario_outputs_lower, list(COLONISE_ENRICH_VALUES))),
-            ("roughen-envelope", colonise_opportunity & np.isin(scenario_outputs_lower, list(COLONISE_ROUGHEN_VALUES))),
+            (PROPOSAL_COLONISE_REWILD_INTERVENTION, colonise_opportunity & np.isin(scenario_outputs_lower, list(PROPOSAL_COLONISE_REWILD_INTERVENTION_VALUES))),
+            (PROPOSAL_COLONISE_ENRICH_INTERVENTION, colonise_opportunity & np.isin(scenario_outputs_lower, list(PROPOSAL_COLONISE_ENRICH_INTERVENTION_VALUES))),
+            (PROPOSAL_COLONISE_ROUGHEN_INTERVENTION, colonise_opportunity & np.isin(scenario_outputs_lower, list(PROPOSAL_COLONISE_ROUGHEN_INTERVENTION_VALUES))),
         ],
         "colonise",
     )
@@ -550,8 +585,8 @@ def add_proposal_point_data(polydata):
         _empty_proposal_labels(n_points),
         upgrade_mask | adapt_mask,
         [
-            ("upgrade-feature", upgrade_mask),
-            ("adapt-utility-pole", adapt_mask),
+            (PROPOSAL_DEPLOY_STRUCTURE_UPGRADE_INTERVENTION, upgrade_mask),
+            (PROPOSAL_DEPLOY_STRUCTURE_ADAPT_INTERVENTION, adapt_mask),
         ],
         "deploy-structure",
     )
@@ -625,11 +660,11 @@ def ensure_v3_proposal_point_data(polydata):
     forest_decay_mask = ~np.isin(forest_decay_decision_lower, ["", "nan", "not-assessed"])
     proposal_decay[forest_decay_mask] = forest_decay_decision[forest_decay_mask]
     decay_intervention[forest_decay_mask] = forest_decay_intervention[forest_decay_mask]
-    decay_buffer_mask = np.isin(scenario_bio_envelope_lower, list(DECAY_BUFFER_VALUES))
-    decay_brace_mask = scenario_bio_envelope_lower == "exoskeleton"
+    decay_buffer_mask = np.isin(scenario_bio_envelope_lower, list(PROPOSAL_DECAY_BUFFER_INTERVENTION_VALUES))
+    decay_brace_mask = np.isin(scenario_bio_envelope_lower, list(PROPOSAL_DECAY_BRACE_INTERVENTION_VALUES))
     proposal_decay[decay_buffer_mask | decay_brace_mask] = "proposal-decay_accepted"
-    decay_intervention[decay_buffer_mask] = "buffer-feature"
-    decay_intervention[decay_brace_mask] = "brace-feature"
+    decay_intervention[decay_buffer_mask] = PROPOSAL_DECAY_BUFFER_INTERVENTION
+    decay_intervention[decay_brace_mask] = PROPOSAL_DECAY_BRACE_INTERVENTION
 
     release_opportunity = search_bioavailable_lower == "arboreal"
     forest_release_mask = ~np.isin(forest_release_decision_lower, ["", "nan", "not-assessed"])
@@ -638,32 +673,32 @@ def ensure_v3_proposal_point_data(polydata):
     proposal_release_control[release_opportunity & (release_control_intervention == "none")] = "proposal-release-control_rejected"
     release_control_intervention[
         release_opportunity
-        & np.isin(forest_control_lower, ["park-tree", "park tree"])
+        & np.isin(forest_control_lower, list(PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION_VALUES))
         & (release_control_intervention == "none")
-    ] = "reduce-pruning"
+    ] = PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION
     release_control_intervention[
         release_opportunity
-        & np.isin(forest_control_lower, ["reserve-tree", "reserve tree", "improved-tree", "improved tree"])
+        & np.isin(forest_control_lower, list(PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION_VALUES))
         & (release_control_intervention == "none")
-    ] = "eliminate-pruning"
+    ] = PROPOSAL_RELEASE_CONTROL_ELIMINATE_INTERVENTION
     proposal_release_control[release_opportunity & (release_control_intervention != "none")] = "proposal-release-control_accepted"
 
-    colonise_opportunity = np.isin(scenario_outputs_lower, list(COLONISE_PROPOSAL_VALUES))
+    colonise_opportunity = np.isin(scenario_outputs_lower, list(PROPOSAL_COLONISE_OPPORTUNITY_VALUES))
     proposal_colonise[colonise_opportunity] = "proposal-colonise_accepted"
-    colonise_intervention[np.isin(scenario_outputs_lower, list(COLONISE_REWILD_VALUES))] = "rewild-ground"
-    colonise_intervention[np.isin(scenario_outputs_lower, list(COLONISE_ENRICH_VALUES))] = "enrich-envelope"
-    colonise_intervention[np.isin(scenario_outputs_lower, list(COLONISE_ROUGHEN_VALUES))] = "roughen-envelope"
+    colonise_intervention[np.isin(scenario_outputs_lower, list(PROPOSAL_COLONISE_REWILD_INTERVENTION_VALUES))] = PROPOSAL_COLONISE_REWILD_INTERVENTION
+    colonise_intervention[np.isin(scenario_outputs_lower, list(PROPOSAL_COLONISE_ENRICH_INTERVENTION_VALUES))] = PROPOSAL_COLONISE_ENRICH_INTERVENTION
+    colonise_intervention[np.isin(scenario_outputs_lower, list(PROPOSAL_COLONISE_ROUGHEN_INTERVENTION_VALUES))] = PROPOSAL_COLONISE_ROUGHEN_INTERVENTION
 
     recruit_buffer_opportunity = get_points_within_distance(
         polydata,
         get_distance_reference_mask(polydata, "canopy-feature"),
-        20.0,
+        PROPOSAL_RECRUIT_DISTANCE_M,
     ) & (~get_building_mask(polydata))
     recruit_consideration_mask = recruit_buffer_opportunity | recruit_planting_mask
     proposal_recruit[recruit_consideration_mask] = "proposal-recruit_rejected"
-    recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_BUFFER_VALUES))] = "buffer-feature"
-    recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(RECRUIT_REWILD_VALUES))] = "rewild-ground"
-    recruit_acceptance_mask = np.isin(recruit_intervention, ["buffer-feature", "rewild-ground"])
+    recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(PROPOSAL_RECRUIT_BUFFER_INTERVENTION_VALUES))] = PROPOSAL_RECRUIT_BUFFER_INTERVENTION
+    recruit_intervention[recruit_indicator & np.isin(scenario_bio_envelope_lower, list(PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES))] = PROPOSAL_RECRUIT_REWILD_INTERVENTION
+    recruit_acceptance_mask = np.isin(recruit_intervention, [PROPOSAL_RECRUIT_BUFFER_INTERVENTION, PROPOSAL_RECRUIT_REWILD_INTERVENTION])
     proposal_recruit[recruit_acceptance_mask] = "proposal-recruit_accepted"
 
     forest_deploy_mask = ~np.isin(forest_deploy_decision_lower, ["", "nan", "not-assessed"])
@@ -671,10 +706,10 @@ def ensure_v3_proposal_point_data(polydata):
     deploy_structure_intervention[forest_deploy_mask] = forest_deploy_intervention[forest_deploy_mask]
     adapt_mask = (forest_size_lower == "artificial") & (~forest_precolonial) & (deploy_structure_intervention == "none")
     proposal_deploy_structure[adapt_mask] = "proposal-deploy-structure_accepted"
-    deploy_structure_intervention[adapt_mask] = "adapt-utility-pole"
+    deploy_structure_intervention[adapt_mask] = PROPOSAL_DEPLOY_STRUCTURE_ADAPT_INTERVENTION
     upgrade_mask = (~forest_precolonial) & peeling_indicator & (deploy_structure_intervention == "none")
     proposal_deploy_structure[upgrade_mask] = "proposal-deploy-structure_accepted"
-    deploy_structure_intervention[upgrade_mask] = "upgrade-feature"
+    deploy_structure_intervention[upgrade_mask] = PROPOSAL_DEPLOY_STRUCTURE_UPGRADE_INTERVENTION
 
     polydata.point_data["proposal_decayV3"] = proposal_decay
     polydata.point_data["proposal_release_controlV3"] = proposal_release_control
@@ -1057,6 +1092,38 @@ def merge_site_stats(site, scenarios=None, years=None, voxel_size=1, include_bas
     return indicator_df, action_df
 
 
+def assign_v4_proposals_per_voxel(polydata):
+    """Assign V4 proposals that depend on per-voxel indicators (available only
+    after apply_indicators has run).
+
+    Deploy-structure → upgrade-feature:
+        ~precolonial & peeling_indicator
+        Only on voxels still not-assessed (don't overwrite poles/logs).
+    """
+    if "proposal_deploy_structureV4" not in polydata.point_data:
+        return polydata
+    if "indicator_Bird_self_peeling" not in polydata.point_data:
+        return polydata
+
+    deploy_decision = np.asarray(polydata.point_data["proposal_deploy_structureV4"]).astype("<U64")
+    unset = deploy_decision == "not-assessed"
+
+    precolonial = _coerce_bool_array(polydata.point_data["forest_precolonial"])
+    peeling = _coerce_bool_array(polydata.point_data["indicator_Bird_self_peeling"])
+
+    upgrade_mask = unset & (~precolonial) & peeling
+
+    if upgrade_mask.any():
+        deploy_decision[upgrade_mask] = "proposal-deploy-structure_accepted"
+        deploy_intervention = np.asarray(polydata.point_data["proposal_deploy_structureV4_intervention"]).astype("<U64")
+        deploy_intervention[upgrade_mask] = DEPLOY_FULL_UPGRADE
+        polydata.point_data["proposal_deploy_structureV4"] = deploy_decision
+        polydata.point_data["proposal_deploy_structureV4_intervention"] = deploy_intervention
+        print(f"V4 deploy-structure per-voxel: {int(upgrade_mask.sum())} upgrade-feature")
+
+    return polydata
+
+
 def process_polydata(polydata, site, scenario, year, voxel_size=1, save_vtk=True, save_stats=True, output_mode=None):
     """
     Process a single in-memory polydata: apply indicators, gather counts, and optionally save.
@@ -1072,8 +1139,11 @@ def process_polydata(polydata, site, scenario, year, voxel_size=1, save_vtk=True
     print(f"{'='*60}")
 
     polydata, results = apply_indicators(polydata)
-    polydata = add_proposal_point_data(polydata)
-    polydata = ensure_v3_proposal_point_data(polydata)
+    polydata = assign_v4_proposals_per_voxel(polydata)
+    # Build Blender framebuffer int arrays from V4 proposal point data
+    blender_arrays = build_blender_proposal_framebuffer_arrays(polydata.point_data)
+    for name, values in blender_arrays.items():
+        polydata.point_data[name] = values
 
     indicator_df, action_df = _build_indicator_action_frames(
         polydata, results, site, scenario, year, voxel_size

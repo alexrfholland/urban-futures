@@ -38,19 +38,19 @@ from refactor_code.blender.bexport.proposal_framebuffers import DEFAULT_OUTPUT_C
 
 
 VTK_PROPOSAL_FAMILIES = [
-    ("proposal-decay", "proposal_decayV3", "proposal_decayV3_intervention"),
-    ("proposal-release-control", "proposal_release_controlV3", "proposal_release_controlV3_intervention"),
-    ("proposal-recruit", "proposal_recruitV3", "proposal_recruitV3_intervention"),
-    ("proposal-colonise", "proposal_coloniseV3", "proposal_coloniseV3_intervention"),
-    ("proposal-deploy-structure", "proposal_deploy_structureV3", "proposal_deploy_structureV3_intervention"),
+    ("proposal-decay", "proposal_decayV4", "proposal_decayV4_intervention"),
+    ("proposal-release-control", "proposal_release_controlV4", "proposal_release_controlV4_intervention"),
+    ("proposal-recruit", "proposal_recruitV4", "proposal_recruitV4_intervention"),
+    ("proposal-colonise", "proposal_coloniseV4", "proposal_coloniseV4_intervention"),
+    ("proposal-deploy-structure", "proposal_deploy_structureV4", "proposal_deploy_structureV4_intervention"),
 ]
 
 
 def _normalized_array(values_by_name, name: str, fallback: str) -> np.ndarray:
     if name not in values_by_name:
         raise KeyError(f"Missing required point-data array: {name}")
-    values = np.asarray(values_by_name[name]).astype(str)
-    values[values == "nan"] = fallback
+    values = np.asarray(values_by_name[name]).astype('<U64')
+    values[(values == "nan") | (values == "None") | (values == "")] = fallback
     return values
 
 

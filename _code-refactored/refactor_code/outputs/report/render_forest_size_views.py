@@ -146,6 +146,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--point-size", type=float, default=4.0)
     parser.add_argument("--window-width", type=int, default=2200)
     parser.add_argument("--window-height", type=int, default=1600)
+    parser.add_argument(
+        "--views",
+        nargs="*",
+        default=None,
+        help="View names to render (e.g. classic merged). Default: all views.",
+    )
     return parser.parse_args()
 
 
@@ -442,18 +448,21 @@ def main() -> None:
     args = parse_args()
     render_root = engine_output_validation_dir(args.output_mode) / "renders"
 
+    all_views = [
+        "classic",
+        "merged",
+        "proposal-hybrid",
+        "proposal-hybrid-v3",
+        "lifecycle-phases",
+        "lifecycles-ground-conditons",
+    ]
+    views = args.views if args.views else all_views
+
     for site, scenario, year, vtk_path in iter_targets(args):
         mesh = pv.read(vtk_path)
         base_name = f"{site}_{scenario}_yr{year}"
         print(f"Rendering {base_name} from {vtk_path}")
-        for view_name in [
-            "classic",
-            "merged",
-            "proposal-hybrid",
-            "proposal-hybrid-v3",
-            "lifecycle-phases",
-            "lifecycles-ground-conditons",
-        ]:
+        for view_name in views:
             output_path = render_root / view_name / f"{base_name}_{view_name}.png"
             render_view(
                 mesh,
