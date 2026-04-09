@@ -16,10 +16,10 @@ import bpy
 try:
     from .bV2_scene_contract import (
         MATERIAL_NAMES,
-        VIEW_LAYER_NAMES,
         get_aov_names,
         get_expected_camera_names,
         get_source_world_objects,
+        get_view_layer_names,
         get_working_collection_tree,
         make_bioenvelope_object_name,
         make_world_object_name,
@@ -30,10 +30,10 @@ except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from bV2_scene_contract import (  # type: ignore
         MATERIAL_NAMES,
-        VIEW_LAYER_NAMES,
         get_aov_names,
         get_expected_camera_names,
         get_source_world_objects,
+        get_view_layer_names,
         get_working_collection_tree,
         make_bioenvelope_object_name,
         make_world_object_name,
@@ -113,7 +113,9 @@ def validate_scene(scene: bpy.types.Scene | None = None, *, strict: bool = True)
             f"Scene camera is {scene.camera.name!r}; expected one of {expected_camera_names!r}"
         )
 
-    expected_layers = list(VIEW_LAYER_NAMES)
+    is_baseline = mode == "baseline"
+
+    expected_layers = list(get_view_layer_names(mode))
     actual_layers = [view_layer.name for view_layer in scene.view_layers]
     for layer_name in expected_layers:
         if layer_name not in actual_layers:
@@ -129,8 +131,8 @@ def validate_scene(scene: bpy.types.Scene | None = None, *, strict: bool = True)
         if missing:
             errors.append(f"View layer {view_layer.name!r} is missing AOVs: {', '.join(missing)}")
 
-    expected_roles = set(get_working_collection_tree().keys())
-    for child_roles in get_working_collection_tree().values():
+    expected_roles = set(get_working_collection_tree(mode).keys())
+    for child_roles in get_working_collection_tree(mode).values():
         expected_roles.update(child_roles)
     for role in sorted(expected_roles):
         if find_collection_by_role(scene, role) is None:
@@ -138,35 +140,39 @@ def validate_scene(scene: bpy.types.Scene | None = None, *, strict: bool = True)
 
     if not bool(scene.get("bV2_instancers_built", False)):
         errors.append("Scene flag bV2_instancers_built is not set")
-    if not bool(scene.get("bV2_bioenvelopes_built", False)):
+    if not is_baseline and not bool(scene.get("bV2_bioenvelopes_built", False)):
         errors.append("Scene flag bV2_bioenvelopes_built is not set")
-    if not bool(scene.get("bV2_world_attributes_built", False)):
+    if not is_baseline and not bool(scene.get("bV2_world_attributes_built", False)):
         errors.append("Scene flag bV2_world_attributes_built is not set")
 
-    for state in ("positive", "trending"):
+    validate_states = ("positive",) if is_baseline else ("positive", "trending")
+
+    for state in validate_states:
         for kind in get_source_world_objects(site).keys() if site else ():
             object_name = make_world_object_name(kind, site, mode, state, year)
             obj = bpy.data.objects.get(object_name)
             if obj is None:
-                errors.append(f"Missing world object {object_name!r}")
+                if not is_baseline:
+                    errors.append(f"Missing world object {object_name!r}")
                 continue
             if not mesh_has_attribute(obj, SOURCE_YEAR_ATTRIBUTE):
                 errors.append(f"World object {object_name!r} is missing {SOURCE_YEAR_ATTRIBUTE!r}")
             if not object_uses_material(obj, MATERIAL_NAMES["world"]):
                 warnings.append(f"World object {object_name!r} is not using {MATERIAL_NAMES['world']!r}")
 
-    for state in ("positive", "trending"):
-        object_name = make_bioenvelope_object_name(site, mode, state, year) if site and mode else ""
-        obj = bpy.data.objects.get(object_name) if object_name else None
-        if obj is None:
-            errors.append(f"Missing bioenvelope object {object_name!r}")
-            continue
-        if not mesh_has_attribute(obj, SOURCE_YEAR_ATTRIBUTE):
-            errors.append(f"Bioenvelope {object_name!r} is missing {SOURCE_YEAR_ATTRIBUTE!r}")
-        if obj.type == "MESH" and len(obj.data.vertices) == 0:
-            warnings.append(f"Bioenvelope {object_name!r} is empty")
-        if not object_uses_material(obj, MATERIAL_NAMES["bioenvelope"]):
-            warnings.append(f"Bioenvelope {object_name!r} is not using {MATERIAL_NAMES['bioenvelope']!r}")
+    if not is_baseline:
+        for state in validate_states:
+            object_name = make_bioenvelope_object_name(site, mode, state, year) if site and mode else ""
+            obj = bpy.data.objects.get(object_name) if object_name else None
+            if obj is None:
+                errors.append(f"Missing bioenvelope object {object_name!r}")
+                continue
+            if not mesh_has_attribute(obj, SOURCE_YEAR_ATTRIBUTE):
+                errors.append(f"Bioenvelope {object_name!r} is missing {SOURCE_YEAR_ATTRIBUTE!r}")
+            if obj.type == "MESH" and len(obj.data.vertices) == 0:
+                warnings.append(f"Bioenvelope {object_name!r} is empty")
+            if not object_uses_material(obj, MATERIAL_NAMES["bioenvelope"]):
+                warnings.append(f"Bioenvelope {object_name!r} is not using {MATERIAL_NAMES['bioenvelope']!r}")
 
     for role in STATE_ROLES:
         collection = find_collection_by_role(scene, role)

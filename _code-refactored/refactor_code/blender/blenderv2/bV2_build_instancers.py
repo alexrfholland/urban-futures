@@ -132,7 +132,6 @@ FAMILY_TO_PLY_ROOT_ROLE = {
 }
 
 IGNORED_TREE_SIZES = {"gone", "early-tree-death"}
-PLY_SIZE_REMAP = {"decayed": "fallen"}
 PRIORITY_TREE_SIZES = {"senescing", "snag", "fallen"}
 POLE_FALLBACK_PLY = "artificial_precolonial.False_size.snag_control.improved-tree_id.10.ply"
 HIDE_IMPORTED_MODEL_OBJECTS = True
@@ -287,7 +286,7 @@ def get_active_years(site: str, mode: str, year: int | None) -> tuple[int, ...]:
     if mode == "timeline":
         return TIMELINE_YEARS
     if year is None:
-        raise ValueError("single_state instancer build requires a year")
+        raise ValueError(f"{mode} instancer build requires a year")
     return (int(year),)
 
 
@@ -566,8 +565,6 @@ def choose_stable_match(matches: pd.DataFrame, needed: pd.Series) -> str:
 
 def build_filename_requests(df: pd.DataFrame, family: str) -> pd.DataFrame:
     adjusted = df.copy()
-    if PLY_SIZE_REMAP and "size" in adjusted.columns:
-        adjusted["size"] = adjusted["size"].fillna("").astype(str).str.lower().replace(PLY_SIZE_REMAP)
     if family in {"trees", "poles"}:
         adjusted["filename"] = (
             "precolonial."
@@ -1112,26 +1109,12 @@ def build_family_state_instancer(
     }
 
 
-def initialise_fake_baseline_data(
-    baseline_df: pd.DataFrame,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Create fake trending and priority dataframes for baseline scenario.
-
-    Baseline has no separate trending scenario, so we reuse the baseline data
-    as trending and derive priority from it as usual.
-    """
-    trending_df = baseline_df.copy()
-    priority_df = derive_priority_dataframe(baseline_df)
-    return trending_df, priority_df
-
-
 def build_instancers(
     scene: bpy.types.Scene | None = None,
     *,
     site: str | None = None,
     mode: str | None = None,
     year: int | None = None,
-    scenario: str | None = None,
 ) -> dict[str, object]:
     scene = scene or get_active_scene()
     runtime = get_runtime_config(scene)
@@ -1139,12 +1122,10 @@ def build_instancers(
     mode = mode or str(runtime["mode"])
     if year is None:
         year = runtime["year"]  # type: ignore[assignment]
-    if scenario is None:
-        scenario = str(scene.get("bV2_scenario", "")).strip() or None
 
-    is_baseline = scenario == "baseline"
+    is_baseline = mode == "baseline"
 
-    log(f"Building bV2 instancers for scene={scene.name}, site={site}, mode={mode}, year={year}, scenario={scenario}")
+    log(f"Building bV2 instancers for scene={scene.name}, site={site}, mode={mode}, year={year}")
 
     if is_baseline:
         log("BUILD_INSTANCERS_LOAD_BASELINE_START")
@@ -1152,7 +1133,12 @@ def build_instancers(
         log("BUILD_INSTANCERS_LOAD_BASELINE_DONE", "rows=", len(baseline_df))
 
         positive_df = baseline_df
-        trending_df, priority_df = initialise_fake_baseline_data(baseline_df)
+        priority_df = derive_priority_dataframe(positive_df)
+
+        frames_by_state = {
+            "positive": split_family_dataframes(positive_df, site),
+            "positive_priority": split_family_dataframes(priority_df, site),
+        }
     else:
         log("BUILD_INSTANCERS_LOAD_POSITIVE_START")
         positive_df = drop_ignored_tree_sizes(load_scenario_dataframe(site, "positive", mode, year))
@@ -1166,11 +1152,11 @@ def build_instancers(
         priority_df = derive_priority_dataframe(positive_df)
         log("BUILD_INSTANCERS_DERIVE_PRIORITY_DONE", "rows=", len(priority_df))
 
-    frames_by_state = {
-        "positive": split_family_dataframes(positive_df, site),
-        "positive_priority": split_family_dataframes(priority_df, site),
-        "trending": split_family_dataframes(trending_df, site),
-    }
+        frames_by_state = {
+            "positive": split_family_dataframes(positive_df, site),
+            "positive_priority": split_family_dataframes(priority_df, site),
+            "trending": split_family_dataframes(trending_df, site),
+        }
 
     results: list[dict[str, object]] = []
     for state, family_frames in frames_by_state.items():
@@ -1200,7 +1186,7 @@ def build_instancers(
         "results": results,
         "positive_rows": int(len(positive_df)),
         "priority_rows": int(len(priority_df)),
-        "trending_rows": int(len(trending_df)),
+        "trending_rows": 0 if is_baseline else int(len(trending_df)),
     }
     scene["bV2_instancers_built"] = True
     log(f"Instancer build summary: {summary}")

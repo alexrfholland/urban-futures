@@ -10,7 +10,7 @@ from typing import Final
 
 
 SUPPORTED_SITES: Final[tuple[str, ...]] = ("city", "trimmed-parade", "uni")
-SUPPORTED_MODES: Final[tuple[str, ...]] = ("single_state", "timeline")
+SUPPORTED_MODES: Final[tuple[str, ...]] = ("single_state", "timeline", "baseline")
 
 TEMPLATE_SCENE_NAME: Final[str] = "bV2_template"
 TEMPLATE_VIEW_LAYER_NAME: Final[str] = "template_base"
@@ -58,6 +58,20 @@ WORKING_COLLECTION_TREE: Final[dict[str, tuple[str, ...]]] = {
     "build": ("helpers",),
 }
 
+BASELINE_COLLECTION_TREE: Final[dict[str, tuple[str, ...]]] = {
+    "cameras": (),
+    "world": (
+        "world_sources",
+        "world_positive_attributes",
+    ),
+    "instancers": (
+        "positive_instances",
+        "positive_priority_instances",
+    ),
+    "bioenvelopes": (),
+    "build": ("helpers",),
+}
+
 VIEW_LAYER_NAMES: Final[tuple[str, ...]] = (
     "existing_condition_positive",
     "existing_condition_trending",
@@ -66,6 +80,12 @@ VIEW_LAYER_NAMES: Final[tuple[str, ...]] = (
     "trending_state",
     "bioenvelope_positive",
     "bioenvelope_trending",
+)
+
+BASELINE_VIEW_LAYER_NAMES: Final[tuple[str, ...]] = (
+    "existing_condition_positive",
+    "positive_state",
+    "positive_priority_state",
 )
 
 AOV_NAMES: Final[tuple[str, ...]] = (
@@ -228,7 +248,7 @@ def get_mode_year_token(mode: str, year: int | str | None = None) -> str:
     if mode == "timeline":
         return "timeline"
     if year is None:
-        raise ValueError("single_state mode requires a year")
+        raise ValueError(f"{mode} mode requires a year")
     if isinstance(year, str) and year.startswith("yr"):
         return year
     return f"yr{int(year)}"
@@ -241,6 +261,8 @@ def make_scene_name(site: str, mode: str, year: int | str | None = None) -> str:
     mode = ensure_supported_mode(mode)
     if mode == "timeline":
         return f"bV2_{site}_timeline"
+    if mode == "baseline":
+        return f"bV2_{site}_baseline_{get_mode_year_token(mode, year)}"
     return f"bV2_{site}_single_state_{get_mode_year_token(mode, year)}"
 
 
@@ -291,15 +313,19 @@ def make_bioenvelope_object_name(
     return f"bioenvelope_{ensure_supported_site(site)}_{get_mode_year_token(mode, year)}_{state}"
 
 
-def get_view_layer_names() -> tuple[str, ...]:
+def get_view_layer_names(mode: str | None = None) -> tuple[str, ...]:
     """Return the canonical ordered view-layer names."""
 
+    if mode == "baseline":
+        return BASELINE_VIEW_LAYER_NAMES
     return VIEW_LAYER_NAMES
 
 
-def get_working_collection_tree() -> dict[str, tuple[str, ...]]:
+def get_working_collection_tree(mode: str | None = None) -> dict[str, tuple[str, ...]]:
     """Return the canonical top-level and second-level working collections."""
 
+    if mode == "baseline":
+        return BASELINE_COLLECTION_TREE
     return WORKING_COLLECTION_TREE
 
 
@@ -337,7 +363,7 @@ def get_default_camera_name(
     site = ensure_supported_site(site)
     mode = ensure_supported_mode(mode)
     cameras = dict(get_site_contract(site)["cameras"])
-    if site == "city" and mode == "single_state" and "hero" in cameras:
+    if site == "city" and mode in ("single_state", "baseline") and "hero" in cameras:
         return str(cameras["hero"])
     return str(cameras["timeline"])
 

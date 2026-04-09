@@ -104,11 +104,12 @@ def ensure_top_level_collections(scene: bpy.types.Scene, names: Iterable[str]) -
 
 def ensure_second_level_collections(
     top_level: dict[str, bpy.types.Collection],
+    mode: str | None = None,
 ) -> dict[str, bpy.types.Collection]:
     """Create the canonical second-level collection shell."""
 
     resolved: dict[str, bpy.types.Collection] = {}
-    for parent_name, child_names in get_working_collection_tree().items():
+    for parent_name, child_names in get_working_collection_tree(mode).items():
         parent = top_level[parent_name]
         for child_name in child_names:
             collection = bpy.data.collections.new(f"{parent.name}::{child_name}")
@@ -187,10 +188,10 @@ def populate_site_sources(
     return cloned_world, cloned_cameras
 
 
-def ensure_view_layers(scene: bpy.types.Scene) -> None:
+def ensure_view_layers(scene: bpy.types.Scene, mode: str | None = None) -> None:
     """Reset the scene to the canonical ordered view-layer set."""
 
-    desired = list(get_view_layer_names())
+    desired = list(get_view_layer_names(mode))
     while len(scene.view_layers) > 1:
         scene.view_layers.remove(scene.view_layers[-1])
     if not scene.view_layers:
@@ -378,7 +379,7 @@ def init_scene(
     log("INIT_TOP_LEVEL_COLLECTIONS_DONE", "count=", len(top_level), "names=", ",".join(sorted(top_level.keys())))
 
     log("INIT_SECOND_LEVEL_COLLECTIONS_START")
-    second_level = ensure_second_level_collections(top_level)
+    second_level = ensure_second_level_collections(top_level, mode=mode)
     log(
         "INIT_SECOND_LEVEL_COLLECTIONS_DONE",
         "count=",
@@ -406,7 +407,7 @@ def init_scene(
     )
 
     log("INIT_VIEW_LAYERS_START")
-    ensure_view_layers(scene)
+    ensure_view_layers(scene, mode=mode)
     log("INIT_VIEW_LAYERS_DONE", "names=", ",".join(view_layer.name for view_layer in scene.view_layers))
 
     log("INIT_AOV_RESET_START", "layer_count=", len(scene.view_layers), "aov_count=", len(tuple(get_aov_names())))

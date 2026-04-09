@@ -72,6 +72,8 @@ def get_runtime_case_tag(scene: bpy.types.Scene) -> str:
     site_label = SITE_LABELS.get(site, site)
     if mode == "timeline":
         return f"{site_label}_timeline"
+    if mode == "baseline":
+        return f"{site_label}_baseline_yr{year}"
     return f"{site_label}_single-state_yr{year}"
 
 

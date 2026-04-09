@@ -196,7 +196,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--tree-size-filter",
         nargs="+",
-        choices=("small", "medium", "large", "senescing", "snag", "fallen"),
+        choices=("small", "medium", "large", "senescing", "snag", "fallen", "decayed"),
         default=(),
     )
     parser.add_argument("--tree-dir", default="")

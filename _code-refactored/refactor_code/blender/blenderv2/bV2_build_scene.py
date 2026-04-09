@@ -101,12 +101,17 @@ def build_scene(
     remote_subpath: str | None = None,
     validate_strict: bool = True,
 ) -> dict[str, object]:
+    is_baseline = mode == "baseline"
     log("BUILD_SCENE_START", "site=", site, "mode=", mode, "year=", year, "render_exrs=", render_exrs)
     open_template_blend()
     scene = init_scene(site=site, mode=mode, year=year, camera_name=camera_name)
     instancer_summary = build_instancers(scene)
-    bio_summary = build_bioenvelopes(scene)
-    world_summary = build_world_attributes(scene)
+    if is_baseline:
+        bio_summary = {"skipped": True, "reason": "baseline mode"}
+        world_summary = {"skipped": True, "reason": "baseline mode"}
+    else:
+        bio_summary = build_bioenvelopes(scene)
+        world_summary = build_world_attributes(scene)
     validation_summary = validate_scene(scene, strict=validate_strict)
 
     scene["bV2_build_scene_complete"] = True
