@@ -68,18 +68,31 @@ Primary compositor in active use:
 ### Canonical Helper Renderers
 
 - `render_proposal_only_layers.py`
-  - renders filled proposal-only masks from the canonical helper blend
+  - should be treated as a thin runner for:
+    - `canonical_templates/proposal_only_layers.blend`
   - helper workflow, not part of the main template
+  - should open the canonical helper blend, repath the single `EXR` node, render, and exit
 
 - `render_proposal_outline_layers.py`
-  - renders proposal outlines from the canonical helper blend
+  - should be treated as a thin runner for:
+    - `canonical_templates/proposal_outline_layers.blend`
   - helper workflow, not part of the main template
+  - should open the canonical helper blend, repath the single `EXR` node, render, and exit
+
+### Agent Rule
+
+For agents working in this folder:
+
+- edit canonical blends when workflow logic needs to change
+- use thin runners when only the EXR set or output folder changes
+- use one-off headless Blender commands for inspection or probing
+- do not rebuild existing canonical helper blends from scratch as the normal render path
 
 ## Current Refactor Priority
 
 The main architectural cleanup target is:
 
-1. any remaining shading naming/output cleanup
+1. continue normalizing helper renderers so they are clearly thin runners
 2. any cleanup needed to remove mist file-output fallback if Blender behavior becomes reliable
 
 because those are the places where runtime script ownership and template

@@ -238,9 +238,9 @@ def create_bioavailablity_layer(scenario_vtk):
     low_vegetation_mask = np.zeros(scenario_vtk.n_points, dtype=bool)
     
     # Check for rewilding plantings
-    if 'scenario_rewildingPlantings' in scenario_vtk.point_data:
-        bioavailable_mask |= (scenario_vtk.point_data['scenario_rewildingPlantings'] > 0)
-        low_vegetation_mask |= (scenario_vtk.point_data['scenario_rewildingPlantings'] > 0)
+    if 'scenario_rewildGroundRecruitZone' in scenario_vtk.point_data:
+        bioavailable_mask |= (scenario_vtk.point_data['scenario_rewildGroundRecruitZone'] > 0)
+        low_vegetation_mask |= (scenario_vtk.point_data['scenario_rewildGroundRecruitZone'] > 0)
     
     # Check for rewilded areas
     if 'scenario_under-node-treatment' in scenario_vtk.point_data:
@@ -302,8 +302,8 @@ def create_design_action_layer(scenario_vtk):
     search_design_action = np.full(scenario_vtk.n_points, 'none', dtype='<U20')
     
     # Set rewilded areas
-    if 'scenario_rewildingPlantings' in scenario_vtk.point_data:
-        mask = scenario_vtk.point_data['scenario_rewildingPlantings'] > 0
+    if 'scenario_rewildGroundRecruitZone' in scenario_vtk.point_data:
+        mask = scenario_vtk.point_data['scenario_rewildGroundRecruitZone'] > 0
         search_design_action[mask] = 'rewilded'
     
     # Override with specific rewilded types

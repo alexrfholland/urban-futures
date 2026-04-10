@@ -40,7 +40,7 @@ Output columns:
 - blender_proposal-deploy-structure
 
 General encoding pattern:
-- -1 = accepted with no intervention allocated yet
+- 10 = accepted with no intervention allocated yet
 - 0 = not-assessed
 - 1 = rejected
 - higher values = accepted intervention variants for that proposal family
@@ -75,28 +75,28 @@ DEFAULT_OUTPUT_COLUMNS = {
 
 FRAMEBUFFER_STATE_MAPPINGS = {
     "proposal-decay": {
-        "accepted-no-intervention": -1,
+        "accepted-no-intervention": 10,
         "not-assessed": 0,
         "rejected": 1,
         DECAY_FULL: 2,
         DECAY_PARTIAL: 3,
     },
     "proposal-release-control": {
-        "accepted-no-intervention": -1,
+        "accepted-no-intervention": 10,
         "not-assessed": 0,
         "rejected": 1,
         RELEASECONTROL_PARTIAL: 2,
         RELEASECONTROL_FULL: 3,
     },
     "proposal-recruit": {
-        "accepted-no-intervention": -1,
+        "accepted-no-intervention": 10,
         "not-assessed": 0,
         "rejected": 1,
         RECRUIT_PARTIAL: 2,
         RECRUIT_FULL: 3,
     },
     "proposal-colonise": {
-        "accepted-no-intervention": -1,
+        "accepted-no-intervention": 10,
         "not-assessed": 0,
         "rejected": 1,
         COLONISE_FULL_GROUND: 2,
@@ -104,7 +104,7 @@ FRAMEBUFFER_STATE_MAPPINGS = {
         COLONISE_PARTIAL_ENVELOPE: 4,
     },
     "proposal-deploy-structure": {
-        "accepted-no-intervention": -1,
+        "accepted-no-intervention": 10,
         "not-assessed": 0,
         "rejected": 1,
         DEPLOY_FULL_POLE: 2,

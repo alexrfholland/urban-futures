@@ -331,8 +331,8 @@ def create_v3_proposal_point_data(ds):
     building_mask = np.isin(search_urban_elements_lower, list(BUILDING_URBAN_VALUES))
     recruit_buffer_opportunity = _points_within_distance(points, canopy_feature_mask, PROPOSAL_RECRUIT_DISTANCE_M) & (~building_mask)
     recruit_planting_mask = (
-        np.asarray(ds["scenario_rewildingPlantings"].values) >= 0
-        if "scenario_rewildingPlantings" in ds.variables
+        np.asarray(ds["scenario_rewildGroundRecruitZone"].values) >= 0
+        if "scenario_rewildGroundRecruitZone" in ds.variables
         else np.zeros(voxel_count, dtype=bool)
     )
 
@@ -672,6 +672,7 @@ def assign_v4_proposals_under_canopy_and_nodes(ds, df):
         print(f"V4 decay under-canopy: assigned {n_assigned} voxels")
 
     return ds
+
 
 
 def assign_v4_proposals_from_bioenvelope(ds):
@@ -1026,7 +1027,8 @@ def print_simulation_statistics(df, year, site):
     print("\nUnique values and their counts for 'under-node-treatment':")
     print(df['under-node-treatment'].value_counts())
 
-    print(f"Trees planted: {df[df['isNewTree'] == True].shape[0]}")
+    new_tree_col = "recruit_isNewTree" if "recruit_isNewTree" in df.columns else "isNewTree"
+    print(f"Trees planted: {df[df[new_tree_col] == True].shape[0]}")
     
     print("\nEnd of simulation statistics.\n")
 
@@ -1159,6 +1161,13 @@ def generate_vtk(
     }
     for var, default in _v4_derived.items():
         ds[var] = xr.DataArray(np.full(voxel_count, default, dtype=object), dims="voxel")
+
+    # Rename treeDF debug columns to recruit_* prefix before voxelisation
+    # so they flow through the voxeliser pipeline (like proposal columns).
+    treeDF = treeDF.rename(columns={
+        "isNewTree": "recruit_isNewTree",
+        "hasbeenReplanted": "recruit_hasbeenReplanted",
+    })
 
     templateResolution = 1
     ds, combinedDF_scenario = a_voxeliser.integrate_resources_into_xarray(ds, treeDF, templateResolution, logDF, poleDF, valid_points)

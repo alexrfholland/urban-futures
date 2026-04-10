@@ -388,7 +388,9 @@ def PreprocessData(treeDF, ds, extraTreeDF):
     treeDF['action'] = 'None'
 
     ds['scenario_rewildingEnabled'] = xr.full_like(ds['node_CanopyID'], -1)
-    ds['scenario_rewildingPlantings'] = xr.full_like(ds['node_CanopyID'], -1)
+    ds['scenario_rewildGroundRecruitZone'] = xr.full_like(ds['node_CanopyID'], -1)
+    ds['scenario_nodeRewildRecruitZone'] = xr.full_like(ds['node_CanopyID'], -1)
+    ds['scenario_underCanopyRecruitZone'] = xr.full_like(ds['node_CanopyID'], -1)
     underBuildingMask = ds['isTerrainUnderBuilding'] == True
     ds['sim_Turns'][underBuildingMask] = -1
     ds['sim_Nodes'][underBuildingMask] = -1

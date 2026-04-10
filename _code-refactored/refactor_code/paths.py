@@ -108,6 +108,11 @@ def refactor_run_output_root(output_mode: str | None = None) -> Path | None:
     override = os.environ.get("REFACTOR_RUN_OUTPUT_ROOT")
     if override:
         return Path(override)
+    # Fall back to the last explicitly-set output root from the run log
+    from refactor_code.sim.run.run_log import get_last_output_root
+    last = get_last_output_root()
+    if last and last != "default":
+        return Path(last)
     return None
 
 

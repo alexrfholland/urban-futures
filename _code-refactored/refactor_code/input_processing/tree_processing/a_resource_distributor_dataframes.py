@@ -486,8 +486,15 @@ def initialise_and_translate_tree(tree_template, row):
     else:
         tree_template_copy['nodeType'] = row['nodeType']
 
-    if 'isNewTree' in row:
-        tree_template_copy['isNewTree'] = row['isNewTree']
+    # Broadcast recruit debug columns to every voxel of this tree
+    _recruit_columns = [
+        'recruit_isNewTree', 'recruit_hasbeenReplanted',
+        'recruit_mechanism', 'recruit_year',
+        'recruit_mortality_rate', 'recruit_mortality_cohort',
+    ]
+    for col in _recruit_columns:
+        if col in row.index:
+            tree_template_copy[col] = row[col]
 
     # Broadcast node-level proposal/intervention values directly into V4 arrays.
     # These are excluded from the forest_* rename step so they land on ds with

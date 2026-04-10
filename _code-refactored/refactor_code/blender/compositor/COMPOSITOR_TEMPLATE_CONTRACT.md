@@ -1,5 +1,12 @@
 # Compositor Template Contract
 
+## IMPORTANT PLEASE READ
+
+- use a thin runner when the workflow already exists and only the EXR set or output path changes
+- runners do not rebuild an existing canonical workflow
+- runners open the canonical blend, repath inputs, set outputs, render, and exit
+- if the workflow logic needs to change, edit the canonical blend instead
+
 This document defines the contract between canonical compositor `.blend` files
 and Python scripts in Edge Lab.
 
@@ -40,6 +47,18 @@ template:
 
 Scripts should not become alternate owners of compositor logic.
 
+For this project, "runner script" means:
+
+- open an existing canonical blend
+- repath EXR input nodes
+- set output folders
+- render
+- optionally normalize `_0001` filenames
+- exit without saving runtime changes back into the canonical blend
+
+If a script is rebuilding a canonical graph from scratch during a normal render,
+it is not acting as a runner and is violating the intended contract.
+
 ## Render Script Rule
 
 Normal render scripts may:
@@ -61,6 +80,12 @@ Short version:
 - renderers use templates
 - renderers do not redefine templates
 
+Operational version:
+
+- if the blend already exists canonically, use it
+- do not recreate it from factory startup during routine rendering
+- if a helper workflow is repeatable, give it a thin runner rather than a builder
+
 ## Template Edit Rule
 
 Only explicit template-edit work may change a canonical template.
@@ -73,6 +98,17 @@ This includes:
 
 If a script exists to modify a canonical template, that must be its explicit
 purpose.
+
+If an agent is changing:
+
+- masks
+- node groups
+- output sockets
+- workflow layout
+- semantic naming
+
+that agent is doing template-edit work and should edit the canonical blend, not
+hide the change in a runner.
 
 ## Working Copy Rule
 
@@ -89,6 +125,7 @@ When the request is:
 - same workflow, different EXR set
   - rerender only
   - do not change the canonical template
+  - prefer a thin runner or one-off render command
 
 - new output, new mask logic, new workflow branch, or changed graph behavior
   - change the canonical template first
@@ -97,6 +134,10 @@ When the request is:
 - exploratory debugging
   - prefer a working copy or helper blend first
   - promote to canonical only if the workflow becomes standard
+
+- one-off inspection
+  - a direct headless Blender command is acceptable
+  - do not turn every inspection into a durable repo script
 
 ## Mist And Depth Rule
 
@@ -117,5 +158,11 @@ The system should read like this:
 - canonical blend = graph truth
 - script = runtime operator
 - working copy = safe derivative when needed
+
+For agents, the default questions should be:
+
+1. Does the canonical blend already contain the requested workflow?
+2. If yes, can I just repath and render it?
+3. If not, do I need to edit the canonical blend or prototype in a working copy first?
 
 That is the ownership boundary to preserve during refactor.

@@ -108,9 +108,10 @@ def get_scenario_parameters():
             0: 0,
             10: 0,
             30: 3000,
-            60: 4000,
-            180: 4500,
+            60: 4500,
+            180: 5000,
         },
+        "ground_filter_mode": "node-exclusion",  # "proximity" or "node-exclusion"
     }
 
     params_parade_trending = {
@@ -138,6 +139,7 @@ def get_scenario_parameters():
             60: 0,
             180: 0,
         },
+        "ground_filter_mode": "node-exclusion",
     }
 
     params_city_positive = {
@@ -172,6 +174,7 @@ def get_scenario_parameters():
             60: 67.90487670898438,
             180: 96,
         },
+        "ground_filter_mode": "node-exclusion",
     }
 
     params_city_trending = {
@@ -206,6 +209,7 @@ def get_scenario_parameters():
             60: 30,
             180: 50,
         },
+        "ground_filter_mode": "node-exclusion",
     }
 
     params_uni_positive = {
@@ -229,8 +233,8 @@ def get_scenario_parameters():
         "sim_TurnsThreshold": {
             0: 0,
             10: 300,
-            30: 1249.75,
-            60: 4000,
+            30: 3000,
+            60: 4500,
             180: 5000,
         },
         "sim_averageResistance": {
@@ -239,6 +243,14 @@ def get_scenario_parameters():
             30: 50,
             60: 67.90487670898438,
             180: 80,
+        },
+        "ground_filter_mode": "node-exclusion",
+        "deployGroundDeadwood": {
+            "enabled": True,
+            "deadwood_m3_per_ha": 208.3,       # volume target per ha (matches baseline)
+            "fallen_share": 0.70,              # 70% fallen, 30% decayed by volume
+            "max_fraction_per_pulse": 0.10,    # cap at 10% of baseline per pulse
+            "spacing_preference": 3.0,         # metres; soft — fallback places anyway
         },
     }
 
@@ -274,6 +286,7 @@ def get_scenario_parameters():
             60: 0,
             180: 0,
         },
+        "ground_filter_mode": "node-exclusion",
     }
 
     return {

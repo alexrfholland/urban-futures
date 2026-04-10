@@ -11,15 +11,37 @@ For mortality, we use two Le Roux data values that are described as derived from
 
 We use `annual_tree_death_urban` by default and `annual_tree_death_nature-reserves` for tree mortality in larger rewilded areas to reflect these different conditions of proposals under recruit that are partially supported (smaller nodes, higher mortality) and fully supported (rewilded nodes, lower mortality).
 
-In the current v3 implementation, we follow Le Roux's cohort-thinning logic, keep their standard `0.06` urban and `0.03` nature-reserve annual mortality values as anchors, and apply DBH-cohort survival curves based on their assessments of tree survival across successive cohorts.
+In the current v4 implementation, we follow Le Roux's cohort-thinning logic, keep their standard `0.06` urban and `0.03` nature-reserve annual mortality values as anchors, and apply DBH-cohort survival curves based on their assessments of tree survival across successive cohorts.
 
-In the current v3 implementation, `buffer-feature` recruits use the urban mortality rate and `rewild-ground` recruits use the nature-reserve mortality rate. Other `small`, `medium`, and `large` trees also use the urban mortality rate by default.
+### Three recruitment types and their mortality mapping
+
+The v4 engine distinguishes three recruitment mechanisms via the `recruit_mechanism` column on the treeDF:
+
+| `recruit_mechanism` | Zone mask | Mortality anchor | Rationale |
+|---|---|---|---|
+| `node-rewild` | `scenario_nodeRewildRecruitZone` | Reserve (0.03) | Large rewilded ground patches around node-rewilded trees — conditions approximate nature reserves |
+| `under-canopy` | `scenario_underCanopyRecruitZone` | Urban (0.06) | Smaller patches under footprint-depaved/exoskeleton tree canopies — urban conditions persist |
+| `ground` | `scenario_rewildGroundRecruitZone` | Reserve (0.03) | Remaining depaved ground filtered by node-exclusion — larger open areas similar to node-rewild |
+
+Previously (v3), these were called `buffer-feature` (urban mortality) and `rewild-ground` (reserve mortality). The v4 split into three types provides finer spatial control while preserving the same mortality logic.
+
+Other `small`, `medium`, and `large` trees use the urban mortality rate by default.
+
+### Zone masks
+
+All three zone masks are computed together in `calculate_under_node_treatment_status()` (`engine_v3.py`). Each mask uses the convention `>= 0` = active (value is the year enabled), `-1` = inactive.
+
+- `scenario_nodeRewildRecruitZone` — ground voxels mapped via `sim_Nodes` to node-rewilded tree NodeIDs
+- `scenario_underCanopyRecruitZone` — canopy voxels mapped via `node_CanopyID` to footprint-depaved/exoskeleton tree NodeIDs
+- `scenario_rewildGroundRecruitZone` — remaining depaved ground, filtered by `ground_filter_mode` (default: `node-exclusion`, which excludes voxels already covered by the other two zones)
+
+### Summary
 
 - adds annual_tree_death_urban = 0.06
 - adds annual_tree_death_nature-reserves = 0.03
 - applies this to small, medium, and large trees (v4: extended to large; v3 applied only to small and medium)
-- uses rewild-ground recruits as the lower-mortality case
-- uses buffer-feature recruits as the urban-rate case
+- uses node-rewild and ground recruits as the lower-mortality case (reserve rate)
+- uses under-canopy recruits as the urban-rate case
 - uses the urban rate for other small / medium / large trees by default
 
 Definitions for the current implementation:

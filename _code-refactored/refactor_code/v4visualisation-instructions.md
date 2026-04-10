@@ -12,17 +12,31 @@ Renders hybrid proposal views from `state_with_indicators.vtk` files. The hybrid
 - The renderer does **not** generate VTKs — it only reads them
 - Uses `uv run python` (repo-local `.venv`)
 
-## Key Environment Variable
+## Output Root
+
+All paths resolve via `refactor_code.paths.refactor_run_output_root()` using this priority:
+
+1. **Env var** `REFACTOR_RUN_OUTPUT_ROOT` — if set, used directly.
+2. **Run log** `_data-refactored/run_log.csv` — if no env var, the last logged output root is used automatically.
+
+The run log is appended by `run_full_v3_batch.py` on every run. To inspect recent runs:
+
+```bash
+uv run python _code-refactored/refactor_code/sim/run/run_log.py
+```
+
+To explicitly set the root (overrides the log):
 
 ```
 REFACTOR_RUN_OUTPUT_ROOT=<path-to-run-root>
 ```
 
-This controls where VTKs are read from and where renders are written. The renderer resolves paths via `refactor_code.paths`:
+Resolved paths under the root:
 
 - **Scenario VTKs**: `{root}/output/vtks/{site}/{site}_{scenario}_{voxel}_yr{year}_state_with_indicators.vtk`
 - **Baseline VTKs**: `{root}/output/vtks/{site}/{site}_baseline_{voxel}_state_with_indicators.vtk`
-- **Render output**: `{root}/temp/validation/renders/custom/`
+- **Render output**: `{root}/temp/validation/renders/`
+- **Debug recruit renders**: `{root}/temp/validation/renders/debugRecruit/`
 
 ## Shared Layout Parameters
 
@@ -96,7 +110,7 @@ Camera presets per site are in `render_forest_size_views.py` → `CAMERAS` dict.
 
 ## Output filenames
 
-`{site}_{scenario}_yr{year}_engine3-proposal-hybrid_with-legend.png`
+`{site}_{scenario}_yr{year}_proposal-and-interventions_hybrid_with-legend.png`
 
 ## Flags reference
 
@@ -109,6 +123,46 @@ Camera presets per site are in `render_forest_size_views.py` → `CAMERAS` dict.
 | `--hybrid-only` | Skip non-hybrid render variants |
 | `--model-base-y` | Shared vertical alignment (use `1170`) |
 | `--target-model-width` | Shared width normalisation (use `1757`) |
+
+## Debug Recruit Renderer
+
+`_code-refactored/refactor_code/outputs/report/render_debug_recruit.py`
+
+Renders one image per recruit diagnostic variable. White background, point rendering with lighting (same camera/settings as the proposal renderer). All non-highlighted voxels are white.
+
+### Layers (9 total)
+
+| Layer | Type | What it shows |
+|-------|------|---------------|
+| `recruit_isNewTree` | categorical | new trees (green) vs original (grey) |
+| `recruit_hasbeenReplanted` | categorical | replanted (blue) vs not (grey) |
+| `recruit_mechanism` | categorical | node-rewild (orange), under-canopy (purple), ground (green) |
+| `recruit_year` | numeric ramp | blue (early) → red (late) |
+| `recruit_mortality_rate` | numeric ramp | yellow (low) → dark red (high) |
+| `recruit_mortality_cohort` | discrete | green (small DBH) → red (large DBH) |
+| `ground_recruitment` | composite | recruitable ground (green) + ground-recruited canopies (orange) |
+| `node_rewild_recruitment` | composite | node-rewild zone via sim_Nodes (blue) + node-rewild canopies (red) |
+| `under_canopy_recruitment` | composite | under-canopy zone via node_CanopyID (lavender) + under-canopy canopies (magenta) |
+
+### Render command
+
+```bash
+cd _code-refactored && uv run python -m refactor_code.outputs.report.render_debug_recruit \
+  --site trimmed-parade --scenario positive --years 180 \
+  --output-mode validation
+```
+
+Render specific layers only with `--layers ground_recruitment node_rewild_recruitment`.
+
+### Output filenames
+
+`{site}_{scenario}_yr{year}_{layer}_with-legend.png` in `debugRecruit/`
+
+## Batch Runner
+
+`_code-refactored/refactor_code/sim/run/run_full_v3_batch.py`
+
+Pass `--description "my note"` to add a description to the run log entry.
 
 ## Polling for fresh VTKs
 

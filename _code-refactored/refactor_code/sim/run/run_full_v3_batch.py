@@ -30,6 +30,8 @@ if str(CODE_ROOT) not in sys.path:
 
 from refactor_code.sim.baseline import baseline_v3
 from refactor_code.sim.generate_interim_state_data import a_scenario_runscenario
+from refactor_code.sim.generate_interim_state_data.engine_v3 import log_run_stats
+from refactor_code.paths import scenario_output_root
 from refactor_code.sim.generate_vtk_and_nodeDFs import (
     a_info_gather_capabilities,
     a_scenario_generateVTKs,
@@ -40,7 +42,11 @@ from refactor_code.sim.setup import a_scenario_initialiseDS, params_v3
 from refactor_code.paths import (
     engine_output_validation_dir,
 )
+from refactor_code.outputs.report import render_proposal_v4, render_debug_recruit
+from refactor_code.sim.v4_indicator_extract import compute_indicators, format_site_table, INDICATOR_ORDER, write_v4_indicator_csv
+from refactor_code.sim.run.run_log import append_run_log
 
+import pandas as pd
 
 SITES = ["trimmed-parade", "city", "uni"]
 SCENARIOS = ["positive", "trending"]
@@ -129,7 +135,18 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Save raw scenario state VTKs during VTK generation.",
     )
+    parser.add_argument(
+        "--description",
+        default="",
+        help="One-sentence description appended to the run log.",
+    )
     return parser.parse_args()
+
+
+def _write_v4_indicator_csv(polydata, site: str, scenario: str, year: int, is_baseline: bool = False) -> None:
+    """Write per-state V4 indicator counts to a CSV alongside the V3 stats."""
+    path = write_v4_indicator_csv(polydata, site, scenario, year, is_baseline=is_baseline)
+    print(f"  V4 indicators → {path}")
 
 
 def _prepare_subset_dataset(site: str, voxel_size: int, *, write_cache: bool = True):
@@ -155,6 +172,7 @@ def run_site_scenario(
     vtk_only: bool = False,
     multiple_agent: bool = False,
     save_raw_vtk: bool = False,
+    indicator_counts: dict | None = None,
 ) -> None:
     print(f"\n===== V3: {site} / {scenario} =====\n")
 
@@ -163,6 +181,13 @@ def run_site_scenario(
         voxel_size,
         write_cache=not (vtk_only or multiple_agent),
     )
+
+    # Set up recruit telemetry path (delete old file so appends start fresh)
+    site_dir = scenario_output_root("validation") / site
+    site_dir.mkdir(parents=True, exist_ok=True)
+    telemetry_path = site_dir / f"{site}_{scenario}_recruit_telemetry.csv"
+    if not vtk_only and telemetry_path.exists():
+        telemetry_path.unlink()
 
     current_tree_df = treeDF.copy()
     previous_year = 0
@@ -189,6 +214,7 @@ def run_site_scenario(
                 logDF,
                 poleDF,
                 previous_year=previous_year,
+                recruit_telemetry_path=telemetry_path,
             )
 
         if node_only:
@@ -232,8 +258,39 @@ def run_site_scenario(
             if vtk_file:
                 print(f"Saved scenario VTK (manager path): {vtk_file}")
 
+            # Inline proposal render (hybrid-only, from in-memory polydata)
+            try:
+                render_proposal_v4.render_target(
+                    site, scenario, year, vtk_path=None, output_mode="validation",
+                    all_variants=False, hybrid_only=True, mesh=state_polydata,
+                )
+                print(f"  Rendered proposal: {site}/{scenario}/yr{year}")
+            except Exception as e:
+                print(f"  Proposal render failed: {e}")
+
+            # Inline debug recruit render (years 10, 60, 180 only)
+            if year in (10, 60, 180):
+                try:
+                    render_debug_recruit.render_debug_target(
+                        site, scenario, year, vtk_path=None,
+                        output_mode="validation", mesh=state_polydata,
+                    )
+                    print(f"  Rendered debug recruit: {site}/{scenario}/yr{year}")
+                except Exception as e:
+                    print(f"  Debug recruit render failed: {e}")
+
+            # Write per-state V4 indicator CSV
+            _write_v4_indicator_csv(state_polydata, site, scenario, year)
+
+            # Collect V4 indicator counts for the final year
+            if indicator_counts is not None and year == max(years):
+                indicator_counts[(site, scenario)] = compute_indicators(state_polydata)
+
         current_tree_df = treeDF_scenario.copy()
         previous_year = year
+
+    # Log recruit and size stats after all years complete
+    log_run_stats(site, scenario, years, voxel_size=voxel_size, output_mode="validation")
 
 
 def run_baselines(sites: list[str], *, voxel_size: int = 1) -> None:
@@ -257,6 +314,7 @@ def run_baselines(sites: list[str], *, voxel_size: int = 1) -> None:
             save_stats=False,
             output_mode="validation",
         )
+        _write_v4_indicator_csv(baseline_polydata, site, "baseline", -180, is_baseline=True)
 
 
 def run_capabilities(sites: list[str], scenarios: list[str], years: list[int], *, voxel_size: int = 1) -> None:
@@ -313,6 +371,16 @@ def main() -> None:
     )
     print(f"Wrote run metadata: {run_meta_path}")
 
+    # Log to the run log only when an explicit root is set
+    _explicit_root = os.environ.get("REFACTOR_RUN_OUTPUT_ROOT")
+    _mode = "node-only" if args.node_only else "vtk-only" if args.vtk_only else "stats-only" if args.compile_stats_only else "baselines-only" if args.baselines_only else "full"
+    _name = f"{'-'.join(sites)}_{'-'.join(scenarios)}_{_mode}"
+    append_run_log(
+        name=_name,
+        output_root=_explicit_root or "default",
+        description=args.description or f"{_mode} run for {', '.join(sites)} / {', '.join(scenarios)} yrs {years}",
+    )
+
     if args.compile_stats_only:
         print("\n===== V3: Compile-stats-only mode =====\n")
         run_capabilities(sites, scenarios, years, voxel_size=args.voxel_size)
@@ -322,6 +390,9 @@ def main() -> None:
         print("\n===== V3: Baselines-only mode =====\n")
         run_baselines(sites, voxel_size=args.voxel_size)
         return
+
+    # Collect V4 indicator counts per (site, scenario) during VTK generation
+    indicator_counts: dict[tuple[str, str], dict] = {}
 
     for site in sites:
         for scenario in scenarios:
@@ -334,6 +405,7 @@ def main() -> None:
                 vtk_only=args.vtk_only,
                 multiple_agent=args.multiple_agent,
                 save_raw_vtk=args.save_raw_vtk,
+                indicator_counts=indicator_counts,
             )
 
     if args.node_only:
@@ -348,6 +420,33 @@ def main() -> None:
     if args.multiple_agent:
         print("\n===== V3: Multiple-agent mode, stats remain for later explicit compilation =====\n")
         return
+
+    # Write V4 indicator comparison if we collected counts during VTK generation
+    if indicator_counts:
+        import pyvista as pv
+        from refactor_code.paths import refactor_run_output_root
+        root = refactor_run_output_root("validation")
+        vtk_dir = root.parent / "output" / "vtks" if root else None
+
+        all_lines = ["# V4 Indicator Comparisons (voxel counts, yr 180)", ""]
+        for site in sites:
+            # Load baseline indicators from VTK
+            baseline_vtk_path = vtk_dir / site / f"{site}_baseline_1_state_with_indicators.vtk" if vtk_dir else None
+            if baseline_vtk_path and baseline_vtk_path.exists():
+                baseline_counts = compute_indicators(pv.read(baseline_vtk_path), is_baseline=True)
+            else:
+                baseline_counts = {}
+            pos_counts = indicator_counts.get((site, "positive"), {})
+            trend_counts = indicator_counts.get((site, "trending"), {})
+            if pos_counts or trend_counts:
+                all_lines.extend(format_site_table(site, baseline_counts, pos_counts, trend_counts))
+
+        if root:
+            comparison_dir = root.parents[1] / "comparison"
+            comparison_dir.mkdir(parents=True, exist_ok=True)
+            output_path = comparison_dir / "v4_indicator_comparison.md"
+            output_path.write_text("\n".join(all_lines) + "\n")
+            print(f"\nWrote V4 indicator comparison: {output_path}")
 
     print("\n===== V3: Generation complete, skipping stats pass by default =====\n")
     print("Run --compile-stats-only to build per-state and merged stats from final state_with_indicators VTKs.\n")

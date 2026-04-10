@@ -1,3 +1,26 @@
+"""Build non-destructive tree-template variants for fallen/snag/decayed testing.
+
+TODO(ticket TBD): relabel_as_fallen_log is currently disabled — the 4 call
+sites in build_fallen_variant_rows and build_decayed_variant_rows are
+commented out. Fallen and decayed templates therefore retain their original
+resource labels (peeling bark, perch branch, epiphyte, other, etc.) rather
+than being flattened to resource="fallen log" with stat_fallen log=1 and
+resource_fallen log=1 on every point.
+
+Rationale: preserve the distinction between
+  - "small logs" = resource_fallen log points already set on standing-tree
+    templates (small dead branches on the ground near the trunk)
+  - "larger logs" = whole fallen/decayed trees, identified by
+    size=fallen / size=decayed
+
+Relabelling would flood every fallen/decayed voxel with resource=fallen log
+and stat_fallen log=1, making it impossible to tell branch-scale logs from
+whole-tree logs via a single resource query. Re-enable only if downstream
+v4 indicators are updated to stop relying on this distinction.
+
+See also: the matching TODO entry in
+_code-refactored/refactor_code/sim/run/v4-run-instructions.md.
+"""
 from __future__ import annotations
 
 import argparse
@@ -165,7 +188,9 @@ def build_fallen_variant_rows(
 ) -> tuple[pd.DataFrame, dict]:
     canonical_fallen = canonical_combined_templates[canonical_combined_templates["size"] == "fallen"].copy()
     if fallens_use == "canonical":
-        canonical_fallen["template"] = canonical_fallen["template"].apply(relabel_as_fallen_log)
+        # TODO(ticket TBD): relabel_as_fallen_log disabled — preserve original resource labels.
+        # See module docstring for rationale.
+        # canonical_fallen["template"] = canonical_fallen["template"].apply(relabel_as_fallen_log)
         return canonical_fallen, {"fallens_use": fallens_use, "mapping": {}, "added_non_precolonial_fallens": 0}
 
     euc_fallen = eucalyptus_df[eucalyptus_df["size"] == "fallen"].copy()
@@ -196,7 +221,9 @@ def build_fallen_variant_rows(
         else:
             raise ValueError(f"Unsupported fallens_use: {fallens_use}")
 
-        replacement_template = relabel_as_fallen_log(replacement_template)
+        # TODO(ticket TBD): relabel_as_fallen_log disabled — preserve original resource labels.
+        # See module docstring for rationale.
+        # replacement_template = relabel_as_fallen_log(replacement_template)
         new_row = row.copy()
         new_row["template"] = replacement_template
         replaced_pre_rows.append(new_row)
@@ -212,7 +239,9 @@ def build_fallen_variant_rows(
 
     if not non_pre_fallen.empty:
         non_pre_fallen = non_pre_fallen.copy()
-        non_pre_fallen["template"] = non_pre_fallen["template"].apply(relabel_as_fallen_log)
+        # TODO(ticket TBD): relabel_as_fallen_log disabled — preserve original resource labels.
+        # See module docstring for rationale.
+        # non_pre_fallen["template"] = non_pre_fallen["template"].apply(relabel_as_fallen_log)
 
     variant_rows = pd.concat([non_pre_fallen, pd.DataFrame(replaced_pre_rows)], ignore_index=True)
     variant_rows = variant_rows.sort_values(["precolonial", "tree_id"]).reset_index(drop=True)
@@ -253,7 +282,9 @@ def build_decayed_variant_rows(
         (canonical_combined_templates["size"] == "fallen") & (canonical_combined_templates["precolonial"] == True)
     ].copy()
     canonical_pre_fallen["size"] = "decayed"
-    canonical_pre_fallen["template"] = canonical_pre_fallen["template"].apply(relabel_as_fallen_log)
+    # TODO(ticket TBD): relabel_as_fallen_log disabled — preserve original resource labels.
+    # See module docstring for rationale.
+    # canonical_pre_fallen["template"] = canonical_pre_fallen["template"].apply(relabel_as_fallen_log)
 
     tree_id_mapping = combined_voxelise_dfs.create_treeid_mapping(eucalyptus_df, target_sizes=["fallen"])
     duplicated_false_rows = []

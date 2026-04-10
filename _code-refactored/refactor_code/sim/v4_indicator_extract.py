@@ -1,7 +1,11 @@
 """
 Extract V4 indicator voxel counts from yr-180 VTKs.
 Reads baseline + positive + trending for each site, computes all V4 indicators.
+
+Respects REFACTOR_RUN_OUTPUT_ROOT env var for the data root.
+Writes comparison table to {ROOT}/comparison/v4_indicator_comparison.md
 """
+import os
 import sys
 import numpy as np
 import pyvista as pv
@@ -18,7 +22,8 @@ from refactor_code.sim.setup.constants import (
     RELEASECONTROL_PARTIAL,
 )
 
-ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-outputs/generated-states/v4updatedterms")
+_DEFAULT_ROOT = Path(__file__).resolve().parents[3] / "_data-refactored" / "model-outputs" / "generated-states" / "v4updatedterms"
+ROOT = Path(os.environ.get("REFACTOR_RUN_OUTPUT_ROOT", str(_DEFAULT_ROOT)))
 VTK_DIR = ROOT / "output" / "vtks"
 
 SITES = ["trimmed-parade", "city", "uni"]
@@ -113,6 +118,56 @@ def compute_indicators(vtk, is_baseline=False):
     return results
 
 
+def write_v4_indicator_csv(
+    polydata_or_path,
+    site: str,
+    scenario: str,
+    year: int,
+    *,
+    output_dir: str | Path | None = None,
+    is_baseline: bool = False,
+) -> Path:
+    """Write per-state V4 indicator CSV.
+
+    Args:
+        polydata_or_path: pyvista.PolyData or path to a VTK file.
+        site: Site name.
+        scenario: Scenario name (or 'baseline').
+        year: Simulation year.
+        output_dir: Directory to write CSV. If None, uses
+            {REFACTOR_RUN_OUTPUT_ROOT}/output/stats/per-state/{site}.
+        is_baseline: Whether this is a baseline state.
+
+    Returns:
+        Path to the written CSV.
+    """
+    import pandas as pd
+
+    if isinstance(polydata_or_path, (str, Path)):
+        polydata = pv.read(str(polydata_or_path))
+    else:
+        polydata = polydata_or_path
+
+    counts = compute_indicators(polydata, is_baseline=is_baseline)
+    rows = [
+        {"site": site, "scenario": scenario, "year": year, "indicator": ind, "count": counts.get(ind, 0)}
+        for ind in INDICATOR_ORDER
+    ]
+
+    if output_dir is None:
+        output_dir = ROOT / "output" / "stats" / "per-state" / site
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if is_baseline:
+        path = output_dir / f"{site}_baseline_1_v4_indicators.csv"
+    else:
+        path = output_dir / f"{site}_{scenario}_1_yr{year}_v4_indicators.csv"
+
+    pd.DataFrame(rows).to_csv(path, index=False)
+    return path
+
+
 def fmt(count):
     return f"{count:,}"
 
@@ -164,10 +219,12 @@ AGGREGATES = {
 }
 
 
-def print_site_table(site, baseline_counts, pos_counts, trend_counts):
-    print(f"\n### {site}\n")
-    print("| indicator | measure | baseline | positive yr180 | trending yr180 | positive / trending | trending % of positive |")
-    print("|---|---|---|---|---|---|---|")
+def format_site_table(site, baseline_counts, pos_counts, trend_counts) -> list[str]:
+    """Return markdown table lines for one site."""
+    lines = []
+    lines.append(f"\n### {site}\n")
+    lines.append("| indicator | measure | baseline | positive yr180 | trending yr180 | positive / trending | trending % of positive |")
+    lines.append("|---|---|---|---|---|---|---|")
 
     for ind in INDICATOR_ORDER:
         b = baseline_counts.get(ind, 0)
@@ -211,7 +268,14 @@ def print_site_table(site, baseline_counts, pos_counts, trend_counts):
         # measure column - use vtk query syntax
         measure = get_measure(ind)
 
-        print(f"| {bold}{ind}{bold} | {bold}{measure}{bold} | {bold}{fmt(b)}{bold} | {bold}{pos_str}{bold} | {bold}{trend_str}{bold} | {bold}{r_str}{bold} | {bold}{tp_str}{bold} |")
+        lines.append(f"| {bold}{ind}{bold} | {bold}{measure}{bold} | {bold}{fmt(b)}{bold} | {bold}{pos_str}{bold} | {bold}{trend_str}{bold} | {bold}{r_str}{bold} | {bold}{tp_str}{bold} |")
+
+    return lines
+
+
+def print_site_table(site, baseline_counts, pos_counts, trend_counts):
+    for line in format_site_table(site, baseline_counts, pos_counts, trend_counts):
+        print(line)
 
 
 MEASURES = {
@@ -239,11 +303,19 @@ MEASURES = {
 }
 
 def get_measure(ind):
-    return MEASURES.get(ind, ind)
+    raw = MEASURES.get(ind, ind)
+    # Escape pipe characters so they don't break markdown table columns
+    return raw.replace("|", "\\|")
 
 
 if __name__ == "__main__":
     import sys
+
+    all_lines = ["# V4 Indicator Comparisons (voxel counts, yr 180)", ""]
+    all_lines.append(f"Data root: `{ROOT}`")
+    all_lines.append("")
+    all_lines.append("\\* trending was 0; substituted ~1% of baseline for comparison columns")
+
     for site in SITES:
         baseline_path = VTK_DIR / site / f"{site}_baseline_1_state_with_indicators.vtk"
         pos_path = VTK_DIR / site / f"{site}_positive_1_yr180_state_with_indicators.vtk"
@@ -262,4 +334,16 @@ if __name__ == "__main__":
         pc = compute_indicators(pos)
         tc = compute_indicators(trend)
 
-        print_site_table(site, bc, pc, tc)
+        table_lines = format_site_table(site, bc, pc, tc)
+        all_lines.extend(table_lines)
+
+        # Also print to stdout
+        for line in table_lines:
+            print(line)
+
+    # Write to {ROOT}/comparison/v4_indicator_comparison.md
+    comparison_dir = ROOT / "comparison"
+    comparison_dir.mkdir(parents=True, exist_ok=True)
+    output_path = comparison_dir / "v4_indicator_comparison.md"
+    output_path.write_text("\n".join(all_lines) + "\n")
+    print(f"\nWrote: {output_path}", file=sys.stderr)

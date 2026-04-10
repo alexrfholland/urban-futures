@@ -557,6 +557,9 @@ def rename_non_resource_columns(voxelised_resource_df):
         'proposal_decayV4', 'proposal_decayV4_intervention',
         'proposal_release_controlV4', 'proposal_release_controlV4_intervention',
         'proposal_deploy_structureV4', 'proposal_deploy_structureV4_intervention',
+        'recruit_isNewTree', 'recruit_hasbeenReplanted',
+        'recruit_mechanism', 'recruit_year',
+        'recruit_mortality_rate', 'recruit_mortality_cohort',
     ]
     
     non_resource_cols = [col for col in voxelised_resource_df.columns 

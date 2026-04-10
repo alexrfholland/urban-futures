@@ -17,6 +17,7 @@ RECRUIT_PARTIAL = "rewild-smaller-patch"
 DEPLOY_FULL_POLE = "adapt-utility-pole"
 DEPLOY_FULL_LOG = "translocate-log"
 DEPLOY_FULL_UPGRADE = "upgrade-feature"
+DEPLOY_GROUND_DEADWOOD = "translocate-deadwood"
 
 # -- Colonise ----------------------------------------------------------------
 COLONISE_FULL_GROUND = "larger-patches-rewild"

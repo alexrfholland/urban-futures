@@ -34,6 +34,12 @@ Use this together with:
   - `blender/bexport/bexport_f_vtk_to_ply_surfaces.py`
 - imports were updated so the live sim runtime no longer depends on `final/` for active execution
 - `tree_processing` now lives in `_code-refactored/refactor_code/input_processing/tree_processing`
+- three recruit zone masks (`scenario_nodeRewildRecruitZone`, `scenario_underCanopyRecruitZone`, `scenario_rewildGroundRecruitZone`) computed centrally in `calculate_under_node_treatment_status()`
+- `recruit_mechanism` now uses specific values (`node-rewild`, `under-canopy`, `ground`) instead of the previous `node` / `buffer-feature` / `rewild-ground`
+- recruit telemetry CSV with per-pulse zone/density/occupancy tracking
+- persistent run log at `_data-refactored/run_log.csv` with fallback in `paths.py`
+- debug recruit renderer with 9 diagnostic layers (6 per-variable + 3 composite zone layers)
+- proposal renderer updated to v4 hybrid views (`render_proposal_v4.py`)
 
 ## Confirmed Runtime Facts
 
@@ -72,6 +78,34 @@ Current canonical v3 behavior still allows new planted trees to have:
 
 - `isNewTree == True`
 - `NodeID == -1`
+
+### Three Recruitment Types (v4)
+
+The engine now distinguishes three recruitment mechanisms via `recruit_mechanism` on the treeDF:
+
+| `recruit_mechanism` | Zone mask | Allocation | Mortality |
+|---|---|---|---|
+| `node-rewild` | `scenario_nodeRewildRecruitZone` | Voxel-mask from `sim_Nodes` matching node-rewilded tree NodeIDs | Reserve (0.03) |
+| `under-canopy` | `scenario_underCanopyRecruitZone` | Voxel-mask from `node_CanopyID` matching footprint-depaved/exoskeleton trees | Urban (0.06) |
+| `ground` | `scenario_rewildGroundRecruitZone` | Depaved ground filtered by `ground_filter_mode` (default: node-exclusion) | Reserve (0.03) |
+
+All three zone masks are computed together in `calculate_under_node_treatment_status()`. Convention: `>= 0` = active (year enabled), `-1` = inactive.
+
+Previously these were `buffer-feature` and `rewild-ground`. The v4 split uses specific `recruit_mechanism` values (`node-rewild`, `under-canopy`, `ground`) eliminating the need for compound checks.
+
+### Recruit Telemetry
+
+Each pulse writes per-type rows to `{site}_{scenario}_recruit_telemetry.csv` with fields including `zone_voxel_count`, `density_per_pulse`, `filled`, `fallback_used`, `fallback_count`. After all years, `log_run_stats()` prints per-year and per-pulse summary tables.
+
+### Run Log
+
+Persistent CSV at `_data-refactored/run_log.csv` (columns: timestamp, name, output_root, description). Appended by the batch runner on every run. `refactor_code.paths.refactor_run_output_root()` falls back to the last logged root when `REFACTOR_RUN_OUTPUT_ROOT` is not set.
+
+### Debug Recruit Renderer
+
+`outputs/report/render_debug_recruit.py` — renders 9 diagnostic layers per VTK:
+- 6 per-variable layers (recruit_isNewTree, recruit_hasbeenReplanted, recruit_mechanism, recruit_year, recruit_mortality_rate, recruit_mortality_cohort)
+- 3 composite zone layers (ground_recruitment, node_rewild_recruitment, under_canopy_recruitment) each showing zone voxels in one colour and recruited tree canopies in another
 
 ## Validation Completed
 

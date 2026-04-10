@@ -1,35 +1,22 @@
 from __future__ import annotations
 
 """
-Render the custom v3 proposal schema images from assessed VTKs.
+Render v4 proposal-and-interventions views from assessed VTKs.
 
-This is the checked-in renderer for the custom proposal images previously made
-ad hoc under:
-    _data-refactored/v3engine_outputs/validation/renders/custom
-
-It uses:
+Uses:
     - the `blender_proposal-*` framebuffer arrays
     - the fixed deadwood base colours
     - the accepted camera presets
-    - the accepted PyVista settings:
-        render_points_as_spheres = False
-        lighting = False
-        eye_dome_lighting = True
+    - PyVista settings: render_points_as_spheres=False, lighting=False, eye_dome_lighting=True
 
 Outputs:
-    - {site}_{scenario}_yr{year}_engine3-proposals_interventions_with-legend.png
-    - {site}_{scenario}_yr{year}_engine3-proposals.png
-Optional extra variants:
-    - {site}_{scenario}_yr{year}_engine3-proposals_interventions.png
-    - {site}_{scenario}_yr{year}_engine3-proposals_with-legend.png
-
-Meaning:
-    - default:
-      - `engine3-proposals_interventions_with-legend`
-      - `engine3-proposals`
-    - `engine3-proposals_interventions` shows intervention-specific accepted states
-    - `engine3-proposals` shows proposal presence only
-      any framebuffer value except `0` (not-assessed) and `1` (rejected)
+    - {site}_{scenario}_yr{year}_proposal-and-interventions_interventions_with-legend.png
+    - {site}_{scenario}_yr{year}_proposal-and-interventions.png
+Optional extra variants (--all-variants):
+    - {site}_{scenario}_yr{year}_proposal-and-interventions_interventions.png
+    - {site}_{scenario}_yr{year}_proposal-and-interventions_with-legend.png
+Hybrid (--hybrid-only):
+    - {site}_{scenario}_yr{year}_proposal-and-interventions_hybrid_with-legend.png
 """
 
 import argparse
@@ -65,17 +52,17 @@ from refactor_code.outputs.report._archived_renderers.render_proposal_schema_v3 
 )
 
 
-INTERVENTIONS_OUTPUT_STEM = "engine3-proposals_interventions"
-PROPOSALS_ONLY_OUTPUT_STEM = "engine3-proposals"
-PROPOSAL_HYBRID_OUTPUT_STEM = "engine3-proposal-hybrid"
+INTERVENTIONS_OUTPUT_STEM = "proposal-and-interventions_interventions"
+PROPOSALS_ONLY_OUTPUT_STEM = "proposal-and-interventions"
+PROPOSAL_HYBRID_OUTPUT_STEM = "proposal-and-interventions_hybrid"
 TITLE_TEXT_TEMPLATE = "{site} {scenario} yr{year}"
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Render custom v3 proposal schema views.")
+    parser = argparse.ArgumentParser(description="Render v4 proposal-and-interventions views.")
     parser.add_argument("--site", default="trimmed-parade", help="Site key or 'all'.")
     parser.add_argument("--scenario", default="positive", help="Scenario key or 'all'.")
-    parser.add_argument("--years", nargs="*", type=int, default=[180], help="Years to render.")
+    parser.add_argument("--years", nargs="*", type=int, default=[0, 1, 10, 30, 60, 90, 120, 150, 180], help="Years to render.")
     parser.add_argument("--output-mode", default="validation", choices=["canonical", "validation"])
     parser.add_argument(
         "--all-variants",
@@ -90,7 +77,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--hybrid-only",
         action="store_true",
-        help="Only render the proposal-hybrid with bottom legend.",
+        default=True,
+        help="Only render the proposal-hybrid with bottom legend (default: on).",
+    )
+    parser.add_argument(
+        "--all-renders",
+        action="store_true",
+        help="Render all variants including interventions-only image.",
     )
     parser.add_argument("--model-base-y", type=int, default=None, help="Pre-computed shared model base y.")
     parser.add_argument("--target-model-width", type=int, default=None, help="Pre-computed shared target model width.")
@@ -753,9 +746,10 @@ def iter_targets(args: argparse.Namespace):
                     print(f"Skipping missing VTK: {vtk_path}")
 
 
-def render_target(site: str, scenario: str, year: int, vtk_path: Path, output_mode: str, all_variants: bool, model_base_y: int | None = None, hybrid_only: bool = False, target_model_width: int | None = None) -> list[Path]:
-    mesh = pv.read(vtk_path)
-    render_root = engine_output_validation_dir(output_mode) / "renders" / "custom"
+def render_target(site: str, scenario: str, year: int, vtk_path: Path, output_mode: str, all_variants: bool, model_base_y: int | None = None, hybrid_only: bool = False, target_model_width: int | None = None, mesh: pv.PolyData | None = None) -> list[Path]:
+    if mesh is None:
+        mesh = pv.read(vtk_path)
+    render_root = engine_output_validation_dir(output_mode) / "renders"
     outputs: list[Path] = []
 
     if not hybrid_only:
@@ -828,7 +822,9 @@ def render_target(site: str, scenario: str, year: int, vtk_path: Path, output_mo
 
 def main() -> None:
     args = parse_args()
-    all_variants = args.all_variants or args.with_legend
+    all_variants = args.all_variants or args.with_legend or args.all_renders
+    if args.all_renders:
+        args.hybrid_only = False
 
     # Collect all targets
     targets = list(iter_targets(args))
@@ -841,7 +837,7 @@ def main() -> None:
         target_model_width = args.target_model_width
     else:
         # First pass: render raw hybrid PNGs to measure model bounds
-        render_root = engine_output_validation_dir(args.output_mode) / "renders" / "custom"
+        render_root = engine_output_validation_dir(args.output_mode) / "renders"
         max_bottom = 0
         max_width = 0
         for site, scenario, year, vtk_path in targets:

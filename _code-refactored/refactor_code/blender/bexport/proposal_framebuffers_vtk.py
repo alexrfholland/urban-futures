@@ -16,7 +16,7 @@ Output point-data arrays:
 - blender_proposal-deploy-structure
 
 General encoding pattern:
-- -1 = accepted with no intervention allocated yet
+- 10 = accepted with no intervention allocated yet
 - 0 = not-assessed
 - 1 = rejected
 - higher values = accepted intervention variants for that proposal family

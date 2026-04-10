@@ -719,16 +719,12 @@ def _annotate_baseline_combined_polydata(
 
     release_control_mask = np.isin(forest_size_lower, ["small", "medium", "large"])
 
-    canopy_feature_mask = (forest_size_lower != "nan") & (forest_size_lower != "none") & (forest_size_lower != "")
-    if "stat_fallen log" in combined_poly.point_data:
-        fl = np.asarray(combined_poly.point_data["stat_fallen log"])
-        if np.issubdtype(fl.dtype, np.number):
-            canopy_feature_mask = canopy_feature_mask | (fl > 0)
-    canopy_feature_points = combined_poly.points[canopy_feature_mask]
-    if len(canopy_feature_points) > 0:
-        canopy_tree = cKDTree(canopy_feature_points[:, :2])
+    active_trees = node_df[node_df["size"].isin(["small", "medium", "large"])]
+    if len(active_trees) > 0:
+        active_tree_xy = active_trees[["x", "y"]].to_numpy()
+        active_tree_kd = cKDTree(active_tree_xy)
         terrain_xy = combined_poly.points[terrain_mask, :2]
-        recruit_distances, _ = canopy_tree.query(terrain_xy, k=1)
+        recruit_distances, _ = active_tree_kd.query(terrain_xy, k=1)
         recruit_mask = np.zeros(total_points, dtype=bool)
         recruit_mask[terrain_mask] = recruit_distances > 1.5
     else:

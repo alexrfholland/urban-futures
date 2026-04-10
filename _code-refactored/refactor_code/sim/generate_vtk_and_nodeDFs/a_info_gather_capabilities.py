@@ -641,8 +641,8 @@ def ensure_v3_proposal_point_data(polydata):
         else np.zeros(n_points, dtype=bool)
     )
     recruit_planting_mask = (
-        np.asarray(polydata.point_data["scenario_rewildingPlantings"]).astype(float) >= 0
-        if "scenario_rewildingPlantings" in polydata.point_data
+        np.asarray(polydata.point_data["scenario_rewildGroundRecruitZone"]).astype(float) >= 0
+        if "scenario_rewildGroundRecruitZone" in polydata.point_data
         else np.zeros(n_points, dtype=bool)
     )
 
