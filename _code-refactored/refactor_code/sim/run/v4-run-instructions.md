@@ -265,25 +265,26 @@ Renders diagnostic images for each recruit variable. Requires VTKs from Step 2.
 
 `_code-refactored/refactor_code/outputs/report/render_debug_recruit.py`
 
-### 10 diagnostic layers
+### 11 diagnostic layers
 
 | Layer | Type | What it shows |
 |---|---|---|
 | `recruit_isNewTree` | categorical | New trees (green) vs original (grey) |
 | `recruit_hasbeenReplanted` | categorical | Replanted (blue) vs not (grey) |
-| `recruit_mechanism` | categorical | node-rewild (orange), under-canopy (purple), ground (green) |
+| `recruit_mechanism` | categorical | node-rewild (orange), under-canopy (purple), under-canopy-linked (teal), ground (green) |
 | `recruit_year` | numeric ramp | Blue (early) -> red (late) |
 | `recruit_mortality_rate` | numeric ramp | Yellow (low) -> dark red (high) |
 | `recruit_mortality_cohort` | discrete | Green (small DBH) -> red (large DBH) |
 | `ground_recruitment` | composite | Recruitable ground (green) + ground-recruited canopies (orange) |
 | `node_rewild_recruitment` | composite | Node-rewild zone via sim_Nodes (blue) + node-rewild canopies (red) |
 | `under_canopy_recruitment` | composite | Under-canopy zone via node_CanopyID (lavender) + under-canopy canopies (magenta) |
+| `under_canopy_linked_recruitment` | composite | Under-canopy-linked zone via node_CanopyID (pale teal) + linked canopies (deep teal) |
 | `sim_nodes_zones` | composite | Each sim_Nodes zone coloured uniquely |
 
 ### Defaults
 
 - Years 10, 60, 180
-- All 10 diagnostic layers
+- All 11 diagnostic layers
 
 ### Run all sites in parallel
 
@@ -307,7 +308,7 @@ wait
 REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-name> \
   uv run python _code-refactored/refactor_code/outputs/report/render_debug_recruit.py \
   --site trimmed-parade --scenario positive --years 180 \
-  --layers ground_recruitment node_rewild_recruitment under_canopy_recruitment sim_nodes_zones
+  --layers ground_recruitment node_rewild_recruitment under_canopy_recruitment under_canopy_linked_recruitment sim_nodes_zones
 ```
 
 ### Output
@@ -373,7 +374,7 @@ Comparison metric: `pct_of_baseline` (count as percentage of the baseline count 
 
 - `control_level` breakdown: high (street-tree), medium (park-tree), low (reserve-tree, improved-tree)
 - `urban_element` breakdown: open space, green roof, brown roof, facade, roadway, busy roadway, parking, etc.
-- `rewilding_status` breakdown: footprint-depaved, exoskeleton, node-rewilded, none
+- `rewilding_status` breakdown: footprint-depaved, footprint-depaved-connected, exoskeleton, node-rewilded, none
 - Some indicators also count `artificial` (installed) separately
 
 **Merged site-level stats** — all per-state data merged into one CSV per site.

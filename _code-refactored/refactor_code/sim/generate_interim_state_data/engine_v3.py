@@ -66,15 +66,18 @@ UNDER_NODE_TREATMENT_ORDER = {
     "None": 0,
     "exoskeleton": 1,
     "footprint-depaved": 2,
+    "footprint-depaved-connected": 2,
     "node-rewilded": 3,
 }
 RELEASE_SUPPORT_BY_REWILDING = {
     "node-rewilded": RELEASECONTROL_FULL,
     "footprint-depaved": RELEASECONTROL_PARTIAL,
+    "footprint-depaved-connected": RELEASECONTROL_PARTIAL,
 }
 DECAY_INTERVENTION_BY_TREATMENT = {
     "node-rewilded": DECAY_FULL,
     "footprint-depaved": DECAY_FULL,
+    "footprint-depaved-connected": DECAY_FULL,
     "exoskeleton": DECAY_PARTIAL,
 }
 RELEASE_TREATMENT_BY_INTERVENTION = {
@@ -83,11 +86,16 @@ RELEASE_TREATMENT_BY_INTERVENTION = {
     "standard-pruning": "paved",
     "none": "paved",
 }
-# Config for the three recruitment mechanisms. All three share a common flow
+# Config for the four recruitment mechanisms. All share a common flow
 # (zone mask → area from voxel count → quota → place saplings). The fields
 # differ only in where the zone comes from, how voxels link back to contributor
 # trees (None for ground), and which intervention/treatment label to stamp on
 # the new tree. Keys match telemetry/occupancy labels.
+#
+# ``under-canopy-linked`` is a connected-patch variant of ``under-canopy``:
+# footprint-depaved parents whose canopy sits over >50% depaved ground get
+# relabelled ``footprint-depaved-connected`` each pulse and routed here so
+# saplings receive full (reserve) support instead of partial (urban).
 RECRUIT_MECHANISMS = {
     "node-rewild": {
         "zone_field":                  "scenario_nodeRewildRecruitZone",
@@ -102,6 +110,13 @@ RECRUIT_MECHANISMS = {
         "under_node_treatment":        "footprint-depaved",
         "recruit_intervention":        RECRUIT_PARTIAL,
         "recruit_mechanism":           "under-canopy",
+    },
+    "under-canopy-linked": {
+        "zone_field":                  "scenario_underCanopyLinkedRecruitZone",
+        "ID_for_linking_df_to_xarray": "node_CanopyID",
+        "under_node_treatment":        "footprint-depaved-connected",
+        "recruit_intervention":        RECRUIT_FULL,
+        "recruit_mechanism":           "under-canopy-linked",
     },
     "ground-rewild": {
         "zone_field":                  "scenario_rewildGroundRecruitZone",
@@ -904,7 +919,7 @@ def assign_decay_interventions(df: pd.DataFrame, params: dict) -> pd.DataFrame:
 def refresh_colonise_support(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["proposal-colonise_intervention"] = "none"
-    ground_mask = df["under-node-treatment"].isin(["node-rewilded", "footprint-depaved"])
+    ground_mask = df["under-node-treatment"].isin(["node-rewilded", "footprint-depaved", "footprint-depaved-connected"])
     df.loc[ground_mask, "proposal-colonise_intervention"] = COLONISE_FULL_GROUND
     df["proposal-colonise_decision"] = np.where(
         ground_mask.to_numpy(dtype=bool),
@@ -1270,19 +1285,72 @@ def _collect_active_parent_ids(df: pd.DataFrame, treatment: str) -> set[int]:
     return ids
 
 
+def _relabel_footprint_depaved_connected(
+    df: pd.DataFrame, ds: xr.Dataset, depaved_threshold: float,
+) -> pd.DataFrame:
+    """Reclassify footprint-depaved parents each pulse as linked/unlinked.
+
+    For each active parent currently tagged ``footprint-depaved`` or
+    ``footprint-depaved-connected``, compute the fraction of its
+    ``node_CanopyID`` voxels that sit over depaved ground
+    (``sim_Turns <= threshold``). If >50%, the parent is ``connected``
+    (in a larger rewilded patch) and gets full support; otherwise it
+    stays as vanilla ``footprint-depaved`` (partial support).
+
+    The relabel is recomputed every pulse so parents can flip either
+    direction as ground state evolves.
+    """
+    if "node_CanopyID" not in ds.variables:
+        return df
+    canopy_id_arr = ds["node_CanopyID"].values
+    depaved_mask = (
+        (ds["sim_Turns"].values <= depaved_threshold)
+        & (ds["sim_Turns"].values >= 0)
+    )
+
+    candidate_mask = (
+        ~df["size"].isin(ABSENT_TREE_SIZES)
+        & df["under-node-treatment"].isin(
+            ["footprint-depaved", "footprint-depaved-connected"]
+        )
+    )
+    if not candidate_mask.any():
+        return df
+
+    new_labels = df.loc[candidate_mask, "under-node-treatment"].astype(object).copy()
+    for idx in df.index[candidate_mask]:
+        try:
+            nid = int(float(df.at[idx, "NodeID"]))
+        except (TypeError, ValueError):
+            continue
+        if nid < 0:
+            continue
+        own_mask = (canopy_id_arr == nid)
+        total = int(own_mask.sum())
+        if total == 0:
+            continue
+        linked_frac = float((own_mask & depaved_mask).sum()) / total
+        new_labels.at[idx] = (
+            "footprint-depaved-connected" if linked_frac > 0.5 else "footprint-depaved"
+        )
+    df.loc[candidate_mask, "under-node-treatment"] = new_labels
+    return df
+
+
 def _compute_recruit_zone_masks(
     df: pd.DataFrame, ds: xr.Dataset, depaved_threshold: float,
 ) -> dict[str, np.ndarray]:
-    """Compute boolean voxel masks for all three recruitment zones.
+    """Compute boolean voxel masks for all four recruitment zones.
 
     Shared source of truth for zone areas between the runtime engine
-    (``apply_recruit``) and post-hoc stats (``log_run_stats``). All three
+    (``apply_recruit``) and post-hoc stats (``log_run_stats``). All
     mechanisms derive their area from ``mask.sum() * voxel_size²``.
 
     Returns a dict with keys:
         - ``node-rewild``: voxels owned by active node-rewilded parents via ``sim_Nodes``.
         - ``under-canopy``: voxels owned by active footprint-depaved parents via ``node_CanopyID``.
-        - ``ground-rewild``: depaved ground voxels *not* claimed by the node-based zones.
+        - ``under-canopy-linked``: voxels owned by active footprint-depaved-connected parents (>50% over depaved ground).
+        - ``ground-rewild``: depaved ground voxels *not* claimed by any node-based zone.
         - ``rewilding-enabled``: all depaved ground voxels (node or ground, pre-partition).
     """
     n_voxels = ds.sizes["voxel"]
@@ -1292,6 +1360,7 @@ def _compute_recruit_zone_masks(
 
     node_rewild_parent_ids = _collect_active_parent_ids(df, "node-rewilded")
     under_canopy_parent_ids = _collect_active_parent_ids(df, "footprint-depaved")
+    under_canopy_linked_parent_ids = _collect_active_parent_ids(df, "footprint-depaved-connected")
 
     sim_nodes_arr = ds["sim_Nodes"].values if "sim_Nodes" in ds.variables else np.full(n_voxels, -1)
     canopy_id_arr = ds["node_CanopyID"].values if "node_CanopyID" in ds.variables else np.full(n_voxels, -1)
@@ -1304,28 +1373,41 @@ def _compute_recruit_zone_masks(
         np.isin(canopy_id_arr, list(under_canopy_parent_ids))
         if under_canopy_parent_ids else np.zeros(n_voxels, dtype=bool)
     )
-    ground_rewild_mask = depaved_ground & ~(node_rewild_mask | under_canopy_mask)
+    under_canopy_linked_mask = (
+        np.isin(canopy_id_arr, list(under_canopy_linked_parent_ids))
+        if under_canopy_linked_parent_ids else np.zeros(n_voxels, dtype=bool)
+    )
+    ground_rewild_mask = depaved_ground & ~(
+        node_rewild_mask | under_canopy_mask | under_canopy_linked_mask
+    )
 
     return {
         "node-rewild": node_rewild_mask,
         "under-canopy": under_canopy_mask,
+        "under-canopy-linked": under_canopy_linked_mask,
         "ground-rewild": ground_rewild_mask,
         "rewilding-enabled": depaved_ground,
     }
 
 
 def _recruit_occupancy_by_type(df: pd.DataFrame) -> dict[str, int]:
-    """Count alive recruits by type: node-rewild, under-canopy, ground-rewild."""
+    """Count alive recruits by type: node-rewild, under-canopy, under-canopy-linked, ground-rewild."""
     alive_recruit_mask = (
         df["isNewTree"].fillna(False)
         & ~df["size"].isin(NON_OCCUPYING_TREE_SIZES)
     )
     if not alive_recruit_mask.any():
-        return {"node-rewild": 0, "under-canopy": 0, "ground-rewild": 0}
+        return {
+            "node-rewild": 0,
+            "under-canopy": 0,
+            "under-canopy-linked": 0,
+            "ground-rewild": 0,
+        }
     sub = df.loc[alive_recruit_mask]
     return {
         "node-rewild": int((sub["recruit_mechanism"] == "node-rewild").sum()),
         "under-canopy": int((sub["recruit_mechanism"] == "under-canopy").sum()),
+        "under-canopy-linked": int((sub["recruit_mechanism"] == "under-canopy-linked").sum()),
         "ground-rewild": int((sub["recruit_mechanism"] == "ground").sum()),
     }
 
@@ -1416,7 +1498,11 @@ def _make_new_tree_record(
 
 
 def calculate_under_node_treatment_status(df: pd.DataFrame, ds: xr.Dataset, params: dict):
-    """Persist the three recruitment-zone masks onto ``ds`` for this pulse.
+    """Persist the four recruitment-zone masks onto ``ds`` for this pulse.
+
+    Also runs the ``footprint-depaved`` → ``footprint-depaved-connected``
+    relabel pre-pass so linked parents are correctly routed into the
+    ``under-canopy-linked`` zone mask.
 
     The actual mask computation lives in ``_compute_recruit_zone_masks`` so it
     can be reused by ``log_run_stats`` for consistent area reporting. Saves:
@@ -1424,10 +1510,13 @@ def calculate_under_node_treatment_status(df: pd.DataFrame, ds: xr.Dataset, para
     - ``scenario_nodeRewildRecruitZone``: voxels mapped via ``sim_Nodes`` to
       active node-rewilded trees.
     - ``scenario_underCanopyRecruitZone``: voxels mapped via ``node_CanopyID``
-      to active footprint-depaved trees (exoskeletons are excluded — they
-      don't host recruitment).
+      to active unlinked footprint-depaved trees (exoskeletons are excluded —
+      they don't host recruitment).
+    - ``scenario_underCanopyLinkedRecruitZone``: voxels mapped via
+      ``node_CanopyID`` to active footprint-depaved-connected trees (>50% of
+      canopy voxels over depaved ground → in a connected rewilded patch).
     - ``scenario_rewildGroundRecruitZone``: depaved ground voxels not already
-      claimed by the two node-based zones.
+      claimed by any node-based zone.
     - ``scenario_rewildingEnabled``: all depaved ground (pre-partition).
     """
     ds = ds.copy(deep=True)
@@ -1439,8 +1528,10 @@ def calculate_under_node_treatment_status(df: pd.DataFrame, ds: xr.Dataset, para
         ds["scenario_rewildGroundRecruitZone"] = xr.full_like(ds["node_CanopyID"], -1)
         ds["scenario_nodeRewildRecruitZone"] = xr.DataArray(np.full(n_voxels, -1, dtype=float), dims="voxel")
         ds["scenario_underCanopyRecruitZone"] = xr.DataArray(np.full(n_voxels, -1, dtype=float), dims="voxel")
+        ds["scenario_underCanopyLinkedRecruitZone"] = xr.DataArray(np.full(n_voxels, -1, dtype=float), dims="voxel")
         return df, ds
 
+    df = _relabel_footprint_depaved_connected(df, ds, params["sim_TurnsThreshold"])
     masks = _compute_recruit_zone_masks(df, ds, params["sim_TurnsThreshold"])
 
     def _stamp(mask: np.ndarray) -> xr.DataArray:
@@ -1449,6 +1540,7 @@ def calculate_under_node_treatment_status(df: pd.DataFrame, ds: xr.Dataset, para
     ds["scenario_rewildingEnabled"] = _stamp(masks["rewilding-enabled"])
     ds["scenario_nodeRewildRecruitZone"] = _stamp(masks["node-rewild"])
     ds["scenario_underCanopyRecruitZone"] = _stamp(masks["under-canopy"])
+    ds["scenario_underCanopyLinkedRecruitZone"] = _stamp(masks["under-canopy-linked"])
     ds["scenario_rewildGroundRecruitZone"] = _stamp(masks["ground-rewild"])
     return df, ds
 
@@ -1499,10 +1591,13 @@ def apply_recruit(
 
     # --- Mark existing node-based support trees as accepted ---
     existing_mask = (~df["isNewTree"].fillna(False)) & (~df["size"].isin(ABSENT_TREE_SIZES))
-    node_support_mask = existing_mask & df["under-node-treatment"].isin(["node-rewilded", "footprint-depaved"])
+    node_support_mask = existing_mask & df["under-node-treatment"].isin(
+        ["node-rewilded", "footprint-depaved", "footprint-depaved-connected"]
+    )
     df.loc[node_support_mask, "proposal-recruit_decision"] = "proposal-recruit_accepted"
     df.loc[existing_mask & df["under-node-treatment"].eq("node-rewilded"), "proposal-recruit_intervention"] = RECRUIT_FULL
     df.loc[existing_mask & df["under-node-treatment"].eq("footprint-depaved"), "proposal-recruit_intervention"] = RECRUIT_PARTIAL
+    df.loc[existing_mask & df["under-node-treatment"].eq("footprint-depaved-connected"), "proposal-recruit_intervention"] = RECRUIT_FULL
 
     occupancy = _recruit_occupancy_by_type(df)
 
@@ -2171,6 +2266,7 @@ def log_run_stats(
         # Zone-derived areas (single source of truth; matches runtime engine).
         node_rewild_area = 0.0
         under_canopy_area = 0.0
+        under_canopy_linked_area = 0.0
         gr_area = 0.0
         if ds is not None and thresholds_dict:
             threshold = params_v3.get_interpolated_param(thresholds_dict, yr)
@@ -2178,6 +2274,7 @@ def log_run_stats(
             voxel_area = ds.attrs["voxel_size"] ** 2
             node_rewild_area = float(zone_masks["node-rewild"].sum()) * voxel_area
             under_canopy_area = float(zone_masks["under-canopy"].sum()) * voxel_area
+            under_canopy_linked_area = float(zone_masks["under-canopy-linked"].sum()) * voxel_area
             gr_area = float(zone_masks["ground-rewild"].sum()) * voxel_area
 
         if yr == 0:
@@ -2188,18 +2285,25 @@ def log_run_stats(
             pf = 10.0 / RECRUIT_INTERVAL
 
         # Count total placed per type across all pulses up to this year
-        recruits = df[df["recruit_mechanism"].isin(["node-rewild", "under-canopy", "ground"])]
+        recruits = df[df["recruit_mechanism"].isin(["node-rewild", "under-canopy", "under-canopy-linked", "ground"])]
         total_placed_nr = int((recruits["recruit_mechanism"] == "node-rewild").sum())
         total_placed_uc = int((recruits["recruit_mechanism"] == "under-canopy").sum())
+        total_placed_ucl = int((recruits["recruit_mechanism"] == "under-canopy-linked").sum())
         total_placed_gr = int((recruits["recruit_mechanism"] == "ground").sum())
-        placed_map = {"node-rewild": total_placed_nr, "under-canopy": total_placed_uc, "ground-rewild": total_placed_gr}
+        placed_map = {
+            "node-rewild": total_placed_nr,
+            "under-canopy": total_placed_uc,
+            "under-canopy-linked": total_placed_ucl,
+            "ground-rewild": total_placed_gr,
+        }
 
         print(f"\n--- yr {yr} ---")
-        print(f"  {'type':<16} {'area (m²)':>10} {'occupancy':>10} {'recruit/30yr':>13} {'density/pulse':>13} {'recruit/pulse':>13} {'total placed':>13}")
+        print(f"  {'type':<20} {'area (m²)':>10} {'occupancy':>10} {'recruit/30yr':>13} {'density/pulse':>13} {'recruit/pulse':>13} {'total placed':>13}")
         for label, area, occ_key in [
             ("node-rewild", node_rewild_area, "node-rewild"),
             ("ground-rewild", gr_area, "ground-rewild"),
             ("under-canopy", under_canopy_area, "under-canopy"),
+            ("under-canopy-linked", under_canopy_linked_area, "under-canopy-linked"),
         ]:
             r30 = int(np.round(area * density))
             dpulse = round(density * pf, 6)
@@ -2225,10 +2329,10 @@ def log_run_stats(
             ]
             if not yr_tel.empty:
                 pulse_ends = sorted(yr_tel["pulse_end_year"].unique())
-                print(f"\n  {'pulse':>6}  {'type':<14} {'zone_vxl':>9} {'density':>10} {'quota':>6} {'occ':>5} {'to_place':>9} {'placed':>7} {'filled':>7} {'unfilled':>9} {'rej_sp':>7}")
+                print(f"\n  {'pulse':>6}  {'type':<20} {'zone_vxl':>9} {'density':>10} {'quota':>6} {'occ':>5} {'to_place':>9} {'placed':>7} {'filled':>7} {'unfilled':>9} {'rej_sp':>7}")
                 for pe in pulse_ends:
                     pe_int = int(pe)
-                    for t in ["node-rewild", "under-canopy", "ground-rewild"]:
+                    for t in ["node-rewild", "under-canopy", "under-canopy-linked", "ground-rewild"]:
                         row = yr_tel[(yr_tel["pulse_end_year"] == pe) & (yr_tel["type"] == t)]
                         if row.empty:
                             continue
@@ -2244,7 +2348,7 @@ def log_run_stats(
                         dp = f"{r['density_per_pulse']:.6f}" if "density_per_pulse" in r.index else ""
                         if q == 0 and tp == 0 and p == 0:
                             continue
-                        print(f"  {pe_int:>6}  {t:<14} {zv:>9} {dp:>10} {q:>6} {occ:>5} {tp:>9} {p:>7} {fi:>7} {uf:>9} {rs:>7}")
+                        print(f"  {pe_int:>6}  {t:<20} {zv:>9} {dp:>10} {q:>6} {occ:>5} {tp:>9} {p:>7} {fi:>7} {uf:>9} {rs:>7}")
                         recruit_rows.append({
                             "site": site, "scenario": scenario, "year": yr,
                             "record": "pulse", "pulse_year": pe_int,
@@ -2259,15 +2363,16 @@ def log_run_stats(
             # Fallback: placed counts only from tree DF
             pulse_years = sorted(recruits["recruit_year"].dropna().unique())
             if pulse_years:
-                print(f"\n  {'pulse':>6} {'NR placed':>10} {'UC placed':>10} {'GR placed':>10}")
+                print(f"\n  {'pulse':>6} {'NR placed':>10} {'UC placed':>10} {'UCL placed':>11} {'GR placed':>10}")
                 for py in pulse_years:
                     py_int = int(py)
                     sub = recruits[recruits["recruit_year"] == py]
                     node_rewild_placed = int((sub["recruit_mechanism"] == "node-rewild").sum())
                     uc_placed = int((sub["recruit_mechanism"] == "under-canopy").sum())
+                    ucl_placed = int((sub["recruit_mechanism"] == "under-canopy-linked").sum())
                     gr_placed = int((sub["recruit_mechanism"] == "ground").sum())
-                    print(f"  {py_int:>6} {node_rewild_placed:>10} {uc_placed:>10} {gr_placed:>10}")
-                    for label, placed in [("node-rewild", node_rewild_placed), ("under-canopy", uc_placed), ("ground-rewild", gr_placed)]:
+                    print(f"  {py_int:>6} {node_rewild_placed:>10} {uc_placed:>10} {ucl_placed:>11} {gr_placed:>10}")
+                    for label, placed in [("node-rewild", node_rewild_placed), ("under-canopy", uc_placed), ("under-canopy-linked", ucl_placed), ("ground-rewild", gr_placed)]:
                         recruit_rows.append({
                             "site": site, "scenario": scenario, "year": yr,
                             "record": "pulse", "pulse_year": py_int,

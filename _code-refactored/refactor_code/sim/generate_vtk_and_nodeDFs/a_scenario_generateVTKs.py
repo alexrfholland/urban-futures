@@ -66,7 +66,7 @@ PROPOSAL_DEPLOY_STRUCTURE_UPGRADE_INTERVENTION = DEPLOY_FULL_UPGRADE
 
 # --- Proposal intervention value sets ----------------------------------------
 # scenario_bioEnvelope values that trigger each decay intervention
-PROPOSAL_DECAY_BUFFER_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved"}
+PROPOSAL_DECAY_BUFFER_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved", "footprint-depaved-connected"}
 PROPOSAL_DECAY_BRACE_INTERVENTION_VALUES = {"exoskeleton"}
 
 # scenario_outputs values that trigger colonise acceptance / interventions
@@ -75,17 +75,18 @@ PROPOSAL_COLONISE_OPPORTUNITY_VALUES = {
     "greenroof",
     "livingfacade",
     "footprint-depaved",
+    "footprint-depaved-connected",
     "node-rewilded",
     "otherground",
     "rewilded",
 }
-PROPOSAL_COLONISE_REWILD_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved", "rewilded"}
+PROPOSAL_COLONISE_REWILD_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved", "footprint-depaved-connected", "rewilded"}
 PROPOSAL_COLONISE_ENRICH_INTERVENTION_VALUES = {"greenroof"}
 PROPOSAL_COLONISE_ROUGHEN_INTERVENTION_VALUES = {"brownroof", "livingfacade"}
 
 # scenario_bioEnvelope values that trigger recruit interventions
 PROPOSAL_RECRUIT_BUFFER_INTERVENTION_VALUES = {"footprint-depaved"}
-PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES = {"node-rewilded", "otherground", "rewilded"}
+PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved-connected", "otherground", "rewilded"}
 PROPOSAL_RECRUIT_DISTANCE_M = 20.0
 
 # forest_control values that trigger release-control interventions
@@ -479,7 +480,7 @@ def create_under_node_treatment_variable(ds, df):
     skipped_invalid_node_ids = 0
     for idx, row in df.iterrows():
         treatment_value = row['under-node-treatment']
-        if treatment_value not in ['exoskeleton', 'footprint-depaved', 'node-rewilded']:
+        if treatment_value not in ['exoskeleton', 'footprint-depaved', 'footprint-depaved-connected', 'node-rewilded']:
             continue
 
         raw_node_id = row.get('NodeID', np.nan)
@@ -500,7 +501,7 @@ def create_under_node_treatment_variable(ds, df):
             skipped_invalid_node_ids += 1
             continue
 
-        if treatment_value in ['exoskeleton', 'footprint-depaved']:
+        if treatment_value in ['exoskeleton', 'footprint-depaved', 'footprint-depaved-connected']:
             # Match using 'node_CanopyID'
             mask = (canopy_id == node_id)
         else:
@@ -639,7 +640,7 @@ def assign_v4_proposals_under_canopy_and_nodes(ds, df):
 
     for _, row in df.iterrows():
         treatment = row.get('under-node-treatment', 'paved')
-        if treatment not in ('exoskeleton', 'footprint-depaved', 'node-rewilded'):
+        if treatment not in ('exoskeleton', 'footprint-depaved', 'footprint-depaved-connected', 'node-rewilded'):
             continue
 
         raw_node_id = row.get('NodeID', np.nan)
@@ -680,13 +681,13 @@ def assign_v4_proposals_from_bioenvelope(ds):
     Only touches voxels still marked not-assessed.
 
     Colonise:
-        node-rewilded, footprint-depaved, rewilded, otherground → rewild-ground
+        node-rewilded, footprint-depaved, footprint-depaved-connected, rewilded, otherground → rewild-ground
         greenroof → enrich-envelope
         brownroof, livingfacade → roughen-envelope
 
     Recruit:
-        node-rewilded, footprint-depaved → buffer-feature
-        otherground, rewilded → rewild-ground
+        footprint-depaved → buffer-feature
+        node-rewilded, footprint-depaved-connected, otherground, rewilded → rewild-ground
     """
     if 'scenario_bioEnvelope' not in ds.variables:
         return ds
@@ -699,7 +700,7 @@ def assign_v4_proposals_from_bioenvelope(ds):
         colonise_intervention = np.asarray(ds['proposal_coloniseV4_intervention'].values).astype('<U64')
         unset = colonise_decision == 'not-assessed'
 
-        colonise_rewild = unset & np.isin(bio_envelope, ["node-rewilded", "footprint-depaved", "rewilded", "otherground"])
+        colonise_rewild = unset & np.isin(bio_envelope, ["node-rewilded", "footprint-depaved", "footprint-depaved-connected", "rewilded", "otherground"])
         colonise_enrich = unset & np.isin(bio_envelope, ["greenroof"])
         colonise_roughen = unset & np.isin(bio_envelope, ["brownroof", "livingfacade"])
 

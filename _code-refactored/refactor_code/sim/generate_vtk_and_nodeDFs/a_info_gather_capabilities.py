@@ -270,7 +270,7 @@ URBAN_ELEMENTS = [
 ]
 
 # Rewilding status types
-REWILDING_TYPES = ['footprint-depaved', 'exoskeleton', 'node-rewilded', 'none']
+REWILDING_TYPES = ['footprint-depaved', 'footprint-depaved-connected', 'exoskeleton', 'node-rewilded', 'none']
 PROPOSAL_LABEL_DTYPE = "<U64"
 
 # --- Proposal intervention string constants (imported from constants.py) ------
@@ -287,7 +287,7 @@ PROPOSAL_DEPLOY_STRUCTURE_ADAPT_INTERVENTION = DEPLOY_FULL_POLE
 PROPOSAL_DEPLOY_STRUCTURE_UPGRADE_INTERVENTION = DEPLOY_FULL_UPGRADE
 
 # --- Proposal intervention value sets ----------------------------------------
-PROPOSAL_DECAY_BUFFER_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved"}
+PROPOSAL_DECAY_BUFFER_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved", "footprint-depaved-connected"}
 PROPOSAL_DECAY_BRACE_INTERVENTION_VALUES = {"exoskeleton"}
 
 PROPOSAL_COLONISE_OPPORTUNITY_VALUES = {
@@ -295,16 +295,17 @@ PROPOSAL_COLONISE_OPPORTUNITY_VALUES = {
     "greenroof",
     "livingfacade",
     "footprint-depaved",
+    "footprint-depaved-connected",
     "node-rewilded",
     "otherground",
     "rewilded",
 }
-PROPOSAL_COLONISE_REWILD_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved", "rewilded"}
+PROPOSAL_COLONISE_REWILD_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved", "footprint-depaved-connected", "rewilded"}
 PROPOSAL_COLONISE_ENRICH_INTERVENTION_VALUES = {"greenroof"}
 PROPOSAL_COLONISE_ROUGHEN_INTERVENTION_VALUES = {"brownroof", "livingfacade"}
 
 PROPOSAL_RECRUIT_BUFFER_INTERVENTION_VALUES = {"node-rewilded", "footprint-depaved"}
-PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES = {"otherground", "rewilded"}
+PROPOSAL_RECRUIT_REWILD_INTERVENTION_VALUES = {"footprint-depaved-connected", "otherground", "rewilded"}
 PROPOSAL_RECRUIT_DISTANCE_M = 20.0
 
 PROPOSAL_RELEASE_CONTROL_REDUCE_INTERVENTION_VALUES = {"park-tree", "park tree"}
@@ -521,7 +522,7 @@ def add_proposal_point_data(polydata):
         _empty_proposal_labels(n_points),
         np.isin(
             scenario_under_node_treatment_lower,
-            ["exoskeleton", "footprint-depaved", "node-rewilded", "rewilded"],
+            ["exoskeleton", "footprint-depaved", "footprint-depaved-connected", "node-rewilded", "rewilded"],
         ),
         [
             (PROPOSAL_DECAY_BUFFER_INTERVENTION, np.isin(scenario_bio_envelope_lower, list(PROPOSAL_DECAY_BUFFER_INTERVENTION_VALUES))),
