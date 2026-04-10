@@ -30,6 +30,7 @@ from refactor_code.sim.setup.constants import (  # noqa: E402
 
 from refactor_code.paths import (  # noqa: E402
     scenario_log_df_path,
+    scenario_output_root,
     scenario_pole_df_path,
     scenario_tree_df_path,
 )
@@ -81,6 +82,34 @@ RELEASE_TREATMENT_BY_INTERVENTION = {
     RELEASECONTROL_FULL: "node-rewilded",
     "standard-pruning": "paved",
     "none": "paved",
+}
+# Config for the three recruitment mechanisms. All three share a common flow
+# (zone mask → area from voxel count → quota → place saplings). The fields
+# differ only in where the zone comes from, how voxels link back to contributor
+# trees (None for ground), and which intervention/treatment label to stamp on
+# the new tree. Keys match telemetry/occupancy labels.
+RECRUIT_MECHANISMS = {
+    "node-rewild": {
+        "zone_field":                  "scenario_nodeRewildRecruitZone",
+        "ID_for_linking_df_to_xarray": "sim_Nodes",
+        "under_node_treatment":        "node-rewilded",
+        "recruit_intervention":        RECRUIT_FULL,
+        "recruit_mechanism":           "node-rewild",
+    },
+    "under-canopy": {
+        "zone_field":                  "scenario_underCanopyRecruitZone",
+        "ID_for_linking_df_to_xarray": "node_CanopyID",
+        "under_node_treatment":        "footprint-depaved",
+        "recruit_intervention":        RECRUIT_PARTIAL,
+        "recruit_mechanism":           "under-canopy",
+    },
+    "ground-rewild": {
+        "zone_field":                  "scenario_rewildGroundRecruitZone",
+        "ID_for_linking_df_to_xarray": None,
+        "under_node_treatment":        "scenario-rewilded",
+        "recruit_intervention":        RECRUIT_FULL,
+        "recruit_mechanism":           "ground",
+    },
 }
 # Le Roux-shaped mortality curves, anchored to the current annual mortality
 # defaults. Only cohorts up to 70-80 cm are used because this mortality pass
@@ -606,6 +635,12 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
     rng = np.random.default_rng(seed + 2000 + int(params["absolute_year"]))
     mortality_mask = pd.Series(False, index=df.index, dtype=bool)
 
+    # Store per-tree mortality rate and cohort used for thinning
+    if "recruit_mortality_rate" not in df.columns:
+        df["recruit_mortality_rate"] = np.nan
+    if "recruit_mortality_cohort" not in df.columns:
+        df["recruit_mortality_cohort"] = np.nan
+
     # Thin small/medium/large trees by DBH cohort so each cohort retains a
     # stable surviving proportion, rather than rolling every row independently.
     for is_reserve_like in (False, True):
@@ -625,6 +660,8 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
             if cohort >= 8:
                 annual_rate *= 0.5
             step_death_probability = 1.0 - np.power(1.0 - annual_rate, step_years)
+            df.loc[cohort_index, "recruit_mortality_rate"] = step_death_probability
+            df.loc[cohort_index, "recruit_mortality_cohort"] = int(cohort)
             survivor_count = int(np.rint(cohort_size * (1.0 - step_death_probability)))
             survivor_count = max(0, min(cohort_size, survivor_count))
             death_count = cohort_size - survivor_count
@@ -1155,7 +1192,8 @@ def _resolve_candidate_from_indices(
 
 
 def _recruit_active_mask(df: pd.DataFrame) -> pd.Series:
-    return df["size"].isin(["small", "medium", "large", "senescing"])
+    """Trees that occupy space for recruitment proximity/spacing checks."""
+    return df["size"].isin(["small", "medium", "large"])
 
 
 def _append_recruit_telemetry_csv(path: Path | str, rows: list[dict[str, object]]) -> None:
@@ -1169,22 +1207,24 @@ def _append_recruit_telemetry_csv(path: Path | str, rows: list[dict[str, object]
         "assessed_year",
         "pulse_start_year",
         "pulse_end_year",
+        "pulse_duration",
+        "density_per_pulse",
+        "type",
         "recruit_type",
-        "source_id",
-        "source_treatment",
-        "candidate_count",
+        "total_area",
+        "zone_voxel_count",
         "quota",
-        "starting_occupancy",
-        "remaining_capacity",
+        "occupancy",
+        "to_place",
         "placed",
+        "filled",
         "unfilled",
         "rejected_spacing",
-        "rejected_attempt_limit",
         "attempts",
     ]
     write_header = not telemetry_path.exists()
     with telemetry_path.open("a", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
         if write_header:
             writer.writeheader()
         writer.writerows(rows)
@@ -1217,21 +1257,77 @@ def _pick_source_id(*values: object, fallback: object) -> str:
     return _format_source_id(fallback, fallback)
 
 
-def _recruit_occupancy_counts(df: pd.DataFrame, intervention_type: str) -> dict[str, int]:
-    occupied_mask = (
+def _collect_active_parent_ids(df: pd.DataFrame, treatment: str) -> set[int]:
+    """Integer NodeIDs of non-absent trees whose under-node-treatment matches."""
+    active_mask = ~df["size"].isin(ABSENT_TREE_SIZES)
+    ids: set[int] = set()
+    for nid in df.loc[active_mask & df["under-node-treatment"].eq(treatment), "NodeID"].dropna():
+        try:
+            ids.add(int(float(nid)))
+        except (TypeError, ValueError):
+            continue
+    ids.discard(-1)
+    return ids
+
+
+def _compute_recruit_zone_masks(
+    df: pd.DataFrame, ds: xr.Dataset, depaved_threshold: float,
+) -> dict[str, np.ndarray]:
+    """Compute boolean voxel masks for all three recruitment zones.
+
+    Shared source of truth for zone areas between the runtime engine
+    (``apply_recruit``) and post-hoc stats (``log_run_stats``). All three
+    mechanisms derive their area from ``mask.sum() * voxel_size²``.
+
+    Returns a dict with keys:
+        - ``node-rewild``: voxels owned by active node-rewilded parents via ``sim_Nodes``.
+        - ``under-canopy``: voxels owned by active footprint-depaved parents via ``node_CanopyID``.
+        - ``ground-rewild``: depaved ground voxels *not* claimed by the node-based zones.
+        - ``rewilding-enabled``: all depaved ground voxels (node or ground, pre-partition).
+    """
+    n_voxels = ds.sizes["voxel"]
+    depaved_mask = (ds["sim_Turns"] <= depaved_threshold) & (ds["sim_Turns"] >= 0)
+    terrain_mask = (ds["site_building_element"] != "facade") & (ds["site_building_element"] != "roof")
+    depaved_ground = (depaved_mask & terrain_mask).values
+
+    node_rewild_parent_ids = _collect_active_parent_ids(df, "node-rewilded")
+    under_canopy_parent_ids = _collect_active_parent_ids(df, "footprint-depaved")
+
+    sim_nodes_arr = ds["sim_Nodes"].values if "sim_Nodes" in ds.variables else np.full(n_voxels, -1)
+    canopy_id_arr = ds["node_CanopyID"].values if "node_CanopyID" in ds.variables else np.full(n_voxels, -1)
+
+    node_rewild_mask = (
+        np.isin(sim_nodes_arr, list(node_rewild_parent_ids))
+        if node_rewild_parent_ids else np.zeros(n_voxels, dtype=bool)
+    )
+    under_canopy_mask = (
+        np.isin(canopy_id_arr, list(under_canopy_parent_ids))
+        if under_canopy_parent_ids else np.zeros(n_voxels, dtype=bool)
+    )
+    ground_rewild_mask = depaved_ground & ~(node_rewild_mask | under_canopy_mask)
+
+    return {
+        "node-rewild": node_rewild_mask,
+        "under-canopy": under_canopy_mask,
+        "ground-rewild": ground_rewild_mask,
+        "rewilding-enabled": depaved_ground,
+    }
+
+
+def _recruit_occupancy_by_type(df: pd.DataFrame) -> dict[str, int]:
+    """Count alive recruits by type: node-rewild, under-canopy, ground-rewild."""
+    alive_recruit_mask = (
         df["isNewTree"].fillna(False)
-        & df["recruit_intervention_type"].eq(intervention_type)
-        & df["recruit_source_id"].ne("none")
         & ~df["size"].isin(NON_OCCUPYING_TREE_SIZES)
     )
-    if not occupied_mask.any():
-        return {}
-    return (
-        df.loc[occupied_mask, "recruit_source_id"]
-        .astype(str)
-        .value_counts()
-        .to_dict()
-    )
+    if not alive_recruit_mask.any():
+        return {"node-rewild": 0, "under-canopy": 0, "ground-rewild": 0}
+    sub = df.loc[alive_recruit_mask]
+    return {
+        "node-rewild": int((sub["recruit_mechanism"] == "node-rewild").sum()),
+        "under-canopy": int((sub["recruit_mechanism"] == "under-canopy").sum()),
+        "ground-rewild": int((sub["recruit_mechanism"] == "ground").sum()),
+    }
 
 
 def _new_tree_template(df: pd.DataFrame):
@@ -1320,43 +1416,40 @@ def _make_new_tree_record(
 
 
 def calculate_under_node_treatment_status(df: pd.DataFrame, ds: xr.Dataset, params: dict):
+    """Persist the three recruitment-zone masks onto ``ds`` for this pulse.
+
+    The actual mask computation lives in ``_compute_recruit_zone_masks`` so it
+    can be reused by ``log_run_stats`` for consistent area reporting. Saves:
+
+    - ``scenario_nodeRewildRecruitZone``: voxels mapped via ``sim_Nodes`` to
+      active node-rewilded trees.
+    - ``scenario_underCanopyRecruitZone``: voxels mapped via ``node_CanopyID``
+      to active footprint-depaved trees (exoskeletons are excluded — they
+      don't host recruitment).
+    - ``scenario_rewildGroundRecruitZone``: depaved ground voxels not already
+      claimed by the two node-based zones.
+    - ``scenario_rewildingEnabled``: all depaved ground (pre-partition).
+    """
     ds = ds.copy(deep=True)
     absolute_year = int(params.get("absolute_year", params.get("years_passed", 0)))
+    n_voxels = ds.sizes["voxel"]
+
     if absolute_year <= 0:
         ds["scenario_rewildingEnabled"] = xr.full_like(ds["node_CanopyID"], -1)
-        ds["scenario_rewildingPlantings"] = xr.full_like(ds["node_CanopyID"], -1)
+        ds["scenario_rewildGroundRecruitZone"] = xr.full_like(ds["node_CanopyID"], -1)
+        ds["scenario_nodeRewildRecruitZone"] = xr.DataArray(np.full(n_voxels, -1, dtype=float), dims="voxel")
+        ds["scenario_underCanopyRecruitZone"] = xr.DataArray(np.full(n_voxels, -1, dtype=float), dims="voxel")
         return df, ds
 
-    active_df = df.loc[_recruit_active_mask(df)].copy()
+    masks = _compute_recruit_zone_masks(df, ds, params["sim_TurnsThreshold"])
 
-    depaved_threshold = params["sim_TurnsThreshold"]
-    depaved_mask = (ds["sim_Turns"] <= depaved_threshold) & (ds["sim_Turns"] >= 0)
-    terrain_mask = (ds["site_building_element"] != "facade") & (ds["site_building_element"] != "roof")
-    combined_mask = depaved_mask & terrain_mask
+    def _stamp(mask: np.ndarray) -> xr.DataArray:
+        return xr.DataArray(np.where(mask, float(absolute_year), -1.0), dims="voxel")
 
-    ds["scenario_rewildingEnabled"] = xr.where(combined_mask, absolute_year, -1)
-
-    voxel_positions = np.vstack([
-        ds["centroid_x"].values[combined_mask],
-        ds["centroid_y"].values[combined_mask],
-        ds["centroid_z"].values[combined_mask],
-    ]).T
-    filtered_voxel_ids = np.arange(ds.sizes["voxel"])[combined_mask]
-
-    if len(active_df) == 0 or len(voxel_positions) == 0:
-        ds["scenario_rewildingPlantings"] = xr.where(combined_mask, absolute_year, -1)
-        return df, ds
-
-    tree_locations = np.vstack([active_df["x"], active_df["y"], active_df["z"]]).T
-    tree_kdtree = cKDTree(tree_locations)
-    distances, _ = tree_kdtree.query(voxel_positions, distance_upper_bound=RECRUIT_SPACING_THRESHOLD_METERS)
-    filtered_proximity_mask = distances > RECRUIT_SPACING_THRESHOLD_METERS
-
-    proximity_mask = np.full(ds.sizes["voxel"], False)
-    proximity_mask[filtered_voxel_ids] = filtered_proximity_mask
-
-    final_mask = depaved_mask & terrain_mask & proximity_mask
-    ds["scenario_rewildingPlantings"] = xr.where(final_mask, absolute_year, -1)
+    ds["scenario_rewildingEnabled"] = _stamp(masks["rewilding-enabled"])
+    ds["scenario_nodeRewildRecruitZone"] = _stamp(masks["node-rewild"])
+    ds["scenario_underCanopyRecruitZone"] = _stamp(masks["under-canopy"])
+    ds["scenario_rewildGroundRecruitZone"] = _stamp(masks["ground-rewild"])
     return df, ds
 
 
@@ -1372,7 +1465,7 @@ def apply_recruit(
         return df
 
     seed = int(params.get("seed", 42))
-    np.random.seed(seed + 3000 + int(params["absolute_year"]))
+    rng = np.random.default_rng(seed + 3000 + int(params["absolute_year"]))
 
     gone_mask = df["size"].isin(ABSENT_TREE_SIZES)
     if gone_mask.any():
@@ -1393,248 +1486,101 @@ def apply_recruit(
     scenario = str(params["scenario"])
     pulse_factor = step_years / RECRUIT_INTERVAL
     planting_density_sqm = params["plantingDensity"] / 10000
+    density_this_pulse = planting_density_sqm * pulse_factor
     df_template = _new_tree_template(df)
-    voxel_points, voxel_tree = _build_voxel_tree(ds)
-    planting_mask = ds["scenario_rewildingPlantings"].values == params["absolute_year"]
-    available_voxel_indices = np.arange(ds.sizes["voxel"])[planting_mask]
-    eligible_voxel_points = voxel_points[available_voxel_indices] if len(available_voxel_indices) else np.empty((0, 3))
-    eligible_voxel_tree = cKDTree(eligible_voxel_points) if len(eligible_voxel_points) else None
+    voxel_points, _ = _build_voxel_tree(ds)
+    n_voxels = ds.sizes["voxel"]
+    voxel_indices_all = np.arange(n_voxels)
+    voxel_area_sqm = ds.attrs["voxel_size"] * ds.attrs["voxel_size"]
 
     active_df = df.loc[_recruit_active_mask(df)]
     current_positions = np.vstack([active_df["x"], active_df["y"], active_df["z"]]).T if len(active_df) else np.empty((0, 3))
     accepted_positions = [tuple(position) for position in current_positions]
 
-    node_candidates: list[dict] = []
-    node_telemetry: dict[str, dict[str, object]] = {}
+    # --- Mark existing node-based support trees as accepted ---
     existing_mask = (~df["isNewTree"].fillna(False)) & (~df["size"].isin(ABSENT_TREE_SIZES))
     node_support_mask = existing_mask & df["under-node-treatment"].isin(["node-rewilded", "footprint-depaved"])
-    node_rewilded_mask = node_support_mask & df["under-node-treatment"].eq("node-rewilded")
-    footprint_depaved_mask = node_support_mask & df["under-node-treatment"].eq("footprint-depaved")
     df.loc[node_support_mask, "proposal-recruit_decision"] = "proposal-recruit_accepted"
-    df.loc[node_rewilded_mask, "proposal-recruit_intervention"] = RECRUIT_FULL
-    df.loc[footprint_depaved_mask, "proposal-recruit_intervention"] = RECRUIT_PARTIAL
-    node_occupancy_full = _recruit_occupancy_counts(df, RECRUIT_FULL)
-    node_occupancy_partial = _recruit_occupancy_counts(df, RECRUIT_PARTIAL)
-    if node_support_mask.any():
-        temp_area = np.where(
-            df.loc[node_support_mask, "under-node-treatment"].eq("node-rewilded"),
-            _numeric_series(df.loc[node_support_mask, "sim_NodesArea"]).to_numpy(dtype=float),
-            _numeric_series(df.loc[node_support_mask, "CanopyArea"]).to_numpy(dtype=float),
-        )
-        temp_area = np.nan_to_num(temp_area, nan=0.0, posinf=0.0, neginf=0.0)
-        temp_area = np.clip(temp_area, a_min=0.0, a_max=None)
-        node_quota = np.ceil(temp_area * planting_density_sqm * pulse_factor).astype(int)
-        for (_, parent_row), quota in zip(df.loc[node_support_mask].iterrows(), node_quota, strict=False):
-            source_id = _pick_source_id(
-                parent_row.get("NodeID"),
-                parent_row.get("debugNodeID"),
-                fallback="unknown",
-            )
-            source_treatment = str(parent_row.get("under-node-treatment", "none"))
-            is_node_rewilded = source_treatment == "node-rewilded"
-            recruit_type = RECRUIT_FULL if is_node_rewilded else RECRUIT_PARTIAL
-            node_occupancy = node_occupancy_full if is_node_rewilded else node_occupancy_partial
-            parent_position = (
-                float(parent_row["x"]),
-                float(parent_row["y"]),
-                float(parent_row["z"]),
-            )
-            starting_occupancy = int(node_occupancy.get(source_id, 0))
-            remaining_capacity = max(0, int(quota) - node_occupancy.get(source_id, 0))
-            telemetry = node_telemetry.setdefault(
-                source_id,
-                {
-                    "site": site,
-                    "scenario": scenario,
-                    "assessed_year": absolute_year,
-                    "pulse_start_year": int(params["previous_year"]),
-                    "pulse_end_year": absolute_year,
-                    "recruit_type": recruit_type,
-                    "source_id": source_id,
-                    "source_treatment": source_treatment,
-                    "candidate_count": 0,
-                    "quota": 0,
-                    "starting_occupancy": starting_occupancy,
-                    "remaining_capacity": 0,
-                    "placed": 0,
-                    "unfilled": 0,
-                    "rejected_spacing": 0,
-                    "rejected_attempt_limit": 0,
-                    "attempts": 0,
-                },
-            )
-            telemetry["quota"] += int(quota)
-            telemetry["remaining_capacity"] += int(remaining_capacity)
-            if remaining_capacity <= 0:
-                continue
-            planted_here = 0
-            attempts = 0
-            attempt_cap = max(remaining_capacity * 8, 8)
-            spacing_threshold = RECRUIT_SPACING_THRESHOLD_METERS
-            while planted_here < remaining_capacity and attempts < attempt_cap:
-                attempts += 1
-                telemetry["candidate_count"] += 1
-                candidate_position = (
-                    float(parent_position[0] + np.random.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
-                    float(parent_position[1] + np.random.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
-                    float(parent_position[2]),
-                )
-                if accepted_positions:
-                    spacing_positions = accepted_positions
-                    if parent_position in accepted_positions:
-                        spacing_positions = [position for position in accepted_positions if position != parent_position]
-                    if spacing_positions:
-                        candidate_tree = cKDTree(np.array(spacing_positions))
-                        distance, _ = candidate_tree.query(
-                            np.array(candidate_position),
-                            distance_upper_bound=spacing_threshold,
-                        )
-                        if np.isfinite(distance) and distance <= spacing_threshold:
-                            telemetry["rejected_spacing"] += 1
-                            continue
-                voxel_index = _resolve_candidate_from_indices(
-                    eligible_voxel_points,
-                    eligible_voxel_tree,
-                    available_voxel_indices,
-                    candidate_position,
-                )
-                if voxel_index is None:
-                    telemetry["rejected_attempt_limit"] += 1
+    df.loc[existing_mask & df["under-node-treatment"].eq("node-rewilded"), "proposal-recruit_intervention"] = RECRUIT_FULL
+    df.loc[existing_mask & df["under-node-treatment"].eq("footprint-depaved"), "proposal-recruit_intervention"] = RECRUIT_PARTIAL
+
+    occupancy = _recruit_occupancy_by_type(df)
+
+    # Ground voxel source_id fallback arrays (used only when ID_for_linking_df_to_xarray is None)
+    sim_node_values = ds["sim_Nodes"].values if "sim_Nodes" in ds.variables else np.full(n_voxels, np.nan)
+    analysis_node_values = ds["analysis_nodeID"].values if "analysis_nodeID" in ds.variables else np.full(n_voxels, np.nan)
+    canopy_node_values = ds["node_CanopyID"].values if "node_CanopyID" in ds.variables else np.full(n_voxels, np.nan)
+
+    # --- Telemetry scaffold (shared across mechanisms) ---
+    pulse_duration = absolute_year - int(params["previous_year"])
+    _tel_common = {
+        "site": site, "scenario": scenario, "assessed_year": absolute_year,
+        "pulse_start_year": int(params["previous_year"]), "pulse_end_year": absolute_year,
+        "pulse_duration": pulse_duration,
+        "density_per_pulse": density_this_pulse,
+    }
+    recruit_telemetry: dict[str, dict] = {}
+    new_tree_records: list[dict] = []
+
+    # --- Unified recruitment loop over all three mechanisms ---
+    for mechanism_key, config in RECRUIT_MECHANISMS.items():
+        id_field = config["ID_for_linking_df_to_xarray"]
+        under_node_treatment = config["under_node_treatment"]
+        recruit_intervention = config["recruit_intervention"]
+        recruit_mechanism = config["recruit_mechanism"]
+
+        # Zone mask was persisted onto ds by calculate_under_node_treatment_status.
+        zone_voxel_mask = ds[config["zone_field"]].values == absolute_year
+        zone_indices = voxel_indices_all[zone_voxel_mask]
+        zone_voxel_count = int(zone_voxel_mask.sum())
+        total_area = float(zone_voxel_count * voxel_area_sqm)
+        quota = int(np.round(total_area * density_this_pulse))
+        to_place = max(0, quota - occupancy[mechanism_key])
+
+        tel = {
+            **_tel_common,
+            "recruit_type": recruit_intervention, "type": mechanism_key,
+            "total_area": total_area, "zone_voxel_count": zone_voxel_count,
+            "quota": quota, "occupancy": occupancy[mechanism_key], "to_place": to_place,
+            "placed": 0, "filled": occupancy[mechanism_key], "unfilled": 0,
+            "rejected_spacing": 0, "attempts": 0,
+        }
+        recruit_telemetry[mechanism_key] = tel
+
+        if to_place <= 0:
+            continue
+
+        # Parent lookup + per-parent voxel counts (node-based mechanisms only).
+        parent_lookup: dict[int, pd.Series] = {}
+        parent_voxel_counts: np.ndarray | None = None
+        id_array: np.ndarray | None = None
+        if id_field is not None:
+            id_array = ds[id_field].values if id_field in ds.variables else np.full(n_voxels, -1)
+            parents_mask = existing_mask & df["under-node-treatment"].eq(under_node_treatment)
+            for _, row in df.loc[parents_mask].iterrows():
+                try:
+                    nid = int(float(row["NodeID"]))
+                except (TypeError, ValueError):
                     continue
-                node_candidates.append(
-                    _make_new_tree_record(
-                        df_template=df_template,
-                        ds=ds,
-                        voxel_index=voxel_index,
-                        position=candidate_position,
-                        recruit_intervention=recruit_type,
-                        recruit_intervention_type=recruit_type,
-                        recruit_source_id=source_id,
-                        recruit_year=absolute_year,
-                        under_node_treatment=source_treatment,
-                        recruit_mechanism="node",
-                    )
-                )
-                accepted_positions.append(candidate_position)
-                planted_here += 1
-                telemetry["placed"] += 1
-                node_occupancy[source_id] = node_occupancy.get(source_id, 0) + 1
-            if planted_here < remaining_capacity and attempts >= attempt_cap:
-                spacing_threshold = RELAXED_RECRUIT_SPACING_THRESHOLD_METERS
-                extra_attempts = 0
-                while planted_here < remaining_capacity and extra_attempts < attempt_cap:
-                    extra_attempts += 1
-                    telemetry["candidate_count"] += 1
-                    candidate_position = (
-                        float(parent_position[0] + np.random.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
-                        float(parent_position[1] + np.random.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
-                        float(parent_position[2]),
-                    )
-                    if accepted_positions:
-                        spacing_positions = accepted_positions
-                        if parent_position in accepted_positions:
-                            spacing_positions = [position for position in accepted_positions if position != parent_position]
-                        if spacing_positions:
-                            candidate_tree = cKDTree(np.array(spacing_positions))
-                            distance, _ = candidate_tree.query(
-                                np.array(candidate_position),
-                                distance_upper_bound=spacing_threshold,
-                            )
-                            if np.isfinite(distance) and distance <= spacing_threshold:
-                                telemetry["rejected_spacing"] += 1
-                                continue
-                    voxel_index = _resolve_candidate_from_indices(
-                        eligible_voxel_points,
-                        eligible_voxel_tree,
-                        available_voxel_indices,
-                        candidate_position,
-                    )
-                    if voxel_index is None:
-                        continue
-                    node_candidates.append(
-                        _make_new_tree_record(
-                            df_template=df_template,
-                            ds=ds,
-                            voxel_index=voxel_index,
-                            position=candidate_position,
-                            recruit_intervention=recruit_type,
-                            recruit_intervention_type=recruit_type,
-                            recruit_source_id=source_id,
-                            recruit_year=absolute_year,
-                            under_node_treatment=source_treatment,
-                            recruit_mechanism="node",
-                        )
-                    )
-                    accepted_positions.append(candidate_position)
-                    planted_here += 1
-                    telemetry["placed"] += 1
-                    node_occupancy[source_id] = node_occupancy.get(source_id, 0) + 1
-                attempts += extra_attempts
-            telemetry["attempts"] += int(attempts)
-            telemetry["unfilled"] += max(0, remaining_capacity - planted_here)
-            if planted_here < remaining_capacity and attempts >= attempt_cap:
-                telemetry["rejected_attempt_limit"] += max(0, remaining_capacity - planted_here)
+                if nid >= 0:
+                    parent_lookup[nid] = row
+            if zone_voxel_count > 0 and parent_lookup:
+                zone_owner_ids = id_array[zone_voxel_mask]
+                valid_owner_ids = zone_owner_ids[zone_owner_ids >= 0].astype(int)
+                if len(valid_owner_ids):
+                    parent_voxel_counts = np.bincount(valid_owner_ids)
 
-    turn_candidates: list[dict] = []
-    ground_telemetry: dict[str, dict[str, object]] = {}
-    if planting_mask.any():
-        sim_node_values = ds["sim_Nodes"].values if "sim_Nodes" in ds.variables else np.full(ds.sizes["voxel"], np.nan)
-        analysis_node_values = (
-            ds["analysis_nodeID"].values if "analysis_nodeID" in ds.variables else np.full(ds.sizes["voxel"], np.nan)
-        )
-        canopy_node_values = (
-            ds["node_CanopyID"].values if "node_CanopyID" in ds.variables else np.full(ds.sizes["voxel"], np.nan)
-        )
-        ground_source_to_voxels: dict[str, list[int]] = {}
-        for voxel_index in available_voxel_indices:
-            source_id = _pick_source_id(
-                sim_node_values[int(voxel_index)],
-                analysis_node_values[int(voxel_index)],
-                canopy_node_values[int(voxel_index)],
-                fallback=f"voxel-{int(voxel_index)}",
-            )
-            ground_source_to_voxels.setdefault(source_id, []).append(int(voxel_index))
+        placed = 0
+        attempts = 0
 
-        ground_occupancy = _recruit_occupancy_counts(df, RECRUIT_FULL)
-        voxel_area_sqm = ds.attrs["voxel_size"] * ds.attrs["voxel_size"]
-
-        for source_id, voxel_indices in ground_source_to_voxels.items():
-            source_area_sqm = len(voxel_indices) * voxel_area_sqm
-            source_quota = int(np.round(source_area_sqm * planting_density_sqm * pulse_factor))
-            starting_occupancy = int(ground_occupancy.get(source_id, 0))
-            remaining_capacity = max(0, source_quota - ground_occupancy.get(source_id, 0))
-            telemetry = ground_telemetry.setdefault(
-                source_id,
-                {
-                    "site": site,
-                    "scenario": scenario,
-                    "assessed_year": absolute_year,
-                    "pulse_start_year": int(params["previous_year"]),
-                    "pulse_end_year": absolute_year,
-                    "recruit_type": RECRUIT_FULL,
-                    "source_id": source_id,
-                    "source_treatment": "scenario_rewildingPlantings",
-                    "candidate_count": int(len(voxel_indices)),
-                    "quota": int(source_quota),
-                    "starting_occupancy": starting_occupancy,
-                    "remaining_capacity": int(remaining_capacity),
-                    "placed": 0,
-                    "unfilled": 0,
-                    "rejected_spacing": 0,
-                    "rejected_attempt_limit": 0,
-                    "attempts": 0,
-                },
-            )
-            if remaining_capacity <= 0:
-                continue
-
-            candidate_indices = np.array(voxel_indices, dtype=int)
-            np.random.shuffle(candidate_indices)
-
-            for voxel_index in candidate_indices:
-                telemetry["attempts"] += 1
-                if ground_occupancy.get(source_id, 0) >= source_quota:
+        # --- Primary: random shuffle over zone voxels ---
+        if len(zone_indices) > 0:
+            candidates = zone_indices.copy()
+            rng.shuffle(candidates)
+            for voxel_index in candidates:
+                if placed >= to_place:
                     break
+                attempts += 1
                 candidate_position = tuple(voxel_points[int(voxel_index)])
                 if accepted_positions:
                     candidate_tree = cKDTree(np.array(accepted_positions))
@@ -1643,29 +1589,114 @@ def apply_recruit(
                         distance_upper_bound=RECRUIT_SPACING_THRESHOLD_METERS,
                     )
                     if np.isfinite(distance) and distance <= RECRUIT_SPACING_THRESHOLD_METERS:
-                        telemetry["rejected_spacing"] += 1
+                        tel["rejected_spacing"] += 1
                         continue
-                turn_candidates.append(
+                if id_array is not None:
+                    owning_node_id = int(id_array[int(voxel_index)])
+                    parent_row = parent_lookup.get(owning_node_id)
+                    source_id = _pick_source_id(
+                        parent_row.get("NodeID") if parent_row is not None else None,
+                        parent_row.get("debugNodeID") if parent_row is not None else None,
+                        fallback=f"node-{owning_node_id}",
+                    )
+                else:
+                    source_id = _pick_source_id(
+                        sim_node_values[int(voxel_index)],
+                        analysis_node_values[int(voxel_index)],
+                        canopy_node_values[int(voxel_index)],
+                        fallback=f"voxel-{int(voxel_index)}",
+                    )
+                new_tree_records.append(
                     _make_new_tree_record(
-                        df_template=df_template,
-                        ds=ds,
-                        voxel_index=int(voxel_index),
-                        position=candidate_position,
-                        recruit_intervention=RECRUIT_FULL,
-                        recruit_intervention_type=RECRUIT_FULL,
+                        df_template=df_template, ds=ds,
+                        voxel_index=int(voxel_index), position=candidate_position,
+                        recruit_intervention=recruit_intervention,
+                        recruit_intervention_type=recruit_intervention,
                         recruit_source_id=source_id,
                         recruit_year=absolute_year,
-                        under_node_treatment="scenario-rewilded",
-                        recruit_mechanism="ground",
+                        under_node_treatment=under_node_treatment,
+                        recruit_mechanism=recruit_mechanism,
                     )
                 )
                 accepted_positions.append(candidate_position)
-                telemetry["placed"] += 1
-                ground_occupancy[source_id] = ground_occupancy.get(source_id, 0) + 1
-            telemetry["unfilled"] += max(0, source_quota - ground_occupancy.get(source_id, 0))
+                placed += 1
 
-    if node_candidates or turn_candidates:
-        new_trees = pd.DataFrame(node_candidates + turn_candidates)
+        tel["attempts"] = attempts
+
+        # --- Fallback: parent-offset placement (node-based mechanisms only) ---
+        remaining = to_place - placed
+        if remaining > 0 and id_field is not None and parent_lookup and parent_voxel_counts is not None:
+            parent_ids = list(parent_lookup.keys())
+            parent_weights = np.array([
+                int(parent_voxel_counts[pid]) if pid < len(parent_voxel_counts) else 0
+                for pid in parent_ids
+            ], dtype=float)
+            if parent_weights.sum() > 0:
+                parent_weights = parent_weights / parent_weights.sum()
+                zone_points = voxel_points[zone_indices]
+                zone_tree = cKDTree(zone_points) if len(zone_points) else None
+
+                attempt_cap = remaining * 8
+                fallback_attempts = 0
+                while placed < to_place and fallback_attempts < attempt_cap:
+                    fallback_attempts += 1
+                    parent_idx = rng.choice(len(parent_ids), p=parent_weights)
+                    parent_row = parent_lookup[parent_ids[parent_idx]]
+                    source_id = _pick_source_id(
+                        parent_row.get("NodeID"),
+                        parent_row.get("debugNodeID"),
+                        fallback="unknown",
+                    )
+                    parent_position = (
+                        float(parent_row["x"]),
+                        float(parent_row["y"]),
+                        float(parent_row["z"]),
+                    )
+                    candidate_position = (
+                        float(parent_position[0] + rng.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
+                        float(parent_position[1] + rng.uniform(-BUFFER_RECRUIT_PARENT_OFFSET_METERS, BUFFER_RECRUIT_PARENT_OFFSET_METERS)),
+                        float(parent_position[2]),
+                    )
+                    if accepted_positions:
+                        spacing_positions = accepted_positions
+                        if parent_position in accepted_positions:
+                            spacing_positions = [p for p in accepted_positions if p != parent_position]
+                        if spacing_positions:
+                            candidate_tree = cKDTree(np.array(spacing_positions))
+                            distance, _ = candidate_tree.query(
+                                np.array(candidate_position),
+                                distance_upper_bound=RECRUIT_SPACING_THRESHOLD_METERS,
+                            )
+                            if np.isfinite(distance) and distance <= RECRUIT_SPACING_THRESHOLD_METERS:
+                                tel["rejected_spacing"] += 1
+                                continue
+                    voxel_index = _resolve_candidate_from_indices(
+                        zone_points, zone_tree, zone_indices, candidate_position,
+                    )
+                    if voxel_index is None:
+                        continue
+                    new_tree_records.append(
+                        _make_new_tree_record(
+                            df_template=df_template, ds=ds,
+                            voxel_index=voxel_index, position=candidate_position,
+                            recruit_intervention=recruit_intervention,
+                            recruit_intervention_type=recruit_intervention,
+                            recruit_source_id=source_id,
+                            recruit_year=absolute_year,
+                            under_node_treatment=under_node_treatment,
+                            recruit_mechanism=recruit_mechanism,
+                        )
+                    )
+                    accepted_positions.append(candidate_position)
+                    placed += 1
+                tel["attempts"] += fallback_attempts
+
+        tel["placed"] = placed
+        tel["filled"] = tel["occupancy"] + placed
+        tel["unfilled"] = to_place - placed
+
+    if new_tree_records:
+        new_trees = pd.DataFrame(new_tree_records)
         # Stagger recruit DBH by simulating random arrival times within the pulse.
         # Each recruit arrives at a uniform random point in [0, step_years] and
         # pre-grows from 2cm using Fischer for the remaining time in the pulse.
@@ -1683,8 +1714,7 @@ def apply_recruit(
         df = pd.concat([df, new_trees], ignore_index=True)
 
     if telemetry_rows is not None:
-        telemetry_rows.extend(node_telemetry.values())
-        telemetry_rows.extend(ground_telemetry.values())
+        telemetry_rows.extend(recruit_telemetry.values())
 
     return _refresh_schema(df)
 
@@ -1724,6 +1754,205 @@ def assign_poles(pole_df: pd.DataFrame | None, params: dict) -> pd.DataFrame | N
     return pole_df[pole_df["isEnabled"]].copy()
 
 
+_DEADWOOD_VOLUME_LOOKUP: pd.DataFrame | None = None
+
+
+def _load_deadwood_volume_lookup() -> pd.DataFrame:
+    """Load the pre-built template volume lookup table (cached)."""
+    global _DEADWOOD_VOLUME_LOOKUP
+    if _DEADWOOD_VOLUME_LOOKUP is not None:
+        return _DEADWOOD_VOLUME_LOOKUP
+
+    lookup_path = (
+        Path(__file__).resolve().parents[4]
+        / "_data-refactored" / "model-inputs" / "tree_variants"
+        / "template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen"
+        / "trees" / "template-edits_base_geometry_volume_lookup.csv"
+    )
+    _DEADWOOD_VOLUME_LOOKUP = pd.read_csv(lookup_path)
+    return _DEADWOOD_VOLUME_LOOKUP
+
+
+def deploy_ground_deadwood(
+    df: pd.DataFrame,
+    ds: xr.Dataset,
+    params: dict,
+) -> pd.DataFrame:
+    """Place fallen/decayed deadwood on depaved ground via deploy proposal.
+
+    Uses the same ground mask as recruitment (``scenario_rewildGroundRecruitZone``)
+    but does NOT compete with tree planting quotas.  Volume budget is derived
+    from the baseline deadwood target (m³/ha), scaled by eligible ground area
+    and pulse duration.  Template volumes from the pre-built lookup table
+    determine how many features to place.
+
+    Spacing away from existing trees is preferred but not required — if all
+    candidates fail the spacing check the feature is placed anyway.
+    """
+    dw_params = params.get("deployGroundDeadwood")
+    if not dw_params or not dw_params.get("enabled", False):
+        return df
+
+    step_years = params["step_years"]
+    if step_years <= 0:
+        return df
+
+    absolute_year = int(params["absolute_year"])
+    seed = int(params.get("seed", 42))
+    rng = np.random.default_rng(seed + 7000 + absolute_year)
+
+    target_m3_per_ha = dw_params.get("deadwood_m3_per_ha", 208.3)
+    fallen_share = dw_params.get("fallen_share", 0.70)
+    decayed_share = 1.0 - fallen_share
+    spacing_pref = dw_params.get("spacing_preference", 3.0)
+
+    # Ground mask — same as recruitment, excludes buildings
+    planting_mask = ds["scenario_rewildGroundRecruitZone"].values == params["absolute_year"]
+    available_indices = np.arange(ds.sizes["voxel"])[planting_mask]
+    if len(available_indices) == 0:
+        return df
+
+    # Eligible ground area in hectares
+    eligible_area_ha = len(available_indices) / 10_000.0
+    max_frac = dw_params.get("max_fraction_per_pulse", 0.10)
+
+    # Volume budget for this pulse — capped at max_fraction of baseline per pulse
+    fallen_budget_m3 = target_m3_per_ha * fallen_share * eligible_area_ha * max_frac
+    decayed_budget_m3 = target_m3_per_ha * decayed_share * eligible_area_ha * max_frac
+
+    # Load template volume lookup to pick representative volumes
+    lookup = _load_deadwood_volume_lookup()
+    fallen_templates = lookup.loc[lookup["size"] == "fallen", "template_volume_m3"].values
+    decayed_templates = lookup.loc[lookup["size"] == "decayed", "template_volume_m3"].values
+    if len(fallen_templates) == 0 or len(decayed_templates) == 0:
+        return df
+
+    # Derive placement count: pick random templates, accumulate volume
+    placements: list[tuple[str, float]] = []  # (size, template_volume)
+    vol = 0.0
+    while vol < fallen_budget_m3 and len(placements) < 500:
+        tv = rng.choice(fallen_templates)
+        placements.append(("fallen", float(tv)))
+        vol += tv
+    vol = 0.0
+    while vol < decayed_budget_m3 and len(placements) < 1000:
+        tv = rng.choice(decayed_templates)
+        placements.append(("decayed", float(tv)))
+        vol += tv
+
+    if not placements:
+        return df
+
+    rng.shuffle(placements)
+
+    voxel_points, _ = _build_voxel_tree(ds)
+
+    # Build tree of existing positions for soft spacing
+    active = df.loc[~df["size"].isin(ABSENT_TREE_SIZES)]
+    existing_positions = (
+        np.vstack([active["x"], active["y"], active["z"]]).T
+        if len(active) else np.empty((0, 3))
+    )
+    existing_tree = cKDTree(existing_positions) if len(existing_positions) else None
+
+    candidate_indices = available_indices.copy()
+    rng.shuffle(candidate_indices)
+
+    # Split candidates into preferred (spaced) and fallback
+    spaced = []
+    fallback = []
+    for vi in candidate_indices:
+        pos = tuple(voxel_points[int(vi)])
+        if existing_tree is not None and len(existing_positions) > 0:
+            dist, _ = existing_tree.query(np.array(pos), distance_upper_bound=spacing_pref)
+            if np.isfinite(dist) and dist <= spacing_pref:
+                fallback.append(int(vi))
+                continue
+        spaced.append(int(vi))
+
+    ordered = spaced + fallback
+
+    df_template = _new_tree_template(df)
+    new_records = []
+
+    for i, (dw_size, template_vol) in enumerate(placements):
+        if i >= len(ordered):
+            break
+        vi = ordered[i]
+        pos = tuple(voxel_points[vi])
+        is_fallen = dw_size == "fallen"
+
+        record = dict(df_template)
+        record.update({
+            "x": pos[0],
+            "y": pos[1],
+            "z": pos[2],
+            "size": dw_size,
+            "diameter_breast_height": rng.uniform(30.0, 80.0),
+            "precolonial": False,
+            "useful_life_expectancy": 0.0,
+            "CanopyArea": 1.0,
+            "sim_NodesArea": 1.0,
+            "sim_NodesVoxels": 1.0,
+            "CanopyResistance": float(ds["analysis_combined_resistance"].values[vi]),
+            "voxel_index": vi,
+            "tree_id": -1,
+            "tree_number": -1,
+            "NodeID": -1,
+            "debugNodeID": -1,
+            "isNewTree": True,
+            "isRewildedTree": True,
+            "hasbeenReplanted": False,
+            "under-node-treatment": "scenario-rewilded",
+            "recruit_mechanism": "ground-deadwood-deploy",
+            "action": "None",
+            "replacement_reason": "none",
+            "proposal-decay_decision": "not-assessed",
+            "proposal-decay_intervention": "none",
+            "proposal-release-control_decision": "not-assessed",
+            "proposal-release-control_intervention": "none",
+            "proposal-release-control_target_years": 0.0,
+            "proposal-release-control_years": 0.0,
+            "proposal-recruit_decision": "not-assessed",
+            "proposal-recruit_intervention": "none",
+            "recruit_intervention_type": "none",
+            "recruit_source_id": "none",
+            "recruit_year": float(absolute_year),
+            "proposal-colonise_decision": "not-assessed",
+            "proposal-colonise_intervention": "none",
+            "proposal-deploy-structure_decision": "proposal-deploy-structure_accepted",
+            "proposal-deploy-structure_intervention": DEPLOY_FULL_LOG,
+            "control_reached": LOW_CONTROL_STATE,
+            "control": "reserve-tree",
+            "lifecycle_state": dw_size,
+            "early_death_at_year": np.nan,
+            "became_large_at_year": np.nan,
+            "became_senescing_at_year": np.nan,
+            "became_snag_at_year": np.nan,
+            "senescing_duration_years": np.nan,
+            "snag_duration_years": np.nan,
+            "became_fallen_at_year": float(absolute_year) if is_fallen else np.nan,
+            "fallen_decay_after_years": rng.triangular(
+                params["fallen_duration_years"]["min"],
+                params["fallen_duration_years"]["mode"],
+                params["fallen_duration_years"]["max"],
+            ) if is_fallen else np.nan,
+            "became_decayed_at_year": np.nan if is_fallen else float(absolute_year),
+            "decayed_remove_after_years": np.nan if is_fallen else rng.triangular(
+                params["decayed_duration_years"]["min"],
+                params["decayed_duration_years"]["mode"],
+                params["decayed_duration_years"]["max"],
+            ),
+            "became_gone_at_year": np.nan,
+        })
+        new_records.append(record)
+
+    if new_records:
+        df = pd.concat([df, pd.DataFrame(new_records)], ignore_index=True)
+
+    return _refresh_schema(df)
+
+
 def _run_single_pulse(
     df: pd.DataFrame,
     ds: xr.Dataset,
@@ -1748,6 +1977,7 @@ def _run_single_pulse(
 
     _, pulse_ds = calculate_under_node_treatment_status(df, ds, params)
     df = apply_recruit(df, pulse_ds, params, telemetry_rows=telemetry_rows)
+    df = deploy_ground_deadwood(df, pulse_ds, params)
     df = refresh_colonise_support(df)
     return _refresh_schema(df)
 
@@ -1859,6 +2089,255 @@ def run_timestep(
             _append_recruit_telemetry_csv(recruit_telemetry_path, recruit_telemetry_rows)
 
     return tree_state, log_df, pole_df
+
+
+# Default baseline roots per site — baselines rarely change, so we define
+# a stable root for each site to use when the current run root has no baseline.
+DEFAULT_BASELINE_ROOTS: dict[str, str] = {
+    "trimmed-parade": "_data-refactored/model-outputs/generated-states/v4.5test",
+    "city": "_data-refactored/model-outputs/generated-states/v4updatedterms",
+    "uni": "_data-refactored/model-outputs/generated-states/v4updatedterms",
+}
+
+
+def _find_baseline(site: str, site_dir: Path) -> pd.DataFrame | None:
+    """Locate baseline nodeDF in the current root or known fallback roots."""
+    baseline_path = site_dir / f"{site}_baseline_1_nodeDF_-180.csv"
+    if baseline_path.exists():
+        return pd.read_csv(baseline_path)
+    # Try the default baseline root for this site
+    default_root = DEFAULT_BASELINE_ROOTS.get(site)
+    if default_root:
+        fb = REPO_ROOT / default_root / "temp" / "interim-data" / site / f"{site}_baseline_1_nodeDF_-180.csv"
+        if fb.exists():
+            return pd.read_csv(fb)
+    # Legacy fallbacks
+    for fallback_name in ["v4-3", "v4-allometric-flat-mortality", "v4updatedterms"]:
+        fb = site_dir.parents[1] / fallback_name / "temp" / "interim-data" / site / f"{site}_baseline_1_nodeDF_-180.csv"
+        if fb.exists():
+            return pd.read_csv(fb)
+    return None
+
+
+def log_run_stats(
+    site: str,
+    scenario: str,
+    years: list[int],
+    voxel_size: int = 1,
+    output_mode: str | None = None,
+) -> None:
+    """Write recruit and size breakdown stats CSVs to the temp/interim-data dir.
+
+    Produces two CSVs per site/scenario:
+      - {site}_{scenario}_recruit_stats.csv — per assessed year and per pulse
+      - {site}_{scenario}_size_stats.csv — size breakdown vs baseline
+    Also prints summary tables to stdout.
+    """
+    root = scenario_output_root(output_mode)
+    site_dir = root / site
+    baseline_df = _find_baseline(site, site_dir)
+
+    size_order = ["small", "medium", "large", "senescing", "snag", "fallen", "decayed"]
+
+    # Load ds for ground area computation
+    ds_path = Path("data/revised/final") / site / f"{site}_{voxel_size}_subsetForScenarios.nc"
+    ds = xr.open_dataset(ds_path) if ds_path.exists() else None
+
+    thresholds_dict = params_v3.get_scenario_parameters().get(
+        (site, scenario), {},
+    ).get("sim_TurnsThreshold", {})
+
+    # Load recruit telemetry if available (per-pulse quota/placed/unfilled)
+    telemetry_path = site_dir / f"{site}_{scenario}_recruit_telemetry.csv"
+    telemetry_df = pd.read_csv(telemetry_path) if telemetry_path.exists() else None
+
+    density = 50 / 10000
+    recruit_rows: list[dict] = []
+    size_rows: list[dict] = []
+
+    print(f"\n===== Stats: {site} / {scenario} =====")
+
+    prev_year = 0
+    for yr in years:
+        tree_path = site_dir / f"{site}_{scenario}_{voxel_size}_treeDF_{yr}.csv"
+        if not tree_path.exists():
+            prev_year = yr
+            continue
+        df = pd.read_csv(tree_path)
+
+        # --- Recruit stats per assessed year ---
+        occ = _recruit_occupancy_by_type(df)
+
+        # Zone-derived areas (single source of truth; matches runtime engine).
+        node_rewild_area = 0.0
+        under_canopy_area = 0.0
+        gr_area = 0.0
+        if ds is not None and thresholds_dict:
+            threshold = params_v3.get_interpolated_param(thresholds_dict, yr)
+            zone_masks = _compute_recruit_zone_masks(df, ds, threshold)
+            voxel_area = ds.attrs["voxel_size"] ** 2
+            node_rewild_area = float(zone_masks["node-rewild"].sum()) * voxel_area
+            under_canopy_area = float(zone_masks["under-canopy"].sum()) * voxel_area
+            gr_area = float(zone_masks["ground-rewild"].sum()) * voxel_area
+
+        if yr == 0:
+            pf = 0.0
+        elif yr <= 1:
+            pf = 1.0 / RECRUIT_INTERVAL
+        else:
+            pf = 10.0 / RECRUIT_INTERVAL
+
+        # Count total placed per type across all pulses up to this year
+        recruits = df[df["recruit_mechanism"].isin(["node-rewild", "under-canopy", "ground"])]
+        total_placed_nr = int((recruits["recruit_mechanism"] == "node-rewild").sum())
+        total_placed_uc = int((recruits["recruit_mechanism"] == "under-canopy").sum())
+        total_placed_gr = int((recruits["recruit_mechanism"] == "ground").sum())
+        placed_map = {"node-rewild": total_placed_nr, "under-canopy": total_placed_uc, "ground-rewild": total_placed_gr}
+
+        print(f"\n--- yr {yr} ---")
+        print(f"  {'type':<16} {'area (m²)':>10} {'occupancy':>10} {'recruit/30yr':>13} {'density/pulse':>13} {'recruit/pulse':>13} {'total placed':>13}")
+        for label, area, occ_key in [
+            ("node-rewild", node_rewild_area, "node-rewild"),
+            ("ground-rewild", gr_area, "ground-rewild"),
+            ("under-canopy", under_canopy_area, "under-canopy"),
+        ]:
+            r30 = int(np.round(area * density))
+            dpulse = round(density * pf, 6)
+            rpulse = int(np.round(area * density * pf))
+            tp = placed_map[label]
+            print(f"  {label:<16} {area:>10,.0f} {occ[occ_key]:>10} {r30:>13} {dpulse:>13.6f} {rpulse:>13} {tp:>13}")
+            recruit_rows.append({
+                "site": site, "scenario": scenario, "year": yr,
+                "record": "assessed", "pulse_year": yr,
+                "type": label, "area_m2": round(area, 1),
+                "occupancy": occ[occ_key],
+                "recruit_per_30yr": r30, "density_per_pulse": dpulse,
+                "recruit_per_pulse": rpulse, "total_placed": tp,
+            })
+
+        # --- Per-pulse breakdown (quota vs placed per sub-step) ---
+        # Use telemetry if available (has quota/to_place/unfilled per pulse per type)
+        if telemetry_df is not None and not telemetry_df.empty:
+            # Telemetry assessed_year = pulse end year; filter pulses in (prev_year, yr]
+            yr_tel = telemetry_df[
+                (telemetry_df["pulse_end_year"] > prev_year)
+                & (telemetry_df["pulse_end_year"] <= yr)
+            ]
+            if not yr_tel.empty:
+                pulse_ends = sorted(yr_tel["pulse_end_year"].unique())
+                print(f"\n  {'pulse':>6}  {'type':<14} {'zone_vxl':>9} {'density':>10} {'quota':>6} {'occ':>5} {'to_place':>9} {'placed':>7} {'filled':>7} {'unfilled':>9} {'rej_sp':>7}")
+                for pe in pulse_ends:
+                    pe_int = int(pe)
+                    for t in ["node-rewild", "under-canopy", "ground-rewild"]:
+                        row = yr_tel[(yr_tel["pulse_end_year"] == pe) & (yr_tel["type"] == t)]
+                        if row.empty:
+                            continue
+                        r = row.iloc[0]
+                        q = int(r["quota"])
+                        occ = int(r.get("occupancy", 0))
+                        tp = int(r["to_place"])
+                        p = int(r["placed"])
+                        fi = int(r.get("filled", occ + p))
+                        uf = int(r["unfilled"])
+                        rs = int(r["rejected_spacing"])
+                        zv = int(r["zone_voxel_count"]) if "zone_voxel_count" in r.index else ""
+                        dp = f"{r['density_per_pulse']:.6f}" if "density_per_pulse" in r.index else ""
+                        if q == 0 and tp == 0 and p == 0:
+                            continue
+                        print(f"  {pe_int:>6}  {t:<14} {zv:>9} {dp:>10} {q:>6} {occ:>5} {tp:>9} {p:>7} {fi:>7} {uf:>9} {rs:>7}")
+                        recruit_rows.append({
+                            "site": site, "scenario": scenario, "year": yr,
+                            "record": "pulse", "pulse_year": pe_int,
+                            "type": t, "area_m2": "", "occupancy": occ,
+                            "zone_voxel_count": zv, "density_per_pulse": dp,
+                            "recruit_per_30yr": "", "recruit_per_pulse": "",
+                            "total_placed": p, "filled": fi, "quota": q,
+                            "to_place": tp, "unfilled": uf,
+                            "rejected_spacing": rs,
+                        })
+        else:
+            # Fallback: placed counts only from tree DF
+            pulse_years = sorted(recruits["recruit_year"].dropna().unique())
+            if pulse_years:
+                print(f"\n  {'pulse':>6} {'NR placed':>10} {'UC placed':>10} {'GR placed':>10}")
+                for py in pulse_years:
+                    py_int = int(py)
+                    sub = recruits[recruits["recruit_year"] == py]
+                    node_rewild_placed = int((sub["recruit_mechanism"] == "node-rewild").sum())
+                    uc_placed = int((sub["recruit_mechanism"] == "under-canopy").sum())
+                    gr_placed = int((sub["recruit_mechanism"] == "ground").sum())
+                    print(f"  {py_int:>6} {node_rewild_placed:>10} {uc_placed:>10} {gr_placed:>10}")
+                    for label, placed in [("node-rewild", node_rewild_placed), ("under-canopy", uc_placed), ("ground-rewild", gr_placed)]:
+                        recruit_rows.append({
+                            "site": site, "scenario": scenario, "year": yr,
+                            "record": "pulse", "pulse_year": py_int,
+                            "type": label, "area_m2": "", "occupancy": "",
+                            "recruit_per_30yr": "", "recruit_per_pulse": "",
+                            "total_placed": placed,
+                        })
+
+        # --- Size stats ---
+        alive = df[~df["size"].isin(["early-tree-death"])]
+        counts = alive["size"].value_counts()
+        bl_counts = baseline_df["size"].value_counts() if baseline_df is not None else None
+
+        print(f"\n  {'size':<12} {'baseline':>9} {'count':>7} {'delta':>7}")
+        for s in size_order:
+            count = int(counts.get(s, 0))
+            bl_count = int(bl_counts.get(s, 0)) if bl_counts is not None else None
+            delta = count - bl_count if bl_count is not None else None
+            delta_str = f"{delta:+d}" if delta is not None else "n/a"
+            bl_str = str(bl_count) if bl_count is not None else "n/a"
+            print(f"  {s:<12} {bl_str:>9} {count:>7} {delta_str:>7}")
+            size_rows.append({
+                "site": site, "scenario": scenario, "year": yr,
+                "size": s, "count": count,
+                "baseline": bl_count, "delta": delta,
+            })
+        total = sum(int(counts.get(s, 0)) for s in size_order)
+        bl_total = sum(int(bl_counts.get(s, 0)) for s in size_order) if bl_counts is not None else None
+        delta_total = total - bl_total if bl_total is not None else None
+        delta_str = f"{delta_total:+d}" if delta_total is not None else "n/a"
+        bl_str = str(bl_total) if bl_total is not None else "n/a"
+        print(f"  {'TOTAL':<12} {bl_str:>9} {total:>7} {delta_str:>7}")
+        size_rows.append({
+            "site": site, "scenario": scenario, "year": yr,
+            "size": "total", "count": total,
+            "baseline": bl_total, "delta": delta_total,
+        })
+        prev_year = yr
+
+    # --- Write CSVs ---
+    if recruit_rows:
+        out = pd.DataFrame(recruit_rows)
+        path = site_dir / f"{site}_{scenario}_recruit_stats.csv"
+        out.to_csv(path, index=False)
+        print(f"\n  Recruit stats → {path}")
+
+    if size_rows:
+        out = pd.DataFrame(size_rows)
+        path = site_dir / f"{site}_{scenario}_size_stats.csv"
+        out.to_csv(path, index=False)
+        print(f"  Size stats → {path}")
+
+    # --- Write yr180 size comparison to {root}/comparison/interim-size-assessment.csv ---
+    max_year = max(years) if years else 180
+    yr180_rows = [r for r in size_rows if r["year"] == max_year]
+    if yr180_rows:
+        comparison_dir = root.parents[1] / "comparison"
+        comparison_dir.mkdir(parents=True, exist_ok=True)
+        comparison_path = comparison_dir / "interim-size-assessment.csv"
+
+        yr180_df = pd.DataFrame(yr180_rows)
+        # Append to existing file if it exists (for multi-site/scenario runs)
+        if comparison_path.exists():
+            existing = pd.read_csv(comparison_path)
+            # Remove any existing rows for this site/scenario to avoid duplicates
+            mask = ~((existing["site"] == site) & (existing["scenario"] == scenario))
+            existing = existing[mask]
+            yr180_df = pd.concat([existing, yr180_df], ignore_index=True)
+        yr180_df.to_csv(comparison_path, index=False)
+        print(f"  Interim size assessment → {comparison_path}")
 
 
 def run_scenario(
