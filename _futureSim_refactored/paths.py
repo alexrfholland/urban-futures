@@ -15,6 +15,14 @@ GENERATED_STATE_RUNS_ROOT = MODEL_OUTPUTS_ROOT / "generated-states"
 BLENDER_ROOT = REFACTORED_DATA_ROOT / "blender"
 BLENDER_INPUTS_ROOT = BLENDER_ROOT / "inputs"
 BLENDER_WORLD_ROOT = BLENDER_INPUTS_ROOT / "world"
+BLENDERV2_ROOT = REFACTORED_DATA_ROOT / "blenderv2"
+BLENDERV2_INPUTS_ROOT = BLENDERV2_ROOT / "inputs"
+BLENDERV2_OUTPUT_ROOT = BLENDERV2_ROOT / "output"
+BLENDERV2_BLENDS_ROOT = BLENDERV2_ROOT / "blends"
+BLENDERV2_LOGS_ROOT = BLENDERV2_ROOT / "logs"
+COMPOSITOR_ROOT = REFACTORED_DATA_ROOT / "compositor"
+COMPOSITOR_OUTPUTS_ROOT = COMPOSITOR_ROOT / "outputs"
+COMPOSITOR_TEMP_BLENDS_ROOT = COMPOSITOR_ROOT / "temp_blends"
 TREE_LIBRARY_ROOT = MODEL_INPUTS_ROOT / "tree_libraries"
 TREE_LIBRARY_BASE_ROOT = TREE_LIBRARY_ROOT / "base" / "trees"
 TREE_LIBRARY_EXPORT_ROOT = MODEL_INPUTS_ROOT / "tree_library_exports"
@@ -100,8 +108,63 @@ def simv3_run_root(run_name: str | int) -> Path:
 
 
 def mediaflux_versioned_destination(run_name: str) -> str:
-    root = os.environ.get("MEDIAFLUX_SIM_DESTINATION_ROOT", "urban-futures/simulation-runs")
-    return f"{root.rstrip('/')}/{run_name}"
+    root = os.environ.get("MEDIAFLUX_SIM_DESTINATION_ROOT", "pipeline")
+    return f"{root.rstrip('/')}/{run_name}/simulation_outputs"
+
+
+def normalize_contract_note(note: str | None) -> str:
+    if not note:
+        return ""
+    cleaned = "-".join(str(note).strip().lower().replace("_", "-").split())
+    return cleaned.strip("-")
+
+
+def exr_family_name(case: str, note: str | None = None) -> str:
+    normalized = normalize_contract_note(note)
+    if not normalized:
+        return case
+    return f"{case}__{normalized}"
+
+
+def exr_case_from_family(exr_family: str) -> str:
+    return exr_family.split("__", 1)[0]
+
+
+def compositor_run_name(
+    compositor_family: str,
+    timestamp: str,
+    note: str | None = None,
+) -> str:
+    family = normalize_contract_note(compositor_family)
+    extra = normalize_contract_note(note)
+    base = f"{family}__{timestamp}"
+    if not extra:
+        return base
+    return f"{base}__{extra}"
+
+
+def blenderv2_exr_family_dir(sim_root: str, exr_family: str) -> Path:
+    return BLENDERV2_OUTPUT_ROOT / sim_root / exr_family
+
+
+def blenderv2_scene_blend_path(sim_root: str, exr_family: str) -> Path:
+    return BLENDERV2_BLENDS_ROOT / sim_root / f"{exr_family}__full_pipeline.blend"
+
+
+def compositor_run_dir(sim_root: str, exr_family: str, compositor_run: str) -> Path:
+    return COMPOSITOR_OUTPUTS_ROOT / sim_root / exr_family / compositor_run
+
+
+def mediaflux_sim_root_subpath(sim_root: str) -> Path:
+    return Path("pipeline") / sim_root / "simulation_outputs"
+
+
+def mediaflux_blenderv2_exr_family_subpath(sim_root: str, exr_family: str) -> Path:
+    return Path("pipeline") / sim_root / "blender_exrs" / exr_family
+
+
+def mediaflux_compositor_run_subpath(sim_root: str, exr_family: str, compositor_run: str) -> Path:
+    return Path("pipeline") / sim_root / "compositor_pngs" / exr_family / compositor_run
 
 
 def refactor_run_output_root(output_mode: str | None = None) -> Path | None:

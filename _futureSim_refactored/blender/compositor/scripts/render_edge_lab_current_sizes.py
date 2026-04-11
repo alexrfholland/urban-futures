@@ -28,33 +28,33 @@ def env_path(name: str, default: str) -> Path:
 
 
 BLEND_PATH = env_path(
-    "EDGE_LAB_BLEND_PATH",
+    "COMPOSITOR_BLEND_PATH",
     str(CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend"),
 )
 OUTPUT_DIR = env_path(
-    "EDGE_LAB_OUTPUT_DIR",
+    "COMPOSITOR_OUTPUT_DIR",
     str(OUTPUT_BASE / "edge_lab_final_template" / "current" / "sizes"),
 )
 PATHWAY_EXR = env_path(
-    "EDGE_LAB_PATHWAY_EXR",
+    "COMPOSITOR_PATHWAY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_state__8k64s.exr"),
 )
 PRIORITY_EXR = env_path(
-    "EDGE_LAB_PRIORITY_EXR",
+    "COMPOSITOR_PRIORITY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_priority_state__8k64s.exr"),
 )
 EXISTING_EXR = env_path(
-    "EDGE_LAB_EXISTING_EXR",
+    "COMPOSITOR_EXISTING_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__existing_condition_positive__8k64s.exr"),
 )
 TRENDING_EXR = env_path(
-    "EDGE_LAB_TRENDING_EXR",
+    "COMPOSITOR_TRENDING_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__trending_state__8k64s.exr"),
 )
-SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
+SCENE_NAME = os.environ.get("COMPOSITOR_SCENE_NAME", "Current")
 OUTPUT_FILTER = {
     item.strip()
-    for item in os.environ.get("EDGE_LAB_OUTPUT_FILTER", "").split(",")
+    for item in os.environ.get("COMPOSITOR_OUTPUT_FILTER", "").split(",")
     if item.strip()
 }
 
@@ -260,7 +260,7 @@ def selected_slots(node: bpy.types.Node) -> list[tuple[int, str]]:
         return slots
     selected = [(index, stem) for index, stem in slots if stem in OUTPUT_FILTER]
     if not selected:
-        raise ValueError(f"No Sizes outputs matched EDGE_LAB_OUTPUT_FILTER={sorted(OUTPUT_FILTER)}")
+        raise ValueError(f"No Sizes outputs matched COMPOSITOR_OUTPUT_FILTER={sorted(OUTPUT_FILTER)}")
     return selected
 
 
@@ -282,7 +282,7 @@ def filtered_output_nodes(nodes: list[bpy.types.Node]) -> list[bpy.types.Node]:
         matched = slot_stems & OUTPUT_FILTER
         if matched:
             return nodes
-    raise ValueError(f"No Sizes outputs matched EDGE_LAB_OUTPUT_FILTER={sorted(OUTPUT_FILTER)}")
+    raise ValueError(f"No Sizes outputs matched COMPOSITOR_OUTPUT_FILTER={sorted(OUTPUT_FILTER)}")
 
 
 def allowed_output_stems(nodes: list[bpy.types.Node]) -> set[str]:

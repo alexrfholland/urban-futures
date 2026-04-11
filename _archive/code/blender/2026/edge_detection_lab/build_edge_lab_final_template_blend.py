@@ -26,32 +26,32 @@ def env_path(name: str, default: Path) -> Path:
 
 
 CURRENT_SOURCE_BLEND = env_path(
-    "EDGE_LAB_CURRENT_SOURCE_BLEND",
+    "COMPOSITOR_CURRENT_SOURCE_BLEND",
     DATA_ROOT / "edge_lab_output_suite_refined.blend",
 )
 LEGACY_SOURCE_BLEND = env_path(
-    "EDGE_LAB_LEGACY_SOURCE_BLEND",
+    "COMPOSITOR_LEGACY_SOURCE_BLEND",
     DATA_ROOT / "city_exr_compositor_lightweight_city_final.blend",
 )
 OUTPUT_BLEND = env_path(
-    "EDGE_LAB_FINAL_TEMPLATE_BLEND",
+    "COMPOSITOR_FINAL_TEMPLATE_BLEND",
     DATA_ROOT / "edge_lab_final_template.blend",
 )
 PROPOSAL_PATHWAY_EXR = env_path(
-    "EDGE_LAB_PROPOSAL_PATHWAY_EXR",
+    "COMPOSITOR_PROPOSAL_PATHWAY_EXR",
     DATA_ROOT / "inputs" / "parade_8k_network_20260402" / "parade_pathway_state_8k.exr",
 )
 PROPOSAL_PRIORITY_EXR = env_path(
-    "EDGE_LAB_PROPOSAL_PRIORITY_EXR",
+    "COMPOSITOR_PROPOSAL_PRIORITY_EXR",
     DATA_ROOT / "inputs" / "parade_8k_network_20260402" / "parade_priority_state_8k.exr",
 )
 PROPOSAL_TRENDING_EXR = env_path(
-    "EDGE_LAB_PROPOSAL_TRENDING_EXR",
+    "COMPOSITOR_PROPOSAL_TRENDING_EXR",
     DATA_ROOT / "inputs" / "parade_8k_network_20260402" / "parade_trending_state_8k.exr",
 )
 
-CURRENT_SOURCE_SCENE = os.environ.get("EDGE_LAB_CURRENT_SOURCE_SCENE", "Suite")
-LEGACY_SOURCE_SCENE = os.environ.get("EDGE_LAB_LEGACY_SOURCE_SCENE", "City")
+CURRENT_SOURCE_SCENE = os.environ.get("COMPOSITOR_CURRENT_SOURCE_SCENE", "Suite")
+LEGACY_SOURCE_SCENE = os.environ.get("COMPOSITOR_LEGACY_SOURCE_SCENE", "City")
 
 
 def log(message: str) -> None:

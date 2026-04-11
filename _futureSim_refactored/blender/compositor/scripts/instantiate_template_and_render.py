@@ -3,8 +3,15 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
+from _futureSim_refactored.paths import (
+    blenderv2_exr_family_dir,
+    compositor_run_dir,
+    compositor_run_name,
+    exr_case_from_family,
+)
 
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
 COMPOSITOR_ROOT = REPO_ROOT / "_futureSim_refactored" / "blender" / "compositor"
@@ -19,29 +26,45 @@ def env_path(name: str, default: Path) -> Path:
     return Path(os.environ.get(name, str(default))).expanduser()
 
 
+def default_dataset_root() -> Path:
+    sim_root = os.environ.get("COMPOSITOR_SIM_ROOT", "").strip()
+    exr_family = os.environ.get("COMPOSITOR_EXR_FAMILY", "").strip()
+    if sim_root and exr_family:
+        return blenderv2_exr_family_dir(sim_root, exr_family)
+    return (
+        LEGACY_INPUT_ROOT
+        / "inputs"
+        / "LATEST_REMOTE_EXRS"
+        / "simv3-7_20260405_8k64s_simv3-7"
+        / "city_timeline"
+    )
+
+
+def default_output_root(default_family: str) -> Path:
+    sim_root = os.environ.get("COMPOSITOR_SIM_ROOT", "").strip()
+    exr_family = os.environ.get("COMPOSITOR_EXR_FAMILY", "").strip()
+    compositor_family = os.environ.get("COMPOSITOR_FAMILY", default_family).strip()
+    timestamp = os.environ.get("COMPOSITOR_RUN_TIMESTAMP", "").strip() or time.strftime("%Y%m%d_%H%M")
+    note = os.environ.get("COMPOSITOR_RUN_NOTE", "").strip()
+    if sim_root and exr_family and compositor_family:
+        compositor_run = compositor_run_name(compositor_family, timestamp, note or None)
+        return compositor_run_dir(sim_root, exr_family, compositor_run)
+    return DATA_ROOT / "outputs" / "edge_lab_template_instantiation"
+
+
 CANONICAL_BLEND = env_path(
-    "EDGE_LAB_CANONICAL_BLEND",
+    "COMPOSITOR_CANONICAL_BLEND",
     CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend",
 )
-DATASET_ROOT = env_path(
-    "EDGE_LAB_DATASET_ROOT",
-    LEGACY_INPUT_ROOT
-    / "inputs"
-    / "LATEST_REMOTE_EXRS"
-    / "simv3-7_20260405_8k64s_simv3-7"
-    / "city_timeline",
-)
-OUTPUT_ROOT = env_path(
-    "EDGE_LAB_OUTPUT_ROOT",
-    DATA_ROOT / "outputs" / "edge_lab_template_instantiation",
-)
+DATASET_ROOT = default_dataset_root()
+OUTPUT_ROOT = default_output_root("edge-lab-template-instantiation")
 WORKING_BLEND = env_path(
-    "EDGE_LAB_WORKING_BLEND",
+    "COMPOSITOR_WORKING_BLEND",
     OUTPUT_ROOT / "_working" / CANONICAL_BLEND.name,
 )
 FAMILY_FILTER = {
     item.strip().lower()
-    for item in os.environ.get("EDGE_LAB_FAMILIES", "ao,bioenvelope,base").split(",")
+    for item in os.environ.get("COMPOSITOR_RENDER_FAMILIES", "ao,bioenvelope,base").split(",")
     if item.strip()
 }
 
@@ -62,6 +85,9 @@ def run_blender_python(script_path: Path, env: dict[str, str]) -> None:
 
 
 def dataset_name(dataset_root: Path) -> str:
+    exr_family = os.environ.get("COMPOSITOR_EXR_FAMILY", "").strip()
+    if exr_family:
+        return exr_case_from_family(exr_family)
     return dataset_root.name
 
 
@@ -96,29 +122,28 @@ def instantiate_working_blend() -> None:
 def family_env(base_env: dict[str, str], output_dir: Path) -> dict[str, str]:
     return {
         **base_env,
-        "EDGE_LAB_BLEND_PATH": str(WORKING_BLEND),
-        "EDGE_LAB_SCENE_NAME": "Current",
-        "EDGE_LAB_OUTPUT_DIR": str(output_dir),
-        "EDGE_LAB_OUTPUT_ROOT": str(output_dir),
+        "COMPOSITOR_BLEND_PATH": str(WORKING_BLEND),
+        "COMPOSITOR_SCENE_NAME": "Current",
+        "COMPOSITOR_OUTPUT_DIR": str(output_dir),
     }
 
 
 def run_selected_families(paths: dict[str, Path]) -> None:
     current_root = OUTPUT_ROOT / "current"
     common_env = {
-        "EDGE_LAB_PATHWAY_EXR": str(paths["PATHWAY_EXR"]),
-        "EDGE_LAB_PRIORITY_EXR": str(paths["PRIORITY_EXR"]),
-        "EDGE_LAB_EXISTING_EXR": str(paths["EXISTING_EXR"]),
-        "EDGE_LAB_EXISTING_TRENDING_EXR": str(paths["EXISTING_TRENDING_EXR"]),
-        "EDGE_LAB_TRENDING_EXR": str(paths["TRENDING_EXR"]),
-        "EDGE_LAB_BIOENVELOPE_EXR": str(paths["BIOENVELOPE_EXR"]),
-        "EDGE_LAB_BIOENVELOPE_TRENDING_EXR": str(paths["BIOENVELOPE_TRENDING_EXR"]),
+        "COMPOSITOR_PATHWAY_EXR": str(paths["PATHWAY_EXR"]),
+        "COMPOSITOR_PRIORITY_EXR": str(paths["PRIORITY_EXR"]),
+        "COMPOSITOR_EXISTING_EXR": str(paths["EXISTING_EXR"]),
+        "COMPOSITOR_EXISTING_TRENDING_EXR": str(paths["EXISTING_TRENDING_EXR"]),
+        "COMPOSITOR_TRENDING_EXR": str(paths["TRENDING_EXR"]),
+        "COMPOSITOR_BIOENVELOPE_EXR": str(paths["BIOENVELOPE_EXR"]),
+        "COMPOSITOR_BIOENVELOPE_TRENDING_EXR": str(paths["BIOENVELOPE_TRENDING_EXR"]),
     }
 
     core_requested = FAMILY_FILTER & {"ao", "normals", "resources"}
     if core_requested:
         env = family_env(common_env, current_root)
-        env["EDGE_LAB_FAMILIES"] = ",".join(sorted(core_requested))
+        env["COMPOSITOR_RENDER_FAMILIES"] = ",".join(sorted(core_requested))
         run_blender_python(SCRIPT_ROOT / "render_edge_lab_current_core_outputs.py", env)
 
     if "shading" in FAMILY_FILTER:

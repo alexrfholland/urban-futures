@@ -24,19 +24,19 @@ DEFAULT_EXR = (
 
 EXR_PATH = Path(
     os.environ.get(
-        "EDGE_LAB_PROPOSAL_OUTLINE_EXR",
+        "COMPOSITOR_PROPOSAL_OUTLINE_EXR",
         str(DEFAULT_EXR),
     )
 ).expanduser()
 OUTPUT_DIR = Path(
     os.environ.get(
-        "EDGE_LAB_PROPOSAL_OUTLINE_OUTPUT_DIR",
+        "COMPOSITOR_PROPOSAL_OUTLINE_OUTPUT_DIR",
         str(OUTPUT_BASE / "proposal_outline_layers"),
     )
 ).expanduser()
 BLEND_PATH = Path(
     os.environ.get(
-        "EDGE_LAB_PROPOSAL_OUTLINE_BLEND",
+        "COMPOSITOR_PROPOSAL_OUTLINE_BLEND",
         str(CANONICAL_ROOT / "proposal_outline_layers.blend"),
     )
 ).expanduser()

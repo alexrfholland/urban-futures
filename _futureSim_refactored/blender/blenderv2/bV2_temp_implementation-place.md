@@ -448,17 +448,8 @@ The important practical point for `blenderv2` is that v1.5 is not a clean from-s
 
 ### Current bV2 bundle preference
 
-- `blenderv2` should read from the local temp bundle root, not directly from the network share
-- shared settings now live in [bV2_paths.py](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored/blender/blenderv2/bV2_paths.py):
-  - `BLENDER_USE_REMOTE`
-  - `BLENDER_TEMP_REPO`
-  - `BLENDER_REPO_ROOT`
-- sync helper now lives in [bV2_sync_inputs.py](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored/blender/blenderv2/bV2_sync_inputs.py)
-- current intended flow:
-  - copy from `BLENDER_REPO_ROOT` (currently the mapped `Z:` drive location)
-  - into `BLENDER_TEMP_REPO`
-  - write `_bV2_source.txt` in the temp repo for provenance
-  - builders read from `BLENDER_TEMP_REPO`
+- older notes in this section referred to a temporary mapped-drive sync path
+- current bV2 input resolution is repo-local under `_data-refactored/blenderv2/inputs`
 
 ## Immediate note for bV2
 

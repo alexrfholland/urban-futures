@@ -28,27 +28,27 @@ def env_path(name: str, default: str) -> Path:
 
 
 BLEND_PATH = env_path(
-    "EDGE_LAB_BLEND_PATH",
+    "COMPOSITOR_BLEND_PATH",
     str(CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend"),
 )
 OUTPUT_DIR = env_path(
-    "EDGE_LAB_OUTPUT_DIR",
+    "COMPOSITOR_OUTPUT_DIR",
     str(OUTPUT_BASE / "edge_lab_final_template" / "current" / "outlines_mist"),
 )
 PATHWAY_EXR = env_path(
-    "EDGE_LAB_PATHWAY_EXR",
+    "COMPOSITOR_PATHWAY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_state__8k64s.exr"),
 )
 PRIORITY_EXR = env_path(
-    "EDGE_LAB_PRIORITY_EXR",
+    "COMPOSITOR_PRIORITY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_priority_state__8k64s.exr"),
 )
 TRENDING_EXR = env_path(
-    "EDGE_LAB_TRENDING_EXR",
+    "COMPOSITOR_TRENDING_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__trending_state__8k64s.exr"),
 )
-MIST_EXR = env_path("EDGE_LAB_MIST_EXR", str(PATHWAY_EXR))
-SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
+MIST_EXR = env_path("COMPOSITOR_MIST_EXR", str(PATHWAY_EXR))
+SCENE_NAME = os.environ.get("COMPOSITOR_SCENE_NAME", "Current")
 
 
 def log(message: str) -> None:

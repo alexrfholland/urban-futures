@@ -10,6 +10,10 @@ from pathlib import Path
 import bpy
 
 try:
+    from _futureSim_refactored.paths import (
+        BLENDERV2_OUTPUT_ROOT,
+        mediaflux_blenderv2_exr_family_subpath,
+    )
     from .bV2_scene_contract import (
         MATERIAL_NAMES,
         VIEW_LAYER_NAMES,
@@ -20,6 +24,10 @@ except ImportError:
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from _futureSim_refactored.paths import (
+        BLENDERV2_OUTPUT_ROOT,
+        mediaflux_blenderv2_exr_family_subpath,
+    )
     from bV2_scene_contract import (  # type: ignore
         MATERIAL_NAMES,
         VIEW_LAYER_NAMES,
@@ -30,7 +38,7 @@ except ImportError:
 
 CODE_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent.name == "_futureSim_refactored")
 REPO_ROOT = CODE_ROOT.parent
-DEFAULT_RENDER_ROOT = Path(r"E:\2026 Arboreal Futures\blenderv2\renders")
+DEFAULT_RENDER_ROOT = BLENDERV2_OUTPUT_ROOT
 MEDIAFLUX_CLIENT_BIN_DIR = (
     REPO_ROOT
     / ".tools"
@@ -75,6 +83,26 @@ def get_runtime_case_tag(scene: bpy.types.Scene) -> str:
     if mode == "baseline":
         return f"{site_label}_baseline_yr{year}"
     return f"{site_label}_single-state_yr{year}"
+
+
+def normalize_runtime_note(note: str) -> str:
+    cleaned = "-".join(note.strip().lower().replace("_", "-").split())
+    return cleaned.strip("-")
+
+
+def get_runtime_exr_family(scene: bpy.types.Scene, note: str | None = None) -> str:
+    case_tag = get_runtime_case_tag(scene)
+    note_value = normalize_runtime_note(note or os.environ.get("BV2_EXR_FAMILY_NOTE", ""))
+    if not note_value:
+        return case_tag
+    return f"{case_tag}__{note_value}"
+
+
+def default_render_output_root(scene: bpy.types.Scene, *, timestamp: str, tag: str) -> Path:
+    sim_root = os.environ.get("BV2_SIM_ROOT", "").strip()
+    if sim_root:
+        return (DEFAULT_RENDER_ROOT / sim_root / get_runtime_exr_family(scene)).resolve()
+    return (DEFAULT_RENDER_ROOT / f"{timestamp}_{get_runtime_case_tag(scene)}_{tag}").resolve()
 
 
 def ensure_aovs_and_passes(scene: bpy.types.Scene) -> None:
@@ -526,7 +554,7 @@ def upload_folder_to_mediaflux(local_path: Path, remote_subpath: str) -> None:
         str(REPO_VENV_PYTHON),
         "-m",
         "mediafluxsync",
-        "upload-blenderv2",
+        "upload-project",
         str(local_path),
         remote_subpath,
         "--project-dir",
@@ -546,7 +574,7 @@ def main() -> None:
     timestamp = os.environ.get("BV2_OUTPUT_TIMESTAMP", "").strip() or time.strftime("%Y%m%d_%H%M%S")
     tag = os.environ.get("BV2_RENDER_TAG", "8k").strip() or "8k"
     output_root = Path(
-        os.environ.get("BV2_RENDER_OUTPUT_ROOT", str(DEFAULT_RENDER_ROOT / f"{timestamp}_{get_runtime_case_tag(scene)}_{tag}"))
+        os.environ.get("BV2_RENDER_OUTPUT_ROOT", str(default_render_output_root(scene, timestamp=timestamp, tag=tag)))
     )
     resolution_x = int(os.environ.get("BV2_RES_X", "7680"))
     resolution_y = int(os.environ.get("BV2_RES_Y", "4320"))
@@ -554,7 +582,7 @@ def main() -> None:
     samples = int(os.environ.get("BV2_SAMPLES", "1"))
     render_now = os.environ.get("BV2_RENDER_NOW", "0").strip().lower() in TRUTHY
     upload = os.environ.get("BV2_UPLOAD_TO_MEDIAFLUX", "0").strip().lower() in TRUTHY
-    remote_subpath = os.environ.get("BV2_REMOTE_SUBPATH", "").strip()
+    remote_subpath = ""
 
     setup_render_outputs(
         scene,
@@ -581,7 +609,13 @@ def main() -> None:
         write_manifest(scene, output_root, basename, rendered_paths, blend_path=blend_path, remote_subpath=remote_subpath or None)
     if upload:
         if not remote_subpath:
-            remote_subpath = f"output/tests/{timestamp}_{get_runtime_case_tag(scene)}_{tag}"
+            sim_root = os.environ.get("BV2_SIM_ROOT", "").strip()
+            if sim_root:
+                remote_subpath = str(
+                    mediaflux_blenderv2_exr_family_subpath(sim_root, get_runtime_exr_family(scene))
+                )
+            else:
+                remote_subpath = f"pipeline/tests/blender_exrs/{timestamp}_{get_runtime_case_tag(scene)}_{tag}"
         upload_folder_to_mediaflux(output_root, remote_subpath)
 
 

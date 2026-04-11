@@ -28,29 +28,29 @@ def env_path(name: str, default: str) -> Path:
 
 
 BLEND_PATH = env_path(
-    "EDGE_LAB_BLEND_PATH",
+    "COMPOSITOR_BLEND_PATH",
     str(CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend"),
 )
 OUTPUT_DIR = env_path(
-    "EDGE_LAB_OUTPUT_DIR",
+    "COMPOSITOR_OUTPUT_DIR",
     str(OUTPUT_BASE / "edge_lab_final_template" / "current" / "proposals"),
 )
 PATHWAY_EXR = env_path(
-    "EDGE_LAB_PATHWAY_EXR",
+    "COMPOSITOR_PATHWAY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_state__8k64s.exr"),
 )
 PRIORITY_EXR = env_path(
-    "EDGE_LAB_PRIORITY_EXR",
+    "COMPOSITOR_PRIORITY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_priority_state__8k64s.exr"),
 )
 TRENDING_EXR = env_path(
-    "EDGE_LAB_TRENDING_EXR",
+    "COMPOSITOR_TRENDING_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__trending_state__8k64s.exr"),
 )
-SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
+SCENE_NAME = os.environ.get("COMPOSITOR_SCENE_NAME", "Current")
 PHASE_FILTER = {
     item.strip().lower()
-    for item in os.environ.get("EDGE_LAB_PHASE_FILTER", "").split(",")
+    for item in os.environ.get("COMPOSITOR_PHASE_FILTER", "").split(",")
     if item.strip()
 }
 
@@ -210,7 +210,7 @@ def output_nodes(node_tree: bpy.types.NodeTree) -> list[bpy.types.Node]:
             if phase in PHASE_FILTER:
                 filtered.append(node)
         if not filtered:
-            raise ValueError(f"No Proposals outputs matched EDGE_LAB_PHASE_FILTER={sorted(PHASE_FILTER)}")
+            raise ValueError(f"No Proposals outputs matched COMPOSITOR_PHASE_FILTER={sorted(PHASE_FILTER)}")
         nodes = filtered
     return sorted(nodes, key=lambda node: node.name)
 

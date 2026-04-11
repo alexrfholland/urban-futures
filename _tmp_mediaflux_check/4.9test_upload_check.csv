@@ -1,0 +1,8 @@
+SRC_PATH,SRC_LENGTH,SRC_CHECKSUM,DST_PATH,DST_LENGTH,DST_CHECKSUM,DST_EXISTS?,MATCH?
+,,,,,,,
+,,,,,,,
+,,Number of checked files (total):,42,,,,
+,,Number of files (passed):,42,,,,
+,,Number of files (missing):,0,,,,
+,,Number of files (content mismatch):,0,,,,
+,,,,,,,

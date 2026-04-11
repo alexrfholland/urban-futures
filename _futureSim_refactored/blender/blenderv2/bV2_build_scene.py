@@ -9,6 +9,11 @@ from pathlib import Path
 import bpy
 
 try:
+    from _futureSim_refactored.paths import (
+        BLENDERV2_BLENDS_ROOT,
+        blenderv2_scene_blend_path,
+        mediaflux_blenderv2_exr_family_subpath,
+    )
     from .bV2_build_bioenvelopes import build_bioenvelopes
     from .bV2_build_instancers import build_instancers
     from .bV2_build_world_attributes import build_world_attributes
@@ -16,6 +21,8 @@ try:
     from .bV2_scene_contract import TEMPLATE_BLEND_NAME
     from .bV2_setup_render_outputs import (
         DEFAULT_RENDER_ROOT,
+        default_render_output_root,
+        get_runtime_exr_family,
         get_runtime_case_tag,
         render_all_isolated_exrs,
         save_scene_copy,
@@ -28,6 +35,11 @@ except ImportError:
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from _futureSim_refactored.paths import (
+        BLENDERV2_BLENDS_ROOT,
+        blenderv2_scene_blend_path,
+        mediaflux_blenderv2_exr_family_subpath,
+    )
     from bV2_build_bioenvelopes import build_bioenvelopes  # type: ignore
     from bV2_build_instancers import build_instancers  # type: ignore
     from bV2_build_world_attributes import build_world_attributes  # type: ignore
@@ -35,6 +47,8 @@ except ImportError:
     from bV2_scene_contract import TEMPLATE_BLEND_NAME  # type: ignore
     from bV2_setup_render_outputs import (  # type: ignore
         DEFAULT_RENDER_ROOT,
+        default_render_output_root,
+        get_runtime_exr_family,
         get_runtime_case_tag,
         render_all_isolated_exrs,
         save_scene_copy,
@@ -48,7 +62,7 @@ except ImportError:
 CODE_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent.name == "_futureSim_refactored")
 REPO_ROOT = CODE_ROOT.parent
 TEMPLATE_BLEND = REPO_ROOT / "_data-refactored" / "blenderv2" / TEMPLATE_BLEND_NAME
-DEFAULT_BLEND_ROOT = Path(r"E:\2026 Arboreal Futures\blenderv2\blends")
+DEFAULT_BLEND_ROOT = BLENDERV2_BLENDS_ROOT
 TRUTHY = {"1", "true", "yes", "on"}
 LOG_PATH = os.environ.get("BV2_LOG_PATH", "").strip()
 
@@ -118,9 +132,13 @@ def build_scene(
     case_tag = get_runtime_case_tag(scene)
 
     if save_blend:
+        sim_root = os.environ.get("BV2_SIM_ROOT", "").strip()
+        default_blend_path = DEFAULT_BLEND_ROOT / f"{scene.name}__full_pipeline.blend"
+        if sim_root:
+            default_blend_path = blenderv2_scene_blend_path(sim_root, get_runtime_exr_family(scene))
         blend_output_path = Path(
             blend_output_path
-            or DEFAULT_BLEND_ROOT / f"{scene.name}__full_pipeline.blend"
+            or default_blend_path
         ).resolve()
         blend_output_path.parent.mkdir(parents=True, exist_ok=True)
         bpy.ops.wm.save_as_mainfile(filepath=str(blend_output_path), copy=True)
@@ -134,7 +152,7 @@ def build_scene(
         timestamp = os.environ.get("BV2_OUTPUT_TIMESTAMP", "").strip() or time.strftime("%Y%m%d_%H%M%S")
         render_output_root = Path(
             render_output_root
-            or DEFAULT_RENDER_ROOT / f"{timestamp}_{case_tag}_{render_tag}"
+            or default_render_output_root(scene, timestamp=timestamp, tag=render_tag)
         ).resolve()
         render_output_root.mkdir(parents=True, exist_ok=True)
         render_summary = setup_render_outputs(
@@ -167,7 +185,13 @@ def build_scene(
         )
         if upload_to_mediaflux:
             if not remote_subpath:
-                remote_subpath = f"output/tests/{render_tag}/{render_output_root.name}"
+                sim_root = os.environ.get("BV2_SIM_ROOT", "").strip()
+                if sim_root:
+                    remote_subpath = str(
+                        mediaflux_blenderv2_exr_family_subpath(sim_root, get_runtime_exr_family(scene))
+                    )
+                else:
+                    remote_subpath = f"pipeline/tests/blender_exrs/{render_tag}/{render_output_root.name}"
             upload_folder_to_mediaflux(render_output_root, remote_subpath)
 
     summary = {
@@ -208,7 +232,7 @@ def main() -> None:
     resolution_y = int(os.environ.get("BV2_RES_Y", "4320"))
     resolution_percentage = int(os.environ.get("BV2_RES_PERCENT", "100"))
     samples = int(os.environ.get("BV2_SAMPLES", "64"))
-    remote_subpath = os.environ.get("BV2_REMOTE_SUBPATH", "").strip() or None
+    remote_subpath = None
 
     build_scene(
         site=site,

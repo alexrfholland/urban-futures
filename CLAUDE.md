@@ -43,8 +43,8 @@ Always run from this repo root with `--project-dir .`:
 # Upload a file to project data/
 .venv/Scripts/python.exe -m mediafluxsync upload-project --create-parents --project-dir . <local-source> <subpath>
 
-# Upload to blenderV2 area
-.venv/Scripts/python.exe -m mediafluxsync upload-blenderv2 --create-parents --exclude-parent --project-dir . <local-source> <subpath>
+# Upload to pipeline/
+.venv/Scripts/python.exe -m mediafluxsync upload-project --create-parents --exclude-parent --project-dir . <local-source> <subpath>
 
 # Download
 .venv/Scripts/python.exe -m mediafluxsync download-project --project-dir . --out <local-dest> <subpath>

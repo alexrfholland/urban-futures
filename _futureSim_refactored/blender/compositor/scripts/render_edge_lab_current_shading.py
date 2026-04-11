@@ -28,44 +28,44 @@ def env_path(name: str, default: str) -> Path:
 
 
 BLEND_PATH = env_path(
-    "EDGE_LAB_BLEND_PATH",
+    "COMPOSITOR_BLEND_PATH",
     str(CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend"),
 )
 OUTPUT_DIR = env_path(
-    "EDGE_LAB_OUTPUT_DIR",
+    "COMPOSITOR_OUTPUT_DIR",
     str(OUTPUT_BASE / "edge_lab_final_template" / "current" / "shading"),
 )
 PATHWAY_EXR = env_path(
-    "EDGE_LAB_PATHWAY_EXR",
+    "COMPOSITOR_PATHWAY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_state__8k64s.exr"),
 )
 PRIORITY_EXR = env_path(
-    "EDGE_LAB_PRIORITY_EXR",
+    "COMPOSITOR_PRIORITY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_priority_state__8k64s.exr"),
 )
 EXISTING_EXR = env_path(
-    "EDGE_LAB_EXISTING_EXR",
+    "COMPOSITOR_EXISTING_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__existing_condition_positive__8k64s.exr"),
 )
 EXISTING_TRENDING_EXR = env_path(
-    "EDGE_LAB_EXISTING_TRENDING_EXR",
-    os.environ.get("EDGE_LAB_EXISTING_TRENDING", str(EXISTING_EXR)),
+    "COMPOSITOR_EXISTING_TRENDING_EXR",
+    os.environ.get("COMPOSITOR_EXISTING_TRENDING_EXR", str(EXISTING_EXR)),
 )
 BIOENVELOPE_EXR = env_path(
-    "EDGE_LAB_BIOENVELOPE_EXR",
+    "COMPOSITOR_BIOENVELOPE_EXR",
     os.environ.get(
-        "EDGE_LAB_BIOENVELOPE",
+        "COMPOSITOR_BIOENVELOPE_EXR",
         str(DEFAULT_DATASET_ROOT / "city_timeline__bioenvelope_positive__8k64s.exr"),
     ),
 )
 BIOENVELOPE_TRENDING_EXR = env_path(
-    "EDGE_LAB_BIOENVELOPE_TRENDING_EXR",
+    "COMPOSITOR_BIOENVELOPE_TRENDING_EXR",
     os.environ.get(
-        "EDGE_LAB_BIOENVELOPE_TRENDING",
+        "COMPOSITOR_BIOENVELOPE_TRENDING_EXR",
         str(DEFAULT_DATASET_ROOT / "city_timeline__bioenvelope_trending__8k64s.exr"),
     ),
 )
-SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
+SCENE_NAME = os.environ.get("COMPOSITOR_SCENE_NAME", "Current")
 
 
 def log(message: str) -> None:

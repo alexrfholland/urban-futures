@@ -12,7 +12,7 @@ CANONICAL_ROOT = COMPOSITOR_ROOT / "canonical_templates"
 
 SOURCE_BLEND = Path(
     os.environ.get(
-        "EDGE_LAB_SOURCE_BLEND",
+        "COMPOSITOR_SOURCE_BLEND",
         CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend",
     )
 )

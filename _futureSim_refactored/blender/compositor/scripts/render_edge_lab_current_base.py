@@ -28,21 +28,21 @@ def env_path(name: str, default: str) -> Path:
 
 
 BLEND_PATH = env_path(
-    "EDGE_LAB_BLEND_PATH",
+    "COMPOSITOR_BLEND_PATH",
     str(CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend"),
 )
 OUTPUT_DIR = env_path(
-    "EDGE_LAB_OUTPUT_DIR",
+    "COMPOSITOR_OUTPUT_DIR",
     str(OUTPUT_BASE / "edge_lab_final_template" / "current" / "base"),
 )
 EXISTING_EXR = env_path(
-    "EDGE_LAB_EXISTING_EXR",
+    "COMPOSITOR_EXISTING_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__existing_condition_positive__8k64s.exr"),
 )
-SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
+SCENE_NAME = os.environ.get("COMPOSITOR_SCENE_NAME", "Current")
 OUTPUT_FILTER = {
     item.strip()
-    for item in os.environ.get("EDGE_LAB_OUTPUT_FILTER", "").split(",")
+    for item in os.environ.get("COMPOSITOR_OUTPUT_FILTER", "").split(",")
     if item.strip()
 }
 

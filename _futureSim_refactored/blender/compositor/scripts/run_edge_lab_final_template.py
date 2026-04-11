@@ -3,8 +3,15 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
+from _futureSim_refactored.paths import (
+    blenderv2_exr_family_dir,
+    compositor_run_dir,
+    compositor_run_name,
+    exr_case_from_family,
+)
 
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
 COMPOSITOR_ROOT = REPO_ROOT / "_futureSim_refactored" / "blender" / "compositor"
@@ -20,39 +27,61 @@ def env_path(name: str, default: Path) -> Path:
     return Path(os.environ.get(name, str(default))).expanduser()
 
 
+def default_exr_root() -> Path:
+    sim_root = os.environ.get("COMPOSITOR_SIM_ROOT", "").strip()
+    exr_family = os.environ.get("COMPOSITOR_EXR_FAMILY", "").strip()
+    if sim_root and exr_family:
+        return blenderv2_exr_family_dir(sim_root, exr_family)
+    return LEGACY_DATA_ROOT / "inputs" / "LATEST_REMOTE_EXRS" / "simv3-7_20260405_8k64s_simv3-7" / "city_timeline"
+
+
+def default_output_root(default_family: str) -> Path:
+    sim_root = os.environ.get("COMPOSITOR_SIM_ROOT", "").strip()
+    exr_family = os.environ.get("COMPOSITOR_EXR_FAMILY", "").strip()
+    compositor_family = os.environ.get("COMPOSITOR_FAMILY", default_family).strip()
+    timestamp = os.environ.get("COMPOSITOR_RUN_TIMESTAMP", "").strip() or time.strftime("%Y%m%d_%H%M")
+    note = os.environ.get("COMPOSITOR_RUN_NOTE", "").strip()
+    if sim_root and exr_family and compositor_family:
+        compositor_run = compositor_run_name(compositor_family, timestamp, note or None)
+        return compositor_run_dir(sim_root, exr_family, compositor_run)
+    return DATA_ROOT / "outputs" / "edge_lab_final_template"
+
+
+def default_exr_case_name(exr_root: Path) -> str:
+    exr_family = os.environ.get("COMPOSITOR_EXR_FAMILY", "").strip()
+    if exr_family:
+        return exr_case_from_family(exr_family)
+    return exr_root.name
+
+
 FINAL_TEMPLATE_BLEND = env_path(
-    "EDGE_LAB_FINAL_TEMPLATE_BLEND",
+    "COMPOSITOR_FINAL_TEMPLATE_BLEND",
     CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend",
 )
 CURRENT_SOURCE_BLEND = env_path(
-    "EDGE_LAB_CURRENT_SOURCE_BLEND",
+    "COMPOSITOR_CURRENT_SOURCE_BLEND",
     LEGACY_DATA_ROOT / "edge_lab_output_suite_combined.blend",
 )
 LEGACY_SOURCE_BLEND = env_path(
-    "EDGE_LAB_LEGACY_SOURCE_BLEND",
+    "COMPOSITOR_LEGACY_SOURCE_BLEND",
     LEGACY_DATA_ROOT / "city_exr_compositor_lightweight_city_final.blend",
 )
-OUTPUT_ROOT = env_path(
-    "EDGE_LAB_OUTPUT_ROOT",
-    DATA_ROOT / "outputs" / "edge_lab_final_template",
-)
-EXR_ROOT = env_path(
-    "EDGE_LAB_EXR_ROOT",
-    LEGACY_DATA_ROOT / "inputs" / "LATEST_REMOTE_EXRS" / "simv3-7_20260405_8k64s_simv3-7" / "city_timeline",
-)
+OUTPUT_ROOT = default_output_root("edge-lab-final-template")
+EXR_ROOT = default_exr_root()
+EXR_CASE = default_exr_case_name(EXR_ROOT)
 
-PATHWAY_EXR = env_path("EDGE_LAB_PATHWAY_EXR", EXR_ROOT / "city_timeline__positive_state__8k64s.exr")
-PRIORITY_EXR = env_path("EDGE_LAB_PRIORITY_EXR", EXR_ROOT / "city_timeline__positive_priority_state__8k64s.exr")
-EXISTING_EXR = env_path("EDGE_LAB_EXISTING_EXR", EXR_ROOT / "city_timeline__existing_condition_positive__8k64s.exr")
+PATHWAY_EXR = env_path("COMPOSITOR_PATHWAY_EXR", EXR_ROOT / f"{EXR_CASE}__positive_state__8k64s.exr")
+PRIORITY_EXR = env_path("COMPOSITOR_PRIORITY_EXR", EXR_ROOT / f"{EXR_CASE}__positive_priority_state__8k64s.exr")
+EXISTING_EXR = env_path("COMPOSITOR_EXISTING_EXR", EXR_ROOT / f"{EXR_CASE}__existing_condition_positive__8k64s.exr")
 EXISTING_TRENDING_EXR = env_path(
-    "EDGE_LAB_EXISTING_TRENDING_EXR",
-    EXR_ROOT / "city_timeline__existing_condition_trending__8k64s.exr",
+    "COMPOSITOR_EXISTING_TRENDING_EXR",
+    EXR_ROOT / f"{EXR_CASE}__existing_condition_trending__8k64s.exr",
 )
-TRENDING_EXR = env_path("EDGE_LAB_TRENDING_EXR", EXR_ROOT / "city_timeline__trending_state__8k64s.exr")
-BIOENVELOPE_EXR = env_path("EDGE_LAB_BIOENVELOPE_EXR", EXR_ROOT / "city_timeline__bioenvelope_positive__8k64s.exr")
+TRENDING_EXR = env_path("COMPOSITOR_TRENDING_EXR", EXR_ROOT / f"{EXR_CASE}__trending_state__8k64s.exr")
+BIOENVELOPE_EXR = env_path("COMPOSITOR_BIOENVELOPE_EXR", EXR_ROOT / f"{EXR_CASE}__bioenvelope_positive__8k64s.exr")
 BIOENVELOPE_TRENDING_EXR = env_path(
-    "EDGE_LAB_BIOENVELOPE_TRENDING_EXR",
-    EXR_ROOT / "city_timeline__bioenvelope_trending__8k64s.exr",
+    "COMPOSITOR_BIOENVELOPE_TRENDING_EXR",
+    EXR_ROOT / f"{EXR_CASE}__bioenvelope_trending__8k64s.exr",
 )
 
 
@@ -75,12 +104,12 @@ def build_template() -> None:
     run_blender_python(
         LEGACY_CODE_ROOT / "build_edge_lab_final_template_blend.py",
         {
-            "EDGE_LAB_CURRENT_SOURCE_BLEND": str(LEGACY_DATA_ROOT / "edge_lab_output_suite_refined.blend"),
-            "EDGE_LAB_LEGACY_SOURCE_BLEND": str(LEGACY_SOURCE_BLEND),
-            "EDGE_LAB_FINAL_TEMPLATE_BLEND": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_PROPOSAL_PATHWAY_EXR": str(PATHWAY_EXR),
-            "EDGE_LAB_PROPOSAL_PRIORITY_EXR": str(PRIORITY_EXR),
-            "EDGE_LAB_PROPOSAL_TRENDING_EXR": str(TRENDING_EXR),
+            "COMPOSITOR_CURRENT_SOURCE_BLEND": str(LEGACY_DATA_ROOT / "edge_lab_output_suite_refined.blend"),
+            "COMPOSITOR_LEGACY_SOURCE_BLEND": str(LEGACY_SOURCE_BLEND),
+            "COMPOSITOR_FINAL_TEMPLATE_BLEND": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_PROPOSAL_PATHWAY_EXR": str(PATHWAY_EXR),
+            "COMPOSITOR_PROPOSAL_PRIORITY_EXR": str(PRIORITY_EXR),
+            "COMPOSITOR_PROPOSAL_TRENDING_EXR": str(TRENDING_EXR),
         },
     )
 
@@ -90,13 +119,13 @@ def run_current_outputs() -> None:
     run_blender_python(
         SCRIPT_ROOT / "render_edge_lab_current_core_outputs.py",
         {
-            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_SCENE_NAME": "Current",
-            "EDGE_LAB_OUTPUT_ROOT": str(current_root),
-            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
-            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
-            "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
-            "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
+            "COMPOSITOR_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_SCENE_NAME": "Current",
+            "COMPOSITOR_OUTPUT_DIR": str(current_root),
+            "COMPOSITOR_PATHWAY_EXR": str(PATHWAY_EXR),
+            "COMPOSITOR_PRIORITY_EXR": str(PRIORITY_EXR),
+            "COMPOSITOR_EXISTING_EXR": str(EXISTING_EXR),
+            "COMPOSITOR_TRENDING_EXR": str(TRENDING_EXR),
         },
     )
 
@@ -106,12 +135,12 @@ def run_legacy_shading() -> None:
     run_blender_python(
         LEGACY_CODE_ROOT / "render_edge_lab_legacy_shading.py",
         {
-            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_SCENE_NAME": "Legacy",
-            "EDGE_LAB_OUTPUT_DIR": str(shading_root),
-            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
-            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
-            "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
+            "COMPOSITOR_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_SCENE_NAME": "Legacy",
+            "COMPOSITOR_OUTPUT_DIR": str(shading_root),
+            "COMPOSITOR_PATHWAY_EXR": str(PATHWAY_EXR),
+            "COMPOSITOR_PRIORITY_EXR": str(PRIORITY_EXR),
+            "COMPOSITOR_EXISTING_EXR": str(EXISTING_EXR),
         },
     )
 
@@ -121,15 +150,15 @@ def run_current_shading() -> None:
     run_blender_python(
         SCRIPT_ROOT / "render_edge_lab_current_shading.py",
         {
-            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_SCENE_NAME": "Current",
-            "EDGE_LAB_OUTPUT_DIR": str(shading_root),
-            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
-            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
-            "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
-            "EDGE_LAB_EXISTING_TRENDING_EXR": str(EXISTING_TRENDING_EXR),
-            "EDGE_LAB_BIOENVELOPE_EXR": str(BIOENVELOPE_EXR),
-            "EDGE_LAB_BIOENVELOPE_TRENDING_EXR": str(BIOENVELOPE_TRENDING_EXR),
+            "COMPOSITOR_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_SCENE_NAME": "Current",
+            "COMPOSITOR_OUTPUT_DIR": str(shading_root),
+            "COMPOSITOR_PATHWAY_EXR": str(PATHWAY_EXR),
+            "COMPOSITOR_PRIORITY_EXR": str(PRIORITY_EXR),
+            "COMPOSITOR_EXISTING_EXR": str(EXISTING_EXR),
+            "COMPOSITOR_EXISTING_TRENDING_EXR": str(EXISTING_TRENDING_EXR),
+            "COMPOSITOR_BIOENVELOPE_EXR": str(BIOENVELOPE_EXR),
+            "COMPOSITOR_BIOENVELOPE_TRENDING_EXR": str(BIOENVELOPE_TRENDING_EXR),
         },
     )
 
@@ -139,13 +168,13 @@ def run_current_bioenvelopes() -> None:
     run_blender_python(
         SCRIPT_ROOT / "render_edge_lab_current_bioenvelopes.py",
         {
-            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_SCENE_NAME": "Current",
-            "EDGE_LAB_OUTPUT_DIR": str(bio_root),
-            "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
-            "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
-            "EDGE_LAB_BIOENVELOPE_EXR": str(BIOENVELOPE_EXR),
-            "EDGE_LAB_BIOENVELOPE_TRENDING_EXR": str(BIOENVELOPE_TRENDING_EXR),
+            "COMPOSITOR_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_SCENE_NAME": "Current",
+            "COMPOSITOR_OUTPUT_DIR": str(bio_root),
+            "COMPOSITOR_EXISTING_EXR": str(EXISTING_EXR),
+            "COMPOSITOR_TRENDING_EXR": str(TRENDING_EXR),
+            "COMPOSITOR_BIOENVELOPE_EXR": str(BIOENVELOPE_EXR),
+            "COMPOSITOR_BIOENVELOPE_TRENDING_EXR": str(BIOENVELOPE_TRENDING_EXR),
         },
     )
 
@@ -155,12 +184,12 @@ def run_current_mist() -> None:
     run_blender_python(
         SCRIPT_ROOT / "render_edge_lab_current_mist.py",
         {
-            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_SCENE_NAME": "Current",
-            "EDGE_LAB_OUTPUT_DIR": str(mist_root),
-            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
-            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
-            "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
+            "COMPOSITOR_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_SCENE_NAME": "Current",
+            "COMPOSITOR_OUTPUT_DIR": str(mist_root),
+            "COMPOSITOR_PATHWAY_EXR": str(PATHWAY_EXR),
+            "COMPOSITOR_PRIORITY_EXR": str(PRIORITY_EXR),
+            "COMPOSITOR_TRENDING_EXR": str(TRENDING_EXR),
         },
     )
 
@@ -170,11 +199,11 @@ def run_current_depth_outliner() -> None:
     run_blender_python(
         SCRIPT_ROOT / "render_edge_lab_current_depth_outliner.py",
         {
-            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_OUTPUT_DIR": str(depth_root),
-            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
-            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
-            "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
+            "COMPOSITOR_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_OUTPUT_DIR": str(depth_root),
+            "COMPOSITOR_PATHWAY_EXR": str(PATHWAY_EXR),
+            "COMPOSITOR_PRIORITY_EXR": str(PRIORITY_EXR),
+            "COMPOSITOR_TRENDING_EXR": str(TRENDING_EXR),
         },
     )
 
@@ -184,10 +213,10 @@ def run_current_base() -> None:
     run_blender_python(
         SCRIPT_ROOT / "render_edge_lab_current_base.py",
         {
-            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_SCENE_NAME": "Current",
-            "EDGE_LAB_OUTPUT_DIR": str(base_root),
-            "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
+            "COMPOSITOR_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_SCENE_NAME": "Current",
+            "COMPOSITOR_OUTPUT_DIR": str(base_root),
+            "COMPOSITOR_EXISTING_EXR": str(EXISTING_EXR),
         },
     )
 
@@ -197,13 +226,13 @@ def run_current_sizes() -> None:
     run_blender_python(
         SCRIPT_ROOT / "render_edge_lab_current_sizes.py",
         {
-            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_SCENE_NAME": "Current",
-            "EDGE_LAB_OUTPUT_DIR": str(sizes_root),
-            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
-            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
-            "EDGE_LAB_EXISTING_EXR": str(EXISTING_EXR),
-            "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
+            "COMPOSITOR_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_SCENE_NAME": "Current",
+            "COMPOSITOR_OUTPUT_DIR": str(sizes_root),
+            "COMPOSITOR_PATHWAY_EXR": str(PATHWAY_EXR),
+            "COMPOSITOR_PRIORITY_EXR": str(PRIORITY_EXR),
+            "COMPOSITOR_EXISTING_EXR": str(EXISTING_EXR),
+            "COMPOSITOR_TRENDING_EXR": str(TRENDING_EXR),
         },
     )
 
@@ -213,12 +242,12 @@ def run_current_proposals() -> None:
     run_blender_python(
         SCRIPT_ROOT / "render_edge_lab_current_proposals.py",
         {
-            "EDGE_LAB_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
-            "EDGE_LAB_SCENE_NAME": "Current",
-            "EDGE_LAB_OUTPUT_DIR": str(proposals_root),
-            "EDGE_LAB_PATHWAY_EXR": str(PATHWAY_EXR),
-            "EDGE_LAB_PRIORITY_EXR": str(PRIORITY_EXR),
-            "EDGE_LAB_TRENDING_EXR": str(TRENDING_EXR),
+            "COMPOSITOR_BLEND_PATH": str(FINAL_TEMPLATE_BLEND),
+            "COMPOSITOR_SCENE_NAME": "Current",
+            "COMPOSITOR_OUTPUT_DIR": str(proposals_root),
+            "COMPOSITOR_PATHWAY_EXR": str(PATHWAY_EXR),
+            "COMPOSITOR_PRIORITY_EXR": str(PRIORITY_EXR),
+            "COMPOSITOR_TRENDING_EXR": str(TRENDING_EXR),
         },
     )
 

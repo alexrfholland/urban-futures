@@ -23,18 +23,18 @@ def env_path(name: str, default: str) -> Path:
 
 
 BLEND_PATH = env_path(
-    "EDGE_LAB_BLEND_PATH",
+    "COMPOSITOR_BLEND_PATH",
     str(CANONICAL_ROOT / "proposal_outline_layers.blend"),
 )
 EXR_PATH = env_path(
-    "EDGE_LAB_PROPOSAL_OUTLINE_EXR",
+    "COMPOSITOR_PROPOSAL_OUTLINE_EXR",
     "",
 )
 OUTPUT_DIR = env_path(
-    "EDGE_LAB_PROPOSAL_OUTLINE_OUTPUT_DIR",
+    "COMPOSITOR_PROPOSAL_OUTLINE_OUTPUT_DIR",
     "",
 )
-SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "ProposalOutline")
+SCENE_NAME = os.environ.get("COMPOSITOR_SCENE_NAME", "ProposalOutline")
 
 
 def log(message: str) -> None:
@@ -89,7 +89,7 @@ def main() -> None:
     if not EXR_PATH or not Path(EXR_PATH).exists():
         raise FileNotFoundError(f"EXR not found: {EXR_PATH}")
     if not OUTPUT_DIR:
-        raise ValueError("EDGE_LAB_PROPOSAL_OUTLINE_OUTPUT_DIR is required")
+        raise ValueError("COMPOSITOR_PROPOSAL_OUTLINE_OUTPUT_DIR is required")
 
     bpy.ops.wm.open_mainfile(filepath=str(BLEND_PATH))
     scene = bpy.data.scenes.get(SCENE_NAME)

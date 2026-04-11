@@ -28,36 +28,33 @@ def env_path(name: str, default: str) -> Path:
 
 
 BLEND_PATH = env_path(
-    "EDGE_LAB_BLEND_PATH",
+    "COMPOSITOR_BLEND_PATH",
     str(CANONICAL_ROOT / "edge_lab_final_template_safe_rebuild_20260405.blend"),
 )
 OUTPUT_ROOT = env_path(
-    "EDGE_LAB_OUTPUT_ROOT",
-    os.environ.get(
-        "EDGE_LAB_OUTPUT_DIR",
-        str(OUTPUT_BASE / "edge_lab_final_template" / "current"),
-    ),
+    "COMPOSITOR_OUTPUT_DIR",
+    str(OUTPUT_BASE / "edge_lab_final_template" / "current"),
 )
 PATHWAY_EXR = env_path(
-    "EDGE_LAB_PATHWAY_EXR",
+    "COMPOSITOR_PATHWAY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_state__8k64s.exr"),
 )
 PRIORITY_EXR = env_path(
-    "EDGE_LAB_PRIORITY_EXR",
+    "COMPOSITOR_PRIORITY_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__positive_priority_state__8k64s.exr"),
 )
 EXISTING_EXR = env_path(
-    "EDGE_LAB_EXISTING_EXR",
+    "COMPOSITOR_EXISTING_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__existing_condition_positive__8k64s.exr"),
 )
 TRENDING_EXR = env_path(
-    "EDGE_LAB_TRENDING_EXR",
+    "COMPOSITOR_TRENDING_EXR",
     str(DEFAULT_DATASET_ROOT / "city_timeline__trending_state__8k64s.exr"),
 )
-SCENE_NAME = os.environ.get("EDGE_LAB_SCENE_NAME", "Current")
+SCENE_NAME = os.environ.get("COMPOSITOR_SCENE_NAME", "Current")
 FAMILY_FILTER = {
     item.strip().lower()
-    for item in os.environ.get("EDGE_LAB_FAMILIES", "").split(",")
+    for item in os.environ.get("COMPOSITOR_RENDER_FAMILIES", "").split(",")
     if item.strip()
 }
 
@@ -107,7 +104,7 @@ def selected_families() -> tuple[dict[str, object], ...]:
         if family_name in FAMILY_FILTER or output_dir in FAMILY_FILTER:
             selected.append(family)
     if not selected:
-        raise ValueError(f"No families matched EDGE_LAB_FAMILIES={sorted(FAMILY_FILTER)}")
+        raise ValueError(f"No families matched COMPOSITOR_RENDER_FAMILIES={sorted(FAMILY_FILTER)}")
     return tuple(selected)
 
 
