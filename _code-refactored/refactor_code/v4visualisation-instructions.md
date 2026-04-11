@@ -147,7 +147,8 @@ Renders one image per recruit diagnostic variable. White background, point rende
 ### Render command
 
 ```bash
-cd _code-refactored && uv run python -m refactor_code.outputs.report.render_debug_recruit \
+REFACTOR_RUN_OUTPUT_ROOT=<root> uv run python \
+  _code-refactored/refactor_code/outputs/report/render_debug_recruit.py \
   --site trimmed-parade --scenario positive --years 180 \
   --output-mode validation
 ```
