@@ -29,6 +29,31 @@ This is a design contract first.
 
 It is not an implementation note for wrappers or scripts.
 
+## Mounted Discovery
+
+When the Mediaflux project is mounted locally, discovery should use the mounted
+pipeline tree directly rather than `check-project` CSV diffs.
+
+The repo-local discovery helper is:
+
+- `uv run python -m _futureSim_refactored.sim.run.mediaflux_browse`
+
+Supported discovery modes:
+
+- recent roots:
+  - `--last 5`
+- recent root map:
+  - `--last 2 --map`
+- most recent matching root:
+  - `--pattern baseline --last 1`
+- specific root browsing:
+  - `4.9 --section blender_exrs --map`
+  - `4.9 --section blender_exrs --pattern city_baseline --files`
+
+This helper is for discovery only.
+
+It does not replace `upload-project` / `download-project`.
+
 ## Goal
 
 Use one clear lineage:

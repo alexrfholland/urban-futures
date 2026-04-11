@@ -74,6 +74,30 @@ Examples:
 Use `upload-project` / `download-project` against those project-root-relative
 paths.
 
+## Fast Discovery On Mounted Mediaflux
+
+If the Mediaflux project is mounted locally, do not use `check-project` as a
+remote lister for broad discovery. It is much slower because it diffs every
+asset under the queried path.
+
+Use the mounted-volume browser instead:
+
+```bash
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --last 5
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --last 2 --map
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --pattern baseline --last 1
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --pattern city --last 1
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse 4.9 --section blender_exrs --map
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse 4.9 --section blender_exrs --pattern city_baseline
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse 4.9 --section compositor_pngs --pattern city_baseline --files
+```
+
+Default mounted root:
+
+- `/Volumes/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures`
+
+Override it with `MEDIAFLUX_MOUNT_ROOT` or `--mount-root` if needed.
+
 For simulation run roots specifically, prefer the repo helper:
 
 ```powershell

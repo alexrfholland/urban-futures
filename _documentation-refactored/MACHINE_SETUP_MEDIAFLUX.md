@@ -80,6 +80,30 @@ Expected shape:
 - project:
   - `.../MF 2026 Arboreal Futures/pipeline`
 
+## Mounted Discovery
+
+If the Mediaflux project is mounted locally, prefer the mounted-volume browser
+for discovery instead of using `check-project` as a fake remote lister.
+
+Use:
+
+```bash
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --last 5
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --last 2 --map
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --pattern baseline --last 1
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse 4.9 --section blender_exrs --map
+uv run python -m _futureSim_refactored.sim.run.mediaflux_browse 4.9 --section blender_exrs --pattern city_baseline --files
+```
+
+Default mounted root:
+
+- `/Volumes/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures`
+
+Override it with:
+
+- `MEDIAFLUX_MOUNT_ROOT`
+- or `--mount-root`
+
 ## Blender v2 Selectors
 
 The intended bV2 selectors are:
