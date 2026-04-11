@@ -96,7 +96,7 @@ def build_scene(
     resolution_x: int = 7680,
     resolution_y: int = 4320,
     resolution_percentage: int = 100,
-    samples: int = 1,
+    samples: int = 64,
     upload_to_mediaflux: bool = False,
     remote_subpath: str | None = None,
     validate_strict: bool = True,
@@ -108,7 +108,7 @@ def build_scene(
     instancer_summary = build_instancers(scene)
     if is_baseline:
         bio_summary = {"skipped": True, "reason": "baseline mode"}
-        world_summary = {"skipped": True, "reason": "baseline mode"}
+        world_summary = build_world_attributes(scene)
     else:
         bio_summary = build_bioenvelopes(scene)
         world_summary = build_world_attributes(scene)
@@ -207,7 +207,7 @@ def main() -> None:
     resolution_x = int(os.environ.get("BV2_RES_X", "7680"))
     resolution_y = int(os.environ.get("BV2_RES_Y", "4320"))
     resolution_percentage = int(os.environ.get("BV2_RES_PERCENT", "100"))
-    samples = int(os.environ.get("BV2_SAMPLES", "1"))
+    samples = int(os.environ.get("BV2_SAMPLES", "64"))
     remote_subpath = os.environ.get("BV2_REMOTE_SUBPATH", "").strip() or None
 
     build_scene(

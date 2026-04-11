@@ -73,6 +73,8 @@ except ImportError:
 
 LOG_PATH = os.environ.get("BV2_LOG_PATH", "").strip()
 SAVE_MAINFILE = os.environ.get("BV2_SAVE_MAINFILE", "1").strip() != "0"
+REGENERATE_BASELINE_TERRAIN = os.environ.get("BV2_REGENERATE_BASELINE_TERRAIN", "0").strip().lower() in {"1", "true", "yes"}
+BASELINE_TERRAIN_DIR = REPO_ROOT / "_data-refactored" / "blenderv2" / "baseline-terrains"
 TIMELINE_YEARS = (0, 10, 30, 60, 180)
 TIMELINE_OFFSET_STEP = 5.0
 SOURCE_YEAR_DEFAULT = int(GLOBAL_RULES["source_year_initial_value"])
@@ -293,6 +295,39 @@ def resolve_vtk_path(site: str, scenario: str, year: int) -> Path:
     )
 
 
+def resolve_baseline_vtk_path(site: str) -> Path:
+    asset_site = canonicalize_asset_site(site)
+    bundle_name = f"{asset_site}_baseline_1_state_with_indicators.vtk"
+    model_outputs = REPO_ROOT / "_data-refactored" / "model-outputs" / "generated-states"
+    if model_outputs.exists():
+        for version_dir in sorted(model_outputs.iterdir(), reverse=True):
+            candidate = version_dir / "output" / "vtks" / asset_site / bundle_name
+            if candidate.exists():
+                return candidate
+    for root in iter_existing_bundle_roots():
+        candidate = root / "vtks" / asset_site / bundle_name
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError(f"Could not resolve baseline VTK for site={site}")
+
+
+def resolve_baseline_terrain_ply(site: str) -> Path:
+    asset_site = canonicalize_asset_site(site)
+    ply_path = BASELINE_TERRAIN_DIR / f"{asset_site}_baseline_terrain_1.ply"
+    if not ply_path.exists():
+        raise FileNotFoundError(f"Baseline terrain PLY not found: {ply_path}")
+    return ply_path
+
+
+def import_baseline_terrain(site: str) -> bpy.types.Object:
+    ply_path = resolve_baseline_terrain_ply(site)
+    bpy.ops.wm.ply_import(filepath=str(ply_path))
+    obj = bpy.context.selected_objects[0]
+    obj.name = f"{canonicalize_asset_site(site)}_baseline_terrain_source"
+    log("BASELINE_TERRAIN_IMPORTED", obj.name, f"verts={len(obj.data.vertices)}")
+    return obj
+
+
 def find_collection_by_role(scene: bpy.types.Scene, role: str) -> bpy.types.Collection:
     queue = list(scene.collection.children)
     while queue:
@@ -460,6 +495,58 @@ def ensure_world_modifier(obj: bpy.types.Object) -> None:
     modifier.node_group = node_group
 
 
+def ensure_baseline_terrain_modifier(obj: bpy.types.Object) -> None:
+    """Replace the world modifier with a cube-instancer variant for baseline terrain.
+
+    Instances a 1x1x0.25 m cube at each mesh vertex.  The per-vertex attributes
+    (proposals, sim data) propagate as instance attributes so the v2WorldAOV
+    material can read them for AOV output.
+    """
+    material = bpy.data.materials.get(MATERIAL_NAMES["world"])
+    if material is None:
+        raise RuntimeError(f"Could not find required world material {MATERIAL_NAMES['world']!r}")
+
+    existing = obj.modifiers.get("bV2_world")
+    if existing is None:
+        existing = next((m for m in obj.modifiers if m.type == "NODES"), None)
+    cleanup_modifier_node_group(existing)
+    if existing is not None:
+        obj.modifiers.remove(existing)
+
+    ng = bpy.data.node_groups.new(name=f"{obj.name}__world_gn", type="GeometryNodeTree")
+    ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+
+    group_in = ng.nodes.new("NodeGroupInput")
+    group_in.location = (-600, 0)
+
+    mesh_to_points = ng.nodes.new("GeometryNodeMeshToPoints")
+    mesh_to_points.location = (-400, 0)
+
+    cube = ng.nodes.new("GeometryNodeMeshCube")
+    cube.location = (-400, -200)
+    cube.inputs["Size"].default_value = (1.0, 1.0, 0.25)
+
+    instance_on_points = ng.nodes.new("GeometryNodeInstanceOnPoints")
+    instance_on_points.location = (-200, 0)
+
+    set_material = ng.nodes.new("GeometryNodeSetMaterial")
+    set_material.location = (0, 0)
+    set_material.inputs["Material"].default_value = material
+
+    group_out = ng.nodes.new("NodeGroupOutput")
+    group_out.location = (200, 0)
+
+    ng.links.new(group_in.outputs["Geometry"], mesh_to_points.inputs["Mesh"])
+    ng.links.new(mesh_to_points.outputs["Points"], instance_on_points.inputs["Points"])
+    ng.links.new(cube.outputs["Mesh"], instance_on_points.inputs["Instance"])
+    ng.links.new(instance_on_points.outputs["Instances"], set_material.inputs["Geometry"])
+    ng.links.new(set_material.outputs["Geometry"], group_out.inputs["Geometry"])
+
+    modifier = obj.modifiers.new(name="bV2_world", type="NODES")
+    modifier.node_group = ng
+
+
 def remove_existing_object(name: str) -> None:
     existing = bpy.data.objects.get(name)
     if existing is None:
@@ -492,8 +579,9 @@ def vtk_string_values(point_data, name: str, count: int) -> list[str]:
     return [str(array.GetValue(i)) for i in range(count)]
 
 
-def build_vtk_lookup(vtk_path: Path) -> dict[str, np.ndarray]:
+def build_vtk_lookup(vtk_path: Path, *, lenient: bool = False) -> dict[str, np.ndarray]:
     poly = read_vtk_polydata(vtk_path)
+    n_points = poly.GetNumberOfPoints()
     points = vtk_to_numpy(poly.GetPoints().GetData()).astype(np.float64, copy=False)
     origin = points[0].astype(np.float64)
     grid_indices = np.rint(points - origin).astype(np.int32)
@@ -506,18 +594,37 @@ def build_vtk_lookup(vtk_path: Path) -> dict[str, np.ndarray]:
     order = np.argsort(keys, kind="mergesort")
 
     point_data = poly.GetPointData()
-    sim_turns = vtk_to_numpy(point_data.GetArray(ATTR_TURNS)).astype(np.int32, copy=False)
-    sim_nodes = vtk_to_numpy(point_data.GetArray(ATTR_NODES)).astype(np.int32, copy=False)
 
-    bio_raw = np.asarray(vtk_string_values(point_data, "scenario_bioEnvelope", poly.GetNumberOfPoints()), dtype=str)
-    bio_raw[bio_raw == "nan"] = "none"
-    bio_envelope = np.array([BIO_ENVELOPE_MAP.get(value, 0) for value in bio_raw], dtype=np.int32)
-    bio_envelope_simple = np.array([BIO_ENVELOPE_SIMPLE_MAP.get(value, 0) for value in bio_raw], dtype=np.int32)
+    def get_int_array(name: str, default: int = -1) -> np.ndarray:
+        array = point_data.GetArray(name)
+        if array is not None:
+            return vtk_to_numpy(array).astype(np.int32, copy=False)
+        if lenient:
+            return np.full(n_points, default, dtype=np.int32)
+        raise KeyError(f"VTK is missing required array {name!r}: {vtk_path}")
+
+    sim_turns = get_int_array(ATTR_TURNS, -1)
+    sim_nodes = get_int_array(ATTR_NODES, -1)
+
+    bio_array = point_data.GetAbstractArray("scenario_bioEnvelope")
+    if bio_array is not None:
+        bio_raw = np.asarray(vtk_string_values(point_data, "scenario_bioEnvelope", n_points), dtype=str)
+        bio_raw[bio_raw == "nan"] = "none"
+        bio_envelope = np.array([BIO_ENVELOPE_MAP.get(value, 0) for value in bio_raw], dtype=np.int32)
+        bio_envelope_simple = np.array([BIO_ENVELOPE_SIMPLE_MAP.get(value, 0) for value in bio_raw], dtype=np.int32)
+    elif lenient:
+        bio_envelope = np.zeros(n_points, dtype=np.int32)
+        bio_envelope_simple = np.zeros(n_points, dtype=np.int32)
+    else:
+        raise KeyError(f"VTK is missing required array 'scenario_bioEnvelope': {vtk_path}")
 
     proposal_arrays: dict[str, np.ndarray] = {}
     for attr_name in PROPOSAL_ATTRIBUTE_NAMES:
         array = point_data.GetArray(attr_name)
         if array is None:
+            if lenient:
+                proposal_arrays[attr_name] = np.zeros(n_points, dtype=np.int32)
+                continue
             raise KeyError(f"VTK is missing required direct Blender proposal array {attr_name!r}: {vtk_path}")
         proposal_arrays[attr_name] = vtk_to_numpy(array).astype(np.int32, copy=False)
 
@@ -826,6 +933,45 @@ def build_world_attributes(scene: bpy.types.Scene | None = None) -> dict[str, li
     year = config["year"]
 
     log("WORLD_BUILD_START", scene.name, site, mode, year if year is not None else "timeline")
+
+    is_baseline = mode == "baseline"
+
+    if is_baseline:
+        baseline_state_roles = {"positive": "world_positive_attributes"}
+        target_collections = {
+            state: find_collection_by_role(scene, role)
+            for state, role in baseline_state_roles.items()
+        }
+        for collection in target_collections.values():
+            remove_collection_contents(collection)
+
+        created: dict[str, list[str]] = {state: [] for state in baseline_state_roles}
+
+        vtk_cache = build_vtk_lookup(resolve_baseline_vtk_path(site), lenient=True)
+        terrain_source = import_baseline_terrain(site)
+        source_year = int(year) if year is not None else -180
+
+        for state, target_collection in target_collections.items():
+            points, payloads = build_single_state_payload(
+                terrain_source,
+                vtk_cache,
+                source_year=source_year,
+            )
+            target_name = make_world_object_name("terrain", site, mode, state, year)
+            obj = build_world_object(terrain_source, target_collection, target_name, points, payloads)
+            ensure_baseline_terrain_modifier(obj)
+            created[state].append(obj.name)
+            log(
+                "WORLD_OBJECT_DONE",
+                scene.name,
+                obj.name,
+                f"points={len(points)}",
+                f"matched={int(payloads[ATTR_MATCHED]['values'].sum())}",
+            )
+
+        scene["bV2_world_attributes_built"] = True
+        log("WORLD_BUILD_DONE", scene.name, created)
+        return created
 
     source_world_objects = get_source_world_objects(site)
     target_collections = {

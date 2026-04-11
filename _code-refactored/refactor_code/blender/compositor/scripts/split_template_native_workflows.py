@@ -36,6 +36,12 @@ WORKFLOWS = {
         "extra_keep_names": set(),
         "output_blend": CANONICAL_ROOT / "compositor_resources.blend",
     },
+    "sizes": {
+        "target_frame": "Sizes::FamilyFrame",
+        "output_names": {"Sizes::Outputs"},
+        "extra_keep_names": set(),
+        "output_blend": CANONICAL_ROOT / "compositor_sizes.blend",
+    },
     "bioenvelope": {
         "target_frame": "Current BioEnvelope :: Frame",
         "output_names": {"Current BioEnvelope ::Outputs"},

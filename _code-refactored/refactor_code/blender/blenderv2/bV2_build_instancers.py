@@ -31,7 +31,7 @@ except ImportError:
     from pathlib import Path as _Path
 
     sys.path.insert(0, str(_Path(__file__).resolve().parent))
-    sys.path.insert(0, str(_Path(__file__).resolve().parents[2]))
+    sys.path.insert(0, str(_Path(__file__).resolve().parents[3]))
     from bV2_scene_contract import (  # type: ignore
         GLOBAL_RULES,
         NODE_GROUP_NAMES,
@@ -395,19 +395,15 @@ def apply_site_specific_fixes(df: pd.DataFrame, site: str) -> pd.DataFrame:
     return adjusted
 
 
-def ensure_proposal_framebuffer_columns(df: pd.DataFrame) -> pd.DataFrame:
-    adjusted = df.copy()
-    missing = [column for column in TREE_PROPOSAL_COLUMNS if column not in adjusted.columns]
-    if not missing:
-        return adjusted
-    proposal_columns = build_blender_proposal_framebuffer_columns(adjusted)
-    for attr_name in TREE_PROPOSAL_COLUMNS:
-        adjusted[attr_name] = proposal_columns[attr_name].to_numpy(dtype=np.int32)
-    return adjusted
+def require_proposal_framebuffer_columns(df: pd.DataFrame) -> None:
+    missing = [column for column in TREE_PROPOSAL_COLUMNS if column not in df.columns]
+    if missing:
+        raise KeyError(f"CSV is missing required proposal framebuffer columns: {missing}")
 
 
 def normalize_node_dataframe(df: pd.DataFrame, site: str, source_year: int, offset: tuple[float, float, float]) -> pd.DataFrame:
-    adjusted = ensure_proposal_framebuffer_columns(apply_site_specific_fixes(df, site))
+    adjusted = apply_site_specific_fixes(df, site)
+    require_proposal_framebuffer_columns(adjusted)
     adjusted = adjusted.copy()
     for axis in ("x", "y", "z"):
         adjusted[axis] = pd.to_numeric(get_series_or_default(adjusted, axis, 0.0), errors="coerce").fillna(0.0)

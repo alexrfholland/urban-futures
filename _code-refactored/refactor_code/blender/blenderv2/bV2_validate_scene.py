@@ -142,18 +142,22 @@ def validate_scene(scene: bpy.types.Scene | None = None, *, strict: bool = True)
         errors.append("Scene flag bV2_instancers_built is not set")
     if not is_baseline and not bool(scene.get("bV2_bioenvelopes_built", False)):
         errors.append("Scene flag bV2_bioenvelopes_built is not set")
-    if not is_baseline and not bool(scene.get("bV2_world_attributes_built", False)):
+    if not bool(scene.get("bV2_world_attributes_built", False)):
         errors.append("Scene flag bV2_world_attributes_built is not set")
 
     validate_states = ("positive",) if is_baseline else ("positive", "trending")
 
+    if is_baseline:
+        world_kinds = ("terrain",)
+    else:
+        world_kinds = tuple(get_source_world_objects(site).keys()) if site else ()
+
     for state in validate_states:
-        for kind in get_source_world_objects(site).keys() if site else ():
+        for kind in world_kinds:
             object_name = make_world_object_name(kind, site, mode, state, year)
             obj = bpy.data.objects.get(object_name)
             if obj is None:
-                if not is_baseline:
-                    errors.append(f"Missing world object {object_name!r}")
+                errors.append(f"Missing world object {object_name!r}")
                 continue
             if not mesh_has_attribute(obj, SOURCE_YEAR_ATTRIBUTE):
                 errors.append(f"World object {object_name!r} is missing {SOURCE_YEAR_ATTRIBUTE!r}")

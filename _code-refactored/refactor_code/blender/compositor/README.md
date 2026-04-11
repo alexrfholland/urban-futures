@@ -41,6 +41,7 @@ Standalone workflow canonicals:
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/compositor_bioenvelope.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/compositor_normals.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/compositor_resources.blend`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/compositor_sizes.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/compositor_shading.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/compositor_depth_outliner.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/compositor_mist.blend`
@@ -48,6 +49,7 @@ Standalone workflow canonicals:
 Helper canonicals:
 
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/compositor_proposal_masks.blend`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/proposal_colored_depth_outlines.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/proposal_only_layers.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/proposal_outline_layers.blend`
 
@@ -68,6 +70,10 @@ Checkpoints and `.blend1` backups:
 Scratch/debug blends:
 
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/compositor/temp_blends/scratch`
+
+Current proposal-depth checkpoints:
+
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/compositor/temp_blends/checkpoints/proposal_colored_depth_outlines_20260410`
 
 ## Contract
 
@@ -142,6 +148,15 @@ Current notable cases:
 - `shading`
   - standalone blend exists
   - remains multi-source because it genuinely needs multiple EXRs
+
+- `proposal_colored_depth_outlines`
+  - standalone blend is canonical
+  - canonical runner is:
+    - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/scripts/render_current_proposal_colored_depth_outlines.py`
+  - canonical template is:
+    - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/compositor/canonical_templates/proposal_colored_depth_outlines.blend`
+  - working-copy repairs and debug variants belong under `temp_blends/checkpoints`, not `canonical_templates`
+  - Blender 4.2 currently requires a runtime File Output rebuild and, when absent, a transient Composite sink so the compositor executes reliably
 
 ## Current Mist Issue
 

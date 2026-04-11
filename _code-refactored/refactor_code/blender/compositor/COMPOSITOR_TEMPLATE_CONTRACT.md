@@ -36,6 +36,9 @@ template:
 - setting output root folders
 - triggering renders
 - normalising `_0001` filenames
+- creating transient runtime-only compatibility nodes when Blender itself
+  requires them for execution, as long as those nodes are not saved back into
+  the canonical template
 - orchestrating a multi-family run
 
 Scripts should not become alternate owners of compositor logic.
@@ -47,6 +50,8 @@ Normal render scripts may:
 - open a canonical template
 - repath EXR nodes
 - toggle file outputs or workflow selection at runtime
+- create transient runtime-only nodes needed to execute the saved graph on the
+  current Blender version
 - render outputs
 
 Normal render scripts must not:
@@ -55,6 +60,13 @@ Normal render scripts must not:
 - add or remove nodes in the canonical template
 - change node layout in the canonical template
 - save graph changes back into the canonical template as part of normal render execution
+
+Practical example:
+
+- proposal colored depth outlines may rebuild a saved File Output node in
+  memory and add a transient Composite sink during render execution because of
+  current Blender 4.2 behavior
+- those compatibility nodes are runtime scaffolding, not canonical graph edits
 
 Short version:
 

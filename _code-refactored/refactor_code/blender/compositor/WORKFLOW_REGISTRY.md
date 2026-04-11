@@ -163,3 +163,10 @@ For the canonical output contract, use:
 - Reuses workflow: `blender_exr_base_lines_v3_depthwindows`
 - Additional adaptation: tunes only around the useful `balanced` and `internal` multi-window depth setups with slightly lower building thresholds, tighter near/mid windows, and restrained ground thresholds so internal separation comes up without reverting to the noisy full-scene hybrid look.
 - Purpose: headless Blender compositor export of tuned base-only line variants for Photoshop compositing after reviewing the first multi-window results.
+
+## `proposal_colored_depth_outlines_v1`
+
+- Canonical template: `_code-refactored/refactor_code/blender/compositor/canonical_templates/proposal_colored_depth_outlines.blend`
+- Canonical runner: `_code-refactored/refactor_code/blender/compositor/scripts/render_current_proposal_colored_depth_outlines.py`
+- Purpose: headless Blender compositor export of proposal-only colored depth-outline PNGs from the proposal EXR channels.
+- Runtime note: on Blender 4.2 the runner rebuilds the saved `ProposalColoredDepthOutput` node in memory and may add a transient `Composite` sink so the saved canonical graph executes reliably without saving runtime scaffolding back into the template.

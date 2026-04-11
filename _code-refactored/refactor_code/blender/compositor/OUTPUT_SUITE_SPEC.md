@@ -378,6 +378,28 @@ Current proposal-compositor status:
 - likely problem area:
   - proposal-mask node logic / value matching inside the final-template proposal branch
 
+Proposal colored depth outlines:
+
+- canonical template is now:
+  - [proposal_colored_depth_outlines.blend](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/compositor/canonical_templates/proposal_colored_depth_outlines.blend)
+- canonical runner is now:
+  - [render_current_proposal_colored_depth_outlines.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/compositor/scripts/render_current_proposal_colored_depth_outlines.py)
+- approved proposal colors in the canonical template are:
+  - `colonise` -> `(1.00, 0.55, 0.00)`
+  - `decay` -> `(0.90, 0.15, 0.15)`
+  - `deploy-structure` -> `(0.15, 0.35, 1.00)`
+  - `recruit` -> `(0.15, 0.75, 0.15)`
+  - `release-control` -> `(0.55, 0.10, 0.85)`
+- current Blender 4.2 practical rule:
+  - the runner must rebuild `ProposalColoredDepthOutput` in memory before render
+  - if the saved template has no `Composite` sink, the runner may add a transient runtime one
+  - these are execution workarounds only and must not be treated as alternate ownership of the canonical graph
+- working-copy and repair blends belong under:
+  - [_data-refactored/compositor/temp_blends/checkpoints/proposal_colored_depth_outlines_20260410](/d:/2026%20Arboreal%20Futures/urban-futures/_data-refactored/compositor/temp_blends/checkpoints/proposal_colored_depth_outlines_20260410)
+- upload naming rule for this output family:
+  - do not derive the final remote folder name from a temporary local render folder
+  - use an explicit short scenario label taken from the EXR context, for example `priority`
+
 Important practical note:
 
 - `edge_lab_final_template.blend` has manual in-app edits now
