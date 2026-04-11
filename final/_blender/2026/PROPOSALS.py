@@ -43,8 +43,7 @@ STATE_COLOURS = {
 def load_proposal_framebuffer_module():
     script_path = (
         Path(__file__).resolve().parents[3]
-        / "_code-refactored"
-        / "refactor_code"
+        / "_futureSim_refactored"
         / "blender"
         / "proposal_framebuffers.py"
     )

@@ -5,9 +5,9 @@ import sys
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+sys.path.insert(0, str(REPO_ROOT / "_futureSim_refactored"))
 
-from refactor_code.paths import hook_bioenvelope_ply_path
+from _futureSim_refactored.paths import hook_bioenvelope_ply_path
 
 
 PARADE_SCENE_NAME = "parade-senescent"

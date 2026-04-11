@@ -2,7 +2,7 @@
 
 `urban-futures` now consumes the shared [mediafluxsync](/d:/2026%20Arboreal%20Futures/mediafluxsync) repo.
 
-The old in-project module under `_code-refactored/refactor_code/modules/mediafluxsync` is transitional and is intended to be deleted.
+The old in-project module under `_futureSim_refactored/modules/mediafluxsync` is transitional and is intended to be deleted.
 
 The canonical Codex skill source now lives in:
 

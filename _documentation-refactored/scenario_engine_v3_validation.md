@@ -83,7 +83,7 @@ In the current v3 path, the proposal families are:
 - `proposal-colonise`
 - `proposal-deploy-structure`
 
-In the dataframe, each of those exists as a `*_decision` and `*_intervention` pair in [engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v3.py):
+In the dataframe, each of those exists as a `*_decision` and `*_intervention` pair in [engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v3.py):
 
 - `proposal-decay_decision`
 - `proposal-decay_intervention`

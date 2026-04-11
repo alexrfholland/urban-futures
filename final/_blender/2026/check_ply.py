@@ -3,9 +3,9 @@ from pathlib import Path
 import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+sys.path.insert(0, str(REPO_ROOT / "_futureSim_refactored"))
 
-from refactor_code.paths import hook_tree_ply_library_dir
+from _futureSim_refactored.paths import hook_tree_ply_library_dir
 
 
 TREE_PLY_FOLDER = hook_tree_ply_library_dir()

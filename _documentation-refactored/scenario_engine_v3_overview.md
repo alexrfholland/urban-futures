@@ -53,7 +53,7 @@ Current standard voxel size:
 
 Main batch runner:
 
-- [_code-refactored/refactor_code/sim/run/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/run/run_full_v3_batch.py)
+- [_futureSim_refactored/sim/run/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/run/run_full_v3_batch.py)
 
 The normal flow is:
 
@@ -81,36 +81,36 @@ The important simplification is:
 
 ## Dependencies
 
-The active v3 stack now lives directly under `_code-refactored/`.
+The active v3 stack now lives directly under `_futureSim_refactored/`.
 
 Core runtime modules:
 
-- [_code-refactored/refactor_code/sim/run/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/run/run_full_v3_batch.py)
+- [_futureSim_refactored/sim/run/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/run/run_full_v3_batch.py)
   - main batch entrypoint
-- [_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py)
+- [_futureSim_refactored/sim/setup/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/setup/a_scenario_initialiseDS.py)
   - dataset and source-data preparation
-- [_code-refactored/refactor_code/sim/generate_interim_state_data/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_interim_state_data/a_scenario_runscenario.py)
+- [_futureSim_refactored/sim/generate_interim_state_data/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/generate_interim_state_data/a_scenario_runscenario.py)
   - scenario runner around the v3 engine
-- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py)
+- [_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py)
   - integrated `nodeDF` generation and base polydata build
-- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py)
+- [_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py)
   - urban-feature point-data enrichment
-- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py)
+- [_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py)
   - indicator and proposal enrichment, final `state_with_indicators.vtk`, and stats
 
 Shared refactored modules:
 
-- [_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py)
+- [_futureSim_refactored/sim/generate_interim_state_data/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/generate_interim_state_data/engine_v3.py)
   - canonical v3 simulation logic
-- [_code-refactored/refactor_code/sim/setup/params_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/setup/params_v3.py)
+- [_futureSim_refactored/sim/setup/params_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/setup/params_v3.py)
   - canonical v3 parameters and timesteps
-- [_code-refactored/refactor_code/sim/baseline/baseline_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/baseline/baseline_v3.py)
+- [_futureSim_refactored/sim/baseline/baseline_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/baseline/baseline_v3.py)
   - baseline generation core
-- [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py)
+- [_futureSim_refactored/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/paths.py)
   - unified run-root routing
-- [_code-refactored/refactor_code/outputs/report/render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/report/render_forest_size_views.py)
+- [_futureSim_refactored/outputs/report/render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/outputs/report/render_forest_size_views.py)
   - validation render views
-- [_code-refactored/refactor_code/outputs/report/render_custom_proposal_schema_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/report/render_custom_proposal_schema_v3.py)
+- [_futureSim_refactored/outputs/report/render_custom_proposal_schema_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/outputs/report/render_custom_proposal_schema_v3.py)
   - custom proposal-schema renders
   - writes:
     - `engine3-proposals_interventions`
@@ -118,8 +118,8 @@ Shared refactored modules:
 
 So the practical rule is:
 
-- run the batch through `_code-refactored/refactor_code/sim/run/run_full_v3_batch.py`
-- treat `_code-refactored/` as the only live code surface for the active v3 stack
+- run the batch through `_futureSim_refactored/sim/run/run_full_v3_batch.py`
+- treat `_futureSim_refactored/` as the only live code surface for the active v3 stack
 - treat old `final/` references in historical notes as pre-v4 locations
 
 ## Outputs
@@ -146,8 +146,8 @@ Validation / visualisation:
   - `engine3-proposals_with-legend`
   - the older validation views from `render_forest_size_views.py`
 - render scripts:
-  - [_code-refactored/refactor_code/outputs/report/render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/report/render_forest_size_views.py)
-  - [_code-refactored/refactor_code/outputs/report/render_custom_proposal_schema_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/report/render_custom_proposal_schema_v3.py)
+  - [_futureSim_refactored/outputs/report/render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/outputs/report/render_forest_size_views.py)
+  - [_futureSim_refactored/outputs/report/render_custom_proposal_schema_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/outputs/report/render_custom_proposal_schema_v3.py)
 
 ## Comparison And Validation Flow
 
