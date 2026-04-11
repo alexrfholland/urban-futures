@@ -1,3 +1,4 @@
+import argparse
 import sys
 from pathlib import Path
 
@@ -21,16 +22,13 @@ for import_root in (BLENDER_EXPORT_DIR, TREE_PROCESSING_DIR, FINAL_DIR, CODE_ROO
 import vtk_to_ply as a_vtk_to_ply
 
 from refactor_code.paths import (
-    hook_bioenvelope_ply_path,
-    hook_state_vtk_latest_path,
+    engine_output_bioenvelope_ply_path,
+    engine_output_state_vtk_path,
     legacy_world_reference_vtk_path,
 )
 
 
-SITE = "uni"
-SCENARIOS = ["positive", "trending"]
-VOXEL_SIZE = 1
-YEARS = [10, 30, 60, 180]
+SITES = ["trimmed-parade", "city", "uni"]
 BLENDER_PROPOSAL_ATTRS = [
     "blender_proposal-deploy-structure",
     "blender_proposal-decay",
@@ -39,13 +37,15 @@ BLENDER_PROPOSAL_ATTRS = [
     "blender_proposal-release-control",
 ]
 
+_REFERENCE_CACHE: dict[str, tuple[cKDTree, np.ndarray]] = {}
 
-def resolve_scenario_vtk_path(site: str, scenario: str, year: int, voxel_size: int) -> Path:
-    vtk_path = hook_state_vtk_latest_path(site, scenario, year, voxel_size)
-    if vtk_path.exists():
-        return vtk_path
 
-    raise FileNotFoundError(f"No assessed state VTK found for site={site}, scenario={scenario}, year={year}")
+def _get_reference_data(site: str) -> tuple[cKDTree, np.ndarray]:
+    cached = _REFERENCE_CACHE.get(site)
+    if cached is None:
+        cached = load_reference_data(site)
+        _REFERENCE_CACHE[site] = cached
+    return cached
 
 
 def load_reference_data(site: str):
@@ -279,47 +279,87 @@ def scenario_bioenvelope_map_to_int_simple(iso_surface: pv.PolyData) -> pv.PolyD
     return iso_surface
 
 
-def main():
-    site = SITE
-    scenarios = SCENARIOS
-    voxel_size = VOXEL_SIZE
-    years = YEARS
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Export rewilded bioenvelope PLYs from state VTKs.")
+    parser.add_argument("--site", default="all", help="Site key or 'all'.")
+    parser.add_argument("--scenario", default="all", help="Scenario key or 'all'.")
+    parser.add_argument(
+        "--years",
+        nargs="*",
+        type=int,
+        default=[0, 1, 10, 30, 60, 90, 120, 150, 180],
+        help="Years to export.",
+    )
+    parser.add_argument("--voxel-size", type=int, default=1, help="Voxel size. Default: 1.")
+    parser.add_argument("--output-mode", default="validation", choices=["canonical", "validation"])
+    return parser.parse_args()
 
-    tree, combined_normals = load_reference_data(site)
 
-    for scenario in scenarios:
-        for year in years:
-            vtk_path = resolve_scenario_vtk_path(site, scenario, year, voxel_size)
-            print(f"loading polydata from {vtk_path}")
-            voxel_polydata = pv.read(vtk_path)
+def iter_targets(args: argparse.Namespace):
+    sites = SITES if args.site == "all" else [args.site]
+    scenarios = ["positive", "trending"] if args.scenario == "all" else [args.scenario]
 
-            iso_surface = generate_rewilded_envelopes(
-                voxel_polydata,
-                site,
-                tree,
-                combined_normals,
-            )
-            if iso_surface is None:
-                print(f"No envelope output for year {year} and {scenario}")
-                continue
+    for site in sites:
+        if site not in SITES:
+            raise KeyError(f"Unknown site: {site}")
+        for scenario in scenarios:
+            for year in args.years:
+                vtk_path = engine_output_state_vtk_path(site, scenario, year, args.voxel_size, args.output_mode)
+                if vtk_path.exists():
+                    yield site, scenario, year, vtk_path
+                else:
+                    print(f"Skipping missing VTK: {vtk_path}")
 
-            iso_surface = scenario_bioenvelope_map_to_int_simple(iso_surface)
-            attributes = [
-                "scenario_bioEnvelope_int",
-                "scenario_bioEnvelope_simple_int",
-                "sim_Turns",
-                *BLENDER_PROPOSAL_ATTRS,
-            ]
-            if "sim_averageResistance" in iso_surface.point_data:
-                attributes.append("sim_averageResistance")
 
-            refactored_output_path = hook_bioenvelope_ply_path(site, scenario, year, voxel_size)
-            a_vtk_to_ply.export_polydata_to_ply(
-                iso_surface,
-                str(refactored_output_path),
-                attributesToTransfer=attributes,
-            )
-            print(f"Saved bioenvelope surface to {refactored_output_path}")
+def export_target(
+    site: str,
+    scenario: str,
+    year: int,
+    vtk_path: Path | None,
+    output_mode: str,
+    *,
+    voxel_size: int = 1,
+    mesh: pv.PolyData | None = None,
+) -> Path | None:
+    """Export bioenvelope PLY. Pass *mesh* to skip disk read."""
+    if mesh is None:
+        mesh = pv.read(vtk_path)
+
+    tree, combined_normals = _get_reference_data(site)
+
+    iso_surface = generate_rewilded_envelopes(mesh, site, tree, combined_normals)
+    if iso_surface is None:
+        print(f"No envelope output for {site}/{scenario}/yr{year}")
+        return None
+
+    iso_surface = scenario_bioenvelope_map_to_int_simple(iso_surface)
+    attributes = [
+        "scenario_bioEnvelope_int",
+        "scenario_bioEnvelope_simple_int",
+        "sim_Turns",
+        *BLENDER_PROPOSAL_ATTRS,
+    ]
+    if "sim_averageResistance" in iso_surface.point_data:
+        attributes.append("sim_averageResistance")
+
+    output_path = engine_output_bioenvelope_ply_path(site, scenario, year, voxel_size, output_mode)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    a_vtk_to_ply.export_polydata_to_ply(
+        iso_surface,
+        str(output_path),
+        attributesToTransfer=attributes,
+    )
+    print(f"Saved bioenvelope surface to {output_path}")
+    return output_path
+
+
+def main() -> None:
+    args = parse_args()
+    for site, scenario, year, vtk_path in iter_targets(args):
+        try:
+            export_target(site, scenario, year, vtk_path, args.output_mode, voxel_size=args.voxel_size)
+        except Exception as exc:
+            print(f"  Bioenvelope export failed ({site}/{scenario}/yr{year}): {exc}")
 
 
 if __name__ == "__main__":

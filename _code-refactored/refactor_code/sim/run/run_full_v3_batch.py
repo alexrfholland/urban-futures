@@ -43,6 +43,7 @@ from refactor_code.paths import (
     engine_output_validation_dir,
 )
 from refactor_code.outputs.report import render_proposal_v4, render_debug_recruit
+from refactor_code.blender.bexport import export_rewilded_envelopes
 from refactor_code.sim.v4_indicator_extract import compute_indicators, format_site_table, INDICATOR_ORDER, write_v4_indicator_csv
 from refactor_code.sim.run.run_log import append_run_log
 
@@ -278,6 +279,16 @@ def run_site_scenario(
                     print(f"  Rendered debug recruit: {site}/{scenario}/yr{year}")
                 except Exception as e:
                     print(f"  Debug recruit render failed: {e}")
+
+            # Inline bioenvelope export (from in-memory polydata)
+            try:
+                export_rewilded_envelopes.export_target(
+                    site, scenario, year, vtk_path=None,
+                    output_mode="validation", voxel_size=voxel_size, mesh=state_polydata,
+                )
+                print(f"  Exported bioenvelope: {site}/{scenario}/yr{year}")
+            except Exception as e:
+                print(f"  Bioenvelope export failed: {e}")
 
             # Write per-state V4 indicator CSV
             _write_v4_indicator_csv(state_polydata, site, scenario, year)
