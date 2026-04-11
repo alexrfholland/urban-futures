@@ -17,13 +17,34 @@ The canonical Codex skill source now lives in:
 
 - [codex-skill](/d:/2026%20Arboreal%20Futures/mediafluxsync/skills/codex-skill)
 
+## Shared Repo
+
+This project consumes the shared `mediafluxsync` repo.
+It is a sibling repo, not a folder inside `urban-futures`.
+
+Local sibling checkout:
+
+- [mediafluxsync](/d:/2026%20Arboreal%20Futures/mediafluxsync)
+
+GitHub:
+
+- `https://github.com/alexrfholland/mediafluxsync`
+
+Install it into this repo's `.venv` with:
+
+```powershell
+.\.tools\uv\uv.exe pip install --python .\.venv\Scripts\python.exe -e ..\mediafluxsync
+```
+
+Do not recreate a local in-project `mediafluxsync` module.
+
 ## Split
 
 Shared `mediafluxsync` repo:
 
 - tracked `.env.mediaflux`
   - generic Mediaflux defaults
-- local gitignored `.env`
+- optional local gitignored `.env`
   - `MFLUX_PASSWORD`
 - shared package code
 
@@ -36,6 +57,74 @@ This project:
 User profile:
 
 - `%USERPROFILE%\.Arcitecta\mflux.cfg`
+
+## Initialize This Machine
+
+On a fresh machine, do this from this repo root:
+
+```powershell
+uv sync --extra visuals --extra blender
+.\.tools\uv\uv.exe pip install --python .\.venv\Scripts\python.exe -e ..\mediafluxsync
+.\.venv\Scripts\python.exe -m mediafluxsync bootstrap --project-root .
+```
+
+Then verify the setup before attempting real work:
+
+```powershell
+.\.venv\Scripts\python.exe -m mediafluxsync project-config --project-dir .
+.\.venv\Scripts\python.exe -m mediafluxsync which --project-dir .
+.\.venv\Scripts\python.exe -m mediafluxsync project-path pipeline --project-dir .
+.\.venv\Scripts\python.exe -m mediafluxsync exists-project pipeline --project-dir .
+```
+
+Then do one small real transfer in each direction:
+
+```powershell
+.\.venv\Scripts\python.exe -m mediafluxsync download-project `
+  "pipeline/v4.9/blender_exrs/city_timeline__hero-test" `
+  --project-dir . `
+  --out ".\_tmp_unified_validation\mf-download-test\city_timeline__hero-test"
+```
+
+```powershell
+.\.venv\Scripts\python.exe -m mediafluxsync upload-project `
+  ".\_tmp_unified_validation\mf-upload-test\tiny-folder" `
+  "pipeline/scratch-upload" `
+  --project-dir . `
+  --create-parents `
+  --exclude-parent
+```
+
+If this machine is already configured, you do not need to bootstrap again.
+In that case, just run the verification commands above.
+
+## Auth Model
+
+Runtime auth can come from more than one place:
+
+- optional shared `mediafluxsync/.env`
+  - for example `MFLUX_PASSWORD`
+- this repo's local `.env`
+- the current process environment
+- `%USERPROFILE%\.Arcitecta\mflux.cfg`
+
+So the shared repo `.env` is optional, not mandatory.
+If it is missing, commands can still work if the effective environment already has
+`MFLUX_PASSWORD` or if the official clients can authenticate from `mflux.cfg`.
+
+The important practical rule is:
+
+- on a fresh machine, run `bootstrap`
+- on an existing machine, verify with `project-config`, `which`, and a small real transfer
+
+## CLI Note
+
+The shared package currently uses:
+
+- `--project-root` for `bootstrap` and `bootstrap-paths`
+- `--project-dir` for most other commands
+
+That is expected for now, even though it is slightly inconsistent.
 
 ## Install In This Project
 
