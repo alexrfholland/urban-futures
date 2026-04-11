@@ -13,8 +13,8 @@ from pathlib import Path
 
 import bpy
 
-REPO_ROOT = Path(__file__).resolve().parents[5]
-COMPOSITOR_ROOT = REPO_ROOT / "_code-refactored" / "refactor_code" / "blender" / "compositor"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+COMPOSITOR_ROOT = REPO_ROOT / "_futureSim_refactored" / "blender" / "compositor"
 CANONICAL_ROOT = COMPOSITOR_ROOT / "canonical_templates"
 
 

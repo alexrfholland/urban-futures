@@ -31,18 +31,19 @@ from mathutils import Vector
 
 SCRIPT_PATH = Path(__file__).resolve()
 SCRIPT_DIR = SCRIPT_PATH.parent
-REPO_ROOT = SCRIPT_PATH.parents[3]
-if str(REPO_ROOT / "_code-refactored") not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+CODE_ROOT = next(parent for parent in SCRIPT_PATH.parents if parent.name == "_futureSim_refactored")
+REPO_ROOT = CODE_ROOT.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 try:
-    from refactor_code.paths import hook_log_ply_library_dir, hook_tree_ply_library_dir
+    from _futureSim_refactored.paths import hook_log_ply_library_dir, hook_tree_ply_library_dir
 except Exception:
     hook_log_ply_library_dir = None
     hook_tree_ply_library_dir = None
 
 try:
-    from refactor_code.blenderv2.bV2_paths import iter_blender_input_roots
+    from _futureSim_refactored.blender.blenderv2.bV2_paths import iter_blender_input_roots
 except Exception:
     iter_blender_input_roots = None
 

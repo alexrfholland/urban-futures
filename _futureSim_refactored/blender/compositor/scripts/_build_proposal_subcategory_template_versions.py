@@ -21,8 +21,8 @@ from pathlib import Path
 import bpy
 
 
-REPO_ROOT = Path(__file__).resolve().parents[5]
-CANONICAL_ROOT = REPO_ROOT / "_code-refactored" / "refactor_code" / "blender" / "compositor" / "canonical_templates"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+CANONICAL_ROOT = REPO_ROOT / "_futureSim_refactored" / "blender" / "compositor" / "canonical_templates"
 OUTPUT_ROOT = Path(
     os.environ.get(
         "PROPOSAL_SUBCATEGORY_OUTPUT_ROOT",

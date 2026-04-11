@@ -16,7 +16,7 @@ import bpy
 
 
 COMPOSITOR_ROOT = Path(
-    r"d:/2026 Arboreal Futures/urban-futures/_code-refactored/refactor_code/blender/compositor"
+    r"d:/2026 Arboreal Futures/urban-futures/_futureSim_refactored/blender/compositor"
 )
 CANONICAL_ROOT = COMPOSITOR_ROOT / "canonical_templates"
 
