@@ -34,8 +34,8 @@ The parent unit is the simulation root:
 
 Examples:
 
-- `v4.9`
-- `v4.9test`
+- `4.9`
+- `4.9test`
 - `v4.10-deadwood`
 
 The simulation root is the authority for simulation outputs.

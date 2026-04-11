@@ -75,17 +75,17 @@ and the default Mediaflux upload target becomes:
 Example:
 
 ```bash
-export BV2_SIM_ROOT=v4.9
+export BV2_SIM_ROOT=4.9
 export BV2_EXR_FAMILY_NOTE=hero-test
 ```
 
 Default local EXR root:
 
-- `_data-refactored/blenderv2/output/v4.9/city_timeline__hero-test/`
+- `_data-refactored/blenderv2/output/4.9/city_timeline__hero-test/`
 
 Default remote EXR target:
 
-- `pipeline/v4.9/blender_exrs/city_timeline__hero-test/`
+- `pipeline/4.9/blender_exrs/city_timeline__hero-test/`
 
 ## Simulation Sync
 
@@ -139,18 +139,18 @@ When those selectors are set, the main compositor runners default to:
 Example:
 
 ```bash
-export COMPOSITOR_SIM_ROOT=v4.9
+export COMPOSITOR_SIM_ROOT=4.9
 export COMPOSITOR_EXR_FAMILY=city_timeline__hero-test
 export COMPOSITOR_FAMILY=mist
 ```
 
 Default local compositor output root:
 
-- `_data-refactored/compositor/outputs/v4.9/city_timeline__hero-test/mist__<timestamp>/`
+- `_data-refactored/compositor/outputs/4.9/city_timeline__hero-test/mist__<timestamp>/`
 
 Default remote compositor target:
 
-- `pipeline/v4.9/compositor_pngs/city_timeline__hero-test/mist__<timestamp>/`
+- `pipeline/4.9/compositor_pngs/city_timeline__hero-test/mist__<timestamp>/`
 
 ## Cross-Machine Rule
 

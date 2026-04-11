@@ -84,7 +84,13 @@ def run_mediafluxsync(command: list[str], *, dry_run: bool) -> None:
     if dry_run:
         print(subprocess.list2cmdline(command))
         return
-    subprocess.run(command, check=True)
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(
+            f"sim_mediaflux_sync failed with exit code {exc.returncode}: "
+            f"{subprocess.list2cmdline(command)}"
+        ) from exc
 
 
 def upload_child(*, project_dir: Path, local_root: Path, remote_root: Path, child: str, dry_run: bool) -> None:
@@ -111,6 +117,8 @@ def upload_child(*, project_dir: Path, local_root: Path, remote_root: Path, chil
 
 def download_child(*, project_dir: Path, local_root: Path, remote_root: Path, child: str, dry_run: bool) -> None:
     local_child = local_root / child
+    if not dry_run:
+        local_child.mkdir(parents=True, exist_ok=True)
     command = [
         sys.executable,
         "-m",

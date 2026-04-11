@@ -2,7 +2,7 @@
 
 ## Project
 
-`urban-futures` is the simulation engine and data pipeline for the 2026 Arboreal Futures project. Source lives in `_code-refactored/`. Data lives in the sibling `../data/` directory.
+`urban-futures` is the simulation engine and data pipeline for the 2026 Arboreal Futures project. Source lives in `_code-refactored/`. The canonical local pipeline data now lives repo-locally under `_data-refactored/`. Legacy source/reference material still exists under `data/`.
 
 ## Mediaflux
 
@@ -33,7 +33,6 @@ export MEDIAFLUX_CLIENT_BIN_DIR="/d/2026 Arboreal Futures/urban-futures/.tools/m
 
 - Allocation: `/projects/proj-7020_research_archive-1128.4.442`
 - Project: `MF 2026 Arboreal Futures`
-- BlenderV2: `blenderV2`
 
 ### Common commands
 
