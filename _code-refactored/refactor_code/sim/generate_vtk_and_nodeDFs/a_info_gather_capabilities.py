@@ -738,12 +738,12 @@ def assign_v4_proposals_per_voxel(polydata):
         ~precolonial & peeling_indicator
         Only on voxels still not-assessed (don't overwrite poles/logs).
     """
-    if "proposal_deploy_structureV4" not in polydata.point_data:
+    if "proposal_deploy_structure" not in polydata.point_data:
         return polydata
     if "indicator_Bird_self_peeling" not in polydata.point_data:
         return polydata
 
-    deploy_decision = np.asarray(polydata.point_data["proposal_deploy_structureV4"]).astype("<U64")
+    deploy_decision = np.asarray(polydata.point_data["proposal_deploy_structure"]).astype("<U64")
     unset = deploy_decision == "not-assessed"
 
     precolonial = _coerce_bool_array(polydata.point_data["forest_precolonial"])
@@ -753,10 +753,10 @@ def assign_v4_proposals_per_voxel(polydata):
 
     if upgrade_mask.any():
         deploy_decision[upgrade_mask] = "proposal-deploy-structure_accepted"
-        deploy_intervention = np.asarray(polydata.point_data["proposal_deploy_structureV4_intervention"]).astype("<U64")
+        deploy_intervention = np.asarray(polydata.point_data["proposal_deploy_structure_intervention"]).astype("<U64")
         deploy_intervention[upgrade_mask] = DEPLOY_FULL_UPGRADE
-        polydata.point_data["proposal_deploy_structureV4"] = deploy_decision
-        polydata.point_data["proposal_deploy_structureV4_intervention"] = deploy_intervention
+        polydata.point_data["proposal_deploy_structure"] = deploy_decision
+        polydata.point_data["proposal_deploy_structure_intervention"] = deploy_intervention
         print(f"V4 deploy-structure per-voxel: {int(upgrade_mask.sum())} upgrade-feature")
 
     return polydata

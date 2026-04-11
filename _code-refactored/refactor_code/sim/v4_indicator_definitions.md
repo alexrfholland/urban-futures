@@ -80,15 +80,15 @@ V4 indicators use the `acquire`/`communicate`/`reproduce` capability naming.
 | Lizard.reproduce.nurse-log | Lizard | reproduce | `stat_fallen log > 0` | |
 | Lizard.reproduce.fallen-tree | Lizard | reproduce | `forest_size in fallen\|decayed` | |
 | Lizard.reproduce | Lizard | reproduce | Union of nurse-log + fallen-tree | Aggregate |
-| Tree.acquire.moderated | Tree | acquire | `proposal_release_controlV4_intervention == "reduce-canopy-pruning"` | Park trees with reduced pruning |
-| Tree.acquire.autonomous | Tree | acquire | `proposal_release_controlV4_intervention == "eliminate-canopy-pruning"` | Reserve/improved trees with pruning eliminated |
+| Tree.acquire.moderated | Tree | acquire | `proposal_release_control_intervention == "reduce-canopy-pruning"` | Park trees with reduced pruning |
+| Tree.acquire.autonomous | Tree | acquire | `proposal_release_control_intervention == "eliminate-canopy-pruning"` | Reserve/improved trees with pruning eliminated |
 | Tree.acquire | Tree | acquire | Union of moderated + autonomous | Total autonomous growth |
 | Tree.communicate.snag | Tree | communicate | `forest_size == "snag"` | |
 | Tree.communicate.fallen | Tree | communicate | `forest_size == "fallen"` | |
 | Tree.communicate.decayed | Tree | communicate | `forest_size == "decayed"` | |
 | Tree.communicate | Tree | communicate | `forest_size in snag\|fallen\|decayed` | Drops `senescing` from V3 |
-| Tree.reproduce.smaller-patches-rewild | Tree | reproduce | `proposal_recruitV4_intervention == "rewild-smaller-patch"` | Under-canopy recruits (`recruit_mechanism == "under-canopy"`) from isolated footprint-depaved/exoskeleton trees |
-| Tree.reproduce.larger-patches-rewild | Tree | reproduce | `proposal_recruitV4_intervention == "rewild-larger-patch"` | Node-rewild (`recruit_mechanism == "node-rewild"`) + under-canopy-linked (`recruit_mechanism == "under-canopy-linked"`, parents with >50% canopy overlap with ground zone) + ground (`recruit_mechanism == "ground"`) |
+| Tree.reproduce.smaller-patches-rewild | Tree | reproduce | `proposal_recruit_intervention == "rewild-smaller-patch"` | Under-canopy recruits (`recruit_mechanism == "under-canopy"`) from isolated footprint-depaved/exoskeleton trees |
+| Tree.reproduce.larger-patches-rewild | Tree | reproduce | `proposal_recruit_intervention == "rewild-larger-patch"` | Node-rewild (`recruit_mechanism == "node-rewild"`) + under-canopy-linked (`recruit_mechanism == "under-canopy-linked"`, parents with >50% canopy overlap with ground zone) + ground (`recruit_mechanism == "ground"`) |
 | Tree.reproduce | Tree | reproduce | Union of smaller + larger patches | Baseline borrowed from `indicator_Tree_generations_grassland` |
 
 > **TODO:** Baseline recruit also includes saplings — consider whether to do this or not.
@@ -106,12 +106,12 @@ The `recruit_mechanism` column on treeDF distinguishes four recruitment types. T
 
 `under-canopy-linked` is activated when a footprint-depaved parent's canopy voxels (via `node_CanopyID`) have >50% overlap with voxels meeting the ground-recruit criterion (`sim_Turns <= sim_TurnsThreshold`). Such parents are relabeled `footprint-depaved-connected` in `under-node-treatment`, and their canopy forms an additional zone with full (reserve) support.
 
-Note: The indicator queries use `proposal_recruitV4_intervention` (derived from the proposal broadcast), not `recruit_mechanism` directly. The mapping between them is handled during proposal assignment in the engine.
+Note: The indicator queries use `proposal_recruit_intervention` (derived from the proposal broadcast), not `recruit_mechanism` directly. The mapping between them is handled during proposal assignment in the engine.
 
 ### Key Differences from V3
 
 - **Bird.communicate**: Added `forest_size in senescing|snag|artificial` filter on top of `stat_perch branch > 0`
-- **Tree.acquire**: Proposal-derived (`proposal_release_controlV4_intervention`) instead of forest_size-based
+- **Tree.acquire**: Proposal-derived (`proposal_release_control_intervention`) instead of forest_size-based
 - **Tree.communicate**: Drops `senescing` from V3 `Tree.self.senescent`
-- **Tree.reproduce**: Proposal-derived (`proposal_recruitV4_intervention`) instead of spatial grassland query. Baseline uses `indicator_Tree_generations_grassland` since baselines have no `scenario_rewilded`. Four distinct recruit mechanisms (`node-rewild`, `under-canopy`, `under-canopy-linked`, `ground`) replace the previous two (`buffer-feature`, `rewild-ground`)
+- **Tree.reproduce**: Proposal-derived (`proposal_recruit_intervention`) instead of spatial grassland query. Baseline uses `indicator_Tree_generations_grassland` since baselines have no `scenario_rewilded`. Four distinct recruit mechanisms (`node-rewild`, `under-canopy`, `under-canopy-linked`, `ground`) replace the previous two (`buffer-feature`, `rewild-ground`)
 - **Lizard.acquire / Lizard.reproduce**: Unions of existing V3 sub-indicators

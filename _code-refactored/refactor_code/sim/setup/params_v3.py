@@ -221,9 +221,9 @@ def get_scenario_parameters():
         "plantingDensity": 50,
         "annual_tree_death_urban": 0.06,
         "annual_tree_death_nature-reserves": 0.03,
-        "minimal-tree-support-threshold": 70,
-        "moderate-tree-support-threshold": 50,
-        "maximum-tree-support-threshold": 10,
+        "minimal-tree-support-threshold": 90,
+        "moderate-tree-support-threshold": 70,
+        "maximum-tree-support-threshold": 20,
         "lifecycle_senescing_ramp_start": -25,
         "senescing_duration_years": senescing_duration_years.copy(),
         "snag_duration_years": snag_duration_years.copy(),
@@ -249,7 +249,7 @@ def get_scenario_parameters():
             "enabled": True,
             "deadwood_m3_per_ha": 208.3,       # volume target per ha (matches baseline)
             "fallen_share": 0.70,              # 70% fallen, 30% decayed by volume
-            "max_fraction_per_pulse": 0.10,    # cap at 10% of baseline per pulse
+            "max_fraction_per_pulse": 0.20,    # cap at 20% of baseline per pulse
             "spacing_preference": 3.0,         # metres; soft — fallback places anyway
         },
     }

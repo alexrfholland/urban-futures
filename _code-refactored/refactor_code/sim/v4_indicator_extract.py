@@ -58,8 +58,8 @@ def ground_not_paved(vtk):
 
 def compute_indicators(vtk, is_baseline=False):
     fs = str_arr(vtk, "forest_size")
-    release = str_arr(vtk, "proposal_release_controlV4_intervention")
-    recruit = str_arr(vtk, "proposal_recruitV4_intervention")
+    release = str_arr(vtk, "proposal_release_control_intervention")
+    recruit = str_arr(vtk, "proposal_recruit_intervention")
 
     results = {}
 
@@ -290,15 +290,15 @@ MEASURES = {
     "Lizard.reproduce.nurse-log": '`vtk["stat_fallen log"] > 0`',
     "Lizard.reproduce.fallen-tree": '`vtk["forest_size"] in fallen|decayed`',
     "Lizard.reproduce": "union",
-    "Tree.acquire.moderated": f'`vtk["proposal_release_controlV4_intervention"] == "{RELEASECONTROL_PARTIAL}"`',
-    "Tree.acquire.autonomous": f'`vtk["proposal_release_controlV4_intervention"] == "{RELEASECONTROL_FULL}"`',
+    "Tree.acquire.moderated": f'`vtk["proposal_release_control_intervention"] == "{RELEASECONTROL_PARTIAL}"`',
+    "Tree.acquire.autonomous": f'`vtk["proposal_release_control_intervention"] == "{RELEASECONTROL_FULL}"`',
     "Tree.acquire": "union",
     "Tree.communicate.snag": '`vtk["forest_size"] == "snag"`',
     "Tree.communicate.fallen": '`vtk["forest_size"] == "fallen"`',
     "Tree.communicate.decayed": '`vtk["forest_size"] == "decayed"`',
     "Tree.communicate": '`vtk["forest_size"] in snag|fallen|decayed`',
-    "Tree.reproduce.smaller-patches-rewild": f'`vtk["proposal_recruitV4_intervention"] == "{RECRUIT_PARTIAL}"`',
-    "Tree.reproduce.larger-patches-rewild": f'`vtk["proposal_recruitV4_intervention"] == "{RECRUIT_FULL}"`',
+    "Tree.reproduce.smaller-patches-rewild": f'`vtk["proposal_recruit_intervention"] == "{RECRUIT_PARTIAL}"`',
+    "Tree.reproduce.larger-patches-rewild": f'`vtk["proposal_recruit_intervention"] == "{RECRUIT_FULL}"`',
     "Tree.reproduce": "union",
 }
 

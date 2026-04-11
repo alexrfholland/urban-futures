@@ -554,9 +554,9 @@ def rename_non_resource_columns(voxelised_resource_df):
     stat_prefix = 'stat_'
     exception_list = [
         'nodeType', 'nodeTypeInt',
-        'proposal_decayV4', 'proposal_decayV4_intervention',
-        'proposal_release_controlV4', 'proposal_release_controlV4_intervention',
-        'proposal_deploy_structureV4', 'proposal_deploy_structureV4_intervention',
+        'proposal_decay', 'proposal_decay_intervention',
+        'proposal_release_control', 'proposal_release_control_intervention',
+        'proposal_deploy_structure', 'proposal_deploy_structure_intervention',
         'recruit_isNewTree', 'recruit_hasbeenReplanted',
         'recruit_mechanism', 'recruit_year',
         'recruit_mortality_rate', 'recruit_mortality_cohort',
@@ -697,8 +697,10 @@ def prepare_new_voxel_dataframe(dfSparse, ds, voxel_size):
             elif dtype == bool:
                 new_voxel_df[var] = False  # Initialize boolean variables to False
             elif dtype == 'O' or dtype.kind in ['U', 'S']:  # Object or string dtype
-                # V4 proposal decision arrays default to 'not-assessed', not 'none'
-                if var.endswith('V4') and 'proposal_' in var:
+                # Proposal decision arrays default to 'not-assessed', not 'none'.
+                # Decision variables are 'proposal_X'; intervention variables are
+                # 'proposal_X_intervention' and default to 'none' like other strings.
+                if var.startswith('proposal_') and not var.endswith('_intervention'):
                     new_voxel_df[var] = 'not-assessed'
                 else:
                     new_voxel_df[var] = 'none'

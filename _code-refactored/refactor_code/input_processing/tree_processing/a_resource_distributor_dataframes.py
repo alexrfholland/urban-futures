@@ -330,8 +330,8 @@ def process_single_log(row, log_templates):
         _deploy_dec = 'not-assessed'
     if _deploy_int is None or str(_deploy_int) in ('None', 'nan', ''):
         _deploy_int = 'none'
-    result_df['proposal_deploy_structureV4'] = _deploy_dec
-    result_df['proposal_deploy_structureV4_intervention'] = _deploy_int
+    result_df['proposal_deploy_structure'] = _deploy_dec
+    result_df['proposal_deploy_structure_intervention'] = _deploy_int
 
     return result_df
 
@@ -500,20 +500,20 @@ def initialise_and_translate_tree(tree_template, row):
     # These are excluded from the forest_* rename step so they land on ds with
     # their V4 names, ready for the proposal logic in a_info_gather_capabilities.
     _proposal_map = {
-        'proposal_decayV4': 'proposal-decay_decision',
-        'proposal_decayV4_intervention': 'proposal-decay_intervention',
-        'proposal_release_controlV4': 'proposal-release-control_decision',
-        'proposal_release_controlV4_intervention': 'proposal-release-control_intervention',
-        'proposal_deploy_structureV4': 'proposal-deploy-structure_decision',
-        'proposal_deploy_structureV4_intervention': 'proposal-deploy-structure_intervention',
+        'proposal_decay': 'proposal-decay_decision',
+        'proposal_decay_intervention': 'proposal-decay_intervention',
+        'proposal_release_control': 'proposal-release-control_decision',
+        'proposal_release_control_intervention': 'proposal-release-control_intervention',
+        'proposal_deploy_structure': 'proposal-deploy-structure_decision',
+        'proposal_deploy_structure_intervention': 'proposal-deploy-structure_intervention',
     }
     _proposal_defaults = {
-        'proposal_decayV4': 'not-assessed',
-        'proposal_decayV4_intervention': 'none',
-        'proposal_release_controlV4': 'not-assessed',
-        'proposal_release_controlV4_intervention': 'none',
-        'proposal_deploy_structureV4': 'not-assessed',
-        'proposal_deploy_structureV4_intervention': 'none',
+        'proposal_decay': 'not-assessed',
+        'proposal_decay_intervention': 'none',
+        'proposal_release_control': 'not-assessed',
+        'proposal_release_control_intervention': 'none',
+        'proposal_deploy_structure': 'not-assessed',
+        'proposal_deploy_structure_intervention': 'none',
     }
     for v4_col, node_col in _proposal_map.items():
         val = row[node_col] if node_col in row.index else None

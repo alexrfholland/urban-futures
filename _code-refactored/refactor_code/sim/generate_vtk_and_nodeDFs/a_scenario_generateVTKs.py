@@ -275,11 +275,11 @@ def assign_v4_proposals_under_canopy_and_nodes(ds, df):
             continue
 
         decay_intervention = str(row.get('proposal-decay_intervention', 'none'))
-        unset = np.asarray(ds['proposal_decayV4'].values).astype('<U64') == 'not-assessed'
+        unset = np.asarray(ds['proposal_decay'].values).astype('<U64') == 'not-assessed'
         target = canopy_mask & unset
         if target.any():
-            ds['proposal_decayV4'].values[target] = decay_decision
-            ds['proposal_decayV4_intervention'].values[target] = decay_intervention
+            ds['proposal_decay'].values[target] = decay_decision
+            ds['proposal_decay_intervention'].values[target] = decay_intervention
             n_assigned += int(target.sum())
 
     if n_assigned > 0:
@@ -308,9 +308,9 @@ def assign_v4_proposals_from_bioenvelope(ds):
     bio_envelope = _normalize_str_array(ds['scenario_bioEnvelope'].values)
 
     # --- colonise ---
-    if 'proposal_coloniseV4' in ds.variables:
-        colonise_decision = np.asarray(ds['proposal_coloniseV4'].values).astype('<U64')
-        colonise_intervention = np.asarray(ds['proposal_coloniseV4_intervention'].values).astype('<U64')
+    if 'proposal_colonise' in ds.variables:
+        colonise_decision = np.asarray(ds['proposal_colonise'].values).astype('<U64')
+        colonise_intervention = np.asarray(ds['proposal_colonise_intervention'].values).astype('<U64')
         unset = colonise_decision == 'not-assessed'
 
         colonise_rewild = unset & np.isin(bio_envelope, ["node-rewilded", "footprint-depaved", "footprint-depaved-connected", "rewilded", "otherground"])
@@ -322,14 +322,14 @@ def assign_v4_proposals_from_bioenvelope(ds):
         colonise_intervention[colonise_enrich] = COLONISE_FULL_ENVELOPE
         colonise_intervention[colonise_roughen] = COLONISE_PARTIAL_ENVELOPE
 
-        ds['proposal_coloniseV4'].values[:] = colonise_decision
-        ds['proposal_coloniseV4_intervention'].values[:] = colonise_intervention
+        ds['proposal_colonise'].values[:] = colonise_decision
+        ds['proposal_colonise_intervention'].values[:] = colonise_intervention
         print(f"V4 colonise from bioenvelope: {int(colonise_rewild.sum())} rewild-ground, {int(colonise_enrich.sum())} enrich-envelope, {int(colonise_roughen.sum())} roughen-envelope")
 
     # --- recruit ---
-    if 'proposal_recruitV4' in ds.variables:
-        recruit_decision = np.asarray(ds['proposal_recruitV4'].values).astype('<U64')
-        recruit_intervention = np.asarray(ds['proposal_recruitV4_intervention'].values).astype('<U64')
+    if 'proposal_recruit' in ds.variables:
+        recruit_decision = np.asarray(ds['proposal_recruit'].values).astype('<U64')
+        recruit_intervention = np.asarray(ds['proposal_recruit_intervention'].values).astype('<U64')
         unset = recruit_decision == 'not-assessed'
 
         recruitInterventionPARTIAL = unset & np.isin(bio_envelope, ["footprint-depaved"])
@@ -354,8 +354,8 @@ def assign_v4_proposals_from_bioenvelope(ds):
                 if n_rejected > 0:
                     print(f"V4 recruit: rejected {n_rejected} voxels within 1.5m of trees")
 
-        ds['proposal_recruitV4'].values[:] = recruit_decision
-        ds['proposal_recruitV4_intervention'].values[:] = recruit_intervention
+        ds['proposal_recruit'].values[:] = recruit_decision
+        ds['proposal_recruit_intervention'].values[:] = recruit_intervention
         print(f"V4 recruit from bioenvelope: {int(recruitInterventionFULL.sum())} FULL (rewild-larger-patch), {int(recruitInterventionPARTIAL.sum())} PARTIAL (rewild-smaller-patch)")
 
     return ds
@@ -755,12 +755,12 @@ def generate_vtk(
     # Node-broadcast proposals: tree-owned voxels get overwritten with real
     # node proposal values during voxel integration below.
     _v4_node_broadcast = {
-        "proposal_decayV4": "not-assessed",
-        "proposal_decayV4_intervention": "none",
-        "proposal_release_controlV4": "not-assessed",
-        "proposal_release_controlV4_intervention": "none",
-        "proposal_deploy_structureV4": "not-assessed",
-        "proposal_deploy_structureV4_intervention": "none",
+        "proposal_decay": "not-assessed",
+        "proposal_decay_intervention": "none",
+        "proposal_release_control": "not-assessed",
+        "proposal_release_control_intervention": "none",
+        "proposal_deploy_structure": "not-assessed",
+        "proposal_deploy_structure_intervention": "none",
     }
     for var, default in _v4_node_broadcast.items():
         ds[var] = xr.DataArray(np.full(voxel_count, default, dtype=object), dims="voxel")
@@ -768,10 +768,10 @@ def generate_vtk(
     # Derived proposals: these do not depend on node df broadcast and are
     # populated later from scenario/search/indicator context.
     _v4_derived = {
-        "proposal_recruitV4": "not-assessed",
-        "proposal_recruitV4_intervention": "none",
-        "proposal_coloniseV4": "not-assessed",
-        "proposal_coloniseV4_intervention": "none",
+        "proposal_recruit": "not-assessed",
+        "proposal_recruit_intervention": "none",
+        "proposal_colonise": "not-assessed",
+        "proposal_colonise_intervention": "none",
     }
     for var, default in _v4_derived.items():
         ds[var] = xr.DataArray(np.full(voxel_count, default, dtype=object), dims="voxel")

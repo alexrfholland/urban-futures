@@ -258,11 +258,11 @@ def run_site_scenario(
             if vtk_file:
                 print(f"Saved scenario VTK (manager path): {vtk_file}")
 
-            # Inline proposal render (hybrid-only, from in-memory polydata)
+            # Inline proposal render (proposal-and-interventions, from in-memory polydata)
             try:
                 render_proposal_v4.render_target(
                     site, scenario, year, vtk_path=None, output_mode="validation",
-                    all_variants=False, hybrid_only=True, mesh=state_polydata,
+                    mesh=state_polydata,
                 )
                 print(f"  Rendered proposal: {site}/{scenario}/yr{year}")
             except Exception as e:

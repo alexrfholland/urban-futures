@@ -753,16 +753,16 @@ def _annotate_baseline_combined_polydata(
     colonise_decision[colonise_mask] = "proposal-colonise_accepted"
     colonise_intervention[colonise_mask] = COLONISE_FULL_GROUND
 
-    combined_poly.point_data["proposal_decayV4"] = decay_decision
-    combined_poly.point_data["proposal_decayV4_intervention"] = decay_intervention
-    combined_poly.point_data["proposal_release_controlV4"] = release_decision
-    combined_poly.point_data["proposal_release_controlV4_intervention"] = release_intervention
-    combined_poly.point_data["proposal_recruitV4"] = recruit_decision
-    combined_poly.point_data["proposal_recruitV4_intervention"] = recruit_intervention
-    combined_poly.point_data["proposal_coloniseV4"] = colonise_decision
-    combined_poly.point_data["proposal_coloniseV4_intervention"] = colonise_intervention
-    combined_poly.point_data["proposal_deploy_structureV4"] = np.full(total_points, "not-assessed", dtype="<U64")
-    combined_poly.point_data["proposal_deploy_structureV4_intervention"] = np.full(total_points, "none", dtype="<U64")
+    combined_poly.point_data["proposal_decay"] = decay_decision
+    combined_poly.point_data["proposal_decay_intervention"] = decay_intervention
+    combined_poly.point_data["proposal_release_control"] = release_decision
+    combined_poly.point_data["proposal_release_control_intervention"] = release_intervention
+    combined_poly.point_data["proposal_recruit"] = recruit_decision
+    combined_poly.point_data["proposal_recruit_intervention"] = recruit_intervention
+    combined_poly.point_data["proposal_colonise"] = colonise_decision
+    combined_poly.point_data["proposal_colonise_intervention"] = colonise_intervention
+    combined_poly.point_data["proposal_deploy_structure"] = np.full(total_points, "not-assessed", dtype="<U64")
+    combined_poly.point_data["proposal_deploy_structure_intervention"] = np.full(total_points, "none", dtype="<U64")
 
     # --- blender framebuffers ---
     blender_arrays = build_blender_proposal_framebuffer_arrays(combined_poly.point_data)

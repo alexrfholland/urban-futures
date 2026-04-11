@@ -130,7 +130,7 @@ REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-n
 - `{root}/output/vtks/{site}/{site}_{scenario}_1_yr{year}_state_with_indicators.vtk`
 - `{root}/output/feature-locations/{site}/{site}_{scenario}_1_nodeDF_yr{year}.csv`
 - `{root}/output/stats/per-state/{site}/{site}_{scenario}_1_yr{year}_v4_indicators.csv`
-- `{root}/temp/validation/renders/{site}_{scenario}_yr{year}_proposal-and-interventions_hybrid_with-legend.png`
+- `{root}/temp/validation/renders/{site}_{scenario}_yr{year}_proposal-and-interventions_with-legend.png`
 - `{root}/temp/validation/renders/debugRecruit/{site}_{scenario}_yr{year}_*_with-legend.png` (years 10, 60, 180 only)
 
 **Verify**: 54 scenario VTKs (3 sites x 2 scenarios x 9 years), 54 nodeDF CSVs, 54 V4 indicator CSVs, 54 proposal renders, and 18 debug recruit sets (3 sites x 2 scenarios x 3 years).
@@ -163,7 +163,7 @@ Extracts the V4 indicator set (using `acquire`/`communicate`/`reproduce` naming)
 
 ```bash
 REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-name> \
-  cd _code-refactored && uv run python -m refactor_code.sim.v4_indicator_extract
+  uv run python _code-refactored/refactor_code/sim/v4_indicator_extract.py
 ```
 
 ### V4 indicators extracted
@@ -181,15 +181,15 @@ REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-n
 | Lizard.reproduce.nurse-log | `stat_fallen log > 0` |
 | Lizard.reproduce.fallen-tree | `forest_size in fallen\|decayed` |
 | **Lizard.reproduce** | Union of nurse-log + fallen-tree |
-| Tree.acquire.moderated | `proposal_release_controlV4_intervention == "reduce-canopy-pruning"` |
-| Tree.acquire.autonomous | `proposal_release_controlV4_intervention == "eliminate-canopy-pruning"` |
+| Tree.acquire.moderated | `proposal_release_control_intervention == "reduce-canopy-pruning"` |
+| Tree.acquire.autonomous | `proposal_release_control_intervention == "eliminate-canopy-pruning"` |
 | **Tree.acquire** | Union of moderated + autonomous |
 | Tree.communicate.snag | `forest_size == "snag"` |
 | Tree.communicate.fallen | `forest_size == "fallen"` |
 | Tree.communicate.decayed | `forest_size == "decayed"` |
 | **Tree.communicate** | `forest_size in snag\|fallen\|decayed` |
-| Tree.reproduce.smaller-patches-rewild | `proposal_recruitV4_intervention == "rewild-smaller-patch"` |
-| Tree.reproduce.larger-patches-rewild | `proposal_recruitV4_intervention == "rewild-larger-patch"` |
+| Tree.reproduce.smaller-patches-rewild | `proposal_recruit_intervention == "rewild-smaller-patch"` |
+| Tree.reproduce.larger-patches-rewild | `proposal_recruit_intervention == "rewild-larger-patch"` |
 | **Tree.reproduce** | Union of smaller + larger patches |
 
 ### Output format
@@ -222,8 +222,8 @@ Renders hybrid proposal views from the VTK files. Requires VTKs from Steps 2 and
 ### Defaults
 
 - All years (0, 1, 10, 30, 60, 90, 120, 150, 180)
-- Hybrid-only variant (the `_hybrid_with-legend.png`)
-- Use `--all-renders` for all variants
+- Main variant only (the `_proposal-and-interventions_with-legend.png`)
+- Pass `--also-families-only` to additionally render the flat `proposal-families-only` variant
 
 ### Run all sites in parallel
 
@@ -251,7 +251,7 @@ REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-n
 
 ### Output
 
-`{root}/temp/validation/renders/{site}_{scenario}_yr{year}_proposal-and-interventions_hybrid_with-legend.png`
+`{root}/temp/validation/renders/{site}_{scenario}_yr{year}_proposal-and-interventions_with-legend.png`
 
 Full render set: 3 sites × 2 scenarios × 9 years = **54 images**
 

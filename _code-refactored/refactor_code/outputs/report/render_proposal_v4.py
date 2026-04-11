@@ -3,24 +3,22 @@ from __future__ import annotations
 """
 Render v4 proposal-and-interventions views from assessed VTKs.
 
-Uses:
-    - the `blender_proposal-*` framebuffer arrays
-    - the fixed deadwood base colours
-    - the accepted camera presets
-    - PyVista settings: render_points_as_spheres=False, lighting=False, eye_dome_lighting=True
-
-Outputs:
-    - {site}_{scenario}_yr{year}_proposal-and-interventions_interventions_with-legend.png
-    - {site}_{scenario}_yr{year}_proposal-and-interventions.png
-Optional extra variants (--all-variants):
-    - {site}_{scenario}_yr{year}_proposal-and-interventions_interventions.png
+Main variant (always rendered):
     - {site}_{scenario}_yr{year}_proposal-and-interventions_with-legend.png
-Hybrid (--hybrid-only):
-    - {site}_{scenario}_yr{year}_proposal-and-interventions_hybrid_with-legend.png
+
+Decay-pathway voxels (senescing, snag, fallen, decayed) are coloured by
+`forest_size`; proposal interventions are overlaid on non-decay voxels
+only. Release-control is shown as saturation shifts on living tree
+sizes. The legend is composed into the bottom whitespace of the render.
+
+Optional variant (`--all-variants`):
+    - {site}_{scenario}_yr{year}_proposal-families-only.png
+    - {site}_{scenario}_yr{year}_proposal-families-only_with-legend.png
+
+Flat colour per proposal family with no per-intervention detail.
 """
 
 import argparse
-import colorsys
 import sys
 from pathlib import Path
 
@@ -38,23 +36,29 @@ from refactor_code.paths import (
     engine_output_state_vtk_path,
     engine_output_validation_dir,
 )
-from refactor_code.outputs.report.render_forest_size_views import CAMERAS
-from refactor_code.outputs.report._archived_renderers.render_proposal_schema_v3 import (
-    CUSTOM_RENDER_SETTINGS,
+from refactor_code.outputs.report.render_common import (
+    CAMERAS,
     DEADWOOD_BASE_HEX,
+    DEADWOOD_BASE_RGB,
     FOREST_SIZE_HEX,
+    FOREST_SIZE_RGB,
     PROPOSAL_HEX,
-    PROPOSAL_INT_MAPPING,
     PROPOSAL_LAYER_ORDER_BOTTOM_TO_TOP,
+    PROPOSAL_RGB,
     RELEASE_CONTROL_FOREST_SIZE_KEYS,
     RELEASE_CONTROL_SATURATION,
     WHITE_RGB,
+    hex_rgb,
+    load_font,
+    normalize_str_array,
+    release_control_rgb,
+    render_png,
+    rgb_to_uint8_array,
 )
 
 
-INTERVENTIONS_OUTPUT_STEM = "proposal-and-interventions_interventions"
-PROPOSALS_ONLY_OUTPUT_STEM = "proposal-and-interventions"
-PROPOSAL_HYBRID_OUTPUT_STEM = "proposal-and-interventions_hybrid"
+OUTPUT_STEM = "proposal-and-interventions"
+FAMILIES_ONLY_OUTPUT_STEM = "proposal-families-only"
 TITLE_TEXT_TEMPLATE = "{site} {scenario} yr{year}"
 
 
@@ -65,127 +69,33 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--years", nargs="*", type=int, default=[0, 1, 10, 30, 60, 90, 120, 150, 180], help="Years to render.")
     parser.add_argument("--output-mode", default="validation", choices=["canonical", "validation"])
     parser.add_argument(
-        "--all-variants",
+        "--also-families-only",
         action="store_true",
-        help="Also write the plain interventions image and the proposal-only image with legend.",
-    )
-    parser.add_argument(
-        "--with-legend",
-        action="store_true",
-        help="Deprecated alias for --all-variants.",
-    )
-    parser.add_argument(
-        "--hybrid-only",
-        action="store_true",
-        default=True,
-        help="Only render the proposal-hybrid with bottom legend (default: on).",
-    )
-    parser.add_argument(
-        "--all-renders",
-        action="store_true",
-        help="Render all variants including interventions-only image.",
+        help="Also render the flat proposal-families-only variant (one colour per family).",
     )
     parser.add_argument("--model-base-y", type=int, default=None, help="Pre-computed shared model base y.")
     parser.add_argument("--target-model-width", type=int, default=None, help="Pre-computed shared target model width.")
     return parser.parse_args()
 
 
-def _hex_rgb(value: str) -> tuple[int, int, int]:
-    value = value.lstrip("#")
-    return tuple(int(value[i : i + 2], 16) for i in (0, 2, 4))
-
-
-FOREST_SIZE_RGB = {key: _hex_rgb(value) for key, value in FOREST_SIZE_HEX.items()}
-DEADWOOD_BASE_RGB = {key: _hex_rgb(value) for key, value in DEADWOOD_BASE_HEX.items()}
-PROPOSAL_RGB = {
-    array_name: {state: _hex_rgb(hex_value) for state, hex_value in state_map.items()}
-    for array_name, state_map in PROPOSAL_HEX.items()
-}
-PROPOSALS_ONLY_RGB = {
-    "blender_proposal-deploy-structure": _hex_rgb("#C05E5E"),
-    "blender_proposal-decay": _hex_rgb("#B83B6B"),
-    "blender_proposal-recruit": _hex_rgb("#5CB85C"),
-    "blender_proposal-colonise": _hex_rgb("#8CCC4F"),
-    "blender_proposal-release-control": _hex_rgb("#D4882B"),
+PROPOSAL_FAMILIES_ONLY_RGB: dict[str, tuple[int, int, int]] = {
+    "blender_proposal-deploy-structure": hex_rgb("#C05E5E"),
+    "blender_proposal-decay": hex_rgb("#B83B6B"),
+    "blender_proposal-recruit": hex_rgb("#5CB85C"),
+    "blender_proposal-colonise": hex_rgb("#8CCC4F"),
+    "blender_proposal-release-control": hex_rgb("#D4882B"),
 }
 DECAY_PATHWAY_SIZES = ["senescing", "snag", "fallen", "decayed"]
 
 
-def _normalize_str_array(values: np.ndarray) -> np.ndarray:
-    return np.char.lower(np.asarray(values).astype(str))
-
-
-def _rgb_to_uint8_array(rgb: tuple[int, int, int], count: int) -> np.ndarray:
-    array = np.empty((count, 3), dtype=np.uint8)
-    array[:] = np.asarray(rgb, dtype=np.uint8)
-    return array
-
-
-def _release_control_rgb(forest_size: str, state: int) -> tuple[int, int, int] | None:
-    if state == 0:
-        return None
-    base = FOREST_SIZE_RGB.get(forest_size)
-    if base is None:
-        return None
-    saturation_scale = RELEASE_CONTROL_SATURATION.get(state)
-    if saturation_scale is None:
-        return None
-    r, g, b = [component / 255.0 for component in base]
-    h, l, s = colorsys.rgb_to_hls(r, g, b)
-    s = max(0.0, min(1.0, s * saturation_scale))
-    rr, gg, bb = colorsys.hls_to_rgb(h, l, s)
-    return (round(rr * 255), round(gg * 255), round(bb * 255))
-
-
-def interventions_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
+def proposal_families_only_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
     required_arrays = set(PROPOSAL_LAYER_ORDER_BOTTOM_TO_TOP)
     missing_arrays = [name for name in required_arrays if name not in mesh.point_data]
     if missing_arrays:
         raise KeyError(f"Missing required proposal framebuffer arrays: {sorted(missing_arrays)}")
 
-    rgb = _rgb_to_uint8_array(WHITE_RGB, mesh.n_points)
-
-    forest_size = _normalize_str_array(mesh["forest_size"]) if "forest_size" in mesh.point_data else np.full(mesh.n_points, "", dtype="<U32")
-
-    for label, color in DEADWOOD_BASE_RGB.items():
-        rgb[forest_size == label] = np.asarray(color, dtype=np.uint8)
-
-    release_name = "blender_proposal-release-control"
-    if release_name in mesh.point_data:
-        release_values = np.asarray(mesh.point_data[release_name]).astype(int)
-        for forest_key in RELEASE_CONTROL_FOREST_SIZE_KEYS:
-            forest_mask = forest_size == forest_key
-            if not np.any(forest_mask):
-                continue
-            for state in [1, 2, 3]:
-                state_mask = forest_mask & (release_values == state)
-                if not np.any(state_mask):
-                    continue
-                color = _release_control_rgb(forest_key, state)
-                if color is not None:
-                    rgb[state_mask] = np.asarray(color, dtype=np.uint8)
-
-    for array_name in PROPOSAL_LAYER_ORDER_BOTTOM_TO_TOP:
-        if array_name == release_name or array_name not in mesh.point_data:
-            continue
-        values = np.asarray(mesh.point_data[array_name]).astype(int)
-        color_map = PROPOSAL_RGB.get(array_name, {})
-        for state, color in color_map.items():
-            mask = values == state
-            if np.any(mask):
-                rgb[mask] = np.asarray(color, dtype=np.uint8)
-
-    return rgb
-
-
-def proposals_only_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
-    required_arrays = set(PROPOSAL_LAYER_ORDER_BOTTOM_TO_TOP)
-    missing_arrays = [name for name in required_arrays if name not in mesh.point_data]
-    if missing_arrays:
-        raise KeyError(f"Missing required proposal framebuffer arrays: {sorted(missing_arrays)}")
-
-    rgb = _rgb_to_uint8_array(WHITE_RGB, mesh.n_points)
-    forest_size = _normalize_str_array(mesh["forest_size"]) if "forest_size" in mesh.point_data else np.full(mesh.n_points, "", dtype="<U32")
+    rgb = rgb_to_uint8_array(WHITE_RGB, mesh.n_points)
+    forest_size = normalize_str_array(mesh["forest_size"]) if "forest_size" in mesh.point_data else np.full(mesh.n_points, "", dtype="<U32")
 
     for label, color in DEADWOOD_BASE_RGB.items():
         rgb[forest_size == label] = np.asarray(color, dtype=np.uint8)
@@ -195,7 +105,7 @@ def proposals_only_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
         proposal_mask = (values != 0) & (values != 1)
         if not np.any(proposal_mask):
             continue
-        color = PROPOSALS_ONLY_RGB.get(array_name)
+        color = PROPOSAL_FAMILIES_ONLY_RGB.get(array_name)
         if color is None:
             continue
         rgb[proposal_mask] = np.asarray(color, dtype=np.uint8)
@@ -203,17 +113,17 @@ def proposals_only_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
     return rgb
 
 
-def interventions_v2_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
-    """Like interventions_schema_rgb but colors the full decay pathway
-    (senescing, snag, fallen, decayed) by forest_size colour."""
+def proposal_and_interventions_rgb(mesh: pv.PolyData) -> np.ndarray:
+    """Colour the full decay pathway (senescing/snag/fallen/decayed) by
+    forest_size and overlay proposal interventions on the non-decay voxels."""
     required_arrays = set(PROPOSAL_LAYER_ORDER_BOTTOM_TO_TOP)
     missing_arrays = [name for name in required_arrays if name not in mesh.point_data]
     if missing_arrays:
         raise KeyError(f"Missing required proposal framebuffer arrays: {sorted(missing_arrays)}")
 
-    rgb = _rgb_to_uint8_array(WHITE_RGB, mesh.n_points)
+    rgb = rgb_to_uint8_array(WHITE_RGB, mesh.n_points)
 
-    forest_size = _normalize_str_array(mesh["forest_size"]) if "forest_size" in mesh.point_data else np.full(mesh.n_points, "", dtype="<U32")
+    forest_size = normalize_str_array(mesh["forest_size"]) if "forest_size" in mesh.point_data else np.full(mesh.n_points, "", dtype="<U32")
 
     # Base layer: color all decay-pathway sizes by their forest_size colour
     for label in DECAY_PATHWAY_SIZES:
@@ -239,7 +149,7 @@ def interventions_v2_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
                 state_mask = forest_mask & (release_values == state) & non_decay
                 if not np.any(state_mask):
                     continue
-                color = _release_control_rgb(forest_key, state)
+                color = release_control_rgb(forest_key, state)
                 if color is not None:
                     rgb[state_mask] = np.asarray(color, dtype=np.uint8)
 
@@ -257,7 +167,7 @@ def interventions_v2_schema_rgb(mesh: pv.PolyData) -> np.ndarray:
     return rgb
 
 
-def _interventions_v2_legend_sections() -> list[tuple[str, list[tuple[str, tuple[int, int, int]]]]]:
+def _proposal_and_interventions_legend_sections() -> list[tuple[str, list[tuple[str, tuple[int, int, int]]]]]:
     return [
         (
             "Deploy-Structure",
@@ -292,87 +202,16 @@ def _interventions_v2_legend_sections() -> list[tuple[str, list[tuple[str, tuple
     ]
 
 
-def render_png(mesh: pv.PolyData, site: str, output_path: Path, rgb_values: np.ndarray) -> None:
-    settings = CUSTOM_RENDER_SETTINGS
-    camera = CAMERAS[site]
-    plotter = pv.Plotter(
-        off_screen=True,
-        window_size=(int(settings["window_width"]), int(settings["window_height"])),
-    )
-    plotter.set_background(str(settings["background"]))
-    plotter.add_mesh(
-        mesh,
-        scalars=rgb_values,
-        rgb=True,
-        render_points_as_spheres=bool(settings["render_points_as_spheres"]),
-        point_size=float(settings["point_size"]),
-        lighting=bool(settings["lighting"]),
-    )
-    if bool(settings["eye_dome_lighting"]):
-        plotter.enable_eye_dome_lighting()
-    plotter.camera_position = [
-        camera["position"],
-        camera["focal_point"],
-        camera["view_up"],
-    ]
-    plotter.camera.view_angle = camera["view_angle"]
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plotter.show(screenshot=str(output_path))
-    plotter.close()
-
-
-def _interventions_legend_sections() -> list[tuple[str, list[tuple[str, tuple[int, int, int]]]]]:
-    return [
-        (
-            "Deploy-Structure",
-            [
-                ("Adapt-Utility-Pole", PROPOSAL_RGB["blender_proposal-deploy-structure"][2]),
-                ("Translocated-Log", PROPOSAL_RGB["blender_proposal-deploy-structure"][3]),
-                ("Upgrade-Feature", PROPOSAL_RGB["blender_proposal-deploy-structure"][4]),
-            ],
-        ),
-        (
-            "Decay",
-            [
-                ("Buffer-Feature", PROPOSAL_RGB["blender_proposal-decay"][2]),
-                ("Brace-Feature", PROPOSAL_RGB["blender_proposal-decay"][3]),
-            ],
-        ),
-        (
-            "Recruit",
-            [
-                ("Buffer-Feature", PROPOSAL_RGB["blender_proposal-recruit"][2]),
-                ("Rewild-Ground", PROPOSAL_RGB["blender_proposal-recruit"][3]),
-            ],
-        ),
-        (
-            "Colonise",
-            [
-                ("Rewild-Ground", PROPOSAL_RGB["blender_proposal-colonise"][2]),
-                ("Enrich-Envelope", PROPOSAL_RGB["blender_proposal-colonise"][3]),
-                ("Roughen-Envelope", PROPOSAL_RGB["blender_proposal-colonise"][4]),
-            ],
-        ),
-        (
-            "Deadwood Base",
-            [
-                ("Fallen", DEADWOOD_BASE_RGB["fallen"]),
-                ("Decayed", DEADWOOD_BASE_RGB["decayed"]),
-            ],
-        ),
-    ]
-
-
-def _proposals_only_legend_sections() -> list[tuple[str, list[tuple[str, tuple[int, int, int]]]]]:
+def _proposal_families_only_legend_sections() -> list[tuple[str, list[tuple[str, tuple[int, int, int]]]]]:
     return [
         (
             "Proposal Families",
             [
-                ("Deploy-Structure", PROPOSALS_ONLY_RGB["blender_proposal-deploy-structure"]),
-                ("Decay", PROPOSALS_ONLY_RGB["blender_proposal-decay"]),
-                ("Recruit", PROPOSALS_ONLY_RGB["blender_proposal-recruit"]),
-                ("Colonise", PROPOSALS_ONLY_RGB["blender_proposal-colonise"]),
-                ("Release-Control", PROPOSALS_ONLY_RGB["blender_proposal-release-control"]),
+                ("Deploy-Structure", PROPOSAL_FAMILIES_ONLY_RGB["blender_proposal-deploy-structure"]),
+                ("Decay", PROPOSAL_FAMILIES_ONLY_RGB["blender_proposal-decay"]),
+                ("Recruit", PROPOSAL_FAMILIES_ONLY_RGB["blender_proposal-recruit"]),
+                ("Colonise", PROPOSAL_FAMILIES_ONLY_RGB["blender_proposal-colonise"]),
+                ("Release-Control", PROPOSAL_FAMILIES_ONLY_RGB["blender_proposal-release-control"]),
             ],
         ),
         (
@@ -383,15 +222,6 @@ def _proposals_only_legend_sections() -> list[tuple[str, list[tuple[str, tuple[i
             ],
         ),
     ]
-
-
-def _load_font(size: int) -> ImageFont.ImageFont:
-    for font_name in ["Aptos.ttf", "Arial.ttf", "Helvetica.ttc", "DejaVuSans.ttf"]:
-        try:
-            return ImageFont.truetype(font_name, size)
-        except Exception:
-            continue
-    return ImageFont.load_default()
 
 
 def _draw_release_control_matrix(
@@ -414,7 +244,7 @@ def _draw_release_control_matrix(
     cell_w = 24
     cell_h = 16
     col_spacing = cell_w + 4
-    small_font = _load_font(13)
+    small_font = load_font(13)
     vertical_text_height = 58
 
     # Measure row label width from longest intervention name
@@ -436,7 +266,7 @@ def _draw_release_control_matrix(
     for row_label, state in row_interventions:
         draw.text((x0, y), row_label, fill=(0, 0, 0), font=label_font)
         for col_idx, size_label in enumerate(col_sizes):
-            color = _release_control_rgb(size_label, state)
+            color = release_control_rgb(size_label, state)
             if color is None:
                 color = (255, 255, 255)
             cx = cells_x0 + col_idx * col_spacing
@@ -466,7 +296,7 @@ def _draw_decay_lifecycle_matrix(
     cell_w = 24
     cell_h = 16
     col_spacing = cell_w + 4
-    small_font = _load_font(13)
+    small_font = load_font(13)
     vertical_text_height = 58
     line_height = 16
     row_text_lines = 2  # each row label is 2 lines
@@ -529,9 +359,9 @@ def compose_with_legend(
     (identified by section name starting with "Decay").
     """
     base = Image.open(base_image_path).convert("RGB")
-    title_font = _load_font(36)
-    section_font = _load_font(22)
-    label_font = _load_font(19)
+    title_font = load_font(36)
+    section_font = load_font(22)
+    label_font = load_font(19)
 
     title_height = 72
     legend_width = 360
@@ -641,9 +471,9 @@ def compose_with_bottom_legend(
 
     content_height = content_bottom - content_top
 
-    title_font = _load_font(36)
-    section_font = _load_font(22)
-    label_font = _load_font(19)
+    title_font = load_font(36)
+    section_font = load_font(22)
+    label_font = load_font(19)
     swatch = 20
     row_gap = 8
 
@@ -746,105 +576,86 @@ def iter_targets(args: argparse.Namespace):
                     print(f"Skipping missing VTK: {vtk_path}")
 
 
-def render_target(site: str, scenario: str, year: int, vtk_path: Path, output_mode: str, all_variants: bool, model_base_y: int | None = None, hybrid_only: bool = False, target_model_width: int | None = None, mesh: pv.PolyData | None = None) -> list[Path]:
+def render_target(
+    site: str,
+    scenario: str,
+    year: int,
+    vtk_path: Path | None,
+    output_mode: str,
+    *,
+    also_families_only: bool = False,
+    model_base_y: int | None = None,
+    target_model_width: int | None = None,
+    mesh: pv.PolyData | None = None,
+) -> list[Path]:
     if mesh is None:
         mesh = pv.read(vtk_path)
     render_root = engine_output_validation_dir(output_mode) / "renders"
     outputs: list[Path] = []
 
-    if not hybrid_only:
-        interventions_stem = f"{site}_{scenario}_yr{year}_{INTERVENTIONS_OUTPUT_STEM}"
-        interventions_rgb = interventions_schema_rgb(mesh)
-        interventions_legend_path = render_root / f"{interventions_stem}_with-legend.png"
-        interventions_base_for_legend = render_root / f"{interventions_stem}.__temp__.png"
-        render_png(mesh, site, interventions_base_for_legend, interventions_rgb)
-        compose_with_legend(
-            interventions_base_for_legend,
-            site,
-            scenario,
-            year,
-            interventions_legend_path,
-            legend_sections=_interventions_legend_sections(),
-            include_release_control_matrix=True,
-        )
-        outputs.append(interventions_legend_path)
-        interventions_base_for_legend.unlink(missing_ok=True)
-        if all_variants:
-            interventions_base_path = render_root / f"{interventions_stem}.png"
-            render_png(mesh, site, interventions_base_path, interventions_rgb)
-            outputs.append(interventions_base_path)
-
-        proposals_only_stem = f"{site}_{scenario}_yr{year}_{PROPOSALS_ONLY_OUTPUT_STEM}"
-        proposals_only_base_path = render_root / f"{proposals_only_stem}.png"
-        proposals_only_rgb = proposals_only_schema_rgb(mesh)
-        render_png(mesh, site, proposals_only_base_path, proposals_only_rgb)
-        outputs.append(proposals_only_base_path)
-        if all_variants:
-            proposals_only_legend_path = render_root / f"{proposals_only_stem}_with-legend.png"
-            compose_with_legend(
-                proposals_only_base_path,
-                site,
-                scenario,
-                year,
-                proposals_only_legend_path,
-                legend_sections=_proposals_only_legend_sections(),
-                include_release_control_matrix=False,
-            )
-            outputs.append(proposals_only_legend_path)
-
-    # Proposal-hybrid: decay pathway by forest_size, proposals on non-decay only
-    hybrid_stem = f"{site}_{scenario}_yr{year}_{PROPOSAL_HYBRID_OUTPUT_STEM}"
-    hybrid_rgb = interventions_v2_schema_rgb(mesh)
-    hybrid_base_for_legend = render_root / f"{hybrid_stem}.__temp__.png"
-    hybrid_legend_path = render_root / f"{hybrid_stem}_with-legend.png"
-    render_png(mesh, site, hybrid_base_for_legend, hybrid_rgb)
+    # Main variant: proposal-and-interventions with bottom legend
+    main_stem = f"{site}_{scenario}_yr{year}_{OUTPUT_STEM}"
+    main_rgb = proposal_and_interventions_rgb(mesh)
+    main_base_for_legend = render_root / f"{main_stem}.__temp__.png"
+    main_legend_path = render_root / f"{main_stem}_with-legend.png"
+    render_png(mesh, site, main_base_for_legend, main_rgb)
     compose_with_bottom_legend(
-        hybrid_base_for_legend,
+        main_base_for_legend,
         site,
         scenario,
         year,
-        hybrid_legend_path,
-        legend_sections=_interventions_v2_legend_sections(),
+        main_legend_path,
+        legend_sections=_proposal_and_interventions_legend_sections(),
         include_release_control_matrix=True,
         include_decay_lifecycle_matrix=True,
         model_base_y=model_base_y,
         target_model_width=target_model_width,
     )
-    outputs.append(hybrid_legend_path)
-    hybrid_base_for_legend.unlink(missing_ok=True)
-    if all_variants:
-        hybrid_base_path = render_root / f"{hybrid_stem}.png"
-        render_png(mesh, site, hybrid_base_path, hybrid_rgb)
-        outputs.append(hybrid_base_path)
+    outputs.append(main_legend_path)
+    main_base_for_legend.unlink(missing_ok=True)
+
+    # Optional: proposal-families-only variant (flat colour per family)
+    if also_families_only:
+        families_stem = f"{site}_{scenario}_yr{year}_{FAMILIES_ONLY_OUTPUT_STEM}"
+        families_base_path = render_root / f"{families_stem}.png"
+        families_rgb = proposal_families_only_schema_rgb(mesh)
+        render_png(mesh, site, families_base_path, families_rgb)
+        outputs.append(families_base_path)
+        families_legend_path = render_root / f"{families_stem}_with-legend.png"
+        compose_with_legend(
+            families_base_path,
+            site,
+            scenario,
+            year,
+            families_legend_path,
+            legend_sections=_proposal_families_only_legend_sections(),
+            include_release_control_matrix=False,
+        )
+        outputs.append(families_legend_path)
 
     return outputs
 
 
 def main() -> None:
     args = parse_args()
-    all_variants = args.all_variants or args.with_legend or args.all_renders
-    if args.all_renders:
-        args.hybrid_only = False
 
-    # Collect all targets
     targets = list(iter_targets(args))
     if not targets:
         return
 
-    # Use pre-computed values if provided, otherwise measure
+    # Use pre-computed values if provided, otherwise measure from main variant
     if args.model_base_y is not None and args.target_model_width is not None:
         model_base_y = args.model_base_y
         target_model_width = args.target_model_width
     else:
-        # First pass: render raw hybrid PNGs to measure model bounds
         render_root = engine_output_validation_dir(args.output_mode) / "renders"
         max_bottom = 0
         max_width = 0
         for site, scenario, year, vtk_path in targets:
-            stem = f"{site}_{scenario}_yr{year}_{PROPOSAL_HYBRID_OUTPUT_STEM}"
+            stem = f"{site}_{scenario}_yr{year}_{OUTPUT_STEM}"
             raw_path = render_root / f"{stem}.__measure__.png"
             mesh = pv.read(vtk_path)
-            rgb = interventions_v2_schema_rgb(mesh)
+            rgb = proposal_and_interventions_rgb(mesh)
             render_png(mesh, site, raw_path, rgb)
             bounds = _measure_raw_model_bounds(raw_path)
             max_bottom = max(max_bottom, bounds["bottom"])
@@ -857,7 +668,16 @@ def main() -> None:
         target_model_width = max_width if multi else None
 
     for site, scenario, year, vtk_path in targets:
-        for output in render_target(site, scenario, year, vtk_path, args.output_mode, all_variants, model_base_y, args.hybrid_only, target_model_width):
+        for output in render_target(
+            site,
+            scenario,
+            year,
+            vtk_path,
+            args.output_mode,
+            also_families_only=args.also_families_only,
+            model_base_y=model_base_y,
+            target_model_width=target_model_width,
+        ):
             print(output)
 
 

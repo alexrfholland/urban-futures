@@ -55,7 +55,7 @@ These were pre-computed from measuring all sites. Pass them to skip the measurem
 REFACTOR_RUN_OUTPUT_ROOT=<root> uv run python \
   _code-refactored/refactor_code/outputs/report/render_proposal_v4.py \
   --site trimmed-parade --scenario positive --years 180 \
-  --output-mode validation --hybrid-only \
+  --output-mode validation \
   --model-base-y 1170 --target-model-width 1757
 ```
 
@@ -66,7 +66,7 @@ REFACTOR_RUN_OUTPUT_ROOT=<root> uv run python \
   _code-refactored/refactor_code/outputs/report/render_proposal_v4.py \
   --site trimmed-parade --scenario all \
   --years 0 10 30 60 90 120 150 180 \
-  --output-mode validation --hybrid-only \
+  --output-mode validation \
   --model-base-y 1170 --target-model-width 1757
 ```
 
@@ -80,7 +80,7 @@ for site in trimmed-parade city uni; do
     _code-refactored/refactor_code/outputs/report/render_proposal_v4.py \
     --site $site --scenario all \
     --years 0 10 30 60 90 120 150 180 \
-    --output-mode validation --hybrid-only \
+    --output-mode validation \
     --model-base-y 1170 --target-model-width 1757 &
 done
 wait
@@ -92,7 +92,7 @@ wait
 - `city`
 - `uni`
 
-Camera presets per site are in `render_forest_size_views.py` → `CAMERAS` dict.
+Camera presets per site are in `render_common.py` → `CAMERAS` dict.
 
 ## Scenarios
 
@@ -110,7 +110,7 @@ Camera presets per site are in `render_forest_size_views.py` → `CAMERAS` dict.
 
 ## Output filenames
 
-`{site}_{scenario}_yr{year}_proposal-and-interventions_hybrid_with-legend.png`
+`{site}_{scenario}_yr{year}_proposal-and-interventions_with-legend.png`
 
 ## Flags reference
 
@@ -120,7 +120,7 @@ Camera presets per site are in `render_forest_size_views.py` → `CAMERAS` dict.
 | `--scenario` | `positive`, `trending`, `baseline`, or `all` |
 | `--years` | Space-separated year list |
 | `--output-mode` | `validation` (use this) |
-| `--hybrid-only` | Skip non-hybrid render variants |
+| `--also-families-only` | Additionally render the flat `proposal-families-only` variant |
 | `--model-base-y` | Shared vertical alignment (use `1170`) |
 | `--target-model-width` | Shared width normalisation (use `1757`) |
 

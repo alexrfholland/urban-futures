@@ -262,6 +262,7 @@ def scenario_bioenvelope_map_to_int_simple(iso_surface: pv.PolyData) -> pv.PolyD
         "footprint-depaved": 5,
         "livingFacade": 6,
         "greenRoof": 7,
+        "footprint-depaved-connected": 8,
     }
     simplified_map = {
         "brownRoof": 2,

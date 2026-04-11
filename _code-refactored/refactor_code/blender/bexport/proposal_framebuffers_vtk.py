@@ -38,11 +38,11 @@ from refactor_code.blender.bexport.proposal_framebuffers import DEFAULT_OUTPUT_C
 
 
 VTK_PROPOSAL_FAMILIES = [
-    ("proposal-decay", "proposal_decayV4", "proposal_decayV4_intervention"),
-    ("proposal-release-control", "proposal_release_controlV4", "proposal_release_controlV4_intervention"),
-    ("proposal-recruit", "proposal_recruitV4", "proposal_recruitV4_intervention"),
-    ("proposal-colonise", "proposal_coloniseV4", "proposal_coloniseV4_intervention"),
-    ("proposal-deploy-structure", "proposal_deploy_structureV4", "proposal_deploy_structureV4_intervention"),
+    ("proposal-decay", "proposal_decay", "proposal_decay_intervention"),
+    ("proposal-release-control", "proposal_release_control", "proposal_release_control_intervention"),
+    ("proposal-recruit", "proposal_recruit", "proposal_recruit_intervention"),
+    ("proposal-colonise", "proposal_colonise", "proposal_colonise_intervention"),
+    ("proposal-deploy-structure", "proposal_deploy_structure", "proposal_deploy_structure_intervention"),
 ]
 
 

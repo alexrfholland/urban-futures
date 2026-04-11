@@ -27,3 +27,23 @@ COLONISE_PARTIAL_ENVELOPE = "roughen-envelope"
 # -- Release Control ---------------------------------------------------------
 RELEASECONTROL_FULL = "eliminate-canopy-pruning"
 RELEASECONTROL_PARTIAL = "reduce-canopy-pruning"
+
+
+# -- Intervention support level ---------------------------------------------
+# Maps each intervention to 'full' or 'partial'. Used by the proposal stream
+# graph plotter to drive opacity (partials rendered at 50% opacity).
+INTERVENTION_SUPPORT = {
+    DECAY_FULL: "full",
+    DECAY_PARTIAL: "partial",
+    RELEASECONTROL_FULL: "full",
+    RELEASECONTROL_PARTIAL: "partial",
+    RECRUIT_FULL: "full",
+    RECRUIT_PARTIAL: "partial",
+    COLONISE_FULL_GROUND: "full",
+    COLONISE_FULL_ENVELOPE: "full",
+    COLONISE_PARTIAL_ENVELOPE: "partial",
+    DEPLOY_FULL_POLE: "full",
+    DEPLOY_FULL_LOG: "full",
+    DEPLOY_FULL_UPGRADE: "full",
+    DEPLOY_GROUND_DEADWOOD: "full",
+}
