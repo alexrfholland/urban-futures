@@ -116,9 +116,14 @@ def upload_child(*, project_dir: Path, local_root: Path, remote_root: Path, chil
 
 
 def download_child(*, project_dir: Path, local_root: Path, remote_root: Path, child: str, dry_run: bool) -> None:
-    local_child = local_root / child
+    # Temporary repo-local workaround:
+    # `mediafluxsync download-project` currently preserves the remote tail and
+    # does not expose `--exclude-parent` on download, so downloading
+    # `.../output` into `<sim_root>/output` produces `<sim_root>/output/output`.
+    # Until the shared package supports symmetric download exclusion, download
+    # into the parent sim root and let the binary materialize the child folder.
     if not dry_run:
-        local_child.mkdir(parents=True, exist_ok=True)
+        local_root.mkdir(parents=True, exist_ok=True)
     command = [
         sys.executable,
         "-m",
@@ -128,7 +133,7 @@ def download_child(*, project_dir: Path, local_root: Path, remote_root: Path, ch
         "--project-dir",
         str(project_dir),
         "--out",
-        str(local_child),
+        str(local_root),
     ]
     if dry_run:
         command.append("--dry-run")

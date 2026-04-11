@@ -1,5 +1,26 @@
 # Mediaflux Sync Contract
 
+## Temporary Download Workaround
+
+Until the shared `mediafluxsync` package supports `--exclude-parent` for
+`download-project`, simulation downloads in this repo use a temporary
+workaround.
+
+Current temporary behavior:
+
+- remote child paths such as `pipeline/<sim_root>/simulation_outputs/output`
+  are downloaded into the parent local run root
+- the download binary recreates the `output/` tail locally
+
+This is temporary.
+
+When `mediafluxsync` supports download-side `--exclude-parent`, the intended
+steady-state behavior is:
+
+- download remote `.../output`
+- target local `<sim_root>/output`
+- pass `--exclude-parent`
+
 This note is the working contract for how simulation outputs, Blender v2 EXR
 families, and compositor runs should relate to each other locally and on
 Mediaflux.

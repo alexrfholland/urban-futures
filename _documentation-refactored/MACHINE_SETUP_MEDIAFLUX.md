@@ -1,5 +1,29 @@
 # Machine Setup For Mediaflux And Local Paths
 
+## Temporary Download Workaround
+
+Until the shared `mediafluxsync` package supports `--exclude-parent` on
+`download-project`, this repo uses a temporary simulation-download workaround.
+
+Current behavior in this repo:
+
+- `sim_mediaflux_sync download <sim_root>` downloads into the parent
+  `<sim_root>/` directory
+- the Mediaflux download binary then recreates `output/`, `temp/`, or
+  `comparison/` beneath that root
+
+Why:
+
+- downloading `pipeline/<sim_root>/simulation_outputs/output` directly into
+  local `<sim_root>/output/` currently produces `output/output/...`
+
+Once `mediafluxsync` supports download-side `--exclude-parent`, this repo
+should switch back to the symmetric form:
+
+- remote `.../output`
+- local target `<sim_root>/output`
+- explicit `--exclude-parent`
+
 This note is repo-specific.
 
 Do not use it as a replacement for the shared `mediafluxsync` setup workflow.
