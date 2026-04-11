@@ -23,8 +23,8 @@ Use this together with:
   - `sim/voxel`
   - `outputs/stats`
   - `outputs/report`
-- active Blender export prep now lives under `_code-refactored/refactor_code/blender/bexport`
-- active Blender v2 code now lives under `_code-refactored/refactor_code/blender/blenderv2`
+- active Blender export prep now lives under `_futureSim_refactored/blender/bexport`
+- active Blender v2 code now lives under `_futureSim_refactored/blender/blenderv2`
 - active legacy sim helpers were moved out of `final/` into:
   - `sim/voxel/voxel_a_voxeliser.py`
   - `sim/voxel/voxel_a_rotate_resource_structures.py`
@@ -33,7 +33,7 @@ Use this together with:
 - active Blender export helper was moved out of `final/` into:
   - `blender/bexport/bexport_f_vtk_to_ply_surfaces.py`
 - imports were updated so the live sim runtime no longer depends on `final/` for active execution
-- `tree_processing` now lives in `_code-refactored/refactor_code/input_processing/tree_processing`
+- `tree_processing` now lives in `_futureSim_refactored/input_processing/tree_processing`
 - three recruit zone masks (`scenario_nodeRewildRecruitZone`, `scenario_underCanopyRecruitZone`, `scenario_rewildGroundRecruitZone`) computed centrally in `calculate_under_node_treatment_status()`
 - `recruit_mechanism` now uses specific values (`node-rewild`, `under-canopy`, `ground`) instead of the previous `node` / `buffer-feature` / `rewild-ground`
 - recruit telemetry CSV with per-pulse zone/density/occupancy tracking
@@ -57,9 +57,9 @@ Use this together with:
 
 Confirmed in:
 
-- `_code-refactored/refactor_code/sim/run/run_full_v3_batch.py`
-- `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
-- `_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py`
+- `_futureSim_refactored/sim/run/run_full_v3_batch.py`
+- `_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
+- `_futureSim_refactored/sim/generate_interim_state_data/engine_v3.py`
 - `AGENTS.md`
 
 ### `nodeDF` vs `treeDF` / `logDF` / `poleDF`
@@ -99,7 +99,7 @@ Each pulse writes per-type rows to `{site}_{scenario}_recruit_telemetry.csv` wit
 
 ### Run Log
 
-Persistent CSV at `_data-refactored/run_log.csv` (columns: timestamp, name, output_root, description). Appended by the batch runner on every run. `refactor_code.paths.refactor_run_output_root()` falls back to the last logged root when `REFACTOR_RUN_OUTPUT_ROOT` is not set.
+Persistent CSV at `_data-refactored/run_log.csv` (columns: timestamp, name, output_root, description). Appended by the batch runner on every run. `_futureSim_refactored.paths.refactor_run_output_root()` falls back to the last logged root when `REFACTOR_RUN_OUTPUT_ROOT` is not set.
 
 ### Debug Recruit Renderer
 
@@ -120,8 +120,8 @@ Explicit env vars used:
 
 Validated commands:
 
-1. `uv run python _code-refactored/refactor_code/sim/run/run_full_v3_batch.py --node-only --multiple-agent --sites trimmed-parade --scenarios positive --years 0 --voxel-size 1`
-2. `uv run python _code-refactored/refactor_code/sim/run/run_full_v3_batch.py --vtk-only --multiple-agent --sites trimmed-parade --scenarios positive --years 0 --voxel-size 1`
+1. `uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py --node-only --multiple-agent --sites trimmed-parade --scenarios positive --years 0 --voxel-size 1`
+2. `uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py --vtk-only --multiple-agent --sites trimmed-parade --scenarios positive --years 0 --voxel-size 1`
 
 Observed result:
 

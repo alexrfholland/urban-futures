@@ -5,12 +5,12 @@ contract.
 
 Use it alongside:
 
-- `D:\2026 Arboreal Futures\urban-futures\_code-refactored\refactor_code\blenderv2\bV2_scene_contract.py`
-- `D:\2026 Arboreal Futures\urban-futures\_code-refactored\refactor_code\blenderv2\bV2_setup_render_outputs.py`
+- `D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blenderv2\bV2_scene_contract.py`
+- `D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blenderv2\bV2_setup_render_outputs.py`
 
 The old `v1.5` reference contract is:
 
-- `D:\2026 Arboreal Futures\urban-futures\final\_code-refactored\blender\timeline\TIMELINE_SCENE_TEMPLATE.md`
+- `D:\2026 Arboreal Futures\urban-futures\final\_futureSim_refactored\blender\timeline\TIMELINE_SCENE_TEMPLATE.md`
 
 ## Current bV2 output pattern
 

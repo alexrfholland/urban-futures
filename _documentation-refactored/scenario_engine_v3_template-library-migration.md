@@ -19,8 +19,8 @@ The working tree was not clean when this note was written.
 
 Modified files already present at this checkpoint:
 
-- `_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py`
-- `_code-refactored/refactor_code/input_processing/tree_processing/build_tree_variants.py`
+- `_futureSim_refactored/sim/generate_interim_state_data/engine_v3.py`
+- `_futureSim_refactored/input_processing/tree_processing/build_tree_variants.py`
 - `_documentation-refactored/appendix/appendix-g/recruit and mortality notes.md`
 
 ### Current template-library naming
@@ -82,7 +82,7 @@ The migration is now applied in the current working tree:
 
 Primary runtime loader:
 
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/a_resource_distributor_dataframes.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/a_resource_distributor_dataframes.py`
 
 Current load order there is:
 
@@ -94,20 +94,20 @@ Current load order there is:
 
 Primary variant builder:
 
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/build_tree_variants.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/build_tree_variants.py`
 
 ### Direct references found for `combined_templateDF.pkl`
 
 Runtime / builder references:
 
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/a_resource_distributor_dataframes.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/build_tree_variants.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/combined_tree_manager.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/combine_edit_individual_trees.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/aa_tree_helper_functions.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/combined_voxelise_dfs.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/combine_resource_treeMeshGenerator.py`
-- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/bexport/vtk_to_ply.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/a_resource_distributor_dataframes.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/build_tree_variants.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/combined_tree_manager.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/combine_edit_individual_trees.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/aa_tree_helper_functions.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/combined_voxelise_dfs.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/combine_resource_treeMeshGenerator.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/bexport/vtk_to_ply.py`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/stanislav/predictions.py`
 
 Documentation references also exist and must be updated after the code/path migration.

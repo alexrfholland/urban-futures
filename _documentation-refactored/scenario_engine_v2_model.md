@@ -6,7 +6,7 @@ For current status, verification, and open issues, see [scenario_engine_v2_statu
 
 ## Runtime Position
 
-The v2 engine lives in [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py).
+The v2 engine lives in [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py).
 
 [final/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py) is now a compatibility wrapper around that engine.
 
@@ -112,7 +112,7 @@ Note: translocated fallen logs in `log_df` may fit better under Proposal-Deploy-
 
 - `lifecycle_state`
 
-`lifecycle_state` is still referenced in [_code-refactored/refactor_code/scenario/validation.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/validation.py), so that validation path should derive it from `size` rather than treat it as an independent state field.
+`lifecycle_state` is still referenced in [_futureSim_refactored/scenario/validation.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/validation.py), so that validation path should derive it from `size` rather than treat it as an independent state field.
 
 ## Preflight
 

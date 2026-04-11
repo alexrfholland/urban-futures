@@ -8,9 +8,9 @@ import pyvista as pv
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+sys.path.insert(0, str(REPO_ROOT / "_futureSim_refactored"))
 
-from refactor_code.paths import hook_baseline_terrain_ply_path, hook_baseline_terrain_vtk_path
+from _futureSim_refactored.paths import hook_baseline_terrain_ply_path, hook_baseline_terrain_vtk_path
 
 DEFAULT_SITE = os.environ.get("B2026_BASELINE_SITE", "city")
 DEFAULT_VOXEL_SIZE = int(os.environ.get("B2026_BASELINE_VOXEL_SIZE", "1"))

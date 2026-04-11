@@ -14,7 +14,7 @@ If a script is writing into the old v1 roots by default, it is not following can
 
 ## Runtime / Entry Point
 
-- Canonical engine core is [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py).
+- Canonical engine core is [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py).
 - [final/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py) is only a compatibility wrapper.
 - Canonical orchestration goes through [final/a_scenario_manager.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_manager.py).
 

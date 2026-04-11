@@ -2,8 +2,8 @@
 
 Path note after the v4 restructure:
 
-- active `blenderv2` code now lives under `_code-refactored/refactor_code/blenderv2`
-- older references in this note to `final/_code-refactored/blender/timeline` are pre-v4 paths for the same code now under `_code-refactored/refactor_code/blender/blenderv2/timeline`
+- active `blenderv2` code now lives under `_futureSim_refactored/blenderv2`
+- older references in this note to `final/_futureSim_refactored/blender/timeline` are pre-v4 paths for the same code now under `_futureSim_refactored/blender/blenderv2/timeline`
 
 ## bV2 conventions
 
@@ -17,7 +17,7 @@ Path note after the v4 restructure:
 
 ### 2. Locations
 
-- reusable code lives under [\_code-refactored](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored)
+- reusable code lives under [\_futureSim_refactored](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored)
 - reusable docs live under [\_documentation-refactored/blenderv2](/d:/2026%20Arboreal%20Futures/urban-futures/_documentation-refactored/blenderv2)
 - the current production EXR / AOV contract note is [bV2_exr_aov_contract.md](/d:/2026%20Arboreal%20Futures/urban-futures/_documentation-refactored/blenderv2/bV2_exr_aov_contract.md)
 - reusable template/data assets live under [\_data-refactored](/d:/2026%20Arboreal%20Futures/urban-futures/_data-refactored)
@@ -70,11 +70,11 @@ The `bV2_*` scripts should:
 
 ### Implemented now
 
-- [bV2_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_scene_contract.py)
+- [bV2_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored/blender/blenderv2/bV2_scene_contract.py)
   - canonical names, materials, node groups, view layers, AOVs, site contracts, and naming helpers
-- [bV2_init_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_init_scene.py)
+- [bV2_init_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored/blender/blenderv2/bV2_init_scene.py)
   - scene shell creation, source asset cloning, view-layer creation, AOV reset, scene metadata, and semantic collection exclusion
-- [bV2_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_build_instancers.py)
+- [bV2_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored/blender/blenderv2/bV2_build_instancers.py)
   - single-state and timeline instancer build
   - timeline dataframe clipping/splicing before translation
   - `source-year` stamping
@@ -102,7 +102,7 @@ Outputs currently live under:
 
 ### Important current implementation notes
 
-- timeline strip spacing is controlled by `TIMELINE_OFFSET_STEP = 5.0` in [bV2_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_build_instancers.py)
+- timeline strip spacing is controlled by `TIMELINE_OFFSET_STEP = 5.0` in [bV2_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored/blender/blenderv2/bV2_build_instancers.py)
 - timeline dataframe assembly is done in pandas before Blender object creation
 - `city` and `trimmed-parade` currently offset on `Y`
 - `uni` currently offsets on `X`
@@ -305,7 +305,7 @@ Examples:
 
 ## Existing v1.5 refactor
 
-The current v1.5 Blender refactor lives in [final/_code-refactored/blender/timeline](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline).
+The current v1.5 Blender refactor lives in [final/_futureSim_refactored/blender/timeline](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline).
 
 This is the stack we have been using to generate the current timeline and single-state scenes. It already has a public `unified` surface, but the architecture is still mixed:
 
@@ -320,48 +320,48 @@ The important practical point for `blenderv2` is that v1.5 is not a clean from-s
 
 ### Public entry flow
 
-1. [b2026_unified_build_template.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_template.py)
+1. [b2026_unified_build_template.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_template.py)
    - opens the source template blend
    - chooses `timeline` or `single_state`
    - prepares the collection shell, view layers, materials, world, and approved camera
-2. [b2026_unified_build_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_scene.py)
+2. [b2026_unified_build_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_scene.py)
    - optional template build when `B2026_UNIFIED_BUILD_TEMPLATE=1`
    - runs instancers
    - runs bioenvelopes
    - runs world rebuild
    - applies single-state post-build layer setup when needed
    - runs validation by default
-3. [b2026_unified_setup_render.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_setup_render.py)
+3. [b2026_unified_setup_render.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_setup_render.py)
    - restores render materials, AOV/passes, camera, mist, and compositor setup
-4. [b2026_unified_render_workbench_view_layers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_render_workbench_view_layers.py)
+4. [b2026_unified_render_workbench_view_layers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_render_workbench_view_layers.py)
    - fast workbench QA renders per view layer
-5. [b2026_unified_render_exrs.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_render_exrs.py)
+5. [b2026_unified_render_exrs.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_render_exrs.py)
    - production multilayer EXR render path
 
 ### What `b2026_unified_build_scene.py` actually runs
 
-1. [b2026_unified_build_template.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_template.py) if template prep is enabled
-2. [b2026_unified_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_instancers.py)
-   - delegates to [b2026_timeline_instancer.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_instancer.py)
-3. [b2026_unified_build_bioenvelopes.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_bioenvelopes.py)
-   - delegates to [b2026_timeline_bioenvelopes.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_bioenvelopes.py)
-4. [b2026_unified_build_world.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_world.py)
-   - delegates to [b2026_timeline_rebuild_world_year_attrs.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_rebuild_world_year_attrs.py)
-5. [b2026_timeline_generate_single_state.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_generate_single_state.py)
+1. [b2026_unified_build_template.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_template.py) if template prep is enabled
+2. [b2026_unified_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_instancers.py)
+   - delegates to [b2026_timeline_instancer.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_instancer.py)
+3. [b2026_unified_build_bioenvelopes.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_bioenvelopes.py)
+   - delegates to [b2026_timeline_bioenvelopes.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_bioenvelopes.py)
+4. [b2026_unified_build_world.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_world.py)
+   - delegates to [b2026_timeline_rebuild_world_year_attrs.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_rebuild_world_year_attrs.py)
+5. [b2026_timeline_generate_single_state.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_generate_single_state.py)
    - only for the single-state post-build view-layer contract
-6. [b2026_unified_validate_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_validate_scene.py)
+6. [b2026_unified_validate_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_validate_scene.py)
 
 ### Core support files
 
-- [b2026_unified_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_scene_contract.py)
+- [b2026_unified_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_scene_contract.py)
   - current public contract for naming, view layers, expected collections, expected instancer specs, and validation expectations
-- [b2026_unified_runtime.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_runtime.py)
+- [b2026_unified_runtime.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_runtime.py)
   - utility layer for env flags and local-script execution
-- [b2026_timeline_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_scene_contract.py)
+- [b2026_timeline_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_scene_contract.py)
   - older contract/naming layer still used by implementation scripts
-- [b2026_timeline_scene_setup.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_scene_setup.py)
+- [b2026_timeline_scene_setup.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_scene_setup.py)
   - scene shell and view-layer setup helper functions
-- [b2026_timeline_layout.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_layout.py)
+- [b2026_timeline_layout.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_layout.py)
   - site specs, bundle resolution, timeline strip positions, and dataframe assembly
 
 ### Current mode split in v1.5
@@ -369,10 +369,10 @@ The important practical point for `blenderv2` is that v1.5 is not a clean from-s
 - `single_state`
   - one year only
   - still uses the same heavy instancer, bioenvelope, and world scripts
-  - adds a post-build layer-contract pass through [b2026_timeline_generate_single_state.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_generate_single_state.py)
+  - adds a post-build layer-contract pass through [b2026_timeline_generate_single_state.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_generate_single_state.py)
 - `timeline`
   - five years merged into timeline strips
-  - uses [b2026_timeline_layout.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_layout.py) to preassemble multi-year dataframes before the instancer/world build stages
+  - uses [b2026_timeline_layout.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_layout.py) to preassemble multi-year dataframes before the instancer/world build stages
 
 ### Current v1.5 strengths
 
@@ -385,7 +385,7 @@ The important practical point for `blenderv2` is that v1.5 is not a clean from-s
 ### Current v1.5 limitations
 
 - the public layer is still too wrapper-heavy
-- instancer logic is still monolithic in [b2026_timeline_instancer.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_instancer.py)
+- instancer logic is still monolithic in [b2026_timeline_instancer.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_instancer.py)
 - bioenvelope and world build logic are still legacy-heavy
 - the `street` / `uni` alias history is still present in v1.5 and should not be carried forward into `blenderv2`
 - source templates and generated outputs are not yet organized under the `_...-refactored` roots the way we want for `blenderv2`
@@ -394,43 +394,43 @@ The important practical point for `blenderv2` is that v1.5 is not a clean from-s
 
 ### Public v1.5 entrypoints
 
-- [b2026_unified_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_scene_contract.py)
-- [b2026_unified_scene_setup.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_scene_setup.py)
-- [b2026_unified_build_template.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_template.py)
-- [b2026_unified_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_instancers.py)
-- [b2026_unified_build_bioenvelopes.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_bioenvelopes.py)
-- [b2026_unified_build_world.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_world.py)
-- [b2026_unified_build_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_build_scene.py)
-- [b2026_unified_setup_render.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_setup_render.py)
-- [b2026_unified_render_workbench_view_layers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_render_workbench_view_layers.py)
-- [b2026_unified_render_exrs.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_render_exrs.py)
-- [b2026_unified_validate_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_validate_scene.py)
-- [b2026_unified_runtime.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_unified_runtime.py)
+- [b2026_unified_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_scene_contract.py)
+- [b2026_unified_scene_setup.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_scene_setup.py)
+- [b2026_unified_build_template.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_template.py)
+- [b2026_unified_build_instancers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_instancers.py)
+- [b2026_unified_build_bioenvelopes.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_bioenvelopes.py)
+- [b2026_unified_build_world.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_world.py)
+- [b2026_unified_build_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_build_scene.py)
+- [b2026_unified_setup_render.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_setup_render.py)
+- [b2026_unified_render_workbench_view_layers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_render_workbench_view_layers.py)
+- [b2026_unified_render_exrs.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_render_exrs.py)
+- [b2026_unified_validate_scene.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_validate_scene.py)
+- [b2026_unified_runtime.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_unified_runtime.py)
 
 ### Heavy implementation files still carrying most of the build logic
 
-- [b2026_timeline_build_template_from_single_state.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_build_template_from_single_state.py)
-- [b2026_timeline_instancer.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_instancer.py)
-- [b2026_timeline_bioenvelopes.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_bioenvelopes.py)
-- [b2026_timeline_rebuild_world_year_attrs.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_rebuild_world_year_attrs.py)
-- [b2026_timeline_render_lightweight_isolated_exrs_generic.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_render_lightweight_isolated_exrs_generic.py)
-- [b2026_timeline_render_workbench_view_layers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_render_workbench_view_layers.py)
-- [b2026_timeline_generate_single_state.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_generate_single_state.py)
+- [b2026_timeline_build_template_from_single_state.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_build_template_from_single_state.py)
+- [b2026_timeline_instancer.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_instancer.py)
+- [b2026_timeline_bioenvelopes.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_bioenvelopes.py)
+- [b2026_timeline_rebuild_world_year_attrs.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_rebuild_world_year_attrs.py)
+- [b2026_timeline_render_lightweight_isolated_exrs_generic.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_render_lightweight_isolated_exrs_generic.py)
+- [b2026_timeline_render_workbench_view_layers.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_render_workbench_view_layers.py)
+- [b2026_timeline_generate_single_state.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_generate_single_state.py)
 
 ### Shared helpers and contracts behind v1.5
 
-- [b2026_timeline_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_scene_contract.py)
-- [b2026_timeline_scene_setup.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_scene_setup.py)
-- [b2026_timeline_layout.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_layout.py)
-- [b2026_timeline_runtime_flags.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/b2026_timeline_runtime_flags.py)
+- [b2026_timeline_scene_contract.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_scene_contract.py)
+- [b2026_timeline_scene_setup.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_scene_setup.py)
+- [b2026_timeline_layout.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_layout.py)
+- [b2026_timeline_runtime_flags.py](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/b2026_timeline_runtime_flags.py)
 
 ### Current v1.5 documentation
 
-- [AGENTS.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/AGENTS.md)
-- [TIMELINE_RESTRUCTURE_PLAN.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/TIMELINE_RESTRUCTURE_PLAN.md)
-- [TIMELINE_RUNBOOK.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/TIMELINE_RUNBOOK.md)
-- [TIMELINE_SCENE_TEMPLATE.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/TIMELINE_SCENE_TEMPLATE.md)
-- [VIEWS.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline/VIEWS.md)
+- [AGENTS.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/AGENTS.md)
+- [TIMELINE_RESTRUCTURE_PLAN.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/TIMELINE_RESTRUCTURE_PLAN.md)
+- [TIMELINE_RUNBOOK.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/TIMELINE_RUNBOOK.md)
+- [TIMELINE_SCENE_TEMPLATE.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/TIMELINE_SCENE_TEMPLATE.md)
+- [VIEWS.md](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline/VIEWS.md)
 
 ### Current v1.5 source blends and working assets
 
@@ -442,18 +442,18 @@ The important practical point for `blenderv2` is that v1.5 is not a clean from-s
 
 ### v1.5 data/output locations currently in use
 
-- working repo code: [final/_code-refactored/blender/timeline](/d:/2026%20Arboreal%20Futures/urban-futures/final/_code-refactored/blender/timeline)
+- working repo code: [final/_futureSim_refactored/blender/timeline](/d:/2026%20Arboreal%20Futures/urban-futures/final/_futureSim_refactored/blender/timeline)
 - staged sim tweak bundle: [simv3recruitanddecaytweaks](/e:/2026%20Arboreal%20Futures/blender/inputs/v3%20tests/simv3recruitanddecaytweaks)
 - generated validation outputs: [urban-futures_validation](/e:/2026%20Arboreal%20Futures/urban-futures_validation)
 
 ### Current bV2 bundle preference
 
 - `blenderv2` should read from the local temp bundle root, not directly from the network share
-- shared settings now live in [bV2_paths.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_paths.py):
+- shared settings now live in [bV2_paths.py](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored/blender/blenderv2/bV2_paths.py):
   - `BLENDER_USE_REMOTE`
   - `BLENDER_TEMP_REPO`
   - `BLENDER_REPO_ROOT`
-- sync helper now lives in [bV2_sync_inputs.py](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored/refactor_code/blender/blenderv2/bV2_sync_inputs.py)
+- sync helper now lives in [bV2_sync_inputs.py](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored/blender/blenderv2/bV2_sync_inputs.py)
 - current intended flow:
   - copy from `BLENDER_REPO_ROOT` (currently the mapped `Z:` drive location)
   - into `BLENDER_TEMP_REPO`
@@ -466,6 +466,6 @@ When we rebuild this as `blenderv2`, the goal is not to rename the existing v1.5
 
 - `uni` used consistently instead of the `street` alias
 - docs under [\_documentation-refactored/blenderv2](/d:/2026%20Arboreal%20Futures/urban-futures/_documentation-refactored/blenderv2)
-- code under a new Blender v2 area in [\_code-refactored](/d:/2026%20Arboreal%20Futures/urban-futures/_code-refactored)
+- code under a new Blender v2 area in [\_futureSim_refactored](/d:/2026%20Arboreal%20Futures/urban-futures/_futureSim_refactored)
 - data/templates under a matching Blender v2 area in [\_data-refactored](/d:/2026%20Arboreal%20Futures/urban-futures/_data-refactored)
 - outputs allowed on `E:` when storage pressure makes that necessary

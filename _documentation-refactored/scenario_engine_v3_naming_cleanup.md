@@ -52,7 +52,7 @@ Note:
 
 ### Parameter Keys
 
-Implemented in [params_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/setup/params_v3.py):
+Implemented in [params_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/setup/params_v3.py):
 
 - `senescingThreshold` -> `lifecycle_senescing_ramp_start`
 - `ageInPlaceThreshold` -> `minimal-tree-support-threshold`
@@ -79,27 +79,27 @@ document are used directly.
 
 Core engine / schema:
 
-- [_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py)
-- [_code-refactored/refactor_code/sim/setup/params_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/setup/params_v3.py)
-- [_code-refactored/refactor_code/sim/baseline/baseline_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/baseline/baseline_v3.py)
-- [_code-refactored/refactor_code/outputs/stats/validation.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/stats/validation.py)
+- [_futureSim_refactored/sim/generate_interim_state_data/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/generate_interim_state_data/engine_v3.py)
+- [_futureSim_refactored/sim/setup/params_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/setup/params_v3.py)
+- [_futureSim_refactored/sim/baseline/baseline_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/baseline/baseline_v3.py)
+- [_futureSim_refactored/outputs/stats/validation.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/outputs/stats/validation.py)
 
 Scenario prep / batch / VTK:
 
-- [_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py)
-- [_code-refactored/refactor_code/sim/run/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/run/run_full_v3_batch.py)
-- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py)
+- [_futureSim_refactored/sim/setup/a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/setup/a_scenario_initialiseDS.py)
+- [_futureSim_refactored/sim/run/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/run/run_full_v3_batch.py)
+- [_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py)
 
 Stats / proposal readers:
 
-- [_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py)
-- [_code-refactored/refactor_code/outputs/report/a_info_proposal_interventions.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/report/a_info_proposal_interventions.py)
+- [_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py)
+- [_futureSim_refactored/outputs/report/a_info_proposal_interventions.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/outputs/report/a_info_proposal_interventions.py)
 
 Direct VTK / Blender helpers:
 
-- [_code-refactored/refactor_code/blender/bexport/export_rewilded_ground.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/bexport/export_rewilded_ground.py)
-- [_code-refactored/refactor_code/blender/bexport/rewilded_surface_shell.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/blender/bexport/rewilded_surface_shell.py)
-- [_code-refactored/refactor_code/outputs/stats/inspect_vtk.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/outputs/stats/inspect_vtk.py)
+- [_futureSim_refactored/blender/bexport/export_rewilded_ground.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/bexport/export_rewilded_ground.py)
+- [_futureSim_refactored/blender/bexport/rewilded_surface_shell.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/bexport/rewilded_surface_shell.py)
+- [_futureSim_refactored/outputs/stats/inspect_vtk.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/outputs/stats/inspect_vtk.py)
 
 ## Deliberate Non-Goals
 

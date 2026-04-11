@@ -13,14 +13,14 @@ Current v4 branch start:
 ## Purpose
 
 This pass moves the active v3 simulation, baseline, tree-library, Blender-export,
-and Blender v2 code into `_code-refactored` and consolidates active input/output
+and Blender v2 code into `_futureSim_refactored` and consolidates active input/output
 path routing under `_data-refactored`.
 
 The goal is clarity, not compatibility.
 
 After this pass:
 
-- the live v3 stack is in `_code-refactored/refactor_code`
+- the live v3 stack is in `_futureSim_refactored`
 - active tree-template inputs stay in `_data-refactored/model-inputs`
 - active generated-state roots stay in `_data-refactored/model-outputs`
 - old `final/` paths are historical references only
@@ -36,40 +36,40 @@ Old root:
 
 New roots:
 
-- `_code-refactored/refactor_code/sim/run/`
-- `_code-refactored/refactor_code/sim/setup/`
-- `_code-refactored/refactor_code/sim/generate_interim_state_data/`
-- `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/`
-- `_code-refactored/refactor_code/sim/baseline/`
-- `_code-refactored/refactor_code/sim/voxel/`
-- `_code-refactored/refactor_code/outputs/stats/`
-- `_code-refactored/refactor_code/outputs/report/`
+- `_futureSim_refactored/sim/run/`
+- `_futureSim_refactored/sim/setup/`
+- `_futureSim_refactored/sim/generate_interim_state_data/`
+- `_futureSim_refactored/sim/generate_vtk_and_nodeDFs/`
+- `_futureSim_refactored/sim/baseline/`
+- `_futureSim_refactored/sim/voxel/`
+- `_futureSim_refactored/outputs/stats/`
+- `_futureSim_refactored/outputs/report/`
 
 Moved live files:
 
-- `final/run_full_v3_batch.py` -> `_code-refactored/refactor_code/sim/run/run_full_v3_batch.py`
-- `final/run_saved_v3_vtks.py` -> `_code-refactored/refactor_code/sim/run/run_saved_v3_vtks.py`
-- `final/run_all_simulations.py` -> `_code-refactored/refactor_code/sim/run/run_all_simulations.py`
-- `final/a_scenario_initialiseDS.py` -> `_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py`
-- `final/a_scenario_runscenario.py` -> `_code-refactored/refactor_code/sim/generate_interim_state_data/a_scenario_runscenario.py`
-- `final/a_scenario_generateVTKs.py` -> `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
-- `final/a_scenario_urban_elements_count.py` -> `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py`
-- `final/a_scenario_get_baselines.py` -> `_code-refactored/refactor_code/sim/baseline/a_scenario_get_baselines.py`
-- `final/a_scenario_manager.py` -> `_code-refactored/refactor_code/sim/run/a_scenario_manager.py`
-- `final/a_info_gather_capabilities.py` -> `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py`
-- `final/a_info_proposal_interventions.py` -> `_code-refactored/refactor_code/outputs/report/a_info_proposal_interventions.py`
-- `final/a_info_pathway_tracking_graphs.py` -> `_code-refactored/refactor_code/outputs/report/a_info_pathway_tracking_graphs.py`
-- `final/a_info_output_capabilities.py` -> `_code-refactored/refactor_code/outputs/stats/a_info_output_capabilities.py`
-- `final/a_info_debuglog.py` -> `_code-refactored/refactor_code/outputs/stats/a_info_debuglog.py`
-- `final/refresh_indicator_csvs_from_baseline.py` -> `_code-refactored/refactor_code/outputs/stats/refresh_indicator_csvs_from_baseline.py`
-- `final/a_voxeliser.py` -> `_code-refactored/refactor_code/sim/voxel/voxel_a_voxeliser.py`
-- `final/a_rotate_resource_structures.py` -> `_code-refactored/refactor_code/sim/voxel/voxel_a_rotate_resource_structures.py`
-- `final/a_helper_functions.py` -> `_code-refactored/refactor_code/sim/voxel/voxel_a_helper_functions.py`
-- `final/f_SiteCoordinates.py` -> `_code-refactored/refactor_code/sim/voxel/voxel_f_SiteCoordinates.py`
+- `final/run_full_v3_batch.py` -> `_futureSim_refactored/sim/run/run_full_v3_batch.py`
+- `final/run_saved_v3_vtks.py` -> `_futureSim_refactored/sim/run/run_saved_v3_vtks.py`
+- `final/run_all_simulations.py` -> `_futureSim_refactored/sim/run/run_all_simulations.py`
+- `final/a_scenario_initialiseDS.py` -> `_futureSim_refactored/sim/setup/a_scenario_initialiseDS.py`
+- `final/a_scenario_runscenario.py` -> `_futureSim_refactored/sim/generate_interim_state_data/a_scenario_runscenario.py`
+- `final/a_scenario_generateVTKs.py` -> `_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
+- `final/a_scenario_urban_elements_count.py` -> `_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py`
+- `final/a_scenario_get_baselines.py` -> `_futureSim_refactored/sim/baseline/a_scenario_get_baselines.py`
+- `final/a_scenario_manager.py` -> `_futureSim_refactored/sim/run/a_scenario_manager.py`
+- `final/a_info_gather_capabilities.py` -> `_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py`
+- `final/a_info_proposal_interventions.py` -> `_futureSim_refactored/outputs/report/a_info_proposal_interventions.py`
+- `final/a_info_pathway_tracking_graphs.py` -> `_futureSim_refactored/outputs/report/a_info_pathway_tracking_graphs.py`
+- `final/a_info_output_capabilities.py` -> `_futureSim_refactored/outputs/stats/a_info_output_capabilities.py`
+- `final/a_info_debuglog.py` -> `_futureSim_refactored/outputs/stats/a_info_debuglog.py`
+- `final/refresh_indicator_csvs_from_baseline.py` -> `_futureSim_refactored/outputs/stats/refresh_indicator_csvs_from_baseline.py`
+- `final/a_voxeliser.py` -> `_futureSim_refactored/sim/voxel/voxel_a_voxeliser.py`
+- `final/a_rotate_resource_structures.py` -> `_futureSim_refactored/sim/voxel/voxel_a_rotate_resource_structures.py`
+- `final/a_helper_functions.py` -> `_futureSim_refactored/sim/voxel/voxel_a_helper_functions.py`
+- `final/f_SiteCoordinates.py` -> `_futureSim_refactored/sim/voxel/voxel_f_SiteCoordinates.py`
 
 Current note:
 
-- `tree_processing` now lives in `_code-refactored/refactor_code/input_processing/tree_processing/`
+- `tree_processing` now lives in `_futureSim_refactored/input_processing/tree_processing/`
 - the dedicated cleanup pass for that area still remains to be done
 
 ### Tree Library And Template Runtime
@@ -81,22 +81,22 @@ Old roots:
 
 New root:
 
-- `_code-refactored/refactor_code/input_processing/tree_processing/`
+- `_futureSim_refactored/input_processing/tree_processing/`
 
 Moved live files:
 
-- `final/a_resource_distributor_dataframes.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/a_resource_distributor_dataframes.py`
-- `final/tree_processing/aa_tree_helper_functions.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/aa_tree_helper_functions.py`
-- `final/tree_processing/aa_io.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/aa_io.py`
-- `final/tree_processing/adTree_AssignResources.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/adTree_AssignResources.py`
-- `final/tree_processing/combine_edit_individual_trees.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combine_edit_individual_trees.py`
-- `final/tree_processing/combine_resource_treeMeshGenerator.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combine_resource_treeMeshGenerator.py`
-- `final/tree_processing/combined_generateResourceDict.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combined_generateResourceDict.py`
-- `final/tree_processing/combined_redoSnags.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combined_redoSnags.py`
-- `final/tree_processing/combined_tree_manager.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combined_tree_manager.py`
-- `final/tree_processing/combined_voxelise_dfs.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/combined_voxelise_dfs.py`
-- `final/tree_processing/b_generate_utility_pole_and_artificial_tree.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/b_generate_utility_pole_and_artificial_tree.py`
-- `final/tree_processing/a_log_mesh_generator.py` -> `_code-refactored/refactor_code/input_processing/tree_processing/a_log_mesh_generator.py`
+- `final/a_resource_distributor_dataframes.py` -> `_futureSim_refactored/input_processing/tree_processing/a_resource_distributor_dataframes.py`
+- `final/tree_processing/aa_tree_helper_functions.py` -> `_futureSim_refactored/input_processing/tree_processing/aa_tree_helper_functions.py`
+- `final/tree_processing/aa_io.py` -> `_futureSim_refactored/input_processing/tree_processing/aa_io.py`
+- `final/tree_processing/adTree_AssignResources.py` -> `_futureSim_refactored/input_processing/tree_processing/adTree_AssignResources.py`
+- `final/tree_processing/combine_edit_individual_trees.py` -> `_futureSim_refactored/input_processing/tree_processing/combine_edit_individual_trees.py`
+- `final/tree_processing/combine_resource_treeMeshGenerator.py` -> `_futureSim_refactored/input_processing/tree_processing/combine_resource_treeMeshGenerator.py`
+- `final/tree_processing/combined_generateResourceDict.py` -> `_futureSim_refactored/input_processing/tree_processing/combined_generateResourceDict.py`
+- `final/tree_processing/combined_redoSnags.py` -> `_futureSim_refactored/input_processing/tree_processing/combined_redoSnags.py`
+- `final/tree_processing/combined_tree_manager.py` -> `_futureSim_refactored/input_processing/tree_processing/combined_tree_manager.py`
+- `final/tree_processing/combined_voxelise_dfs.py` -> `_futureSim_refactored/input_processing/tree_processing/combined_voxelise_dfs.py`
+- `final/tree_processing/b_generate_utility_pole_and_artificial_tree.py` -> `_futureSim_refactored/input_processing/tree_processing/b_generate_utility_pole_and_artificial_tree.py`
+- `final/tree_processing/a_log_mesh_generator.py` -> `_futureSim_refactored/input_processing/tree_processing/a_log_mesh_generator.py`
 
 ### Tree Library Export Data
 
@@ -122,33 +122,33 @@ Live folders:
 
 Old roots:
 
-- `_code-refactored/refactor_code/blender/`
+- `_futureSim_refactored/blender/`
 - `final/_blender/`
 
 New roots:
 
-- `_code-refactored/refactor_code/blender/bexport/`
-- `_code-refactored/refactor_code/blender/blenderv2/`
+- `_futureSim_refactored/blender/bexport/`
+- `_futureSim_refactored/blender/blenderv2/`
 
 Moved live files:
 
-- `_code-refactored/refactor_code/blender/b_generate_rewilded_envelopes.py` -> `_code-refactored/refactor_code/blender/bexport/export_rewilded_envelopes.py`
-- `_code-refactored/refactor_code/blender/b_generate_rewilded_ground.py` -> `_code-refactored/refactor_code/blender/bexport/export_rewilded_ground.py`
-- `_code-refactored/refactor_code/blender/b_rewilded_surface_shell.py` -> `_code-refactored/refactor_code/blender/bexport/rewilded_surface_shell.py`
-- `final/_blender/a_vtk_to_ply.py` -> `_code-refactored/refactor_code/blender/bexport/vtk_to_ply.py`
-- `final/_blender/a_export_to_ply.py` -> `_code-refactored/refactor_code/blender/bexport/export_to_ply.py`
-- `final/_blender/b_extract_scene.py` -> `_code-refactored/refactor_code/blender/bexport/extract_scene.py`
-- `final/_blender/b_tree_system_importer.py` -> `_code-refactored/refactor_code/blender/bexport/tree_system_importer.py`
-- `final/f_vtk_to_ply_surfaces.py` -> `_code-refactored/refactor_code/blender/bexport/bexport_f_vtk_to_ply_surfaces.py`
+- `_futureSim_refactored/blender/b_generate_rewilded_envelopes.py` -> `_futureSim_refactored/blender/bexport/export_rewilded_envelopes.py`
+- `_futureSim_refactored/blender/b_generate_rewilded_ground.py` -> `_futureSim_refactored/blender/bexport/export_rewilded_ground.py`
+- `_futureSim_refactored/blender/b_rewilded_surface_shell.py` -> `_futureSim_refactored/blender/bexport/rewilded_surface_shell.py`
+- `final/_blender/a_vtk_to_ply.py` -> `_futureSim_refactored/blender/bexport/vtk_to_ply.py`
+- `final/_blender/a_export_to_ply.py` -> `_futureSim_refactored/blender/bexport/export_to_ply.py`
+- `final/_blender/b_extract_scene.py` -> `_futureSim_refactored/blender/bexport/extract_scene.py`
+- `final/_blender/b_tree_system_importer.py` -> `_futureSim_refactored/blender/bexport/tree_system_importer.py`
+- `final/f_vtk_to_ply_surfaces.py` -> `_futureSim_refactored/blender/bexport/bexport_f_vtk_to_ply_surfaces.py`
 
 Moved live folders:
 
-- `final/_code-refactored/blender/timeline/` -> `_code-refactored/refactor_code/blender/blenderv2/timeline/`
-- `final/_code-refactored/blender/city_street/` -> `_code-refactored/refactor_code/blender/blenderv2/city_street/`
+- `final/_futureSim_refactored/blender/timeline/` -> `_futureSim_refactored/blender/blenderv2/timeline/`
+- `final/_futureSim_refactored/blender/city_street/` -> `_futureSim_refactored/blender/blenderv2/city_street/`
 
 ## Paths Cleanup
 
-`_code-refactored/refactor_code/paths.py` now groups live path resolution into:
+`_futureSim_refactored/paths.py` now groups live path resolution into:
 
 1. versioning
 2. site information
@@ -232,7 +232,7 @@ place.
 
 Script:
 
-- `_code-refactored/refactor_code/sim/run/run_full_v3_batch.py`
+- `_futureSim_refactored/sim/run/run_full_v3_batch.py`
 
 Main functions:
 
@@ -263,7 +263,7 @@ Hands off:
 
 Script:
 
-- `_code-refactored/refactor_code/sim/setup/a_scenario_initialiseDS.py`
+- `_futureSim_refactored/sim/setup/a_scenario_initialiseDS.py`
 
 Functions:
 
@@ -285,8 +285,8 @@ Creates:
 
 Scripts:
 
-- `_code-refactored/refactor_code/sim/generate_interim_state_data/a_scenario_runscenario.py`
-- `_code-refactored/refactor_code/sim/generate_interim_state_data/engine_v3.py`
+- `_futureSim_refactored/sim/generate_interim_state_data/a_scenario_runscenario.py`
+- `_futureSim_refactored/sim/generate_interim_state_data/engine_v3.py`
 
 Functions:
 
@@ -329,7 +329,7 @@ Also creates the node-level state those depend on:
 
 Script:
 
-- `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
+- `_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
 
 Main functions:
 
@@ -338,7 +338,7 @@ Main functions:
 
 Dependency script:
 
-- `_code-refactored/refactor_code/sim/voxel/voxel_a_voxeliser.py`
+- `_futureSim_refactored/sim/voxel/voxel_a_voxeliser.py`
   - `integrate_resources_into_xarray(...)`
 
 Inputs:
@@ -440,7 +440,7 @@ For the planned temporary `v4` VTK proposal layer, initialize:
 
 Script:
 
-- `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py`
+- `_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_urban_elements_count.py`
 
 Function:
 
@@ -459,7 +459,7 @@ Creates:
 
 Script:
 
-- `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py`
+- `_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_info_gather_capabilities.py`
 
 Functions:
 
@@ -635,7 +635,7 @@ directly into V4 arrays during voxel integration, bypassing the broken
 
 #### 1. `initialise_and_translate_tree()` — add proposal columns
 
-File: `_code-refactored/refactor_code/input_processing/tree_processing/a_resource_distributor_dataframes.py`
+File: `_futureSim_refactored/input_processing/tree_processing/a_resource_distributor_dataframes.py`
 
 Previously this function only copied `precolonial`, `size`, `control`, `tree_id`,
 etc. from the node row onto template voxels. Now it also copies the 6
@@ -652,14 +652,14 @@ Falls back to `"not-assessed"` / `"none"` if the column is absent on the row.
 
 #### 2. `rename_non_resource_columns()` — exception list
 
-File: `_code-refactored/refactor_code/sim/voxel/voxel_a_voxeliser.py`
+File: `_futureSim_refactored/sim/voxel/voxel_a_voxeliser.py`
 
 Added all 6 V4 proposal array names to the exception list so they pass through
 without getting the `forest_` prefix. They land on `ds` with their V4 names.
 
 #### 3. `generate_vtk()` — pre-initialize V4 arrays on ds
 
-File: `_code-refactored/refactor_code/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
+File: `_futureSim_refactored/sim/generate_vtk_and_nodeDFs/a_scenario_generateVTKs.py`
 
 Before `integrate_resources_into_xarray(...)`, all 10 V4 arrays are initialized
 on `ds` with default values (`"not-assessed"` / `"none"`), split into two groups:
@@ -995,8 +995,8 @@ Scratch root used:
 
 Smoke passes completed:
 
-- `uv run python _code-refactored/refactor_code/sim/run/run_full_v3_batch.py --node-only --multiple-agent --sites trimmed-parade --scenarios positive --years 0 --voxel-size 1`
-- `uv run python _code-refactored/refactor_code/sim/run/run_full_v3_batch.py --vtk-only --multiple-agent --sites trimmed-parade --scenarios positive --years 0 --voxel-size 1`
+- `uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py --node-only --multiple-agent --sites trimmed-parade --scenarios positive --years 0 --voxel-size 1`
+- `uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py --vtk-only --multiple-agent --sites trimmed-parade --scenarios positive --years 0 --voxel-size 1`
 
 Observed result:
 
@@ -1009,7 +1009,7 @@ Observed result:
 
 ## Rule After This Pass
 
-- edit live v3 code in `_code-refactored/refactor_code/...`
+- edit live v3 code in `_futureSim_refactored/...`
 - edit active templates and exports in `_data-refactored/...`
 - do not treat `final/` as the live location for the active v3 stack
 - if an old historical script path breaks, inspect commit `e0af588`

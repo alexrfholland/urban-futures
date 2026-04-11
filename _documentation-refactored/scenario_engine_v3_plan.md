@@ -231,8 +231,8 @@ Do this first.
 Actions:
 
 - add a new engine module:
-  - [_code-refactored/refactor_code/scenario/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v3.py)
-- keep [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py) untouched as the v2 reference
+  - [_futureSim_refactored/scenario/engine_v3.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v3.py)
+- keep [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py) untouched as the v2 reference
 - update the v3 branch wrapper path so [final/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py) delegates to `engine_v3.py`
 
 Reason:
@@ -252,7 +252,7 @@ Actions:
   - `_data-refactored/v3engine_outputs`
   - `_statistics-refactored-v3`
 - do not reuse `final-v2` or `_data-refactored/v2engine_outputs`
-- prefer explicit root overrides first; only generalize [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py) once the v3 root layout is stable
+- prefer explicit root overrides first; only generalize [_futureSim_refactored/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/paths.py) once the v3 root layout is stable
 - set `TREE_TEMPLATE_ROOT` explicitly to the approved canonical variant root before any candidate export or verification run
 
 Reason:

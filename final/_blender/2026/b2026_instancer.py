@@ -13,9 +13,9 @@ from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+sys.path.insert(0, str(REPO_ROOT / "_futureSim_refactored"))
 
-from refactor_code.paths import (
+from _futureSim_refactored.paths import (
     hook_log_ply_library_dir,
     hook_state_nodedf_path,
     hook_tree_ply_library_dir,

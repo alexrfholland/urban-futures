@@ -10,9 +10,9 @@ import pandas as pd
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+sys.path.insert(0, str(REPO_ROOT / "_futureSim_refactored"))
 
-from refactor_code.paths import hook_baseline_terrain_ply_path, hook_baseline_trees_csv_path
+from _futureSim_refactored.paths import hook_baseline_terrain_ply_path, hook_baseline_trees_csv_path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 SOURCE_SCENE_NAME = os.environ.get("B2026_BASELINE_SOURCE_SCENE", "city")

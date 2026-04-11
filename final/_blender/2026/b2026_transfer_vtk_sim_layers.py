@@ -15,9 +15,9 @@ except ImportError:
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+sys.path.insert(0, str(REPO_ROOT / "_futureSim_refactored"))
 
-from refactor_code.paths import hook_state_vtk_latest_path
+from _futureSim_refactored.paths import hook_state_vtk_latest_path
 
 VENV_PYTHON = REPO_ROOT / ".venv" / "bin" / "python"
 CACHE_DIR = REPO_ROOT / "data" / "blender" / "2026" / "vtk_sim_layer_cache"

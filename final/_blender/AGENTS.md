@@ -10,7 +10,7 @@ We are currently doing a limited compatibility-first refactor of the Blender-fac
 - Current scope: the last-mile Blender bundle only, not the full upstream simulation pipeline.
 - Current target: move the canonical Blender bundle to `_data-refactored/...` while preserving the legacy `data/...` tree during transition.
 - Current helper names: `refactored_data_read_path(...)` and `refactored_data_write_path(...)`.
-- Planned refactor areas: `_documentation-refactored/`, `_data-refactored/`, `_code-refactored/`.
+- Planned refactor areas: `_documentation-refactored/`, `_data-refactored/`, `_futureSim_refactored/`.
 - Current hook map: [`_documentation-refactored/blender/blender_output_hooks.md`](../../_documentation-refactored/blender/blender_output_hooks.md)
 
 ## 1. Project Context

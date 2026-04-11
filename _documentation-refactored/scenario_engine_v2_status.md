@@ -2,7 +2,7 @@
 
 ## Quick Description
 
-This work introduces a new path-dependent scenario engine in [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py) and turns [final/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py) into a compatibility wrapper that delegates to it.
+This work introduces a new path-dependent scenario engine in [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py) and turns [final/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py) into a compatibility wrapper that delegates to it.
 
 The main functional changes are:
 
@@ -29,7 +29,7 @@ Important detail:
 
 ### Runtime Path Split
 
-- New engine source of truth: [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py)
+- New engine source of truth: [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py)
 - Compatibility entrypoint: [final/a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_runscenario.py)
 - Scenario orchestration: [final/a_scenario_manager.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_manager.py)
 - VTK generation: [final/a_scenario_generateVTKs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_scenario_generateVTKs.py)
@@ -49,13 +49,13 @@ The temporary `nodeidfix` and `inmemorycheck` roots have now been consolidated i
 - `uni` came forward from the verified `inmemorycheck` run
 - the temporary roots were then removed
 
-The path resolver for this split lives in [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py).
+The path resolver for this split lives in [_futureSim_refactored/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/paths.py).
 
 ## Mechanism Changes In The Code
 
 ### 1. Year 0 Baseline Fix
 
-The year-0 issue described in [AGENTS.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/AGENTS.md) is handled by `_year_zero_state(...)` in [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L839).
+The year-0 issue described in [AGENTS.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/AGENTS.md) is handled by `_year_zero_state(...)` in [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L839).
 
 Effect:
 
@@ -64,7 +64,7 @@ Effect:
 
 ### 2. Path-Dependent Timesteps
 
-`run_timestep(...)` in [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L882) now chains the previous `treeDF` forward through each requested timestep.
+`run_timestep(...)` in [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L882) now chains the previous `treeDF` forward through each requested timestep.
 
 Effect:
 
@@ -80,7 +80,7 @@ The release-control/autonomy model is now split into:
 - `autonomy_years`
 - `control_realized`
 
-These are initialized and normalized in [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L101) and applied in `apply_release_control(...)` at [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L421).
+These are initialized and normalized in [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L101) and applied in `apply_release_control(...)` at [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L421).
 
 Current behavior:
 
@@ -105,11 +105,11 @@ Recruit is now pulse-based and tracks recruit origins using:
 - `recruit_source_id`
 - `recruit_year`
 
-These fields are added in [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L124).
+These fields are added in [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L124).
 
-Occupancy is counted in `_recruit_occupancy_counts(...)` at [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L553).
+Occupancy is counted in `_recruit_occupancy_counts(...)` at [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L553).
 
-Source IDs are picked in `_pick_source_id(...)` at [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L546).
+Source IDs are picked in `_pick_source_id(...)` at [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L546).
 
 Current source logic:
 
@@ -120,7 +120,7 @@ This is a carrying-capacity style cap aligned to the existing code shape rather 
 
 ### 6. Validation Stats / Graph Separation
 
-Validation statistics are now routed through `refactor_statistics_root(...)` in [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py#L49).
+Validation statistics are now routed through `refactor_statistics_root(...)` in [_futureSim_refactored/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/paths.py#L49).
 
 This now applies to:
 
@@ -204,7 +204,7 @@ Important scope detail:
 
 ### 8. Render Test Views
 
-Render test views are now generated from the augmented `state_with_indicators` VTKs using [_code-refactored/refactor_code/scenario/render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/render_forest_size_views.py).
+Render test views are now generated from the augmented `state_with_indicators` VTKs using [_futureSim_refactored/scenario/render_forest_size_views.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/render_forest_size_views.py).
 
 Current behavior:
 
@@ -307,7 +307,7 @@ Effect:
 
 ### Regression / Diff
 
-- compare canonical vs validation outputs with [_code-refactored/refactor_code/scenario/compare_outputs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/compare_outputs.py)
+- compare canonical vs validation outputs with [_futureSim_refactored/scenario/compare_outputs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/compare_outputs.py)
 - use CSV row counts and categorical counts for:
   - `control`
   - `rewilded`
@@ -317,7 +317,7 @@ Effect:
 
 ### Manual Spatial Review
 
-- inspect scenario VTKs with [_code-refactored/refactor_code/scenario/inspect_vtk.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/inspect_vtk.py)
+- inspect scenario VTKs with [_futureSim_refactored/scenario/inspect_vtk.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/inspect_vtk.py)
 - compare `scenario_rewilded`, `scenario_bioEnvelope`, and `forest_control`
 
 ### Downstream Preservation
@@ -331,8 +331,8 @@ Effect:
 ### Confirmed
 
 - Changed modules compile successfully:
-  - [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py)
-  - [_code-refactored/refactor_code/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/paths.py)
+  - [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py)
+  - [_futureSim_refactored/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/paths.py)
   - [final/a_info_proposal_interventions.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_proposal_interventions.py)
   - [final/a_info_pathway_tracking_graphs.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/final/a_info_pathway_tracking_graphs.py)
 
@@ -451,7 +451,7 @@ Current read:
 
 ## Non-Destructive Tree Variant Builder
 
-A new refactor-side variant builder now exists at [build_tree_variants.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/input_processing/tree_processing/build_tree_variants.py).
+A new refactor-side variant builder now exists at [build_tree_variants.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/input_processing/tree_processing/build_tree_variants.py).
 
 Purpose:
 
@@ -859,13 +859,13 @@ Original issue:
 
 - `structureID` is not a persistent tree identity in the exported v2 CSVs
 - it is reassigned from scratch at every saved year in:
-  - [engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L880)
-  - [engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L928)
+  - [engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L880)
+  - [engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L928)
 - new recruits are also created with temporary:
   - `tree_number = -1`
   - `NodeID = -1`
   - `debugNodeID = -1`
-  - in [engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py#L609)
+  - in [engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py#L609)
 
 What this breaks:
 
@@ -967,9 +967,9 @@ Implemented:
   - logs
   - poles
 - helper module:
-  - [_code-refactored/refactor_code/scenario/structure_ids.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/structure_ids.py)
+  - [_futureSim_refactored/scenario/structure_ids.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/structure_ids.py)
 - v2 engine integration:
-  - [_code-refactored/refactor_code/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_code-refactored/refactor_code/scenario/engine_v2.py)
+  - [_futureSim_refactored/scenario/engine_v2.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/engine_v2.py)
 
 Verification:
 

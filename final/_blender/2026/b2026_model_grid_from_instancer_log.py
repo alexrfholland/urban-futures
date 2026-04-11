@@ -8,9 +8,9 @@ from mathutils import Vector
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "_code-refactored"))
+sys.path.insert(0, str(REPO_ROOT / "_futureSim_refactored"))
 
-from refactor_code.paths import hook_log_ply_library_dir, hook_tree_ply_library_dir
+from _futureSim_refactored.paths import hook_log_ply_library_dir, hook_tree_ply_library_dir
 
 DEFAULT_LOG_FILEPATH = REPO_ROOT / "data/blender/2026/logs/instancer_city_180_trending_20260323_024211.log"
 TREE_PLY_FOLDER = hook_tree_ply_library_dir()

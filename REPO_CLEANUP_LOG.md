@@ -12,7 +12,7 @@ Record of working-tree tidy-ups. If you need anything "from before", check out t
 - `1bc8436` — Archive legacy root files/folders to _archive/
 - `be42bdf` — Archive grey-area folders to _archive/
 
-**Goal:** Remove decades of pre-refactor cruft from the working root without deleting anything tracked. Live refactor code (`_code-refactored/`), current data (`_data-refactored/`, `_outputs-refactored/`, `_statistics-refactored-v3/`), current docs (`_documentation-refactored/`), and the upstream checkpoint pipeline (`data/`, `final/`, `modules/`) were left untouched.
+**Goal:** Remove decades of pre-refactor cruft from the working root without deleting anything tracked. Live refactor code (`_futureSim_refactored/`), current data (`_data-refactored/`, `_outputs-refactored/`, `_statistics-refactored-v3/`), current docs (`_documentation-refactored/`), and the upstream checkpoint pipeline (`data/`, `final/`, `modules/`) were left untouched.
 
 ### Archived (moved to `_archive/` via `git mv`)
 
@@ -37,7 +37,7 @@ Legacy tracked folders:
 - `mesh_utils-main/` — vendored mesh2pcd library
 - `blender_compositor_cmaps/`
 - `revised/` — 15 pre-refactor geospatial scripts (`rGeoStamp.py`, `rConvertToMesh.py`, `rProcessSites.py`, etc.)
-- `code/` — 2026 Blender edge-detection lab scripts (~56 files). Previously referenced by `_code-refactored/refactor_code/blender/compositor/WORKFLOW_REGISTRY.md` as canonical sources — those md path refs are now stale (point to `_archive/code/...` if needed).
+- `code/` — 2026 Blender edge-detection lab scripts (~56 files). Previously referenced by `_futureSim_refactored/blender/compositor/WORKFLOW_REGISTRY.md` as canonical sources — those md path refs are now stale (point to `_archive/code/...` if needed).
 - `_statistics-refactored/` — v1 legacy stats (canonical v3 stats live at `_statistics-refactored-v3/`, still in root)
 - `documentation/` — superseded by `_documentation-refactored/`. Its `supplementary-scripts-archived/` subfolder (19 `a_*.py` / `f_*.py` scripts) was compressed into `_archive/documentation/archive_of_a_and_f_scripts.zip` rather than moved file-by-file.
 
@@ -55,7 +55,7 @@ Live items only:
 ```
 AGENTS.md  ENVIRONMENT.md  MEDIAFLUX.md  pyproject.toml  uv.lock
 test_template_library_loader.py
-_code-refactored/          # active refactor code
+_futureSim_refactored/          # active refactor code
 _data-refactored/          # live data (gitignored)
 _outputs-refactored/       # live outputs (gitignored, 8.6G)
 _statistics-refactored-v3/ # canonical stats (gitignored)
