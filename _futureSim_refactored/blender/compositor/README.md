@@ -19,6 +19,10 @@ Current active scripts live here:
 
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/scripts`
 
+Experimental but repeatable edge scripts live here:
+
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/scripts/experimental_edges`
+
 Canonical compositor blends live here:
 
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates`
@@ -49,6 +53,7 @@ Standalone workflow canonicals:
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_normals.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_resources.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_sizes.blend`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_sizes_single_input.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_shading.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_depth_outliner.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_mist.blend`
@@ -59,6 +64,7 @@ Helper canonicals:
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/proposal_colored_depth_outlines.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/proposal_only_layers.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/proposal_outline_layers.blend`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/size_outline_layers.blend`
 
 ## Temp Blends
 
@@ -138,6 +144,87 @@ Use this decision rule when working in the compositor:
 
 5. Do not treat runner scripts as template builders:
    - if a canonical blend already exists, do not recreate it from scratch in the normal path
+
+## Canonical Size Module
+
+The size outline workflow is now part of the main compositor layer, not the
+edge-experiment area.
+
+Canonical blend:
+
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/size_outline_layers.blend`
+
+Template-edit builder:
+
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/scripts/build_size_outline_layers.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/scripts/build_compositor_sizes_single_input.py`
+
+Thin runner:
+
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/scripts/render_current_size_outline.py`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/scripts/render_current_sizes_single_input.py`
+
+Contract:
+
+- `build_size_outline_layers.py` is explicit template-edit work
+- `render_current_size_outline.py` is the normal runtime path
+- render runs should open the canonical blend, repath the EXR, set outputs, and exit
+
+Current size-class mapping from `size.V`:
+
+- `1 = small`
+- `2 = medium`
+- `3 = large`
+- `4 = senescing`
+- `5 = snag`
+- `6 = fallen`
+- `7 = decayed`
+- `-1 = artificial`
+
+Single-input size outputs:
+
+- `size_combined.png`
+- `size_small.png`
+- `size_medium.png`
+- `size_large.png`
+- `size_senescing.png`
+- `size_snag.png`
+- `size_fallen.png`
+- `size_decayed.png`
+- `size_artificial.png`
+
+Current class-mask rule:
+
+- evaluate each class as a half-step band around the integer value
+- this is intentional because the `size.V` buffer is anti-aliased
+- do not use fragile exact-value compares for routine rendering
+
+## Experimental Edge Module
+
+The stepped mist/depth edge sweeps are still experimental. They are useful and
+repeatable, but they are not canonical workflow runners.
+
+Repeatable experiment scripts:
+
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/scripts/experimental_edges`
+
+Development blends:
+
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/compositor/temp_blends/template_development`
+
+Experiment outputs:
+
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/compositor/outputs`
+
+Rule:
+
+- keep these experiments accessible and runnable
+- do not present them as canonical runners unless one of them is promoted into a canonical blend
+- if a variant is accepted, promote the graph logic into a canonical blend and then use a thin runner from that blend
+
+See:
+
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/EDGE_EXPERIMENTS.md`
 
 ## Standard Masks
 

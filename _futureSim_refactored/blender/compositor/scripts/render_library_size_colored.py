@@ -13,7 +13,7 @@ This script:
 Env vars:
     COMPOSITOR_LIBRARY_EXR  — path to one library EXR
     COMPOSITOR_OUTPUT_DIR   — short dir (Blender MAX_PATH workaround)
-    COMPOSITOR_SIZE_LABEL   — one of small|medium|large|senescing|snag|fallen|decayed
+    COMPOSITOR_SIZE_LABEL   — one of small|medium|large|senescing|snag|fallen|decayed|artificial
 
 Writes:
     <output_dir>/size_colored.png
@@ -43,9 +43,9 @@ from _exr_header import read_exr_dimensions  # noqa: E402
 # Source: _futureSim_refactored/blender/compositor/canonical_templates/compositor_sizes.blend
 #   inspected via _inspect_sizes_palette.py on 2026-04-11.
 #
-# Note: the canonical palette uses `artificial` where the instancer's size_map
-# uses `decayed` (size_map in bV2_build_instancers.py: small=1 medium=2 large=3
-# senescing=4 snag=5 fallen=6 decayed=7). The 6 shared labels match exactly.
+# Current lifecycle mapping:
+#   small=1 medium=2 large=3 senescing=4 snag=5 fallen=6 decayed=7 artificial=-1
+# The compositor palette below follows that contract directly.
 SIZE_PALETTE: dict[str, tuple[float, float, float]] = {
     "small":      (0.401978, 0.708376, 0.111932),
     "medium":     (0.323143, 0.485150, 0.730461),
@@ -53,6 +53,7 @@ SIZE_PALETTE: dict[str, tuple[float, float, float]] = {
     "senescing":  (0.830770, 0.327778, 0.558340),
     "snag":       (0.973445, 0.768151, 0.097587),
     "fallen":     (0.274677, 0.250158, 0.520996),
+    "decayed":    (0.114435, 0.238398, 0.208637),
     "artificial": (1.000000, 0.000000, 0.000000),
 }
 

@@ -79,6 +79,51 @@ Primary compositor in active use:
   - helper workflow, not part of the main template
   - should open the canonical helper blend, repath the single `EXR` node, render, and exit
 
+- `render_current_size_outline.py`
+  - thin runner for:
+    - `canonical_templates/size_outline_layers.blend`
+  - renders size outlines from `size.V`
+  - should open the canonical helper blend, repath the single `EXR` node, render, and exit
+
+- `render_current_sizes_single_input.py`
+  - thin runner for:
+    - `canonical_templates/compositor_sizes_single_input.blend`
+  - renders the full per-EXR size suite from `size.V`
+  - writes:
+    - `size_combined`
+    - `size_small`
+    - `size_medium`
+    - `size_large`
+    - `size_senescing`
+    - `size_snag`
+    - `size_fallen`
+    - `size_decayed`
+    - `size_artificial`
+  - should open the canonical helper blend, repath the single `EXR` node, render, and exit
+
+### Explicit Template-Edit Builders
+
+- `build_size_outline_layers.py`
+  - explicit template-edit builder for:
+    - `canonical_templates/size_outline_layers.blend`
+  - not a runner
+  - use only when changing the canonical size-outline graph
+
+- `build_compositor_sizes_single_input.py`
+  - explicit template-edit builder for:
+    - `canonical_templates/compositor_sizes_single_input.blend`
+  - not a runner
+  - use only when changing the canonical single-input sizes graph
+
+### Experimental Edge Scripts
+
+- `scripts/experimental_edges/*.py`
+  - repeatable mist/depth tuning sweeps
+  - kept accessible on purpose
+  - not canonical runners
+  - their outputs belong under compositor experiment output roots
+  - if one is accepted, promote the logic into a canonical blend and then render via a thin runner
+
 ### Agent Rule
 
 For agents working in this folder:
