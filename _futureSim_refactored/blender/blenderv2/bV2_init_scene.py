@@ -27,12 +27,12 @@ try:
         get_aov_names,
         get_alternate_camera_names,
         get_default_camera_name,
-        get_source_world_objects,
         get_timeline_camera_name,
         get_view_layer_names,
         get_view_layer_semantics,
         get_working_collection_tree,
         make_scene_name,
+        resolve_source_world_object_names,
     )
 except ImportError:
     # Allow direct Blender execution via `blender -P path\\to\\bV2_init_scene.py`.
@@ -47,12 +47,12 @@ except ImportError:
         get_aov_names,
         get_alternate_camera_names,
         get_default_camera_name,
-        get_source_world_objects,
         get_timeline_camera_name,
         get_view_layer_names,
         get_view_layer_semantics,
         get_working_collection_tree,
         make_scene_name,
+        resolve_source_world_object_names,
     )
 
 
@@ -164,7 +164,8 @@ def populate_site_sources(
     cloned_world: dict[str, bpy.types.Object] = {}
     cloned_cameras: dict[str, bpy.types.Object] = {}
 
-    for role, object_name in get_source_world_objects(site).items():
+    available_names = set(bpy.data.objects.keys())
+    for role, object_name in resolve_source_world_object_names(site, available_names).items():
         cloned_world[role] = clone_object_to_collection(
             source_name=object_name,
             target_collection=second_level["world_sources"],

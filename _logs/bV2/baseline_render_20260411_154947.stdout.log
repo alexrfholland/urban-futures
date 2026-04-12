@@ -1,0 +1,580 @@
+else
+[2026-04-11 15:49:50] BUILD_SCENE_START site= city mode= baseline year= None render_exrs= True
+else
+[2026-04-11 15:49:53] INIT_SCENE scene_name= bV2_city_baseline site= city mode= baseline year= None camera= None
+[2026-04-11 15:49:53] INIT_USE_TEMPLATE_SCENE_START bV2_template -> bV2_city_baseline
+[2026-04-11 15:49:53] INIT_USE_TEMPLATE_SCENE_DONE active_scene= bV2_city_baseline
+[2026-04-11 15:49:53] INIT_TOP_LEVEL_COLLECTIONS_START cameras,world,instancers,bioenvelopes,build
+[2026-04-11 15:49:53] INIT_TOP_LEVEL_COLLECTIONS_DONE count= 5 names= bioenvelopes,build,cameras,instancers,world
+[2026-04-11 15:49:53] INIT_SECOND_LEVEL_COLLECTIONS_START
+[2026-04-11 15:49:53] INIT_SECOND_LEVEL_COLLECTIONS_DONE count= 5 names= helpers,positive_instances,positive_priority_instances,world_positive_attributes,world_sources
+[2026-04-11 15:49:53] INIT_POPULATE_SITE_SOURCES_START site= city mode= baseline camera= city-yr180-hero-image
+[2026-04-11 15:49:53] INIT_POPULATE_SITE_SOURCES_DONE world= city_buildings_source.001,city_roads_source.001 cameras= city-yr180-hero-image.001
+[2026-04-11 15:49:53] INIT_VIEW_LAYERS_START
+[2026-04-11 15:49:53] INIT_VIEW_LAYERS_DONE names= existing_condition_positive,positive_state,positive_priority_state
+[2026-04-11 15:49:53] INIT_AOV_RESET_START layer_count= 3 aov_count= 27
+[2026-04-11 15:49:53] INIT_AOV_RESET_LAYER_START existing_condition_positive
+[2026-04-11 15:49:53] INIT_AOV_RESET_LAYER_DONE existing_condition_positive count= 27
+[2026-04-11 15:49:53] INIT_AOV_RESET_LAYER_START positive_state
+[2026-04-11 15:49:53] INIT_AOV_RESET_LAYER_DONE positive_state count= 27
+[2026-04-11 15:49:53] INIT_AOV_RESET_LAYER_START positive_priority_state
+[2026-04-11 15:49:53] INIT_AOV_RESET_LAYER_DONE positive_priority_state count= 27
+[2026-04-11 15:49:53] INIT_NEUTRAL_SCENE_STATE_START
+[2026-04-11 15:49:53] INIT_NEUTRAL_SCENE_STATE_DONE
+[2026-04-11 15:49:53] INIT_REMOVE_TEMPLATE_COLLECTIONS_START world_sources,camera_sources
+[2026-04-11 15:49:53] INIT_REMOVE_TEMPLATE_COLLECTIONS_DONE
+[2026-04-11 15:49:53] INIT_NORMALIZE_NAMES_START
+[2026-04-11 15:49:53] INIT_NORMALIZE_NAMES_DONE
+[2026-04-11 15:49:53] INIT_NORMALIZE_VISIBILITY_START
+[2026-04-11 15:49:53] INIT_NORMALIZE_VISIBILITY_DONE
+[2026-04-11 15:49:53] INIT_WRITE_METADATA_START
+[2026-04-11 15:49:53] INIT_WRITE_METADATA_DONE
+[2026-04-11 15:49:53] INIT_ASSIGN_CAMERA_START city-yr180-hero-image
+[2026-04-11 15:49:53] INIT_ASSIGN_CAMERA_DONE scene_camera= city-yr180-hero-image
+[2026-04-11 15:49:53] INIT_UI_WORKSPACE_STEPS_SKIPPED
+[2026-04-11 15:49:53] INIT_APPLY_VIEW_LAYER_SEMANTICS_START
+[2026-04-11 15:49:53] INIT_APPLY_VIEW_LAYER_SEMANTICS_DONE
+[2026-04-11 15:49:53] INIT_SCENE_DONE bV2_city_baseline
+[2026-04-11 15:49:53] Building bV2 instancers for scene=bV2_city_baseline, site=city, mode=baseline, year=None
+[2026-04-11 15:49:53] BUILD_INSTANCERS_LOAD_BASELINE_START
+[2026-04-11 15:49:53] LOAD_SCENARIO_START site= city scenario= baseline mode= baseline years= (-180,)
+[2026-04-11 15:49:53] LOAD_SCENARIO_YEAR_START baseline -180 D:\2026 Arboreal Futures\urban-futures\_data-refactored\model-outputs\generated-states\4.9\output\feature-locations\city\city_baseline_1_nodeDF_yr-180.csv
+[2026-04-11 15:49:54] LOAD_SCENARIO_YEAR_DONE baseline -180 rows= 2545
+[2026-04-11 15:49:54] LOAD_SCENARIO_DONE baseline rows= 2545
+[2026-04-11 15:49:54] BUILD_INSTANCERS_LOAD_BASELINE_DONE rows= 2545
+[2026-04-11 15:49:54] BUILD_INSTANCERS_STATE_START positive families= logs,trees
+[2026-04-11 15:49:54] BUILD_INSTANCERS_FAMILY_START state= positive family= trees rows= 2545
+[2026-04-11 15:49:54] BUILD_STATE_START family= trees state= positive rows= 2545
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.decayed_control.improved-tree_id.11.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.decayed_control.improved-tree_id.11.ply seconds 0.04
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.decayed_control.improved-tree_id.12.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.decayed_control.improved-tree_id.12.ply seconds 0.02
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.decayed_control.improved-tree_id.14.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.decayed_control.improved-tree_id.14.ply seconds 0.03
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.decayed_control.improved-tree_id.15.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.decayed_control.improved-tree_id.15.ply seconds 0.06
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.decayed_control.improved-tree_id.16.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.decayed_control.improved-tree_id.16.ply seconds 0.02
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.fallen_control.improved-tree_id.11.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.fallen_control.improved-tree_id.11.ply seconds 0.05
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.fallen_control.improved-tree_id.12.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.fallen_control.improved-tree_id.12.ply seconds 0.02
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.fallen_control.improved-tree_id.13.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.fallen_control.improved-tree_id.13.ply seconds 0.02
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.fallen_control.improved-tree_id.14.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.fallen_control.improved-tree_id.14.ply seconds 0.03
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.fallen_control.improved-tree_id.15.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.fallen_control.improved-tree_id.15.ply seconds 0.06
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.fallen_control.improved-tree_id.16.ply
+[2026-04-11 15:49:54] IMPORT_DONE trees precolonial.True_size.fallen_control.improved-tree_id.16.ply seconds 0.02
+[2026-04-11 15:49:54] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.11.ply
+[2026-04-11 15:49:55] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.11.ply seconds 0.37
+[2026-04-11 15:49:55] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.12.ply
+[2026-04-11 15:49:55] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.12.ply seconds 0.17
+[2026-04-11 15:49:55] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.13.ply
+[2026-04-11 15:49:55] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.13.ply seconds 0.26
+[2026-04-11 15:49:55] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.14.ply
+[2026-04-11 15:49:55] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.14.ply seconds 0.22
+[2026-04-11 15:49:55] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.15.ply
+[2026-04-11 15:49:55] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.15.ply seconds 0.23
+[2026-04-11 15:49:55] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.16.ply
+[2026-04-11 15:49:56] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.16.ply seconds 0.21
+[2026-04-11 15:49:56] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.10.ply
+[2026-04-11 15:49:56] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.10.ply seconds 0.26
+[2026-04-11 15:49:56] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.5.ply
+[2026-04-11 15:49:56] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.5.ply seconds 0.14
+[2026-04-11 15:49:56] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.6.ply
+[2026-04-11 15:49:56] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.6.ply seconds 0.11
+[2026-04-11 15:49:56] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.7.ply
+[2026-04-11 15:49:56] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.7.ply seconds 0.19
+[2026-04-11 15:49:56] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.8.ply
+[2026-04-11 15:49:57] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.8.ply seconds 0.28
+[2026-04-11 15:49:57] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.9.ply
+[2026-04-11 15:49:57] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.9.ply seconds 0.26
+[2026-04-11 15:49:57] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.11.ply
+[2026-04-11 15:49:57] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.11.ply seconds 0.13
+[2026-04-11 15:49:57] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.12.ply
+[2026-04-11 15:49:57] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.12.ply seconds 0.08
+[2026-04-11 15:49:57] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.13.ply
+[2026-04-11 15:49:57] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.13.ply seconds 0.06
+[2026-04-11 15:49:57] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.14.ply
+[2026-04-11 15:49:57] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.14.ply seconds 0.06
+[2026-04-11 15:49:57] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.15.ply
+[2026-04-11 15:49:57] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.15.ply seconds 0.13
+[2026-04-11 15:49:57] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.16.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.16.ply seconds 0.09
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.small_control.reserve-tree_id.1.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.small_control.reserve-tree_id.1.ply seconds 0.03
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.small_control.reserve-tree_id.2.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.small_control.reserve-tree_id.2.ply seconds 0.03
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.small_control.reserve-tree_id.3.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.small_control.reserve-tree_id.3.ply seconds 0.1
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.small_control.reserve-tree_id.4.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.small_control.reserve-tree_id.4.ply seconds 0.06
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.snag_control.improved-tree_id.11.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.snag_control.improved-tree_id.11.ply seconds 0.04
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.snag_control.improved-tree_id.12.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.snag_control.improved-tree_id.12.ply seconds 0.02
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.snag_control.improved-tree_id.13.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.snag_control.improved-tree_id.13.ply seconds 0.02
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.snag_control.improved-tree_id.14.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.snag_control.improved-tree_id.14.ply seconds 0.04
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.snag_control.improved-tree_id.15.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.snag_control.improved-tree_id.15.ply seconds 0.07
+[2026-04-11 15:49:58] IMPORT_START trees precolonial.True_size.snag_control.improved-tree_id.16.ply
+[2026-04-11 15:49:58] IMPORT_DONE trees precolonial.True_size.snag_control.improved-tree_id.16.ply seconds 0.03
+[2026-04-11 15:49:58] BUILD_STATE_MODELS_DONE family= trees state= positive rows= 2545 models= 39
+[2026-04-11 15:49:58] BUILD_STATE_DONE family= trees state= positive point_name= trees_positions_city_baseline_positive points= 2545
+[2026-04-11 15:49:58] BUILD_INSTANCERS_FAMILY_DONE state= positive family= trees
+[2026-04-11 15:49:58] BUILD_INSTANCERS_FAMILY_START state= positive family= logs rows= 0
+[2026-04-11 15:49:58] Skipping logs/positive: no rows
+[2026-04-11 15:49:58] BUILD_INSTANCERS_FAMILY_DONE state= positive family= logs
+[2026-04-11 15:49:58] BUILD_INSTANCERS_STATE_DONE positive
+[2026-04-11 15:49:58] BUILD_INSTANCERS_STATE_START positive_priority families= logs,trees
+[2026-04-11 15:49:58] BUILD_INSTANCERS_FAMILY_START state= positive_priority family= trees rows= 185
+[2026-04-11 15:49:58] BUILD_STATE_START family= trees state= positive_priority rows= 185
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.fallen_control.improved-tree_id.11.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.fallen_control.improved-tree_id.12.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.fallen_control.improved-tree_id.13.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.fallen_control.improved-tree_id.14.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.fallen_control.improved-tree_id.15.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.fallen_control.improved-tree_id.16.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.11.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.12.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.13.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.14.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.15.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.16.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.snag_control.improved-tree_id.11.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.snag_control.improved-tree_id.12.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.snag_control.improved-tree_id.13.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.snag_control.improved-tree_id.14.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.snag_control.improved-tree_id.15.ply
+[2026-04-11 15:49:58] CACHE_HIT trees precolonial.True_size.snag_control.improved-tree_id.16.ply
+[2026-04-11 15:49:58] BUILD_STATE_MODELS_DONE family= trees state= positive_priority rows= 185 models= 18
+[2026-04-11 15:49:58] BUILD_STATE_DONE family= trees state= positive_priority point_name= trees_positions_city_baseline_positive_priority points= 185
+[2026-04-11 15:49:58] BUILD_INSTANCERS_FAMILY_DONE state= positive_priority family= trees
+[2026-04-11 15:49:58] BUILD_INSTANCERS_FAMILY_START state= positive_priority family= logs rows= 0
+[2026-04-11 15:49:58] Skipping logs/positive_priority: no rows
+[2026-04-11 15:49:58] BUILD_INSTANCERS_FAMILY_DONE state= positive_priority family= logs
+[2026-04-11 15:49:58] BUILD_INSTANCERS_STATE_DONE positive_priority
+[2026-04-11 15:49:58] Instancer build summary: {'scene': 'bV2_city_baseline', 'site': 'city', 'mode': 'baseline', 'year': None, 'results': [{'family': 'trees', 'state': 'positive', 'row_count': 2545, 'model_count': 39, 'point_object': 'trees_positions_city_baseline_positive', 'models_collection': 'trees_models_city_baseline_positive'}, {'family': 'trees', 'state': 'positive_priority', 'row_count': 185, 'model_count': 18, 'point_object': 'trees_positions_city_baseline_positive_priority', 'models_collection': 'trees_models_city_baseline_positive_priority'}], 'positive_rows': 2545, 'priority_rows': 185, 'trending_rows': 0}
+[2026-04-11 15:49:58] WORLD_BUILD_START bV2_city_baseline city baseline timeline
+[2026-04-11 15:50:02] BASELINE_TERRAIN_IMPORTED city_baseline_terrain_source verts=172863
+[2026-04-11 15:50:03] WORLD_OBJECT_DONE bV2_city_baseline terrain_city_baseline_positive points=172863 matched=172863
+[2026-04-11 15:50:03] WORLD_BUILD_DONE bV2_city_baseline {'positive': ['terrain_city_baseline_positive']}
+[2026-04-11 15:50:03] VALIDATE_SCENE {'scene': 'bV2_city_baseline', 'site': 'city', 'mode': 'baseline', 'year': None, 'errors': [], 'warnings': [], 'ok': True}
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\bV2_template.blend"
+PLY import of 'precolonial.True_size.decayed_control.improved-tree_id.11.ply' took 33.78 ms
+PLY import of 'precolonial.True_size.decayed_control.improved-tree_id.12.ply' took 18.22 ms
+PLY import of 'precolonial.True_size.decayed_control.improved-tree_id.14.ply' took 25.58 ms
+PLY import of 'precolonial.True_size.decayed_control.improved-tree_id.15.ply' took 59.56 ms
+PLY import of 'precolonial.True_size.decayed_control.improved-tree_id.16.ply' took 16.41 ms
+PLY import of 'precolonial.True_size.fallen_control.improved-tree_id.11.ply' took 46.92 ms
+PLY import of 'precolonial.True_size.fallen_control.improved-tree_id.12.ply' took 18.35 ms
+PLY import of 'precolonial.True_size.fallen_control.improved-tree_id.13.ply' took 13.81 ms
+PLY import of 'precolonial.True_size.fallen_control.improved-tree_id.14.ply' took 23.53 ms
+PLY import of 'precolonial.True_size.fallen_control.improved-tree_id.15.ply' took 60.13 ms
+PLY import of 'precolonial.True_size.fallen_control.improved-tree_id.16.ply' took 19.51 ms
+PLY import of 'precolonial.True_size.large_control.reserve-tree_id.11.ply' took 357.61 ms
+PLY import of 'precolonial.True_size.large_control.reserve-tree_id.12.ply' took 152.63 ms
+PLY import of 'precolonial.True_size.large_control.reserve-tree_id.13.ply' took 255.47 ms
+PLY import of 'precolonial.True_size.large_control.reserve-tree_id.14.ply' took 216.79 ms
+PLY import of 'precolonial.True_size.large_control.reserve-tree_id.15.ply' took 222.77 ms
+PLY import of 'precolonial.True_size.large_control.reserve-tree_id.16.ply' took 199.19 ms
+PLY import of 'precolonial.True_size.medium_control.reserve-tree_id.10.ply' took 248.08 ms
+PLY import of 'precolonial.True_size.medium_control.reserve-tree_id.5.ply' took 131.20 ms
+PLY import of 'precolonial.True_size.medium_control.reserve-tree_id.6.ply' took 106.25 ms
+PLY import of 'precolonial.True_size.medium_control.reserve-tree_id.7.ply' took 182.15 ms
+PLY import of 'precolonial.True_size.medium_control.reserve-tree_id.8.ply' took 270.87 ms
+PLY import of 'precolonial.True_size.medium_control.reserve-tree_id.9.ply' took 247.74 ms
+PLY import of 'precolonial.True_size.senescing_control.improved-tree_id.11.ply' took 119.17 ms
+PLY import of 'precolonial.True_size.senescing_control.improved-tree_id.12.ply' took 77.85 ms
+PLY import of 'precolonial.True_size.senescing_control.improved-tree_id.13.ply' took 53.83 ms
+PLY import of 'precolonial.True_size.senescing_control.improved-tree_id.14.ply' took 60.27 ms
+PLY import of 'precolonial.True_size.senescing_control.improved-tree_id.15.ply' took 123.69 ms
+PLY import of 'precolonial.True_size.senescing_control.improved-tree_id.16.ply' took 79.39 ms
+PLY import of 'precolonial.True_size.small_control.reserve-tree_id.1.ply' took 21.67 ms
+PLY import of 'precolonial.True_size.small_control.reserve-tree_id.2.ply' took 30.89 ms
+PLY import of 'precolonial.True_size.small_control.reserve-tree_id.3.ply' took 91.34 ms
+PLY import of 'precolonial.True_size.small_control.reserve-tree_id.4.ply' took 51.98 ms
+PLY import of 'precolonial.True_size.snag_control.improved-tree_id.11.ply' took 40.31 ms
+PLY import of 'precolonial.True_size.snag_control.improved-tree_id.12.ply' took 13.83 ms
+PLY import of 'precolonial.True_size.snag_control.improved-tree_id.13.ply' took 17.60 ms
+PLY import of 'precolonial.True_size.snag_control.improved-tree_id.14.ply' took 30.19 ms
+PLY import of 'precolonial.True_size.snag_control.improved-tree_id.15.ply' took 60.15 ms
+PLY import of 'precolonial.True_size.snag_control.improved-tree_id.16.ply' took 26.17 ms
+PLY import of 'city_baseline_terrain_1.ply' took 98.43 ms
+Info: Total files 20 | Changed 2 | Failed 0
+Info: Saved "city_baseline__full_pipeline.blend"
+[2026-04-11 15:50:03] BUILD_SCENE_BLEND_SAVED D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\blends\4.9\city_baseline__full_pipeline.blend
+[2026-04-11 15:50:03] MIST_APPLIED profile=city_single_state_hero camera=city-yr180-hero-image use_mist=False start=60.0 depth=420.0 falloff=LINEAR
+[2026-04-11 15:50:04] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+[2026-04-11 15:50:04] RENDER_SETUP_DONE {'scene': 'bV2_city_baseline', 'output_root': 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_baseline', 'resolution': (7680, 4320, 100), 'samples': 64, 'tag': '8k64s'}
+Info: Total files 20 | Changed 2 | Failed 0
+Info: Saved "city_baseline__full_pipeline.blend"
+[2026-04-11 15:50:05] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+Fra:1 Mem:1556.77M (Peak 1556.77M) | Time:00:01.08 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Synchronizing object | terrain_city_baseline_positive
+Fra:1 Mem:1605.83M (Peak 1643.98M) | Time:00:04.14 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Synchronizing object | city_baseline_terrain_source
+Fra:1 Mem:1605.83M (Peak 1643.98M) | Time:00:04.14 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Initializing
+Fra:1 Mem:1593.30M (Peak 1643.98M) | Time:00:04.32 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Waiting for render to start
+Fra:1 Mem:1593.31M (Peak 1643.98M) | Time:00:04.34 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Loading render kernels (may take a few minutes the first time)
+Fra:1 Mem:1593.31M (Peak 1643.98M) | Time:00:04.68 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Scene
+Fra:1 Mem:1593.31M (Peak 1643.98M) | Time:00:04.68 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Shaders
+Fra:1 Mem:1593.39M (Peak 1643.98M) | Time:00:04.68 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Procedurals
+Fra:1 Mem:1593.39M (Peak 1643.98M) | Time:00:04.68 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Background
+Fra:1 Mem:1593.39M (Peak 1643.98M) | Time:00:04.68 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Camera
+Fra:1 Mem:1593.39M (Peak 1643.98M) | Time:00:04.68 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Meshes Flags
+Fra:1 Mem:1593.39M (Peak 1643.98M) | Time:00:04.68 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Objects
+Fra:1 Mem:1593.39M (Peak 1643.98M) | Time:00:04.69 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Objects | Copying Transformations to device
+Fra:1 Mem:1636.91M (Peak 1643.98M) | Time:00:04.71 | Mem:42.21M, Peak:42.21M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Objects | Applying Static Transformations
+Fra:1 Mem:1636.91M (Peak 1643.98M) | Time:00:04.72 | Mem:42.21M, Peak:42.21M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Particle Systems
+Fra:1 Mem:1636.91M (Peak 1643.98M) | Time:00:04.72 | Mem:42.21M, Peak:42.21M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Particle Systems | Copying Particles to device
+Fra:1 Mem:1636.91M (Peak 1643.98M) | Time:00:04.72 | Mem:42.21M, Peak:42.21M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Meshes
+Fra:1 Mem:1636.91M (Peak 1643.98M) | Time:00:04.72 | Mem:42.21M, Peak:42.21M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Mesh | Computing attributes
+Fra:1 Mem:1905.96M (Peak 1905.96M) | Time:00:05.85 | Mem:105.52M, Peak:105.52M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Mesh | Copying Attributes to device
+Fra:1 Mem:1729.24M (Peak 1905.96M) | Time:00:06.13 | Mem:134.53M, Peak:134.53M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Geometry BVH city_baseline_terrain_1 3/3 | Building BVH
+Fra:1 Mem:1729.24M (Peak 1905.96M) | Time:00:06.13 | Mem:134.53M, Peak:134.53M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Geometry BVH terrain_city_baseline_positive_mesh 1/3 | Building BVH
+Fra:1 Mem:1729.24M (Peak 1905.96M) | Time:00:06.13 | Mem:134.53M, Peak:134.53M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Geometry BVH Mesh 2/3 | Building OptiX acceleration structure
+Fra:1 Mem:1729.24M (Peak 1905.96M) | Time:00:06.16 | Mem:134.53M, Peak:134.54M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Scene BVH | Building
+Fra:1 Mem:1730.55M (Peak 1905.96M) | Time:00:06.16 | Mem:134.53M, Peak:134.54M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Scene BVH | Building OptiX acceleration structure
+Fra:1 Mem:1730.55M (Peak 1905.96M) | Time:00:06.21 | Mem:160.40M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Scene BVH | Copying BVH to device
+Fra:1 Mem:1730.55M (Peak 1905.96M) | Time:00:06.21 | Mem:160.40M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Mesh | Computing normals
+Fra:1 Mem:1730.56M (Peak 1905.96M) | Time:00:06.21 | Mem:160.40M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Mesh | Copying Mesh to device
+Fra:1 Mem:1730.56M (Peak 1905.96M) | Time:00:06.22 | Mem:160.41M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Objects Flags
+Fra:1 Mem:1730.56M (Peak 1905.96M) | Time:00:06.23 | Mem:161.72M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Primitive Offsets
+Fra:1 Mem:1731.21M (Peak 1905.96M) | Time:00:06.24 | Mem:162.38M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Images
+Fra:1 Mem:1731.21M (Peak 1905.96M) | Time:00:06.24 | Mem:162.38M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Camera Volume
+Fra:1 Mem:1731.21M (Peak 1905.96M) | Time:00:06.24 | Mem:162.38M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Lookup Tables
+Fra:1 Mem:1731.21M (Peak 1905.96M) | Time:00:06.24 | Mem:162.46M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Lights
+Fra:1 Mem:1731.21M (Peak 1905.96M) | Time:00:06.24 | Mem:162.46M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Lights | Computing tree
+Fra:1 Mem:1765.97M (Peak 1905.96M) | Time:00:06.57 | Mem:197.22M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Integrator
+Fra:1 Mem:1765.97M (Peak 1905.96M) | Time:00:06.57 | Mem:197.22M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Film
+Fra:1 Mem:1765.98M (Peak 1905.96M) | Time:00:06.57 | Mem:197.14M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Lookup Tables
+Fra:1 Mem:1765.98M (Peak 1905.96M) | Time:00:06.58 | Mem:197.23M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Baking
+Fra:1 Mem:1765.98M (Peak 1905.96M) | Time:00:06.58 | Mem:197.23M, Peak:223.29M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Updating Device | Writing constant memory
+Fra:1 Mem:1781.93M (Peak 1905.96M) | Time:00:06.66 | Mem:1302.17M, Peak:1302.17M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 0/12 Tiles, Sample 0/64
+Fra:1 Mem:2520.82M (Peak 2520.82M) | Time:00:06.73 | Remaining:00:36.59 | Mem:2041.04M, Peak:2041.04M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 0/12 Tiles, Sample 1/64
+Fra:1 Mem:2520.84M (Peak 3256.84M) | Time:00:08.15 | Remaining:00:10.34 | Mem:2041.06M, Peak:2041.06M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 0/12 Tiles, Sample 64/64
+Fra:1 Mem:2520.84M (Peak 3256.84M) | Time:00:08.15 | Remaining:00:10.34 | Mem:2041.06M, Peak:2041.06M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 1/12 Tiles, Sample 64/64
+Fra:1 Mem:2522.28M (Peak 3256.84M) | Time:00:08.25 | Remaining:00:10.80 | Mem:2042.50M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 1/12 Tiles, Sample 1/64
+Fra:1 Mem:2522.28M (Peak 3258.28M) | Time:00:10.15 | Remaining:00:10.31 | Mem:2042.50M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 1/12 Tiles, Sample 64/64
+Fra:1 Mem:2522.28M (Peak 3258.28M) | Time:00:10.15 | Remaining:00:10.31 | Mem:2042.50M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 2/12 Tiles, Sample 64/64
+Fra:1 Mem:2522.28M (Peak 3258.28M) | Time:00:10.17 | Remaining:00:10.28 | Mem:2042.50M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 2/12 Tiles, Sample 1/64
+Fra:1 Mem:2522.28M (Peak 3258.28M) | Time:00:12.35 | Remaining:00:09.31 | Mem:2042.50M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 2/12 Tiles, Sample 64/64
+Fra:1 Mem:2522.28M (Peak 3258.28M) | Time:00:12.35 | Remaining:00:09.31 | Mem:2042.50M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 3/12 Tiles, Sample 64/64
+Fra:1 Mem:2336.48M (Peak 3258.28M) | Time:00:12.41 | Remaining:00:09.35 | Mem:1856.70M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 3/12 Tiles, Sample 1/64
+Fra:1 Mem:2336.48M (Peak 3258.28M) | Time:00:13.61 | Remaining:00:07.71 | Mem:1856.70M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 3/12 Tiles, Sample 64/64
+Fra:1 Mem:2336.48M (Peak 3258.28M) | Time:00:13.61 | Remaining:00:07.71 | Mem:1856.70M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 4/12 Tiles, Sample 64/64
+Fra:1 Mem:2522.28M (Peak 3258.28M) | Time:00:13.71 | Remaining:00:07.76 | Mem:2042.50M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 4/12 Tiles, Sample 1/64
+Fra:1 Mem:2522.28M (Peak 3258.28M) | Time:00:15.34 | Remaining:00:05.77 | Mem:2042.50M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 4/12 Tiles, Sample 64/64
+Fra:1 Mem:2522.28M (Peak 3258.28M) | Time:00:15.34 | Remaining:00:05.77 | Mem:2042.50M, Peak:2042.50M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 5/12 Tiles, Sample 64/64
+Fra:1 Mem:2523.72M (Peak 3258.28M) | Time:00:15.43 | Remaining:00:05.79 | Mem:2043.94M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 5/12 Tiles, Sample 1/64
+Fra:1 Mem:2523.72M (Peak 3259.72M) | Time:00:17.47 | Remaining:00:04.06 | Mem:2043.94M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 5/12 Tiles, Sample 64/64
+Fra:1 Mem:2523.72M (Peak 3259.72M) | Time:00:17.47 | Remaining:00:04.06 | Mem:2043.94M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 6/12 Tiles, Sample 64/64
+Fra:1 Mem:2523.72M (Peak 3259.72M) | Time:00:17.48 | Remaining:00:04.02 | Mem:2043.94M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 6/12 Tiles, Sample 1/64
+Fra:1 Mem:2523.72M (Peak 3259.72M) | Time:00:18.73 | Remaining:00:02.07 | Mem:2043.94M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 6/12 Tiles, Sample 64/64
+Fra:1 Mem:2523.72M (Peak 3259.72M) | Time:00:18.73 | Remaining:00:02.07 | Mem:2043.94M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 7/12 Tiles, Sample 64/64
+Fra:1 Mem:2337.56M (Peak 3259.72M) | Time:00:18.81 | Remaining:00:02.06 | Mem:1857.78M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 7/12 Tiles, Sample 1/64
+Fra:1 Mem:2337.56M (Peak 3259.72M) | Time:00:19.79 | Remaining:00:00.71 | Mem:1857.78M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 7/12 Tiles, Sample 64/64
+Fra:1 Mem:2337.56M (Peak 3259.72M) | Time:00:19.79 | Remaining:00:00.71 | Mem:1857.78M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 8/12 Tiles, Sample 64/64
+Fra:1 Mem:1864.05M (Peak 3259.72M) | Time:00:19.83 | Remaining:00:00.71 | Mem:1384.28M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 8/12 Tiles, Sample 1/64
+Fra:1 Mem:1864.05M (Peak 3259.72M) | Time:00:20.08 | Remaining:00:00.53 | Mem:1384.28M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 8/12 Tiles, Sample 64/64
+Fra:1 Mem:1864.05M (Peak 3259.72M) | Time:00:20.08 | Remaining:00:00.53 | Mem:1384.28M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 9/12 Tiles, Sample 64/64
+Fra:1 Mem:1864.21M (Peak 3259.72M) | Time:00:20.10 | Remaining:00:00.52 | Mem:1384.44M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 9/12 Tiles, Sample 1/64
+Fra:1 Mem:1864.21M (Peak 3259.72M) | Time:00:20.31 | Remaining:00:00.33 | Mem:1384.44M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 9/12 Tiles, Sample 64/64
+Fra:1 Mem:1864.21M (Peak 3259.72M) | Time:00:20.31 | Remaining:00:00.33 | Mem:1384.44M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 10/12 Tiles, Sample 64/64
+Fra:1 Mem:1864.21M (Peak 3259.72M) | Time:00:20.31 | Remaining:00:00.33 | Mem:1384.44M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 10/12 Tiles, Sample 1/64
+Fra:1 Mem:1864.21M (Peak 3259.72M) | Time:00:20.53 | Remaining:00:00.14 | Mem:1384.44M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 10/12 Tiles, Sample 64/64
+Fra:1 Mem:1864.21M (Peak 3259.72M) | Time:00:20.53 | Remaining:00:00.14 | Mem:1384.44M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 11/12 Tiles, Sample 64/64
+Fra:1 Mem:1843.57M (Peak 3259.72M) | Time:00:20.55 | Remaining:00:00.14 | Mem:1363.79M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 11/12 Tiles, Sample 1/64
+Fra:1 Mem:1843.57M (Peak 3259.72M) | Time:00:20.72 | Mem:1363.79M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 11/12 Tiles, Sample 64/64
+Fra:1 Mem:1843.57M (Peak 3259.72M) | Time:00:20.72 | Mem:1363.79M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Rendered 11/12 Tiles, Sample 0/64
+Fra:1 Mem:1843.57M (Peak 3259.72M) | Time:00:20.73 | Mem:1363.79M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr, existing_condition_positive | Finished
+Fra:1 Mem:1523.51M (Peak 3259.72M) | Time:00:20.90 | Mem:1130.83M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr | Reading full buffer from disk
+Fra:1 Mem:7345.39M (Peak 7345.39M) | Time:00:22.39 | Mem:1130.83M, Peak:2043.94M | bV2_city_baseline__existing_condition_positive__exr | existing_condition_positive | Finishing
+Fra:1 Mem:6695.04M (Peak 18229.87M) | Time:00:30.69 | Compositing
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__existing_condition_positive__8k64s0001.exr'
+Saved: '.exr'
+Time: 00:43.69 (Saving: 00:02.59)
+
+[2026-04-11 15:50:49] RENDER_EXR_DONE existing_condition_positive D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__existing_condition_positive__8k64s.exr
+[2026-04-11 15:50:49] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+Fra:1 Mem:6763.36M (Peak 6763.36M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_state__exr, positive_state | Synchronizing object | terrain_city_baseline_positive
+Fra:1 Mem:6812.99M (Peak 6850.56M) | Time:00:03.75 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_state__exr, positive_state | Synchronizing object | trees_positions_city_baseline_positive
+Fra:1 Mem:6960.27M (Peak 6960.57M) | Time:00:04.19 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_state__exr, positive_state | Synchronizing object | city_baseline_terrain_source
+Fra:1 Mem:6960.27M (Peak 6960.57M) | Time:00:04.19 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_state__exr, positive_state | Initializing
+Fra:1 Mem:6939.31M (Peak 6960.57M) | Time:00:04.42 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_state__exr, positive_state | Waiting for render to start
+Fra:1 Mem:6939.32M (Peak 6960.57M) | Time:00:04.44 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_state__exr, positive_state | Loading render kernels (may take a few minutes the first time)
+Fra:1 Mem:6939.32M (Peak 6967.71M) | Time:00:04.78 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Scene
+Fra:1 Mem:6939.32M (Peak 6967.71M) | Time:00:04.78 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Shaders
+Fra:1 Mem:6939.41M (Peak 6967.71M) | Time:00:04.78 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Procedurals
+Fra:1 Mem:6939.41M (Peak 6967.71M) | Time:00:04.78 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Background
+Fra:1 Mem:6939.41M (Peak 6967.71M) | Time:00:04.78 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Camera
+Fra:1 Mem:6939.41M (Peak 6967.71M) | Time:00:04.78 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Meshes Flags
+Fra:1 Mem:6939.41M (Peak 6967.71M) | Time:00:04.78 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Objects
+Fra:1 Mem:6939.41M (Peak 6967.71M) | Time:00:04.79 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Objects | Copying Transformations to device
+Fra:1 Mem:6983.57M (Peak 6983.57M) | Time:00:04.83 | Mem:42.83M, Peak:42.83M | bV2_city_baseline__positive_state__exr, positive_state | Updating Objects | Applying Static Transformations
+Fra:1 Mem:6983.57M (Peak 6983.57M) | Time:00:04.84 | Mem:42.83M, Peak:42.83M | bV2_city_baseline__positive_state__exr, positive_state | Updating Particle Systems
+Fra:1 Mem:6983.57M (Peak 6983.57M) | Time:00:04.84 | Mem:42.83M, Peak:42.83M | bV2_city_baseline__positive_state__exr, positive_state | Updating Particle Systems | Copying Particles to device
+Fra:1 Mem:6983.57M (Peak 6983.57M) | Time:00:04.84 | Mem:42.83M, Peak:42.83M | bV2_city_baseline__positive_state__exr, positive_state | Updating Meshes
+Fra:1 Mem:7008.12M (Peak 7008.12M) | Time:00:04.90 | Mem:42.83M, Peak:42.83M | bV2_city_baseline__positive_state__exr, positive_state | Updating Mesh | Computing attributes
+Fra:1 Mem:7304.05M (Peak 7304.05M) | Time:00:06.32 | Mem:107.41M, Peak:107.41M | bV2_city_baseline__positive_state__exr, positive_state | Updating Mesh | Copying Attributes to device
+Fra:1 Mem:7123.56M (Peak 7304.05M) | Time:00:06.55 | Mem:158.28M, Peak:158.28M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH city_baseline_terrain_1 43/43 | Building BVH
+Fra:1 Mem:7123.56M (Peak 7304.05M) | Time:00:06.55 | Mem:158.28M, Peak:158.28M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH city_baseline_terrain_1 43/43 | Building OptiX acceleration structure
+Fra:1 Mem:7123.56M (Peak 7304.05M) | Time:00:06.55 | Mem:158.28M, Peak:158.28M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.decayed_control.improve.003 42/43 | Building BVH
+Fra:1 Mem:7123.56M (Peak 7304.05M) | Time:00:06.55 | Mem:158.28M, Peak:158.28M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH Mesh 2/43 | Building OptiX acceleration structure
+Fra:1 Mem:7123.75M (Peak 7304.05M) | Time:00:06.55 | Mem:158.28M, Peak:158.28M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH trees_positions_city_baseline_positive 3/43 | Building BVH
+Fra:1 Mem:7123.76M (Peak 7304.05M) | Time:00:06.55 | Mem:158.47M, Peak:158.47M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.senescing_control.improved- 15/43 | Building OptiX acceleration structure
+Fra:1 Mem:7123.76M (Peak 7304.05M) | Time:00:06.55 | Mem:159.43M, Peak:159.43M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.medium_control.reserve-.004 12/43 | Building BVH
+Fra:1 Mem:7123.76M (Peak 7304.05M) | Time:00:06.55 | Mem:159.43M, Peak:159.43M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.medium_control.reserve-.004 12/43 | Building OptiX acceleration structure
+Fra:1 Mem:7126.85M (Peak 7304.05M) | Time:00:06.55 | Mem:159.43M, Peak:159.43M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.decayed_control.improve.002 17/43 | Building BVH
+Fra:1 Mem:7126.85M (Peak 7304.05M) | Time:00:06.55 | Mem:159.43M, Peak:159.43M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t.004 16/43 | Building BVH
+Fra:1 Mem:7127.73M (Peak 7304.05M) | Time:00:06.55 | Mem:159.54M, Peak:159.54M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t.004 16/43 | Building OptiX acceleration structure
+Fra:1 Mem:7133.64M (Peak 7304.05M) | Time:00:06.56 | Mem:164.54M, Peak:164.65M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.decayed_control.improved-tr 41/43 | Building BVH
+Fra:1 Mem:7133.64M (Peak 7304.05M) | Time:00:06.56 | Mem:164.54M, Peak:164.65M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.decayed_control.improved-tr 41/43 | Building OptiX acceleration structure
+Fra:1 Mem:7133.94M (Peak 7304.05M) | Time:00:06.57 | Mem:168.86M, Peak:168.87M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-tree_ 18/43 | Building BVH
+Fra:1 Mem:7133.94M (Peak 7304.05M) | Time:00:06.57 | Mem:169.73M, Peak:169.73M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-tree_ 18/43 | Building OptiX acceleration structure
+Fra:1 Mem:7134.06M (Peak 7304.05M) | Time:00:06.57 | Mem:170.10M, Peak:170.10M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.medium_control.reserve-_mes 19/43 | Building BVH
+Fra:1 Mem:7134.06M (Peak 7304.05M) | Time:00:06.57 | Mem:170.10M, Peak:170.10M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.medium_control.reserve-_mes 19/43 | Building OptiX acceleration structure
+Fra:1 Mem:7134.82M (Peak 7304.05M) | Time:00:06.58 | Mem:170.21M, Peak:170.88M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.decayed_control.improve.001 20/43 | Building BVH
+Fra:1 Mem:7134.82M (Peak 7304.05M) | Time:00:06.58 | Mem:170.21M, Peak:170.88M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.decayed_control.improve.001 20/43 | Building OptiX acceleration structure
+Fra:1 Mem:7134.74M (Peak 7304.05M) | Time:00:06.58 | Mem:170.48M, Peak:171.68M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t_mes 21/43 | Building BVH
+Fra:1 Mem:7134.74M (Peak 7304.05M) | Time:00:06.58 | Mem:171.24M, Peak:171.68M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t_mes 21/43 | Building OptiX acceleration structure
+Fra:1 Mem:7134.52M (Peak 7304.05M) | Time:00:06.58 | Mem:170.72M, Peak:172.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.medium_control.reserve-.003 22/43 | Building BVH
+Fra:1 Mem:7134.52M (Peak 7304.05M) | Time:00:06.58 | Mem:171.63M, Peak:172.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.medium_control.reserve-.003 22/43 | Building OptiX acceleration structure
+Fra:1 Mem:7136.03M (Peak 7304.05M) | Time:00:06.59 | Mem:170.78M, Peak:172.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.senescing_control.impro.003 23/43 | Building BVH
+Fra:1 Mem:7136.03M (Peak 7304.05M) | Time:00:06.59 | Mem:171.79M, Peak:172.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.senescing_control.impro.003 23/43 | Building OptiX acceleration structure
+Fra:1 Mem:7136.37M (Peak 7304.05M) | Time:00:06.59 | Mem:173.27M, Peak:175.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t.002 24/43 | Building BVH
+Fra:1 Mem:7136.37M (Peak 7304.05M) | Time:00:06.59 | Mem:173.27M, Peak:175.01M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t.002 24/43 | Building OptiX acceleration structure
+Fra:1 Mem:7135.79M (Peak 7304.05M) | Time:00:06.60 | Mem:177.67M, Peak:184.70M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-tree_ 25/43 | Building BVH
+Fra:1 Mem:7135.79M (Peak 7304.05M) | Time:00:06.60 | Mem:177.67M, Peak:184.70M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-tree_ 25/43 | Building OptiX acceleration structure
+Fra:1 Mem:7137.46M (Peak 7304.05M) | Time:00:06.60 | Mem:175.52M, Peak:184.70M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.senescing_control.impro.001 26/43 | Building BVH
+Fra:1 Mem:7137.46M (Peak 7304.05M) | Time:00:06.60 | Mem:175.52M, Peak:184.70M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.senescing_control.impro.001 26/43 | Building OptiX acceleration structure
+Fra:1 Mem:7137.32M (Peak 7304.05M) | Time:00:06.61 | Mem:180.23M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.decayed_control.improve_mes 27/43 | Building BVH
+Fra:1 Mem:7137.32M (Peak 7304.05M) | Time:00:06.61 | Mem:181.30M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.decayed_control.improve_mes 27/43 | Building OptiX acceleration structure
+Fra:1 Mem:7136.96M (Peak 7304.05M) | Time:00:06.61 | Mem:181.70M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.medium_control.reserve-tree 28/43 | Building BVH
+Fra:1 Mem:7136.96M (Peak 7304.05M) | Time:00:06.61 | Mem:183.21M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.medium_control.reserve-tree 28/43 | Building OptiX acceleration structure
+Fra:1 Mem:7138.66M (Peak 7304.05M) | Time:00:06.62 | Mem:182.94M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved-tre 29/43 | Building BVH
+Fra:1 Mem:7138.66M (Peak 7304.05M) | Time:00:06.62 | Mem:182.94M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved-tre 29/43 | Building OptiX acceleration structure
+Fra:1 Mem:7137.77M (Peak 7304.05M) | Time:00:06.62 | Mem:185.17M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t_mes 30/43 | Building BVH
+Fra:1 Mem:7137.77M (Peak 7304.05M) | Time:00:06.62 | Mem:185.17M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t_mes 30/43 | Building OptiX acceleration structure
+Fra:1 Mem:7139.48M (Peak 7304.05M) | Time:00:06.62 | Mem:183.75M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t.003 40/43 | Building BVH
+Fra:1 Mem:7139.48M (Peak 7304.05M) | Time:00:06.62 | Mem:183.75M, Peak:189.80M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t.003 40/43 | Building OptiX acceleration structure
+Fra:1 Mem:7138.82M (Peak 7304.05M) | Time:00:06.63 | Mem:186.50M, Peak:191.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t.004 31/43 | Building BVH
+Fra:1 Mem:7138.82M (Peak 7304.05M) | Time:00:06.63 | Mem:186.50M, Peak:191.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t.004 31/43 | Building OptiX acceleration structure
+Fra:1 Mem:7138.21M (Peak 7304.05M) | Time:00:06.64 | Mem:186.96M, Peak:191.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.001 32/43 | Building BVH
+Fra:1 Mem:7138.21M (Peak 7304.05M) | Time:00:06.64 | Mem:187.62M, Peak:191.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.001 32/43 | Building OptiX acceleration structure
+Fra:1 Mem:7138.05M (Peak 7304.05M) | Time:00:06.64 | Mem:187.19M, Peak:191.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.002 33/43 | Building BVH
+Fra:1 Mem:7138.05M (Peak 7304.05M) | Time:00:06.64 | Mem:187.19M, Peak:191.33M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.002 33/43 | Building OptiX acceleration structure
+Fra:1 Mem:7137.30M (Peak 7304.05M) | Time:00:06.65 | Mem:187.70M, Peak:192.05M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved_mes 34/43 | Building BVH
+Fra:1 Mem:7137.30M (Peak 7304.05M) | Time:00:06.65 | Mem:188.58M, Peak:192.05M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved_mes 34/43 | Building OptiX acceleration structure
+Fra:1 Mem:7137.24M (Peak 7304.05M) | Time:00:06.65 | Mem:188.53M, Peak:192.05M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t.003 35/43 | Building BVH
+Fra:1 Mem:7137.24M (Peak 7304.05M) | Time:00:06.65 | Mem:188.53M, Peak:192.05M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t.003 35/43 | Building OptiX acceleration structure
+Fra:1 Mem:7139.32M (Peak 7304.05M) | Time:00:06.65 | Mem:187.91M, Peak:192.05M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t.001 36/43 | Building BVH
+Fra:1 Mem:7139.32M (Peak 7304.05M) | Time:00:06.65 | Mem:187.91M, Peak:192.05M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t.001 36/43 | Building OptiX acceleration structure
+Fra:1 Mem:7137.79M (Peak 7304.05M) | Time:00:06.66 | Mem:190.89M, Peak:198.74M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.004 37/43 | Building BVH
+Fra:1 Mem:7137.79M (Peak 7304.05M) | Time:00:06.66 | Mem:190.89M, Peak:198.74M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.004 37/43 | Building OptiX acceleration structure
+Fra:1 Mem:7137.28M (Peak 7304.05M) | Time:00:06.66 | Mem:191.28M, Peak:198.74M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.003 38/43 | Building BVH
+Fra:1 Mem:7137.28M (Peak 7304.05M) | Time:00:06.66 | Mem:191.28M, Peak:198.74M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.003 38/43 | Building OptiX acceleration structure
+Fra:1 Mem:7136.22M (Peak 7304.05M) | Time:00:06.67 | Mem:193.14M, Peak:198.90M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t.001 39/43 | Building BVH
+Fra:1 Mem:7136.22M (Peak 7304.05M) | Time:00:06.67 | Mem:194.43M, Peak:198.90M | bV2_city_baseline__positive_state__exr, positive_state | Updating Geometry BVH cache__trees__precolonial.True_size.large_control.reserve-t.001 39/43 | Building OptiX acceleration structure
+Fra:1 Mem:7123.56M (Peak 7304.05M) | Time:00:06.76 | Mem:199.22M, Peak:212.34M | bV2_city_baseline__positive_state__exr, positive_state | Updating Scene BVH | Building
+Fra:1 Mem:7124.90M (Peak 7304.05M) | Time:00:06.76 | Mem:199.22M, Peak:212.34M | bV2_city_baseline__positive_state__exr, positive_state | Updating Scene BVH | Building OptiX acceleration structure
+Fra:1 Mem:7124.90M (Peak 7304.05M) | Time:00:06.80 | Mem:225.74M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Scene BVH | Copying BVH to device
+Fra:1 Mem:7124.90M (Peak 7304.05M) | Time:00:06.80 | Mem:225.74M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Mesh | Computing normals
+Fra:1 Mem:7180.44M (Peak 7304.05M) | Time:00:06.88 | Mem:225.74M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Mesh | Copying Mesh to device
+Fra:1 Mem:7180.44M (Peak 7304.05M) | Time:00:06.91 | Mem:281.28M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Objects Flags
+Fra:1 Mem:7180.44M (Peak 7304.05M) | Time:00:06.92 | Mem:282.62M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Primitive Offsets
+Fra:1 Mem:7181.10M (Peak 7304.05M) | Time:00:06.93 | Mem:283.28M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Images
+Fra:1 Mem:7181.10M (Peak 7304.05M) | Time:00:06.93 | Mem:283.28M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Camera Volume
+Fra:1 Mem:7181.10M (Peak 7304.05M) | Time:00:06.93 | Mem:283.28M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Lookup Tables
+Fra:1 Mem:7181.10M (Peak 7304.05M) | Time:00:06.93 | Mem:283.37M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Lights
+Fra:1 Mem:7181.10M (Peak 7304.05M) | Time:00:06.93 | Mem:283.37M, Peak:289.55M | bV2_city_baseline__positive_state__exr, positive_state | Updating Lights | Computing tree
+Fra:1 Mem:7499.13M (Peak 7742.26M) | Time:00:08.92 | Mem:601.39M, Peak:601.39M | bV2_city_baseline__positive_state__exr, positive_state | Updating Integrator
+Fra:1 Mem:7499.13M (Peak 7742.26M) | Time:00:08.92 | Mem:601.39M, Peak:601.39M | bV2_city_baseline__positive_state__exr, positive_state | Updating Film
+Fra:1 Mem:7499.13M (Peak 7742.26M) | Time:00:08.92 | Mem:601.31M, Peak:601.39M | bV2_city_baseline__positive_state__exr, positive_state | Updating Lookup Tables
+Fra:1 Mem:7499.13M (Peak 7742.26M) | Time:00:08.92 | Mem:601.39M, Peak:601.39M | bV2_city_baseline__positive_state__exr, positive_state | Updating Baking
+Fra:1 Mem:7499.13M (Peak 7742.26M) | Time:00:08.93 | Mem:601.39M, Peak:601.39M | bV2_city_baseline__positive_state__exr, positive_state | Updating Device | Writing constant memory
+Fra:1 Mem:7515.12M (Peak 7742.26M) | Time:00:09.02 | Mem:1706.33M, Peak:1706.33M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 0/12 Tiles, Sample 0/64
+Fra:1 Mem:8254.02M (Peak 8254.02M) | Time:00:09.11 | Remaining:00:45.97 | Mem:2445.21M, Peak:2445.21M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 0/12 Tiles, Sample 1/64
+Fra:1 Mem:8254.03M (Peak 8990.03M) | Time:00:10.57 | Remaining:00:10.69 | Mem:2445.22M, Peak:2445.22M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 0/12 Tiles, Sample 64/64
+Fra:1 Mem:8254.03M (Peak 8990.03M) | Time:00:10.57 | Remaining:00:10.69 | Mem:2445.22M, Peak:2445.22M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 1/12 Tiles, Sample 64/64
+Fra:1 Mem:8255.47M (Peak 8990.03M) | Time:00:10.66 | Remaining:00:11.14 | Mem:2446.66M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 1/12 Tiles, Sample 1/64
+Fra:1 Mem:8255.47M (Peak 8991.47M) | Time:00:12.65 | Remaining:00:10.71 | Mem:2446.66M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 1/12 Tiles, Sample 64/64
+Fra:1 Mem:8255.47M (Peak 8991.47M) | Time:00:12.65 | Remaining:00:10.71 | Mem:2446.66M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 2/12 Tiles, Sample 64/64
+Fra:1 Mem:8255.47M (Peak 8991.47M) | Time:00:12.67 | Remaining:00:10.67 | Mem:2446.66M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 2/12 Tiles, Sample 1/64
+Fra:1 Mem:8255.47M (Peak 8991.47M) | Time:00:14.85 | Remaining:00:09.53 | Mem:2446.66M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 2/12 Tiles, Sample 64/64
+Fra:1 Mem:8255.47M (Peak 8991.47M) | Time:00:14.85 | Remaining:00:09.53 | Mem:2446.66M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 3/12 Tiles, Sample 64/64
+Fra:1 Mem:8069.67M (Peak 8991.47M) | Time:00:14.92 | Remaining:00:09.59 | Mem:2260.86M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 3/12 Tiles, Sample 1/64
+Fra:1 Mem:8069.67M (Peak 8991.47M) | Time:00:15.91 | Remaining:00:07.63 | Mem:2260.86M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 3/12 Tiles, Sample 64/64
+Fra:1 Mem:8069.67M (Peak 8991.47M) | Time:00:15.91 | Remaining:00:07.63 | Mem:2260.86M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 4/12 Tiles, Sample 64/64
+Fra:1 Mem:8255.47M (Peak 8991.47M) | Time:00:16.00 | Remaining:00:07.68 | Mem:2446.66M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 4/12 Tiles, Sample 1/64
+Fra:1 Mem:8255.47M (Peak 8991.47M) | Time:00:17.58 | Remaining:00:05.69 | Mem:2446.66M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 4/12 Tiles, Sample 64/64
+Fra:1 Mem:8255.47M (Peak 8991.47M) | Time:00:17.58 | Remaining:00:05.69 | Mem:2446.66M, Peak:2446.66M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 5/12 Tiles, Sample 64/64
+Fra:1 Mem:8256.91M (Peak 8991.47M) | Time:00:17.67 | Remaining:00:05.70 | Mem:2448.10M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 5/12 Tiles, Sample 1/64
+Fra:1 Mem:8256.91M (Peak 8992.91M) | Time:00:19.71 | Remaining:00:04.01 | Mem:2448.10M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 5/12 Tiles, Sample 64/64
+Fra:1 Mem:8256.91M (Peak 8992.91M) | Time:00:19.71 | Remaining:00:04.01 | Mem:2448.10M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 6/12 Tiles, Sample 64/64
+Fra:1 Mem:8256.91M (Peak 8992.91M) | Time:00:19.73 | Remaining:00:03.98 | Mem:2448.10M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 6/12 Tiles, Sample 1/64
+Fra:1 Mem:8256.91M (Peak 8992.91M) | Time:00:21.06 | Remaining:00:02.06 | Mem:2448.10M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 6/12 Tiles, Sample 64/64
+Fra:1 Mem:8256.91M (Peak 8992.91M) | Time:00:21.06 | Remaining:00:02.06 | Mem:2448.10M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 7/12 Tiles, Sample 64/64
+Fra:1 Mem:8070.75M (Peak 8992.91M) | Time:00:21.12 | Remaining:00:02.05 | Mem:2261.94M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 7/12 Tiles, Sample 1/64
+Fra:1 Mem:8070.75M (Peak 8992.91M) | Time:00:22.03 | Remaining:00:00.71 | Mem:2261.94M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 7/12 Tiles, Sample 64/64
+Fra:1 Mem:8070.75M (Peak 8992.91M) | Time:00:22.03 | Remaining:00:00.71 | Mem:2261.94M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 8/12 Tiles, Sample 64/64
+Fra:1 Mem:7597.25M (Peak 8992.91M) | Time:00:22.07 | Remaining:00:00.71 | Mem:1788.44M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 8/12 Tiles, Sample 1/64
+Fra:1 Mem:7597.25M (Peak 8992.91M) | Time:00:22.26 | Remaining:00:00.52 | Mem:1788.44M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 8/12 Tiles, Sample 64/64
+Fra:1 Mem:7597.25M (Peak 8992.91M) | Time:00:22.26 | Remaining:00:00.52 | Mem:1788.44M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 9/12 Tiles, Sample 64/64
+Fra:1 Mem:7597.41M (Peak 8992.91M) | Time:00:22.27 | Remaining:00:00.52 | Mem:1788.60M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 9/12 Tiles, Sample 1/64
+Fra:1 Mem:7597.41M (Peak 8992.91M) | Time:00:22.48 | Remaining:00:00.33 | Mem:1788.60M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 9/12 Tiles, Sample 64/64
+Fra:1 Mem:7597.41M (Peak 8992.91M) | Time:00:22.48 | Remaining:00:00.33 | Mem:1788.60M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 10/12 Tiles, Sample 64/64
+Fra:1 Mem:7597.41M (Peak 8992.91M) | Time:00:22.48 | Remaining:00:00.33 | Mem:1788.60M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 10/12 Tiles, Sample 1/64
+Fra:1 Mem:7597.41M (Peak 8992.91M) | Time:00:22.66 | Remaining:00:00.14 | Mem:1788.60M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 10/12 Tiles, Sample 64/64
+Fra:1 Mem:7597.41M (Peak 8992.91M) | Time:00:22.66 | Remaining:00:00.14 | Mem:1788.60M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 11/12 Tiles, Sample 64/64
+Fra:1 Mem:7576.76M (Peak 8992.91M) | Time:00:22.68 | Remaining:00:00.14 | Mem:1767.96M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 11/12 Tiles, Sample 1/64
+Fra:1 Mem:7576.76M (Peak 8992.91M) | Time:00:22.85 | Mem:1767.96M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 11/12 Tiles, Sample 64/64
+Fra:1 Mem:7576.76M (Peak 8992.91M) | Time:00:22.85 | Mem:1767.96M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Rendered 11/12 Tiles, Sample 0/64
+Fra:1 Mem:7576.76M (Peak 8992.91M) | Time:00:22.86 | Mem:1767.96M, Peak:2448.10M | bV2_city_baseline__positive_state__exr, positive_state | Finished
+Fra:1 Mem:6795.52M (Peak 8992.91M) | Time:00:23.06 | Mem:1172.42M, Peak:2448.10M | bV2_city_baseline__positive_state__exr | Reading full buffer from disk
+Fra:1 Mem:12617.39M (Peak 12617.40M) | Time:00:24.96 | Mem:1172.42M, Peak:2448.10M | bV2_city_baseline__positive_state__exr | positive_state | Finishing
+Fra:1 Mem:11967.01M (Peak 23501.87M) | Time:00:32.76 | Compositing
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__positive_state__8k64s0001.exr'
+Saved: '.exr'
+Time: 00:44.55 (Saving: 00:02.84)
+
+[2026-04-11 15:51:34] RENDER_EXR_DONE positive_state D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__positive_state__8k64s.exr
+[2026-04-11 15:51:34] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+Fra:1 Mem:12014.38M (Peak 12014.38M) | Time:00:00.89 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Synchronizing object | terrain_city_baseline_positive
+Fra:1 Mem:12063.48M (Peak 12101.58M) | Time:00:03.64 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Synchronizing object | trees_positions_city_baseline_positive_priority
+Fra:1 Mem:12077.62M (Peak 12101.58M) | Time:00:03.67 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Synchronizing object | city_baseline_terrain_source
+Fra:1 Mem:12077.62M (Peak 12101.58M) | Time:00:03.67 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Initializing
+Fra:1 Mem:12062.66M (Peak 12101.58M) | Time:00:03.84 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Waiting for render to start
+Fra:1 Mem:12062.67M (Peak 12101.58M) | Time:00:03.86 | Mem:0.00M, Peak:0.00M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Loading render kernels (may take a few minutes the first time)
+Fra:1 Mem:12062.67M (Peak 12101.58M) | Time:00:04.18 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Scene
+Fra:1 Mem:12062.67M (Peak 12101.58M) | Time:00:04.18 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Shaders
+Fra:1 Mem:12062.75M (Peak 12101.58M) | Time:00:04.18 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Procedurals
+Fra:1 Mem:12062.75M (Peak 12101.58M) | Time:00:04.18 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Background
+Fra:1 Mem:12062.75M (Peak 12101.58M) | Time:00:04.18 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Camera
+Fra:1 Mem:12062.75M (Peak 12101.58M) | Time:00:04.18 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Meshes Flags
+Fra:1 Mem:12062.75M (Peak 12101.58M) | Time:00:04.18 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Objects
+Fra:1 Mem:12062.75M (Peak 12101.58M) | Time:00:04.19 | Mem:0.01M, Peak:0.01M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Objects | Copying Transformations to device
+Fra:1 Mem:12106.32M (Peak 12106.32M) | Time:00:04.22 | Mem:42.26M, Peak:42.26M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Objects | Applying Static Transformations
+Fra:1 Mem:12106.32M (Peak 12106.32M) | Time:00:04.24 | Mem:42.26M, Peak:42.26M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Particle Systems
+Fra:1 Mem:12106.32M (Peak 12106.32M) | Time:00:04.24 | Mem:42.26M, Peak:42.26M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Particle Systems | Copying Particles to device
+Fra:1 Mem:12106.32M (Peak 12106.32M) | Time:00:04.24 | Mem:42.26M, Peak:42.26M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Meshes
+Fra:1 Mem:12111.02M (Peak 12111.02M) | Time:00:04.25 | Mem:42.26M, Peak:42.26M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Mesh | Computing attributes
+Fra:1 Mem:12384.74M (Peak 12384.74M) | Time:00:05.33 | Mem:105.67M, Peak:105.67M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Mesh | Copying Attributes to device
+Fra:1 Mem:12207.71M (Peak 12384.74M) | Time:00:05.51 | Mem:138.95M, Peak:138.95M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH city_baseline_terrain_1 22/22 | Building BVH
+Fra:1 Mem:12207.71M (Peak 12384.74M) | Time:00:05.51 | Mem:138.95M, Peak:138.95M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH city_baseline_terrain_1 22/22 | Building OptiX acceleration structure
+Fra:1 Mem:12207.71M (Peak 12384.74M) | Time:00:05.51 | Mem:138.95M, Peak:138.95M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH terrain_city_baseline_positive_mesh 1/22 | Building BVH
+Fra:1 Mem:12207.71M (Peak 12384.74M) | Time:00:05.51 | Mem:138.95M, Peak:138.95M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.senescing_control.impro.004 5/22 | Building OptiX acceleration structure
+Fra:1 Mem:12207.71M (Peak 12384.74M) | Time:00:05.51 | Mem:138.95M, Peak:138.95M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.senescing_control.impro.003 11/22 | Building BVH
+Fra:1 Mem:12207.71M (Peak 12384.74M) | Time:00:05.51 | Mem:138.95M, Peak:138.95M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.002 16/22 | Building OptiX acceleration structure
+Fra:1 Mem:12209.88M (Peak 12384.74M) | Time:00:05.51 | Mem:139.06M, Peak:139.06M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved_mes 17/22 | Building BVH
+Fra:1 Mem:12209.88M (Peak 12384.74M) | Time:00:05.51 | Mem:139.26M, Peak:139.26M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved_mes 17/22 | Building OptiX acceleration structure
+Fra:1 Mem:12212.93M (Peak 12384.74M) | Time:00:05.52 | Mem:144.74M, Peak:144.74M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t.001 18/22 | Building BVH
+Fra:1 Mem:12212.93M (Peak 12384.74M) | Time:00:05.52 | Mem:144.74M, Peak:144.74M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.snag_control.improved-t.001 18/22 | Building OptiX acceleration structure
+Fra:1 Mem:12212.71M (Peak 12384.74M) | Time:00:05.52 | Mem:144.44M, Peak:146.21M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.003 20/22 | Building BVH
+Fra:1 Mem:12212.71M (Peak 12384.74M) | Time:00:05.52 | Mem:145.46M, Peak:146.21M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.003 20/22 | Building OptiX acceleration structure
+Fra:1 Mem:12212.62M (Peak 12384.74M) | Time:00:05.53 | Mem:144.94M, Peak:147.12M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.004 19/22 | Building BVH
+Fra:1 Mem:12212.62M (Peak 12384.74M) | Time:00:05.53 | Mem:146.65M, Peak:147.12M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Geometry BVH cache__trees__precolonial.True_size.fallen_control.improved.004 19/22 | Building OptiX acceleration structure
+Fra:1 Mem:12207.71M (Peak 12384.74M) | Time:00:05.57 | Mem:146.63M, Peak:149.62M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Scene BVH | Building
+Fra:1 Mem:12209.03M (Peak 12384.74M) | Time:00:05.57 | Mem:146.63M, Peak:149.62M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Scene BVH | Building OptiX acceleration structure
+Fra:1 Mem:12209.03M (Peak 12384.74M) | Time:00:05.61 | Mem:172.64M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Scene BVH | Copying BVH to device
+Fra:1 Mem:12209.03M (Peak 12384.74M) | Time:00:05.61 | Mem:172.64M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Mesh | Computing normals
+Fra:1 Mem:12219.74M (Peak 12384.74M) | Time:00:05.61 | Mem:172.64M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Mesh | Copying Mesh to device
+Fra:1 Mem:12219.74M (Peak 12384.74M) | Time:00:05.62 | Mem:183.35M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Objects Flags
+Fra:1 Mem:12219.74M (Peak 12384.74M) | Time:00:05.63 | Mem:184.67M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Primitive Offsets
+Fra:1 Mem:12220.40M (Peak 12384.74M) | Time:00:05.63 | Mem:185.33M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Images
+Fra:1 Mem:12220.40M (Peak 12384.74M) | Time:00:05.64 | Mem:185.33M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Camera Volume
+Fra:1 Mem:12220.40M (Peak 12384.74M) | Time:00:05.64 | Mem:185.33M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Lookup Tables
+Fra:1 Mem:12220.40M (Peak 12384.74M) | Time:00:05.64 | Mem:185.41M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Lights
+Fra:1 Mem:12220.40M (Peak 12384.74M) | Time:00:05.64 | Mem:185.41M, Peak:235.60M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Lights | Computing tree
+Fra:1 Mem:12309.54M (Peak 12393.52M) | Time:00:06.30 | Mem:274.55M, Peak:274.55M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Integrator
+Fra:1 Mem:12309.54M (Peak 12393.52M) | Time:00:06.30 | Mem:274.55M, Peak:274.55M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Film
+Fra:1 Mem:12309.54M (Peak 12393.52M) | Time:00:06.30 | Mem:274.47M, Peak:274.55M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Lookup Tables
+Fra:1 Mem:12309.54M (Peak 12393.52M) | Time:00:06.30 | Mem:274.55M, Peak:274.55M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Baking
+Fra:1 Mem:12309.54M (Peak 12393.52M) | Time:00:06.31 | Mem:274.55M, Peak:274.55M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Updating Device | Writing constant memory
+Fra:1 Mem:12325.50M (Peak 12393.52M) | Time:00:06.38 | Mem:1379.49M, Peak:1379.49M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 0/12 Tiles, Sample 0/64
+Fra:1 Mem:13064.39M (Peak 13064.39M) | Time:00:06.45 | Remaining:00:33.71 | Mem:2118.37M, Peak:2118.37M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 0/12 Tiles, Sample 1/64
+Fra:1 Mem:13064.40M (Peak 13800.40M) | Time:00:07.83 | Remaining:00:09.99 | Mem:2118.38M, Peak:2118.38M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 0/12 Tiles, Sample 64/64
+Fra:1 Mem:13064.40M (Peak 13800.40M) | Time:00:07.83 | Remaining:00:09.99 | Mem:2118.38M, Peak:2118.38M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 1/12 Tiles, Sample 64/64
+Fra:1 Mem:13065.84M (Peak 13800.40M) | Time:00:07.93 | Remaining:00:10.47 | Mem:2119.82M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 1/12 Tiles, Sample 1/64
+Fra:1 Mem:13065.84M (Peak 13801.84M) | Time:00:09.85 | Remaining:00:10.25 | Mem:2119.82M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 1/12 Tiles, Sample 64/64
+Fra:1 Mem:13065.84M (Peak 13801.84M) | Time:00:09.85 | Remaining:00:10.25 | Mem:2119.82M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 2/12 Tiles, Sample 64/64
+Fra:1 Mem:13065.84M (Peak 13801.84M) | Time:00:09.88 | Remaining:00:10.23 | Mem:2119.82M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 2/12 Tiles, Sample 1/64
+Fra:1 Mem:13065.84M (Peak 13801.84M) | Time:00:12.17 | Remaining:00:09.47 | Mem:2119.82M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 2/12 Tiles, Sample 64/64
+Fra:1 Mem:13065.84M (Peak 13801.84M) | Time:00:12.17 | Remaining:00:09.47 | Mem:2119.82M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 3/12 Tiles, Sample 64/64
+Fra:1 Mem:12880.04M (Peak 13801.84M) | Time:00:12.25 | Remaining:00:09.54 | Mem:1934.02M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 3/12 Tiles, Sample 1/64
+Fra:1 Mem:12880.04M (Peak 13801.84M) | Time:00:13.23 | Remaining:00:07.59 | Mem:1934.02M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 3/12 Tiles, Sample 64/64
+Fra:1 Mem:12880.04M (Peak 13801.84M) | Time:00:13.23 | Remaining:00:07.59 | Mem:1934.02M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 4/12 Tiles, Sample 64/64
+Fra:1 Mem:13065.84M (Peak 13801.84M) | Time:00:13.30 | Remaining:00:07.61 | Mem:2119.82M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 4/12 Tiles, Sample 1/64
+Fra:1 Mem:13065.84M (Peak 13801.84M) | Time:00:14.79 | Remaining:00:05.59 | Mem:2119.82M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 4/12 Tiles, Sample 64/64
+Fra:1 Mem:13065.84M (Peak 13801.84M) | Time:00:14.79 | Remaining:00:05.59 | Mem:2119.82M, Peak:2119.82M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 5/12 Tiles, Sample 64/64
+Fra:1 Mem:13067.29M (Peak 13801.84M) | Time:00:14.91 | Remaining:00:05.62 | Mem:2121.27M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 5/12 Tiles, Sample 1/64
+Fra:1 Mem:13067.29M (Peak 13803.29M) | Time:00:17.13 | Remaining:00:04.03 | Mem:2121.27M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 5/12 Tiles, Sample 64/64
+Fra:1 Mem:13067.29M (Peak 13803.29M) | Time:00:17.13 | Remaining:00:04.03 | Mem:2121.27M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 6/12 Tiles, Sample 64/64
+Fra:1 Mem:13067.29M (Peak 13803.29M) | Time:00:17.14 | Remaining:00:04.00 | Mem:2121.27M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 6/12 Tiles, Sample 1/64
+Fra:1 Mem:13067.29M (Peak 13803.29M) | Time:00:18.50 | Remaining:00:02.08 | Mem:2121.27M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 6/12 Tiles, Sample 64/64
+Fra:1 Mem:13067.29M (Peak 13803.29M) | Time:00:18.50 | Remaining:00:02.08 | Mem:2121.27M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 7/12 Tiles, Sample 64/64
+Fra:1 Mem:12881.12M (Peak 13803.29M) | Time:00:18.57 | Remaining:00:02.06 | Mem:1935.11M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 7/12 Tiles, Sample 1/64
+Fra:1 Mem:12881.12M (Peak 13803.29M) | Time:00:19.49 | Remaining:00:00.71 | Mem:1935.11M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 7/12 Tiles, Sample 64/64
+Fra:1 Mem:12881.12M (Peak 13803.29M) | Time:00:19.49 | Remaining:00:00.71 | Mem:1935.11M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 8/12 Tiles, Sample 64/64
+Fra:1 Mem:12407.62M (Peak 13803.29M) | Time:00:19.52 | Remaining:00:00.71 | Mem:1461.60M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 8/12 Tiles, Sample 1/64
+Fra:1 Mem:12407.62M (Peak 13803.29M) | Time:00:19.72 | Remaining:00:00.52 | Mem:1461.60M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 8/12 Tiles, Sample 64/64
+Fra:1 Mem:12407.62M (Peak 13803.29M) | Time:00:19.72 | Remaining:00:00.52 | Mem:1461.60M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 9/12 Tiles, Sample 64/64
+Fra:1 Mem:12407.78M (Peak 13803.29M) | Time:00:19.75 | Remaining:00:00.52 | Mem:1461.76M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 9/12 Tiles, Sample 1/64
+Fra:1 Mem:12407.78M (Peak 13803.29M) | Time:00:19.96 | Remaining:00:00.33 | Mem:1461.76M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 9/12 Tiles, Sample 64/64
+Fra:1 Mem:12407.78M (Peak 13803.29M) | Time:00:19.96 | Remaining:00:00.33 | Mem:1461.76M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 10/12 Tiles, Sample 64/64
+Fra:1 Mem:12407.78M (Peak 13803.29M) | Time:00:19.96 | Remaining:00:00.33 | Mem:1461.76M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 10/12 Tiles, Sample 1/64
+Fra:1 Mem:12407.78M (Peak 13803.29M) | Time:00:20.18 | Remaining:00:00.14 | Mem:1461.76M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 10/12 Tiles, Sample 64/64
+Fra:1 Mem:12407.78M (Peak 13803.29M) | Time:00:20.18 | Remaining:00:00.14 | Mem:1461.76M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 11/12 Tiles, Sample 64/64
+Fra:1 Mem:12387.14M (Peak 13803.29M) | Time:00:20.19 | Remaining:00:00.14 | Mem:1441.12M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 11/12 Tiles, Sample 1/64
+Fra:1 Mem:12387.14M (Peak 13803.29M) | Time:00:20.34 | Mem:1441.12M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 11/12 Tiles, Sample 64/64
+Fra:1 Mem:12387.14M (Peak 13803.29M) | Time:00:20.34 | Mem:1441.12M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Rendered 11/12 Tiles, Sample 0/64
+Fra:1 Mem:12387.14M (Peak 13803.29M) | Time:00:20.35 | Mem:1441.12M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr, positive_priority_state | Finished
+Fra:1 Mem:11978.69M (Peak 13803.29M) | Time:00:20.51 | Mem:1138.65M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr | Reading full buffer from disk
+Fra:1 Mem:17800.57M (Peak 17800.57M) | Time:00:22.12 | Mem:1138.65M, Peak:2121.27M | bV2_city_baseline__positive_priority_state__exr | positive_priority_state | Finishing
+Fra:1 Mem:17150.22M (Peak 28685.04M) | Time:00:29.39 | Compositing
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__positive_priority_state__8k64s0001.exr'
+Saved: '.exr'
+Time: 00:39.83 (Saving: 00:02.59)
+
+[2026-04-11 15:52:14] RENDER_EXR_DONE positive_priority_state D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__positive_priority_state__8k64s.exr
+[2026-04-11 15:52:14] MEDIAFLUX_UPLOAD_START D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline -> pipeline\4.9\blender_exrs\city_baseline
+Connected to [0;34mmediaflux.researchsoftware.unimelb.edu.au:443[0m as [0;33munimelb:holland1[0m
+
+Checking 5 files...
+Uploading file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__existing_condition_positive__8k64s.exr' to asset: '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__existing_condition_positive__8k64s.exr'
+Uploaded file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__existing_condition_positive__8k64s.exr' to asset(id=2703753493): '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__existing_condition_positive__8k64s.exr'
+Uploading file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__full_pipeline.blend' to asset: '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__full_pipeline.blend'
+Uploaded file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__full_pipeline.blend' to asset(id=2703753543): '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__full_pipeline.blend'
+Uploading file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__manifest.txt' to asset: '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__manifest.txt'
+Uploaded file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__manifest.txt' to asset(id=2703753551): '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__manifest.txt'
+Uploading file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__positive_priority_state__8k64s.exr' to asset: '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__positive_priority_state__8k64s.exr'
+Uploaded file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__positive_priority_state__8k64s.exr' to asset(id=2703753607): '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__positive_priority_state__8k64s.exr'
+Uploading file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__positive_state__8k64s.exr' to asset: '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__positive_state__8k64s.exr'
+Uploaded file: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline\city_baseline__positive_state__8k64s.exr' to asset(id=2703753708): '/projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline/city_baseline__positive_state__8k64s.exr'
+Listening socket closed!
+
+Upload:
+    src(directory): D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline
+    dst(mediaflux): /projects/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures/pipeline/4.9/blender_exrs/city_baseline
+
+
+Summary:
+         Exec time: 4.617 seconds
+    Worker threads: 1
+
+    Uploaded files:                                5 files
+     Skipped files:                                0 files
+      Failed files:                                0 files
+       Total files:                                5 files
+    Uploaded bytes:                      649,083,019 bytes
+      Upload speed:                          140.585 MB/s
+
+[2026-04-11 15:52:21] MEDIAFLUX_UPLOAD_DONE D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_baseline -> pipeline\4.9\blender_exrs\city_baseline
+[2026-04-11 15:52:21] BUILD_SCENE_DONE {'scene': 'bV2_city_baseline', 'site': 'city', 'mode': 'baseline', 'year': None, 'blend_output_path': 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\blends\\4.9\\city_baseline__full_pipeline.blend', 'render_output_root': 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_baseline', 'remote_subpath': 'pipeline\\4.9\\blender_exrs\\city_baseline', 'instancers': {'scene': 'bV2_city_baseline', 'site': 'city', 'mode': 'baseline', 'year': None, 'results': [{'family': 'trees', 'state': 'positive', 'row_count': 2545, 'model_count': 39, 'point_object': 'trees_positions_city_baseline_positive', 'models_collection': 'trees_models_city_baseline_positive'}, {'family': 'trees', 'state': 'positive_priority', 'row_count': 185, 'model_count': 18, 'point_object': 'trees_positions_city_baseline_positive_priority', 'models_collection': 'trees_models_city_baseline_positive_priority'}], 'positive_rows': 2545, 'priority_rows': 185, 'trending_rows': 0}, 'bioenvelopes': {'skipped': True, 'reason': 'baseline mode'}, 'world': {'positive': ['terrain_city_baseline_positive']}, 'validation': {'scene': 'bV2_city_baseline', 'site': 'city', 'mode': 'baseline', 'year': None, 'errors': [], 'warnings': [], 'ok': True}, 'render': {'scene': 'bV2_city_baseline', 'output_root': 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_baseline', 'resolution': (7680, 4320, 100), 'samples': 64, 'tag': '8k64s'}, 'rendered_paths': ['D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_baseline\\city_baseline__existing_condition_positive__8k64s.exr', 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_baseline\\city_baseline__positive_state__8k64s.exr', 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_baseline\\city_baseline__positive_priority_state__8k64s.exr']}
+
+Blender quit
+Error: Not freed memory blocks: 3, total unfreed memory 0.003983 MB

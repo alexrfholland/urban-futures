@@ -1,0 +1,17 @@
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\blenderv2\bV2_build_scene.py", line 12, in <module>
+    from _futureSim_refactored.paths import (
+ModuleNotFoundError: No module named '_futureSim_refactored'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\blenderv2\bV2_build_scene.py", line 49, in <module>
+    from bV2_build_instancers import build_instancers  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\blenderv2\bV2_build_instancers.py", line 14, in <module>
+    import pandas as pd
+ModuleNotFoundError: No module named 'pandas'
+
+Blender quit

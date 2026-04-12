@@ -1,0 +1,351 @@
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\temp_blends\template_instantiations\compositor_bioenvelope__city_single-state_yr180__4.10__20260412_104824.blend"
+Fra:1 Mem:16339.42M (Peak 16339.42M) | Time:00:00.00 | Compositing
+Fra:1 Mem:16339.44M (Peak 16339.44M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:16339.50M (Peak 16339.50M) | Time:00:00.00 | Compositing | Operation 2-248
+Fra:1 Mem:16339.50M (Peak 16339.50M) | Time:00:00.00 | Compositing | Operation 3-248
+Fra:1 Mem:16592.69M (Peak 16592.69M) | Time:00:00.07 | Compositing | Operation 4-248
+Fra:1 Mem:16719.25M (Peak 16719.25M) | Time:00:00.14 | Compositing | Operation 5-248
+Fra:1 Mem:16845.82M (Peak 16845.82M) | Time:00:00.16 | Compositing | Operation 6-248
+Fra:1 Mem:16845.82M (Peak 16972.38M) | Time:00:00.20 | Compositing | Operation 7-248
+Fra:1 Mem:16845.82M (Peak 16972.38M) | Time:00:00.20 | Compositing | Operation 8-248
+Fra:1 Mem:16845.82M (Peak 16972.38M) | Time:00:00.20 | Compositing | Operation 9-248
+Fra:1 Mem:16972.38M (Peak 16972.38M) | Time:00:00.21 | Compositing | Operation 10-248
+Fra:1 Mem:16972.38M (Peak 17098.94M) | Time:00:00.25 | Compositing | Operation 11-248
+Fra:1 Mem:17352.07M (Peak 17478.63M) | Time:00:00.30 | Compositing | Operation 12-248
+Fra:1 Mem:17478.63M (Peak 17478.63M) | Time:00:00.32 | Compositing | Operation 13-248
+Fra:1 Mem:17605.19M (Peak 17605.19M) | Time:00:00.34 | Compositing | Operation 14-248
+Fra:1 Mem:17605.19M (Peak 17605.19M) | Time:00:00.34 | Compositing | Operation 15-248
+Fra:1 Mem:17731.75M (Peak 17731.75M) | Time:00:00.36 | Compositing | Operation 16-248
+Fra:1 Mem:18111.44M (Peak 18238.00M) | Time:00:00.42 | Compositing | Operation 17-248
+Fra:1 Mem:18238.00M (Peak 18238.00M) | Time:00:00.44 | Compositing | Operation 18-248
+Fra:1 Mem:18238.00M (Peak 18238.00M) | Time:00:00.44 | Compositing | Operation 19-248
+Fra:1 Mem:18238.00M (Peak 18238.00M) | Time:00:00.44 | Compositing | Operation 20-248
+Fra:1 Mem:18238.00M (Peak 18238.00M) | Time:00:00.44 | Compositing | Operation 21-248
+Fra:1 Mem:18238.00M (Peak 18238.00M) | Time:00:00.44 | Compositing | Operation 22-248
+Fra:1 Mem:18238.00M (Peak 18238.00M) | Time:00:00.44 | Compositing | Operation 23-248
+Fra:1 Mem:18238.00M (Peak 18238.00M) | Time:00:00.44 | Compositing | Operation 24-248
+Fra:1 Mem:18364.57M (Peak 18364.57M) | Time:00:00.45 | Compositing | Operation 25-248
+Fra:1 Mem:18364.57M (Peak 18364.57M) | Time:00:00.45 | Compositing | Operation 26-248
+Fra:1 Mem:18364.57M (Peak 18364.57M) | Time:00:00.45 | Compositing | Operation 27-248
+Fra:1 Mem:18364.57M (Peak 18364.57M) | Time:00:00.45 | Compositing | Operation 28-248
+Fra:1 Mem:18364.57M (Peak 18364.57M) | Time:00:00.45 | Compositing | Operation 29-248
+Fra:1 Mem:18491.13M (Peak 18491.13M) | Time:00:00.47 | Compositing | Operation 30-248
+Fra:1 Mem:18491.13M (Peak 18491.13M) | Time:00:00.47 | Compositing | Operation 31-248
+Fra:1 Mem:18491.13M (Peak 18491.13M) | Time:00:00.47 | Compositing | Operation 32-248
+Fra:1 Mem:18491.13M (Peak 19756.75M) | Time:00:01.03 | Compositing | Operation 33-248
+Fra:1 Mem:18491.13M (Peak 19756.75M) | Time:00:01.10 | Compositing | Operation 34-248
+Fra:1 Mem:18870.82M (Peak 19756.75M) | Time:00:01.17 | Compositing | Operation 35-248
+Fra:1 Mem:18870.82M (Peak 19756.75M) | Time:00:01.24 | Compositing | Operation 36-248
+Fra:1 Mem:18870.82M (Peak 20136.44M) | Time:00:01.79 | Compositing | Operation 37-248
+Fra:1 Mem:18870.82M (Peak 20136.44M) | Time:00:01.86 | Compositing | Operation 38-248
+Fra:1 Mem:18870.82M (Peak 20136.44M) | Time:00:01.86 | Compositing | Operation 39-248
+Fra:1 Mem:18870.82M (Peak 20136.44M) | Time:00:01.86 | Compositing | Operation 40-248
+Fra:1 Mem:18997.38M (Peak 20136.44M) | Time:00:01.89 | Compositing | Operation 41-248
+Fra:1 Mem:18997.38M (Peak 20136.44M) | Time:00:01.89 | Compositing | Operation 42-248
+Fra:1 Mem:19123.94M (Peak 20136.44M) | Time:00:01.92 | Compositing | Operation 43-248
+Fra:1 Mem:19123.94M (Peak 20136.44M) | Time:00:01.92 | Compositing | Operation 44-248
+Fra:1 Mem:19123.94M (Peak 20136.44M) | Time:00:01.92 | Compositing | Operation 45-248
+Fra:1 Mem:19123.94M (Peak 20136.44M) | Time:00:01.92 | Compositing | Operation 46-248
+Fra:1 Mem:19250.50M (Peak 20136.44M) | Time:00:01.94 | Compositing | Operation 47-248
+Fra:1 Mem:19250.50M (Peak 20136.44M) | Time:00:01.94 | Compositing | Operation 48-248
+Fra:1 Mem:19377.07M (Peak 20136.44M) | Time:00:01.96 | Compositing | Operation 49-248
+Fra:1 Mem:19377.07M (Peak 20136.44M) | Time:00:01.96 | Compositing | Operation 50-248
+Fra:1 Mem:19377.07M (Peak 20136.44M) | Time:00:01.96 | Compositing | Operation 51-248
+Fra:1 Mem:19377.07M (Peak 20136.44M) | Time:00:01.96 | Compositing | Operation 52-248
+Fra:1 Mem:19503.63M (Peak 20136.44M) | Time:00:01.98 | Compositing | Operation 53-248
+Fra:1 Mem:19503.63M (Peak 20136.44M) | Time:00:01.98 | Compositing | Operation 54-248
+Fra:1 Mem:19630.19M (Peak 20136.44M) | Time:00:02.01 | Compositing | Operation 55-248
+Fra:1 Mem:19630.19M (Peak 20136.44M) | Time:00:02.01 | Compositing | Operation 56-248
+Fra:1 Mem:19250.50M (Peak 20136.44M) | Time:00:02.06 | Compositing | Operation 57-248
+Fra:1 Mem:19630.19M (Peak 20136.44M) | Time:00:02.13 | Compositing | Operation 58-248
+Fra:1 Mem:19756.75M (Peak 20136.44M) | Time:00:02.15 | Compositing | Operation 59-248
+Fra:1 Mem:20136.44M (Peak 20263.00M) | Time:00:02.22 | Compositing | Operation 60-248
+Fra:1 Mem:19756.75M (Peak 20263.00M) | Time:00:02.26 | Compositing | Operation 61-248
+Fra:1 Mem:20136.44M (Peak 20263.00M) | Time:00:02.32 | Compositing | Operation 62-248
+Fra:1 Mem:20136.44M (Peak 20263.00M) | Time:00:02.32 | Compositing | Operation 63-248
+Fra:1 Mem:20136.44M (Peak 20263.00M) | Time:00:02.32 | Compositing | Operation 64-248
+Fra:1 Mem:20263.00M (Peak 20263.00M) | Time:00:02.34 | Compositing | Operation 65-248
+Fra:1 Mem:20263.00M (Peak 20263.00M) | Time:00:02.34 | Compositing | Operation 66-248
+Fra:1 Mem:20642.69M (Peak 20769.25M) | Time:00:02.40 | Compositing | Operation 67-248
+Fra:1 Mem:21022.38M (Peak 21148.94M) | Time:00:02.46 | Compositing | Operation 68-248
+Fra:1 Mem:21022.38M (Peak 21148.94M) | Time:00:02.46 | Compositing | Operation 69-248
+Fra:1 Mem:21022.38M (Peak 21148.94M) | Time:00:02.46 | Compositing | Operation 70-248
+Fra:1 Mem:21022.38M (Peak 21148.94M) | Time:00:02.46 | Compositing | Operation 71-248
+Fra:1 Mem:21148.94M (Peak 21148.94M) | Time:00:02.48 | Compositing | Operation 72-248
+Fra:1 Mem:21148.94M (Peak 21148.94M) | Time:00:02.48 | Compositing | Operation 73-248
+Fra:1 Mem:21528.63M (Peak 21655.19M) | Time:00:02.54 | Compositing | Operation 74-248
+Fra:1 Mem:21908.32M (Peak 22034.88M) | Time:00:02.59 | Compositing | Operation 75-248
+Fra:1 Mem:21908.32M (Peak 22034.88M) | Time:00:02.59 | Compositing | Operation 76-248
+Fra:1 Mem:21908.32M (Peak 22034.88M) | Time:00:02.59 | Compositing | Operation 77-248
+Fra:1 Mem:21908.32M (Peak 22034.88M) | Time:00:02.59 | Compositing | Operation 78-248
+Fra:1 Mem:22034.88M (Peak 22034.88M) | Time:00:02.62 | Compositing | Operation 79-248
+Fra:1 Mem:22034.88M (Peak 22034.88M) | Time:00:02.62 | Compositing | Operation 80-248
+Fra:1 Mem:22414.57M (Peak 22541.13M) | Time:00:02.68 | Compositing | Operation 81-248
+Fra:1 Mem:22794.25M (Peak 22920.82M) | Time:00:02.73 | Compositing | Operation 82-248
+Fra:1 Mem:22794.25M (Peak 22920.82M) | Time:00:02.73 | Compositing | Operation 83-248
+Fra:1 Mem:22794.25M (Peak 22920.82M) | Time:00:02.73 | Compositing | Operation 84-248
+Fra:1 Mem:22794.25M (Peak 23300.50M) | Time:00:02.80 | Compositing | Operation 85-248
+Fra:1 Mem:22794.25M (Peak 23300.50M) | Time:00:02.80 | Compositing | Operation 86-248
+Fra:1 Mem:22794.25M (Peak 23300.50M) | Time:00:02.88 | Compositing | Operation 87-248
+Fra:1 Mem:22794.25M (Peak 23300.50M) | Time:00:02.88 | Compositing | Operation 88-248
+Fra:1 Mem:22794.25M (Peak 23300.50M) | Time:00:02.95 | Compositing | Operation 89-248
+Fra:1 Mem:22920.82M (Peak 23300.50M) | Time:00:02.98 | Compositing | Operation 90-248
+Fra:1 Mem:22920.82M (Peak 23300.50M) | Time:00:02.98 | Compositing | Operation 91-248
+Fra:1 Mem:23300.50M (Peak 23427.07M) | Time:00:03.05 | Compositing | Operation 92-248
+Fra:1 Mem:23300.50M (Peak 23806.75M) | Time:00:03.14 | Compositing | Operation 93-248
+Fra:1 Mem:23300.50M (Peak 23806.75M) | Time:00:03.14 | Compositing | Operation 94-248
+Fra:1 Mem:23300.50M (Peak 23806.75M) | Time:00:03.14 | Compositing | Operation 95-248
+Fra:1 Mem:23300.50M (Peak 23806.75M) | Time:00:03.14 | Compositing | Operation 96-248
+Fra:1 Mem:23427.07M (Peak 23806.75M) | Time:00:03.17 | Compositing | Operation 97-248
+Fra:1 Mem:23427.07M (Peak 23806.75M) | Time:00:03.17 | Compositing | Operation 98-248
+Fra:1 Mem:23806.75M (Peak 23933.32M) | Time:00:03.23 | Compositing | Operation 99-248
+Fra:1 Mem:23806.75M (Peak 24313.00M) | Time:00:03.32 | Compositing | Operation 100-248
+Fra:1 Mem:23806.75M (Peak 24313.00M) | Time:00:03.32 | Compositing | Operation 101-248
+Fra:1 Mem:23806.75M (Peak 24313.00M) | Time:00:03.32 | Compositing | Operation 102-248
+Fra:1 Mem:23806.75M (Peak 24313.00M) | Time:00:03.32 | Compositing | Operation 103-248
+Fra:1 Mem:23933.32M (Peak 24313.00M) | Time:00:03.34 | Compositing | Operation 104-248
+Fra:1 Mem:23933.32M (Peak 24313.00M) | Time:00:03.34 | Compositing | Operation 105-248
+Fra:1 Mem:24313.00M (Peak 24439.57M) | Time:00:03.41 | Compositing | Operation 106-248
+Fra:1 Mem:24313.00M (Peak 24819.25M) | Time:00:03.52 | Compositing | Operation 107-248
+Fra:1 Mem:24313.00M (Peak 24819.25M) | Time:00:03.52 | Compositing | Operation 108-248
+Fra:1 Mem:24313.00M (Peak 24819.25M) | Time:00:03.65 | Compositing | Operation 109-248
+Fra:1 Mem:24313.00M (Peak 24819.25M) | Time:00:03.77 | Compositing | Operation 110-248
+Fra:1 Mem:24313.00M (Peak 24819.25M) | Time:00:03.90 | Compositing | Operation 111-248
+Fra:1 Mem:24313.00M (Peak 24819.25M) | Time:00:03.90 | Compositing | Operation 112-248
+Fra:1 Mem:24313.00M (Peak 24819.25M) | Time:00:03.90 | Compositing | Operation 113-248
+Fra:1 Mem:24692.69M (Peak 24819.25M) | Time:00:03.96 | Compositing | Operation 114-248
+Fra:1 Mem:24692.69M (Peak 25198.94M) | Time:00:04.04 | Compositing | Operation 115-248
+Fra:1 Mem:24692.69M (Peak 25198.94M) | Time:00:04.04 | Compositing | Operation 116-248
+Fra:1 Mem:24692.69M (Peak 25198.94M) | Time:00:04.04 | Compositing | Operation 117-248
+Fra:1 Mem:24692.69M (Peak 25198.94M) | Time:00:04.04 | Compositing | Operation 118-248
+Fra:1 Mem:24819.25M (Peak 25198.94M) | Time:00:04.07 | Compositing | Operation 119-248
+Fra:1 Mem:24819.25M (Peak 25198.94M) | Time:00:04.07 | Compositing | Operation 120-248
+Fra:1 Mem:25198.94M (Peak 25325.50M) | Time:00:04.14 | Compositing | Operation 121-248
+Fra:1 Mem:25198.94M (Peak 25705.19M) | Time:00:04.25 | Compositing | Operation 122-248
+Fra:1 Mem:25198.94M (Peak 25705.19M) | Time:00:04.25 | Compositing | Operation 123-248
+Fra:1 Mem:25198.94M (Peak 25705.19M) | Time:00:04.25 | Compositing | Operation 124-248
+Fra:1 Mem:25198.94M (Peak 25705.19M) | Time:00:04.25 | Compositing | Operation 125-248
+Fra:1 Mem:25325.50M (Peak 25705.19M) | Time:00:04.28 | Compositing | Operation 126-248
+Fra:1 Mem:25325.50M (Peak 25705.19M) | Time:00:04.28 | Compositing | Operation 127-248
+Fra:1 Mem:25705.19M (Peak 25831.75M) | Time:00:04.35 | Compositing | Operation 128-248
+Fra:1 Mem:25705.19M (Peak 26211.44M) | Time:00:04.43 | Compositing | Operation 129-248
+Fra:1 Mem:25705.19M (Peak 26211.44M) | Time:00:04.43 | Compositing | Operation 130-248
+Fra:1 Mem:25325.50M (Peak 26211.44M) | Time:00:04.47 | Compositing | Operation 131-248
+Fra:1 Mem:24945.82M (Peak 26211.44M) | Time:00:04.52 | Compositing | Operation 132-248
+Fra:1 Mem:24566.13M (Peak 26211.44M) | Time:00:04.56 | Compositing | Operation 133-248
+Fra:1 Mem:24566.13M (Peak 26211.44M) | Time:00:04.56 | Compositing | Operation 134-248
+Fra:1 Mem:24566.13M (Peak 26211.44M) | Time:00:04.56 | Compositing | Operation 135-248
+Fra:1 Mem:24692.69M (Peak 26211.44M) | Time:00:04.59 | Compositing | Operation 136-248
+Fra:1 Mem:24692.69M (Peak 26211.44M) | Time:00:04.59 | Compositing | Operation 137-248
+Fra:1 Mem:24692.69M (Peak 26211.44M) | Time:00:04.67 | Compositing | Operation 138-248
+Fra:1 Mem:24692.69M (Peak 26211.44M) | Time:00:04.67 | Compositing | Operation 139-248
+Fra:1 Mem:24692.69M (Peak 26211.44M) | Time:00:04.67 | Compositing | Operation 140-248
+Fra:1 Mem:24692.69M (Peak 26211.44M) | Time:00:04.67 | Compositing | Operation 141-248
+Fra:1 Mem:24819.25M (Peak 26211.44M) | Time:00:04.70 | Compositing | Operation 142-248
+Fra:1 Mem:24819.25M (Peak 26211.44M) | Time:00:04.70 | Compositing | Operation 143-248
+Fra:1 Mem:25198.94M (Peak 26211.44M) | Time:00:04.76 | Compositing | Operation 144-248
+Fra:1 Mem:25198.94M (Peak 26211.44M) | Time:00:04.84 | Compositing | Operation 145-248
+Fra:1 Mem:25198.94M (Peak 26211.44M) | Time:00:04.84 | Compositing | Operation 146-248
+Fra:1 Mem:25198.94M (Peak 26211.44M) | Time:00:04.84 | Compositing | Operation 147-248
+Fra:1 Mem:25198.94M (Peak 26211.44M) | Time:00:04.84 | Compositing | Operation 148-248
+Fra:1 Mem:25325.50M (Peak 26211.44M) | Time:00:04.87 | Compositing | Operation 149-248
+Fra:1 Mem:25325.50M (Peak 26211.44M) | Time:00:04.87 | Compositing | Operation 150-248
+Fra:1 Mem:25705.19M (Peak 26211.44M) | Time:00:04.94 | Compositing | Operation 151-248
+Fra:1 Mem:25705.19M (Peak 26211.44M) | Time:00:05.02 | Compositing | Operation 152-248
+Fra:1 Mem:25705.19M (Peak 26211.44M) | Time:00:05.02 | Compositing | Operation 153-248
+Fra:1 Mem:25705.19M (Peak 26211.44M) | Time:00:05.02 | Compositing | Operation 154-248
+Fra:1 Mem:25831.75M (Peak 26211.44M) | Time:00:05.16 | Compositing | Operation 155-248
+Fra:1 Mem:26211.44M (Peak 26338.00M) | Time:00:05.23 | Compositing | Operation 156-248
+Fra:1 Mem:26211.44M (Peak 26338.00M) | Time:00:05.23 | Compositing | Operation 157-248
+Fra:1 Mem:26338.00M (Peak 26338.00M) | Time:00:05.36 | Compositing | Operation 158-248
+Fra:1 Mem:26717.69M (Peak 26844.25M) | Time:00:05.42 | Compositing | Operation 159-248
+Fra:1 Mem:26717.69M (Peak 26844.25M) | Time:00:05.42 | Compositing | Operation 160-248
+Fra:1 Mem:26844.25M (Peak 26844.25M) | Time:00:05.58 | Compositing | Operation 161-248
+Fra:1 Mem:27223.94M (Peak 27350.50M) | Time:00:05.65 | Compositing | Operation 162-248
+Fra:1 Mem:27223.94M (Peak 27350.50M) | Time:00:05.65 | Compositing | Operation 163-248
+Fra:1 Mem:27223.94M (Peak 27350.50M) | Time:00:05.65 | Compositing | Operation 164-248
+Fra:1 Mem:27350.50M (Peak 27350.50M) | Time:00:05.68 | Compositing | Operation 165-248
+Fra:1 Mem:27350.50M (Peak 27350.50M) | Time:00:05.68 | Compositing | Operation 166-248
+Fra:1 Mem:27730.19M (Peak 27856.75M) | Time:00:05.74 | Compositing | Operation 167-248
+Fra:1 Mem:27730.19M (Peak 28236.44M) | Time:00:05.83 | Compositing | Operation 168-248
+Fra:1 Mem:27730.19M (Peak 28236.44M) | Time:00:05.83 | Compositing | Operation 169-248
+Fra:1 Mem:27730.19M (Peak 28236.44M) | Time:00:05.83 | Compositing | Operation 170-248
+Fra:1 Mem:27730.19M (Peak 28236.44M) | Time:00:05.83 | Compositing | Operation 171-248
+Fra:1 Mem:27856.75M (Peak 28236.44M) | Time:00:05.85 | Compositing | Operation 172-248
+Fra:1 Mem:27856.75M (Peak 28236.44M) | Time:00:05.85 | Compositing | Operation 173-248
+Fra:1 Mem:28236.44M (Peak 28363.00M) | Time:00:05.92 | Compositing | Operation 174-248
+Fra:1 Mem:28236.44M (Peak 28742.69M) | Time:00:06.00 | Compositing | Operation 175-248
+Fra:1 Mem:28236.44M (Peak 28742.69M) | Time:00:06.00 | Compositing | Operation 176-248
+Fra:1 Mem:28236.44M (Peak 28742.69M) | Time:00:06.00 | Compositing | Operation 177-248
+Fra:1 Mem:28236.44M (Peak 28742.69M) | Time:00:06.00 | Compositing | Operation 178-248
+Fra:1 Mem:28363.00M (Peak 28742.69M) | Time:00:06.03 | Compositing | Operation 179-248
+Fra:1 Mem:28363.00M (Peak 28742.69M) | Time:00:06.03 | Compositing | Operation 180-248
+Fra:1 Mem:28742.69M (Peak 28869.25M) | Time:00:06.09 | Compositing | Operation 181-248
+Fra:1 Mem:28742.69M (Peak 29248.94M) | Time:00:06.18 | Compositing | Operation 182-248
+Fra:1 Mem:28742.69M (Peak 29248.94M) | Time:00:06.18 | Compositing | Operation 183-248
+Fra:1 Mem:28742.69M (Peak 29248.94M) | Time:00:06.18 | Compositing | Operation 184-248
+Fra:1 Mem:28742.69M (Peak 29248.94M) | Time:00:06.18 | Compositing | Operation 185-248
+Fra:1 Mem:28742.69M (Peak 29248.94M) | Time:00:06.21 | Compositing | Operation 186-248
+Fra:1 Mem:28742.69M (Peak 29248.94M) | Time:00:06.21 | Compositing | Operation 187-248
+Fra:1 Mem:28363.00M (Peak 29248.94M) | Time:00:06.25 | Compositing | Operation 188-248
+Fra:1 Mem:28363.00M (Peak 29248.94M) | Time:00:06.25 | Compositing | Operation 189-248
+Fra:1 Mem:28363.00M (Peak 29248.94M) | Time:00:06.25 | Compositing | Operation 190-248
+Fra:1 Mem:28363.00M (Peak 29248.94M) | Time:00:06.28 | Compositing | Operation 191-248
+Fra:1 Mem:28363.00M (Peak 29248.94M) | Time:00:06.28 | Compositing | Operation 192-248
+Fra:1 Mem:27983.32M (Peak 29248.94M) | Time:00:06.33 | Compositing | Operation 193-248
+Fra:1 Mem:27983.32M (Peak 29248.94M) | Time:00:06.33 | Compositing | Operation 194-248
+Fra:1 Mem:27983.32M (Peak 29248.94M) | Time:00:06.33 | Compositing | Operation 195-248
+Fra:1 Mem:27983.32M (Peak 29248.94M) | Time:00:06.36 | Compositing | Operation 196-248
+Fra:1 Mem:27983.32M (Peak 29248.94M) | Time:00:06.36 | Compositing | Operation 197-248
+Fra:1 Mem:27603.63M (Peak 29248.94M) | Time:00:06.40 | Compositing | Operation 198-248
+Fra:1 Mem:27730.19M (Peak 29248.94M) | Time:00:06.42 | Compositing | Operation 199-248
+Fra:1 Mem:27730.19M (Peak 29248.94M) | Time:00:06.42 | Compositing | Operation 200-248
+Fra:1 Mem:28109.88M (Peak 29248.94M) | Time:00:06.48 | Compositing | Operation 201-248
+Fra:1 Mem:28109.88M (Peak 29248.94M) | Time:00:06.57 | Compositing | Operation 202-248
+Fra:1 Mem:28109.88M (Peak 29248.94M) | Time:00:06.57 | Compositing | Operation 203-248
+Fra:1 Mem:28109.88M (Peak 29248.94M) | Time:00:06.60 | Compositing | Operation 204-248
+Fra:1 Mem:28109.88M (Peak 29248.94M) | Time:00:06.60 | Compositing | Operation 205-248
+Fra:1 Mem:28489.57M (Peak 29248.94M) | Time:00:06.67 | Compositing | Operation 206-248
+Fra:1 Mem:28489.57M (Peak 29248.94M) | Time:00:06.76 | Compositing | Operation 207-248
+Fra:1 Mem:28489.57M (Peak 29248.94M) | Time:00:06.76 | Compositing | Operation 208-248
+Fra:1 Mem:28489.57M (Peak 29248.94M) | Time:00:06.79 | Compositing | Operation 209-248
+Fra:1 Mem:28489.57M (Peak 29248.94M) | Time:00:06.79 | Compositing | Operation 210-248
+Fra:1 Mem:28869.25M (Peak 29248.94M) | Time:00:06.86 | Compositing | Operation 211-248
+Fra:1 Mem:28869.25M (Peak 29375.50M) | Time:00:06.95 | Compositing | Operation 212-248
+Fra:1 Mem:28869.25M (Peak 29375.50M) | Time:00:06.95 | Compositing | Operation 213-248
+Fra:1 Mem:28869.25M (Peak 29375.50M) | Time:00:06.95 | Compositing | Operation 214-248
+Fra:1 Mem:28869.25M (Peak 29375.50M) | Time:00:06.95 | Compositing | Operation 215-248
+Fra:1 Mem:28869.25M (Peak 29375.50M) | Time:00:06.98 | Compositing | Operation 216-248
+Fra:1 Mem:28869.25M (Peak 29375.50M) | Time:00:06.98 | Compositing | Operation 217-248
+Fra:1 Mem:28742.69M (Peak 29375.50M) | Time:00:07.02 | Compositing | Operation 218-248
+Fra:1 Mem:28742.69M (Peak 29375.50M) | Time:00:07.02 | Compositing | Operation 219-248
+Fra:1 Mem:28742.69M (Peak 29375.50M) | Time:00:07.04 | Compositing | Operation 220-248
+Fra:1 Mem:28742.69M (Peak 29375.50M) | Time:00:07.04 | Compositing | Operation 221-248
+Fra:1 Mem:28616.13M (Peak 29375.50M) | Time:00:07.08 | Compositing | Operation 222-248
+Fra:1 Mem:28616.13M (Peak 29375.50M) | Time:00:07.08 | Compositing | Operation 223-248
+Fra:1 Mem:28616.13M (Peak 29375.50M) | Time:00:07.10 | Compositing | Operation 224-248
+Fra:1 Mem:28616.13M (Peak 29375.50M) | Time:00:07.10 | Compositing | Operation 225-248
+Fra:1 Mem:28489.57M (Peak 29375.50M) | Time:00:07.14 | Compositing | Operation 226-248
+Fra:1 Mem:28489.57M (Peak 29375.50M) | Time:00:07.14 | Compositing | Operation 227-248
+Fra:1 Mem:28869.25M (Peak 29375.50M) | Time:00:07.20 | Compositing | Operation 228-248
+Fra:1 Mem:28869.25M (Peak 29375.50M) | Time:00:07.28 | Compositing | Operation 229-248
+Fra:1 Mem:28869.25M (Peak 29375.50M) | Time:00:07.28 | Compositing | Operation 230-248
+Fra:1 Mem:29248.94M (Peak 29375.50M) | Time:00:07.35 | Compositing | Operation 231-248
+Fra:1 Mem:29248.94M (Peak 29755.19M) | Time:00:07.43 | Compositing | Operation 232-248
+Fra:1 Mem:29248.94M (Peak 29755.19M) | Time:00:07.43 | Compositing | Operation 233-248
+Fra:1 Mem:29628.63M (Peak 29755.19M) | Time:00:07.48 | Compositing | Operation 234-248
+Fra:1 Mem:29628.63M (Peak 30134.88M) | Time:00:07.57 | Compositing | Operation 235-248
+Fra:1 Mem:29628.63M (Peak 30134.88M) | Time:00:07.57 | Compositing | Operation 236-248
+Fra:1 Mem:29628.63M (Peak 30134.88M) | Time:00:07.59 | Compositing | Operation 237-248
+Fra:1 Mem:30134.88M (Peak 30134.88M) | Time:00:07.65 | Compositing | Operation 238-248
+Fra:1 Mem:30514.57M (Peak 30641.13M) | Time:00:07.72 | Compositing | Operation 239-248
+Fra:1 Mem:30894.25M (Peak 31020.82M) | Time:00:07.78 | Compositing | Operation 240-248
+Fra:1 Mem:31273.94M (Peak 31400.50M) | Time:00:07.85 | Compositing | Operation 241-248
+Fra:1 Mem:31653.63M (Peak 31780.19M) | Time:00:07.92 | Compositing | Operation 242-248
+Fra:1 Mem:32033.32M (Peak 32159.88M) | Time:00:07.99 | Compositing | Operation 243-248
+Fra:1 Mem:32413.00M (Peak 32539.57M) | Time:00:08.05 | Compositing | Operation 244-248
+Fra:1 Mem:32413.00M (Peak 32919.25M) | Time:00:08.14 | Compositing | Operation 245-248
+Fra:1 Mem:32413.00M (Peak 32919.25M) | Time:00:08.22 | Compositing | Operation 246-248
+Fra:1 Mem:32413.00M (Peak 32919.25M) | Time:00:08.31 | Compositing | Operation 247-248
+Fra:1 Mem:32286.44M (Peak 32919.25M) | Time:00:08.39 | Compositing | Operation 248-248
+Fra:1 Mem:32286.49M (Peak 47980.19M) | Time:00:15.66 | Compositing | Operation 249-248
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\envelope_voxels_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_brownroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_otherground_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_otherground_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_rewilded_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_outlines-depth_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_livingfacade_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_footprintdepaved_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_full-image_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_footprintdepaved_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_greenroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_greenroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_livingfacade_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_outlines-simple_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_otherground_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_outlines-depth_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_full-image_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_rewilded_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_exoskeleton_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_footprintdepaved_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_brownroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_outlines-simple_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_outlines-depth_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_livingfacade_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_brownroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_full-image_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_exoskeleton_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_greenroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_rewilded_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_exoskeleton_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_outlines-simple_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\_discard_render.png'
+Time: 01:45.42 (Saving: 00:00.82)
+
+Info: Saved "compositor_bioenvelope__city_single-state_yr180__4.10__20260412_104824.blend"
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_brownroof_0001.png -> base_bioenvelope_brownroof.png
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_exoskeleton_0001.png -> base_bioenvelope_exoskeleton.png
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_footprintdepaved_0001.png -> base_bioenvelope_footprintdepaved.png
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_full-image_0001.png -> base_bioenvelope_full-image.png
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_greenroof_0001.png -> base_bioenvelope_greenroof.png
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_livingfacade_0001.png -> base_bioenvelope_livingfacade.png
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_otherground_0001.png -> base_bioenvelope_otherground.png
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_outlines-depth_0001.png -> base_bioenvelope_outlines-depth.png
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_outlines-simple_0001.png -> base_bioenvelope_outlines-simple.png
+[render_edge_lab_current_bioenvelopes] Renamed base_bioenvelope_rewilded_0001.png -> base_bioenvelope_rewilded.png
+[render_edge_lab_current_bioenvelopes] Renamed envelope_voxels_0001.png -> envelope_voxels.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_brownroof_0001.png -> positive_bioenvelope_brownroof.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_exoskeleton_0001.png -> positive_bioenvelope_exoskeleton.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_footprintdepaved_0001.png -> positive_bioenvelope_footprintdepaved.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_full-image_0001.png -> positive_bioenvelope_full-image.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_greenroof_0001.png -> positive_bioenvelope_greenroof.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_livingfacade_0001.png -> positive_bioenvelope_livingfacade.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_otherground_0001.png -> positive_bioenvelope_otherground.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_outlines-depth_0001.png -> positive_bioenvelope_outlines-depth.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_outlines-simple_0001.png -> positive_bioenvelope_outlines-simple.png
+[render_edge_lab_current_bioenvelopes] Renamed positive_bioenvelope_rewilded_0001.png -> positive_bioenvelope_rewilded.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_brownroof_0001.png -> trending_bioenvelope_brownroof.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_exoskeleton_0001.png -> trending_bioenvelope_exoskeleton.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_footprintdepaved_0001.png -> trending_bioenvelope_footprintdepaved.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_full-image_0001.png -> trending_bioenvelope_full-image.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_greenroof_0001.png -> trending_bioenvelope_greenroof.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_livingfacade_0001.png -> trending_bioenvelope_livingfacade.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_otherground_0001.png -> trending_bioenvelope_otherground.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_outlines-depth_0001.png -> trending_bioenvelope_outlines-depth.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_outlines-simple_0001.png -> trending_bioenvelope_outlines-simple.png
+[render_edge_lab_current_bioenvelopes] Renamed trending_bioenvelope_rewilded_0001.png -> trending_bioenvelope_rewilded.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\envelope_voxels.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_greenroof.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_livingfacade.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_footprintdepaved.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_rewilded.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_otherground.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_brownroof.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_exoskeleton.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_full-image.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_greenroof.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_livingfacade.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_footprintdepaved.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_rewilded.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_otherground.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_brownroof.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_exoskeleton.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_full-image.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_greenroof.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_livingfacade.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_footprintdepaved.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_rewilded.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_otherground.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_brownroof.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_exoskeleton.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_full-image.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_outlines-depth.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\positive_bioenvelope_outlines-simple.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_outlines-depth.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\base_bioenvelope_outlines-simple.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_outlines-depth.png
+[render_edge_lab_current_bioenvelopes] Wrote D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\city_single-state_yr180\bioenvelope__20260412_104824\trending_bioenvelope_outlines-simple.png
+
+Blender quit

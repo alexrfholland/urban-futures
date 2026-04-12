@@ -1,0 +1,48 @@
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\temp_blends\template_instantiations\compositor_proposal-only__city_single-state_yr180__20260411_234840.blend"
+Fra:1 Mem:5452.75M (Peak 5452.75M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5452.76M (Peak 5452.76M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5452.77M (Peak 5452.77M) | Time:00:00.00 | Compositing | Operation 2-33
+Fra:1 Mem:5452.77M (Peak 5452.77M) | Time:00:00.00 | Compositing | Operation 3-33
+Fra:1 Mem:5579.40M (Peak 5579.40M) | Time:00:00.01 | Compositing | Operation 4-33
+Fra:1 Mem:5579.40M (Peak 5705.96M) | Time:00:00.04 | Compositing | Operation 5-33
+Fra:1 Mem:5579.40M (Peak 5705.96M) | Time:00:00.04 | Compositing | Operation 6-33
+Fra:1 Mem:5579.40M (Peak 5705.96M) | Time:00:00.04 | Compositing | Operation 7-33
+Fra:1 Mem:5959.08M (Peak 6085.65M) | Time:00:00.08 | Compositing | Operation 8-33
+Fra:1 Mem:6971.59M (Peak 6971.59M) | Time:00:00.39 | Compositing | Operation 9-33
+Fra:1 Mem:6971.59M (Peak 6971.59M) | Time:00:00.39 | Compositing | Operation 10-33
+Fra:1 Mem:6971.59M (Peak 6971.59M) | Time:00:00.39 | Compositing | Operation 11-33
+Fra:1 Mem:7098.15M (Peak 7098.15M) | Time:00:00.41 | Compositing | Operation 12-33
+Fra:1 Mem:7098.15M (Peak 7098.15M) | Time:00:00.41 | Compositing | Operation 13-33
+Fra:1 Mem:7098.15M (Peak 7098.15M) | Time:00:00.41 | Compositing | Operation 14-33
+Fra:1 Mem:7224.71M (Peak 7224.71M) | Time:00:00.43 | Compositing | Operation 15-33
+Fra:1 Mem:7224.71M (Peak 7224.71M) | Time:00:00.43 | Compositing | Operation 16-33
+Fra:1 Mem:7224.71M (Peak 7224.71M) | Time:00:00.43 | Compositing | Operation 17-33
+Fra:1 Mem:7351.28M (Peak 7351.28M) | Time:00:00.45 | Compositing | Operation 18-33
+Fra:1 Mem:7351.28M (Peak 7351.28M) | Time:00:00.45 | Compositing | Operation 19-33
+Fra:1 Mem:7351.28M (Peak 7351.28M) | Time:00:00.45 | Compositing | Operation 20-33
+Fra:1 Mem:7477.84M (Peak 7477.84M) | Time:00:00.47 | Compositing | Operation 21-33
+Fra:1 Mem:7477.84M (Peak 7604.40M) | Time:00:00.51 | Compositing | Operation 22-33
+Fra:1 Mem:7477.84M (Peak 7604.40M) | Time:00:00.51 | Compositing | Operation 23-33
+Fra:1 Mem:7477.84M (Peak 7604.40M) | Time:00:00.56 | Compositing | Operation 24-33
+Fra:1 Mem:7477.84M (Peak 7604.40M) | Time:00:00.56 | Compositing | Operation 25-33
+Fra:1 Mem:7477.84M (Peak 7604.40M) | Time:00:00.60 | Compositing | Operation 26-33
+Fra:1 Mem:7477.84M (Peak 7604.40M) | Time:00:00.60 | Compositing | Operation 27-33
+Fra:1 Mem:7477.84M (Peak 7604.40M) | Time:00:00.64 | Compositing | Operation 28-33
+Fra:1 Mem:7477.84M (Peak 7604.40M) | Time:00:00.64 | Compositing | Operation 29-33
+Fra:1 Mem:7857.53M (Peak 7984.09M) | Time:00:00.70 | Compositing | Operation 30-33
+Fra:1 Mem:8237.21M (Peak 8363.78M) | Time:00:00.76 | Compositing | Operation 31-33
+Fra:1 Mem:8616.90M (Peak 8743.46M) | Time:00:00.82 | Compositing | Operation 32-33
+Fra:1 Mem:8996.59M (Peak 9123.15M) | Time:00:00.88 | Compositing | Operation 33-33
+Fra:1 Mem:8996.60M (Peak 11527.84M) | Time:00:01.69 | Compositing | Operation 34-33
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\proposal-only__20260411_234840\bio_trending__proposal-only_colonise_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\proposal-only__20260411_234840\bio_trending__proposal-only_recruit_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\proposal-only__20260411_234840\bio_trending__proposal-only_release-control_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\proposal-only__20260411_234840\bio_trending__proposal-only_decay_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\proposal-only__20260411_234840\bio_trending__proposal-only_deploy-structure_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\proposal-only__20260411_234840\_discard_render.png'
+Time: 00:22.94 (Saving: 00:03.25)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\proposal-only__20260411_234840  prefix=bio_trending  exr=city_single-state_yr180__bioenvelope_trending__8k64s.exr
+
+Blender quit

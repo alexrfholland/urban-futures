@@ -1,0 +1,277 @@
+[BLEND] proposal-only -> /d/2026 Arboreal Futures/urban-futures/_data-refactored/compositor/temp_blends/template_instantiations/compositor_proposal-only__batch__20260411_2130.blend
+[21:30:09] [1/63] proposal-only city_timeline existing_condition_positive
+  EXIT=0 PNG_COUNT=7
+[21:30:41] [2/63] proposal-only city_timeline existing_condition_trending
+  EXIT=0 PNG_COUNT=7
+[21:31:12] [3/63] proposal-only city_timeline positive_state
+  EXIT=0 PNG_COUNT=7
+[21:31:45] [4/63] proposal-only city_timeline positive_priority_state
+  EXIT=0 PNG_COUNT=7
+[21:32:16] [5/63] proposal-only city_timeline trending_state
+  EXIT=0 PNG_COUNT=7
+[21:32:47] [6/63] proposal-only city_timeline bioenvelope_positive
+  EXIT=0 PNG_COUNT=7
+[21:33:18] [7/63] proposal-only city_timeline bioenvelope_trending
+  EXIT=0 PNG_COUNT=7
+[21:33:47] [8/63] proposal-only parade_timeline existing_condition_positive
+  EXIT=0 PNG_COUNT=7
+[21:34:17] [9/63] proposal-only parade_timeline existing_condition_trending
+  EXIT=0 PNG_COUNT=7
+[21:34:47] [10/63] proposal-only parade_timeline positive_state
+  EXIT=0 PNG_COUNT=7
+[21:35:18] [11/63] proposal-only parade_timeline positive_priority_state
+  EXIT=0 PNG_COUNT=7
+[21:35:48] [12/63] proposal-only parade_timeline trending_state
+  EXIT=0 PNG_COUNT=7
+[21:36:18] [13/63] proposal-only parade_timeline bioenvelope_positive
+  EXIT=0 PNG_COUNT=7
+[21:36:49] [14/63] proposal-only parade_timeline bioenvelope_trending
+  EXIT=0 PNG_COUNT=7
+[21:37:19] [15/63] proposal-only uni_timeline existing_condition_positive
+  EXIT=0 PNG_COUNT=7
+[21:37:50] [16/63] proposal-only uni_timeline existing_condition_trending
+  EXIT=0 PNG_COUNT=7
+[21:38:20] [17/63] proposal-only uni_timeline positive_state
+  EXIT=0 PNG_COUNT=7
+[21:38:50] [18/63] proposal-only uni_timeline positive_priority_state
+  EXIT=0 PNG_COUNT=7
+[21:39:21] [19/63] proposal-only uni_timeline trending_state
+  EXIT=0 PNG_COUNT=7
+[21:39:52] [20/63] proposal-only uni_timeline bioenvelope_positive
+  EXIT=0 PNG_COUNT=7
+[21:40:22] [21/63] proposal-only uni_timeline bioenvelope_trending
+  EXIT=0 PNG_COUNT=7
+[BLEND] proposal-outline -> /d/2026 Arboreal Futures/urban-futures/_data-refactored/compositor/temp_blends/template_instantiations/compositor_proposal-outline__batch__20260411_2130.blend
+[21:40:53] [22/63] proposal-outline city_timeline existing_condition_positive
+  EXIT=0 PNG_COUNT=7
+[21:41:25] [23/63] proposal-outline city_timeline existing_condition_trending
+  EXIT=0 PNG_COUNT=7
+[21:41:58] [24/63] proposal-outline city_timeline positive_state
+  EXIT=0 PNG_COUNT=7
+[21:42:31] [25/63] proposal-outline city_timeline positive_priority_state
+  EXIT=0 PNG_COUNT=7
+[21:43:04] [26/63] proposal-outline city_timeline trending_state
+  EXIT=0 PNG_COUNT=7
+[21:43:36] [27/63] proposal-outline city_timeline bioenvelope_positive
+  EXIT=0 PNG_COUNT=7
+[21:44:08] [28/63] proposal-outline city_timeline bioenvelope_trending
+  EXIT=0 PNG_COUNT=7
+[21:44:40] [29/63] proposal-outline parade_timeline existing_condition_positive
+  EXIT=0 PNG_COUNT=7
+[21:45:13] [30/63] proposal-outline parade_timeline existing_condition_trending
+  EXIT=0 PNG_COUNT=7
+[21:45:46] [31/63] proposal-outline parade_timeline positive_state
+  EXIT=0 PNG_COUNT=7
+[21:46:19] [32/63] proposal-outline parade_timeline positive_priority_state
+  EXIT=0 PNG_COUNT=7
+[21:46:52] [33/63] proposal-outline parade_timeline trending_state
+  EXIT=0 PNG_COUNT=7
+[21:47:26] [34/63] proposal-outline parade_timeline bioenvelope_positive
+  EXIT=0 PNG_COUNT=7
+[21:48:03] [35/63] proposal-outline parade_timeline bioenvelope_trending
+  EXIT=0 PNG_COUNT=7
+[21:48:39] [36/63] proposal-outline uni_timeline existing_condition_positive
+  EXIT=0 PNG_COUNT=7
+[21:49:18] [37/63] proposal-outline uni_timeline existing_condition_trending
+  EXIT=0 PNG_COUNT=7
+[21:49:53] [38/63] proposal-outline uni_timeline positive_state
+  EXIT=0 PNG_COUNT=7
+[21:50:32] [39/63] proposal-outline uni_timeline positive_priority_state
+  EXIT=0 PNG_COUNT=7
+[21:51:09] [40/63] proposal-outline uni_timeline trending_state
+  EXIT=0 PNG_COUNT=7
+[21:51:44] [41/63] proposal-outline uni_timeline bioenvelope_positive
+  EXIT=0 PNG_COUNT=7
+[21:52:20] [42/63] proposal-outline uni_timeline bioenvelope_trending
+  EXIT=0 PNG_COUNT=7
+[BLEND] proposal-colored-depth -> /d/2026 Arboreal Futures/urban-futures/_data-refactored/compositor/temp_blends/template_instantiations/compositor_proposal-colored-depth__batch__20260411_2130.blend
+[21:52:56] [43/63] proposal-colored-depth city_timeline existing_condition_positive
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.37 (Saving: 00:03.34)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130  prefix=existing_positive  exr=city_timeline__existing_condition_positive__8k64s.exr
+
+Blender quit
+[21:53:07] [44/63] proposal-colored-depth city_timeline existing_condition_trending
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.01 (Saving: 00:03.06)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130  prefix=existing_trending  exr=city_timeline__existing_condition_trending__8k64s.exr
+
+Blender quit
+[21:53:18] [45/63] proposal-colored-depth city_timeline positive_state
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.69 (Saving: 00:03.67)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130  prefix=pathway  exr=city_timeline__positive_state__8k64s.exr
+
+Blender quit
+[21:53:30] [46/63] proposal-colored-depth city_timeline positive_priority_state
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.85 (Saving: 00:03.80)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130  prefix=priority  exr=city_timeline__positive_priority_state__8k64s.exr
+
+Blender quit
+[21:53:42] [47/63] proposal-colored-depth city_timeline trending_state
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:03.85 (Saving: 00:02.86)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130  prefix=trending  exr=city_timeline__trending_state__8k64s.exr
+
+Blender quit
+[21:53:53] [48/63] proposal-colored-depth city_timeline bioenvelope_positive
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.72 (Saving: 00:03.63)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130  prefix=bio_positive  exr=city_timeline__bioenvelope_positive__8k64s.exr
+
+Blender quit
+[21:54:05] [49/63] proposal-colored-depth city_timeline bioenvelope_trending
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:03.65 (Saving: 00:02.72)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_timeline\proposal-colored-depth__20260411_2130  prefix=bio_trending  exr=city_timeline__bioenvelope_trending__8k64s.exr
+
+Blender quit
+[21:54:16] [50/63] proposal-colored-depth parade_timeline existing_condition_positive
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.06 (Saving: 00:03.18)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130  prefix=existing_positive  exr=parade_timeline__existing_condition_positive__8k64s.exr
+
+Blender quit
+[21:54:27] [51/63] proposal-colored-depth parade_timeline existing_condition_trending
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.06 (Saving: 00:03.11)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130  prefix=existing_trending  exr=parade_timeline__existing_condition_trending__8k64s.exr
+
+Blender quit
+[21:54:38] [52/63] proposal-colored-depth parade_timeline positive_state
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:05.05 (Saving: 00:04.05)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130  prefix=pathway  exr=parade_timeline__positive_state__8k64s.exr
+
+Blender quit
+[21:54:51] [53/63] proposal-colored-depth parade_timeline positive_priority_state
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.41 (Saving: 00:03.40)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130  prefix=priority  exr=parade_timeline__positive_priority_state__8k64s.exr
+
+Blender quit
+[21:55:03] [54/63] proposal-colored-depth parade_timeline trending_state
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.94 (Saving: 00:03.96)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130  prefix=trending  exr=parade_timeline__trending_state__8k64s.exr
+
+Blender quit
+[21:55:14] [55/63] proposal-colored-depth parade_timeline bioenvelope_positive
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.51 (Saving: 00:03.49)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130  prefix=bio_positive  exr=parade_timeline__bioenvelope_positive__8k64s.exr
+
+Blender quit
+[21:55:26] [56/63] proposal-colored-depth parade_timeline bioenvelope_trending
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:03.75 (Saving: 00:02.81)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\parade_timeline\proposal-colored-depth__20260411_2130  prefix=bio_trending  exr=parade_timeline__bioenvelope_trending__8k64s.exr
+
+Blender quit
+[21:55:37] [57/63] proposal-colored-depth uni_timeline existing_condition_positive
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.78 (Saving: 00:03.74)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130  prefix=existing_positive  exr=uni_timeline__existing_condition_positive__8k64s.exr
+
+Blender quit
+[21:55:50] [58/63] proposal-colored-depth uni_timeline existing_condition_trending
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.13 (Saving: 00:02.76)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130  prefix=existing_trending  exr=uni_timeline__existing_condition_trending__8k64s.exr
+
+Blender quit
+[21:56:01] [59/63] proposal-colored-depth uni_timeline positive_state
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.71 (Saving: 00:03.67)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130  prefix=pathway  exr=uni_timeline__positive_state__8k64s.exr
+
+Blender quit
+[21:56:13] [60/63] proposal-colored-depth uni_timeline positive_priority_state
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.25 (Saving: 00:03.23)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130  prefix=priority  exr=uni_timeline__positive_priority_state__8k64s.exr
+
+Blender quit
+[21:56:24] [61/63] proposal-colored-depth uni_timeline trending_state
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:03.69 (Saving: 00:02.67)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130  prefix=trending  exr=uni_timeline__trending_state__8k64s.exr
+
+Blender quit
+[21:56:36] [62/63] proposal-colored-depth uni_timeline bioenvelope_positive
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:04.13 (Saving: 00:03.06)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130  prefix=bio_positive  exr=uni_timeline__bioenvelope_positive__8k64s.exr
+
+Blender quit
+[21:56:47] [63/63] proposal-colored-depth uni_timeline bioenvelope_trending
+  EXIT=0 PNG_COUNT=0
+  -- last 6 log lines --
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130\_discard_render.png'
+Time: 00:03.80 (Saving: 00:02.74)
+
+[run_proposal_subcategory] done: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\uni_timeline\proposal-colored-depth__20260411_2130  prefix=bio_trending  exr=uni_timeline__bioenvelope_trending__8k64s.exr
+
+Blender quit
+=== DONE total=63 fail=21 ===

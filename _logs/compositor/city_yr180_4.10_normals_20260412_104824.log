@@ -1,0 +1,13 @@
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\temp_blends\template_instantiations\compositor_normals__city_single-state_yr180__4.10__20260412_104824.blend"
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_edge_lab_current_core_outputs.py", line 298, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_edge_lab_current_core_outputs.py", line 275, in main
+    node = require_node(node_tree, node_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_edge_lab_current_core_outputs.py", line 121, in require_node
+    raise ValueError(f"Missing node: {name}")
+ValueError: Missing node: AO::EXR Pathway
+
+Blender quit

@@ -18,11 +18,11 @@ try:
         MATERIAL_NAMES,
         get_aov_names,
         get_expected_camera_names,
-        get_source_world_objects,
         get_view_layer_names,
         get_working_collection_tree,
         make_bioenvelope_object_name,
         make_world_object_name,
+        resolve_source_world_object_names,
     )
 except ImportError:
     import sys
@@ -32,11 +32,11 @@ except ImportError:
         MATERIAL_NAMES,
         get_aov_names,
         get_expected_camera_names,
-        get_source_world_objects,
         get_view_layer_names,
         get_working_collection_tree,
         make_bioenvelope_object_name,
         make_world_object_name,
+        resolve_source_world_object_names,
     )
 
 
@@ -150,7 +150,7 @@ def validate_scene(scene: bpy.types.Scene | None = None, *, strict: bool = True)
     if is_baseline:
         world_kinds = ("terrain",)
     else:
-        world_kinds = tuple(get_source_world_objects(site).keys()) if site else ()
+        world_kinds = tuple(resolve_source_world_object_names(site, set(bpy.data.objects.keys())).keys()) if site else ()
 
     for state in validate_states:
         for kind in world_kinds:

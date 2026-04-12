@@ -6,6 +6,7 @@ and helper functions that other Blender scripts can rely on.
 
 from __future__ import annotations
 
+import os
 from typing import Final
 
 
@@ -27,6 +28,7 @@ MATERIAL_NAMES: Final[dict[str, str]] = {
 
 NODE_GROUP_NAMES: Final[dict[str, str]] = {
     "world": "v2WorldPoints",
+    "world_cubes": "v2WorldCubes",
     "instancers": "instance_template",
     "bioenvelope": "Envelope",
 }
@@ -107,6 +109,7 @@ AOV_NAMES: Final[tuple[str, ...]] = (
     "improvement",
     "canopy_resistance",
     "bioEnvelopeType",
+    "intervention_bioenvelope_ply-int",
     "sim_Turns",
     "world_sim_turns",
     "world_sim_nodes",
@@ -157,7 +160,13 @@ SITE_CONTRACTS: Final[dict[str, dict[str, object]]] = {
     "city": {
         "world_sources": {
             "buildings": "city_buildings_source",
-            "roads": "city_roads_source",
+            "roads_hires": "city_roads_source_hires",
+            "roads_lores": "city_roads_source_lores",
+        },
+        "world_source_aliases": {
+            "buildings": ("city_buildings_source",),
+            "roads": ("city_roads_source", "city_roads_source_hires"),
+            "roads_cubes": ("city_roads_source_lores",),
         },
         "cameras": {
             "timeline": "city - camera - time slice - zoom",
@@ -168,17 +177,30 @@ SITE_CONTRACTS: Final[dict[str, dict[str, object]]] = {
     "trimmed-parade": {
         "world_sources": {
             "buildings": "trimmed-parade_buildings_source",
-            "roads": "trimmed-parade_roads_source",
+            "roads_hires": "trimmed-parade_roads_source_hires",
+            "roads_lores": "trimmed-parade_roads_source_lores",
+        },
+        "world_source_aliases": {
+            "buildings": ("trimmed-parade_buildings_source",),
+            "roads": ("trimmed-parade_roads_source", "trimmed-parade_roads_source_hires"),
+            "roads_cubes": ("trimmed-parade_roads_source_lores",),
         },
         "cameras": {
             "timeline": "parade - camera - time slice - zoom",
+            "hero": "parade-hero-image",
         },
         "instancer_families": ("trees", "logs"),
     },
     "uni": {
         "world_sources": {
             "buildings": "uni_buildings_source",
-            "roads": "uni_roads_source",
+            "roads_hires": "uni_roads_source_hires",
+            "roads_lores": "uni_roads_source_lores",
+        },
+        "world_source_aliases": {
+            "buildings": ("uni_buildings_source",),
+            "roads": ("uni_roads_source", "uni_roads_source_hires"),
+            "roads_cubes": ("uni_roads_source_lores",),
         },
         "cameras": {
             "timeline": "uni - camera - time slice - zoom",
@@ -186,6 +208,10 @@ SITE_CONTRACTS: Final[dict[str, dict[str, object]]] = {
         "instancer_families": ("trees", "logs", "poles"),
     },
 }
+
+REQUIRED_WORLD_SOURCE_ROLES: Final[tuple[str, ...]] = ("buildings", "roads")
+OPTIONAL_WORLD_SOURCE_ROLES: Final[tuple[str, ...]] = ("roads_cubes",)
+WORLD_SOURCE_RUNTIME_MODES: Final[tuple[str, ...]] = ("cubes", "points")
 
 GLOBAL_RULES: Final[dict[str, object]] = {
     "canonical_scenario_branches": ("positive", "trending"),
@@ -247,6 +273,8 @@ def get_mode_year_token(mode: str, year: int | str | None = None) -> str:
     mode = ensure_supported_mode(mode)
     if mode == "timeline":
         return "timeline"
+    if mode == "baseline" and year is None:
+        return "baseline"
     if year is None:
         raise ValueError(f"{mode} mode requires a year")
     if isinstance(year, str) and year.startswith("yr"):
@@ -262,6 +290,8 @@ def make_scene_name(site: str, mode: str, year: int | str | None = None) -> str:
     if mode == "timeline":
         return f"bV2_{site}_timeline"
     if mode == "baseline":
+        if year is None:
+            return f"bV2_{site}_baseline"
         return f"bV2_{site}_baseline_{get_mode_year_token(mode, year)}"
     return f"bV2_{site}_single_state_{get_mode_year_token(mode, year)}"
 
@@ -347,6 +377,54 @@ def get_source_world_objects(site: str) -> dict[str, str]:
     return dict(get_site_contract(site)["world_sources"])
 
 
+def get_source_world_object_aliases(site: str) -> dict[str, tuple[str, ...]]:
+    """Return canonical world-source roles mapped to acceptable template object names."""
+
+    aliases = get_site_contract(site).get("world_source_aliases")
+    if aliases is None:
+        return {
+            str(role): (str(name),)
+            for role, name in dict(get_site_contract(site)["world_sources"]).items()
+        }
+    return {str(role): tuple(names) for role, names in dict(aliases).items()}
+
+
+def get_world_source_runtime_mode() -> str:
+    """Return the runtime world-source mode requested by the build environment."""
+
+    raw = os.environ.get("BV2_POINTSORCUBES", "").strip().lower()
+    if raw in {"", "points", "point"}:
+        return "points"
+    if raw in {"cubes", "split"}:
+        return "cubes"
+    supported = ", ".join(WORLD_SOURCE_RUNTIME_MODES)
+    raise RuntimeError(
+        f"Unsupported BV2_POINTSORCUBES={raw!r}. Expected one of: points, point, {supported}, split"
+    )
+
+
+def resolve_source_world_object_names(site: str, available_names: set[str]) -> dict[str, str]:
+    """Resolve required/optional world sources against the available object names."""
+
+    runtime_mode = get_world_source_runtime_mode()
+    resolved: dict[str, str] = {}
+    missing_required: list[str] = []
+    for role, candidates in get_source_world_object_aliases(site).items():
+        if runtime_mode == "points" and role == "roads_cubes":
+            continue
+        match = next((name for name in candidates if name in available_names), None)
+        if match is not None:
+            resolved[role] = match
+        elif role in REQUIRED_WORLD_SOURCE_ROLES:
+            missing_required.append(f"{role}: {candidates}")
+    if missing_required:
+        raise RuntimeError(
+            "Missing required world source objects for "
+            f"{site!r}: {', '.join(missing_required)}"
+        )
+    return resolved
+
+
 def get_timeline_camera_name(site: str) -> str:
     """Return the canonical timeline camera for a site."""
 
@@ -363,7 +441,7 @@ def get_default_camera_name(
     site = ensure_supported_site(site)
     mode = ensure_supported_mode(mode)
     cameras = dict(get_site_contract(site)["cameras"])
-    if site == "city" and mode in ("single_state", "baseline") and "hero" in cameras:
+    if mode == "single_state" and "hero" in cameras:
         return str(cameras["hero"])
     return str(cameras["timeline"])
 

@@ -219,8 +219,7 @@ def engine_output_root(output_mode: str | None = None) -> Path:
     unified_root = _unified_postprocess_root(output_mode)
     if unified_root is not None:
         return unified_root
-    mode = normalize_output_mode(output_mode)
-    return VALIDATION_ENGINE_OUTPUT_ROOT if mode == "validation" else CANONICAL_ENGINE_OUTPUT_ROOT
+    return REFACTORED_DATA_ROOT / "_unsorted"
 
 
 def refactor_statistics_root(output_mode: str | None = None) -> Path:

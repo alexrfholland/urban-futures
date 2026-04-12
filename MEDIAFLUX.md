@@ -74,7 +74,6 @@ Then verify the setup before attempting real work:
 .\.venv\Scripts\python.exe -m mediafluxsync project-config --project-dir .
 .\.venv\Scripts\python.exe -m mediafluxsync which --project-dir .
 .\.venv\Scripts\python.exe -m mediafluxsync project-path pipeline --project-dir .
-.\.venv\Scripts\python.exe -m mediafluxsync exists-project pipeline --project-dir .
 ```
 
 Then do one small real transfer in each direction:
@@ -148,10 +147,20 @@ The current canonical remote layout for this repo is:
 
 ```text
 pipeline/
-  <sim_root>/
+  <sim_root>/                        # e.g. 4.9, 4.10, 4.9test
     simulation_outputs/
     blender_exrs/
     compositor_pngs/
+  _library/                          # non-sim, e.g. per-tree library renders
+    blender_exrs/
+      <asset_family>/
+        exr/
+        previews/
+    compositor_pngs/                 # planned
+      <asset_family>/
+        <compositor_run>/
+  _site/                             # non-sim site reference material
+    ...
 ```
 
 Examples:
@@ -159,6 +168,15 @@ Examples:
 - `pipeline/v4.9/simulation_outputs/`
 - `pipeline/v4.9/blender_exrs/city_timeline__hero-test/`
 - `pipeline/v4.9/compositor_pngs/city_timeline__hero-test/mist__20260411_1730/`
+- `pipeline/_library/blender_exrs/20260407_232744_ply-library-exr-4sides-large-senescing-snag_el20_4k64s/exr/`
+
+Anything that is **not** a simulation run — per-tree library renders,
+site-level reference material, etc. — lives under a `_`-prefixed entry
+inside `pipeline/` (alongside `<sim_root>` entries, not as a peer of
+`pipeline/`). These `_`-prefixed roots are outside the
+`sim_root → exr_family → compositor_run` lineage. See
+`_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md` §"Non-Simulation-State
+Roots" for the rules.
 
 Use `upload-project` / `download-project` against those project-root-relative
 paths.

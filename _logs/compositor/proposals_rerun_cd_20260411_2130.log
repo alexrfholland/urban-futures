@@ -1,0 +1,44 @@
+BATCH_TS=20260411_2130  WC=/d/2026 Arboreal Futures/urban-futures/_data-refactored/compositor/temp_blends/template_instantiations/compositor_proposal-colored-depth__batch_fixed__20260411_2130.blend
+[22:08:41] [1/21] city_timeline existing_condition_positive prefix=existing_positive
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:09:19] [2/21] city_timeline existing_condition_trending prefix=existing_trending
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:09:56] [3/21] city_timeline positive_state prefix=pathway
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:10:34] [4/21] city_timeline positive_priority_state prefix=priority
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:11:12] [5/21] city_timeline trending_state prefix=trending
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:11:48] [6/21] city_timeline bioenvelope_positive prefix=bio_positive
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:12:26] [7/21] city_timeline bioenvelope_trending prefix=bio_trending
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:12:59] [8/21] parade_timeline existing_condition_positive prefix=existing_positive
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:13:34] [9/21] parade_timeline existing_condition_trending prefix=existing_trending
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:14:08] [10/21] parade_timeline positive_state prefix=pathway
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:14:45] [11/21] parade_timeline positive_priority_state prefix=priority
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:15:26] [12/21] parade_timeline trending_state prefix=trending
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:16:00] [13/21] parade_timeline bioenvelope_positive prefix=bio_positive
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:16:37] [14/21] parade_timeline bioenvelope_trending prefix=bio_trending
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:17:11] [15/21] uni_timeline existing_condition_positive prefix=existing_positive
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:17:45] [16/21] uni_timeline existing_condition_trending prefix=existing_trending
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:18:18] [17/21] uni_timeline positive_state prefix=pathway
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:18:52] [18/21] uni_timeline positive_priority_state prefix=priority
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:19:25] [19/21] uni_timeline trending_state prefix=trending
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:19:58] [20/21] uni_timeline bioenvelope_positive prefix=bio_positive
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+[22:20:32] [21/21] uni_timeline bioenvelope_trending prefix=bio_trending
+  EXIT=0 PNG_COUNT_for_this_prefix=7
+=== DONE total=21 fail=0 ===

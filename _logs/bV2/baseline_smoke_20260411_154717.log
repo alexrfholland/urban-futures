@@ -1,0 +1,38 @@
+[2026-04-11 15:47:21] BUILD_SCENE_START site= city mode= baseline year= None render_exrs= False
+[2026-04-11 15:47:23] INIT_SCENE scene_name= bV2_city_baseline site= city mode= baseline year= None camera= None
+[2026-04-11 15:47:23] INIT_USE_TEMPLATE_SCENE_START bV2_template -> bV2_city_baseline
+[2026-04-11 15:47:23] INIT_USE_TEMPLATE_SCENE_DONE active_scene= bV2_city_baseline
+[2026-04-11 15:47:23] INIT_TOP_LEVEL_COLLECTIONS_START cameras,world,instancers,bioenvelopes,build
+[2026-04-11 15:47:23] INIT_TOP_LEVEL_COLLECTIONS_DONE count= 5 names= bioenvelopes,build,cameras,instancers,world
+[2026-04-11 15:47:23] INIT_SECOND_LEVEL_COLLECTIONS_START
+[2026-04-11 15:47:23] INIT_SECOND_LEVEL_COLLECTIONS_DONE count= 5 names= helpers,positive_instances,positive_priority_instances,world_positive_attributes,world_sources
+[2026-04-11 15:47:23] INIT_POPULATE_SITE_SOURCES_START site= city mode= baseline camera= city-yr180-hero-image
+[2026-04-11 15:47:23] INIT_POPULATE_SITE_SOURCES_DONE world= city_buildings_source.001,city_roads_source.001 cameras= city-yr180-hero-image.001
+[2026-04-11 15:47:23] INIT_VIEW_LAYERS_START
+[2026-04-11 15:47:23] INIT_VIEW_LAYERS_DONE names= existing_condition_positive,positive_state,positive_priority_state
+[2026-04-11 15:47:23] INIT_AOV_RESET_START layer_count= 3 aov_count= 27
+[2026-04-11 15:47:23] INIT_AOV_RESET_LAYER_START existing_condition_positive
+[2026-04-11 15:47:23] INIT_AOV_RESET_LAYER_DONE existing_condition_positive count= 27
+[2026-04-11 15:47:23] INIT_AOV_RESET_LAYER_START positive_state
+[2026-04-11 15:47:23] INIT_AOV_RESET_LAYER_DONE positive_state count= 27
+[2026-04-11 15:47:23] INIT_AOV_RESET_LAYER_START positive_priority_state
+[2026-04-11 15:47:23] INIT_AOV_RESET_LAYER_DONE positive_priority_state count= 27
+[2026-04-11 15:47:23] INIT_NEUTRAL_SCENE_STATE_START
+[2026-04-11 15:47:23] INIT_NEUTRAL_SCENE_STATE_DONE
+[2026-04-11 15:47:23] INIT_REMOVE_TEMPLATE_COLLECTIONS_START world_sources,camera_sources
+[2026-04-11 15:47:23] INIT_REMOVE_TEMPLATE_COLLECTIONS_DONE
+[2026-04-11 15:47:23] INIT_NORMALIZE_NAMES_START
+[2026-04-11 15:47:23] INIT_NORMALIZE_NAMES_DONE
+[2026-04-11 15:47:23] INIT_NORMALIZE_VISIBILITY_START
+[2026-04-11 15:47:23] INIT_NORMALIZE_VISIBILITY_DONE
+[2026-04-11 15:47:23] INIT_WRITE_METADATA_START
+[2026-04-11 15:47:23] INIT_WRITE_METADATA_DONE
+[2026-04-11 15:47:23] INIT_ASSIGN_CAMERA_START city-yr180-hero-image
+[2026-04-11 15:47:23] INIT_ASSIGN_CAMERA_DONE scene_camera= city-yr180-hero-image
+[2026-04-11 15:47:23] INIT_UI_WORKSPACE_STEPS_SKIPPED
+[2026-04-11 15:47:23] INIT_APPLY_VIEW_LAYER_SEMANTICS_START
+[2026-04-11 15:47:23] INIT_APPLY_VIEW_LAYER_SEMANTICS_DONE
+[2026-04-11 15:47:23] INIT_SCENE_DONE bV2_city_baseline
+[2026-04-11 15:47:23] Building bV2 instancers for scene=bV2_city_baseline, site=city, mode=baseline, year=None
+[2026-04-11 15:47:23] BUILD_INSTANCERS_LOAD_BASELINE_START
+[2026-04-11 15:47:23] LOAD_SCENARIO_START site= city scenario= baseline mode= baseline years= (-180,)

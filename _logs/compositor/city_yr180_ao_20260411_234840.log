@@ -1,0 +1,36 @@
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\temp_blends\template_instantiations\compositor_ao__city_single-state_yr180__20260411_234840.blend"
+Fra:1 Mem:16337.83M (Peak 16337.83M) | Time:00:00.00 | Compositing
+Fra:1 Mem:16337.85M (Peak 16337.85M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:16337.85M (Peak 16337.85M) | Time:00:00.00 | Compositing | Operation 2-23
+Fra:1 Mem:16337.85M (Peak 16337.85M) | Time:00:00.00 | Compositing | Operation 3-23
+Fra:1 Mem:17350.42M (Peak 17350.42M) | Time:00:00.25 | Compositing | Operation 4-23
+Fra:1 Mem:17476.98M (Peak 17476.98M) | Time:00:00.27 | Compositing | Operation 5-23
+Fra:1 Mem:17603.54M (Peak 17603.54M) | Time:00:00.32 | Compositing | Operation 6-23
+Fra:1 Mem:17603.54M (Peak 17730.11M) | Time:00:00.40 | Compositing | Operation 7-23
+Fra:1 Mem:17603.54M (Peak 17730.11M) | Time:00:00.47 | Compositing | Operation 8-23
+Fra:1 Mem:17983.23M (Peak 18109.79M) | Time:00:00.54 | Compositing | Operation 9-23
+Fra:1 Mem:18362.92M (Peak 18489.48M) | Time:00:00.60 | Compositing | Operation 10-23
+Fra:1 Mem:18362.92M (Peak 19628.54M) | Time:00:01.14 | Compositing | Operation 11-23
+Fra:1 Mem:18362.92M (Peak 19628.54M) | Time:00:01.66 | Compositing | Operation 12-23
+Fra:1 Mem:18362.92M (Peak 19628.54M) | Time:00:01.66 | Compositing | Operation 13-23
+Fra:1 Mem:17983.23M (Peak 19628.54M) | Time:00:01.70 | Compositing | Operation 14-23
+Fra:1 Mem:17603.54M (Peak 19628.54M) | Time:00:01.74 | Compositing | Operation 15-23
+Fra:1 Mem:18109.79M (Peak 19628.54M) | Time:00:01.79 | Compositing | Operation 16-23
+Fra:1 Mem:18109.79M (Peak 19628.54M) | Time:00:01.82 | Compositing | Operation 17-23
+Fra:1 Mem:18616.04M (Peak 19628.54M) | Time:00:01.86 | Compositing | Operation 18-23
+Fra:1 Mem:18742.61M (Peak 19628.54M) | Time:00:01.88 | Compositing | Operation 19-23
+Fra:1 Mem:19248.86M (Peak 19628.54M) | Time:00:01.93 | Compositing | Operation 20-23
+Fra:1 Mem:19122.29M (Peak 19755.11M) | Time:00:02.01 | Compositing | Operation 21-23
+Fra:1 Mem:18995.73M (Peak 19755.11M) | Time:00:02.09 | Compositing | Operation 22-23
+Fra:1 Mem:18869.17M (Peak 19755.11M) | Time:00:02.17 | Compositing | Operation 23-23
+Fra:1 Mem:18869.17M (Peak 20387.92M) | Time:00:02.74 | Compositing | Operation 24-23
+[render_edge_lab_current_core_outputs] Renamed existing_condition_ao_full_0001.png -> existing_condition_ao_full.png
+[render_edge_lab_current_core_outputs] Renamed pathway_ao_masked_0001.png -> pathway_ao_masked.png
+[render_edge_lab_current_core_outputs] Renamed priority_ao_masked_0001.png -> priority_ao_masked.png
+[render_edge_lab_current_core_outputs] Rendered AO -> D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\ao__20260411_234840\ao
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\ao__20260411_234840\ao\pathway_ao_masked_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\ao__20260411_234840\ao\existing_condition_ao_full_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.9\city_single-state_yr180\ao__20260411_234840\ao\priority_ao_masked_0001.png'
+
+Blender quit

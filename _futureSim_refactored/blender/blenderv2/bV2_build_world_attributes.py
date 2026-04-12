@@ -15,7 +15,6 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Iterable
 
 import bpy
 import numpy as np
@@ -54,8 +53,8 @@ try:
         MATERIAL_NAMES,
         NODE_GROUP_NAMES,
         get_mode_year_token,
-        get_source_world_objects,
         make_world_object_name,
+        resolve_source_world_object_names,
     )
     from .bV2_paths import iter_blender_input_roots
 except ImportError:
@@ -65,8 +64,8 @@ except ImportError:
         MATERIAL_NAMES,
         NODE_GROUP_NAMES,
         get_mode_year_token,
-        get_source_world_objects,
         make_world_object_name,
+        resolve_source_world_object_names,
     )
     from bV2_paths import iter_blender_input_roots  # type: ignore
 
@@ -84,12 +83,6 @@ LOCAL_NEIGHBOR_OFFSETS = np.array(
     dtype=np.int64,
 )
 CHUNK_SIZE = 1_000_000
-DATA_BUNDLE_ROOT_ENV_NAMES = (
-    "BV2_DATA_BUNDLE_ROOTS",
-    "BV2_DATA_BUNDLE_ROOT",
-    "B2026_DATA_BUNDLE_ROOTS",
-    "B2026_DATA_BUNDLE_ROOT",
-)
 
 ATTR_TURNS = "sim_Turns"
 ATTR_NODES = "sim_Nodes"
@@ -205,26 +198,6 @@ def canonicalize_asset_site(site: str) -> str:
     return ASSET_SITE_ALIASES.get(site, site)
 
 
-def iter_existing_bundle_roots() -> Iterable[Path]:
-    seen: set[Path] = set()
-    for env_name in DATA_BUNDLE_ROOT_ENV_NAMES:
-        raw_value = os.environ.get(env_name, "").strip()
-        if not raw_value:
-            continue
-        for raw_path in raw_value.split(os.pathsep):
-            candidate = Path(raw_path.strip())
-            if not raw_path.strip() or candidate in seen:
-                continue
-            if candidate.exists():
-                seen.add(candidate)
-                yield candidate
-    for candidate in iter_blender_input_roots():
-        if candidate in seen:
-            continue
-        seen.add(candidate)
-        yield candidate
-
-
 def get_active_scene() -> bpy.types.Scene:
     scene = bpy.context.scene
     if scene is None:
@@ -286,7 +259,7 @@ def clip_mask_for_points(points: np.ndarray, strip_spec: dict, site_spec: dict) 
 def resolve_vtk_path(site: str, scenario: str, year: int) -> Path:
     asset_site = canonicalize_asset_site(site)
     bundle_name = f"{asset_site}_{scenario}_1_yr{year}_state_with_indicators.vtk"
-    for root in iter_existing_bundle_roots():
+    for root in iter_blender_input_roots():
         candidate = root / "vtks" / asset_site / bundle_name
         if candidate.exists():
             return candidate
@@ -304,7 +277,7 @@ def resolve_baseline_vtk_path(site: str) -> Path:
             candidate = version_dir / "output" / "vtks" / asset_site / bundle_name
             if candidate.exists():
                 return candidate
-    for root in iter_existing_bundle_roots():
+    for root in iter_blender_input_roots():
         candidate = root / "vtks" / asset_site / bundle_name
         if candidate.exists():
             return candidate
@@ -496,12 +469,16 @@ def ensure_world_modifier(obj: bpy.types.Object) -> None:
 
 
 def ensure_baseline_terrain_modifier(obj: bpy.types.Object) -> None:
-    """Replace the world modifier with a cube-instancer variant for baseline terrain.
+    """Apply the v2WorldCubes GN to a lores road object.
 
-    Instances a 1x1x0.25 m cube at each mesh vertex.  The per-vertex attributes
-    (proposals, sim data) propagate as instance attributes so the v2WorldAOV
-    material can read them for AOV output.
+    Copies the template v2WorldCubes node group (already in the blend from the
+    template reset) the same way ensure_world_modifier copies v2WorldPoints.
     """
+    template_name = NODE_GROUP_NAMES["world_cubes"]
+    template_group = bpy.data.node_groups.get(template_name)
+    if template_group is None:
+        raise RuntimeError(f"Could not find required node group {template_name!r}")
+
     material = bpy.data.materials.get(MATERIAL_NAMES["world"])
     if material is None:
         raise RuntimeError(f"Could not find required world material {MATERIAL_NAMES['world']!r}")
@@ -513,38 +490,14 @@ def ensure_baseline_terrain_modifier(obj: bpy.types.Object) -> None:
     if existing is not None:
         obj.modifiers.remove(existing)
 
-    ng = bpy.data.node_groups.new(name=f"{obj.name}__world_gn", type="GeometryNodeTree")
-    ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
-    ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
-
-    group_in = ng.nodes.new("NodeGroupInput")
-    group_in.location = (-600, 0)
-
-    mesh_to_points = ng.nodes.new("GeometryNodeMeshToPoints")
-    mesh_to_points.location = (-400, 0)
-
-    cube = ng.nodes.new("GeometryNodeMeshCube")
-    cube.location = (-400, -200)
-    cube.inputs["Size"].default_value = (1.0, 1.0, 0.25)
-
-    instance_on_points = ng.nodes.new("GeometryNodeInstanceOnPoints")
-    instance_on_points.location = (-200, 0)
-
-    set_material = ng.nodes.new("GeometryNodeSetMaterial")
-    set_material.location = (0, 0)
-    set_material.inputs["Material"].default_value = material
-
-    group_out = ng.nodes.new("NodeGroupOutput")
-    group_out.location = (200, 0)
-
-    ng.links.new(group_in.outputs["Geometry"], mesh_to_points.inputs["Mesh"])
-    ng.links.new(mesh_to_points.outputs["Points"], instance_on_points.inputs["Points"])
-    ng.links.new(cube.outputs["Mesh"], instance_on_points.inputs["Instance"])
-    ng.links.new(instance_on_points.outputs["Instances"], set_material.inputs["Geometry"])
-    ng.links.new(set_material.outputs["Geometry"], group_out.inputs["Geometry"])
+    node_group = template_group.copy()
+    node_group.name = f"{obj.name}__world_gn"
+    for node in node_group.nodes:
+        if node.type == "SET_MATERIAL" and "Material" in node.inputs:
+            node.inputs["Material"].default_value = material
 
     modifier = obj.modifiers.new(name="bV2_world", type="NODES")
-    modifier.node_group = ng
+    modifier.node_group = node_group
 
 
 def remove_existing_object(name: str) -> None:
@@ -667,7 +620,8 @@ def local_neighbor_lookup(
     safe_keys[~flat_in_bounds] = 0
 
     flat_insertion = np.searchsorted(sorted_keys, safe_keys, side="left")
-    flat_found = flat_in_bounds & (flat_insertion < len(sorted_keys)) & (sorted_keys[flat_insertion] == safe_keys)
+    clipped_insertion = np.clip(flat_insertion, 0, max(len(sorted_keys) - 1, 0))
+    flat_found = flat_in_bounds & (flat_insertion < len(sorted_keys)) & (sorted_keys[clipped_insertion] == safe_keys)
 
     n_points = len(world_points)
     candidate_centers = origin + candidate_indices.astype(np.float64)
@@ -890,12 +844,17 @@ def build_combined_timeline_payload(
     return combined_points, payloads
 
 
+LORES_SOURCE_KINDS = frozenset({"roads_cubes"})
+
+
 def build_world_object(
     source_obj: bpy.types.Object,
     target_collection: bpy.types.Collection,
     target_name: str,
     points: np.ndarray,
     payloads: dict[str, dict],
+    *,
+    use_cube_instancer: bool = False,
 ) -> bpy.types.Object:
     remove_existing_object(target_name)
 
@@ -921,7 +880,10 @@ def build_world_object(
             collection.objects.unlink(rebuilt)
 
     ensure_world_material_slot(rebuilt)
-    ensure_world_modifier(rebuilt)
+    if use_cube_instancer:
+        ensure_baseline_terrain_modifier(rebuilt)
+    else:
+        ensure_world_modifier(rebuilt)
     return rebuilt
 
 
@@ -973,7 +935,7 @@ def build_world_attributes(scene: bpy.types.Scene | None = None) -> dict[str, li
         log("WORLD_BUILD_DONE", scene.name, created)
         return created
 
-    source_world_objects = get_source_world_objects(site)
+    source_world_objects = resolve_source_world_object_names(site, set(bpy.data.objects.keys()))
     target_collections = {
         state: find_collection_by_role(scene, STATE_TO_COLLECTION_ROLE[state])
         for state in STATE_TO_COLLECTION_ROLE
@@ -1000,7 +962,10 @@ def build_world_attributes(scene: bpy.types.Scene | None = None) -> dict[str, li
                     source_year=active_year,
                 )
                 target_name = make_world_object_name(kind, site, mode, state, year)
-                obj = build_world_object(source_obj, target_collection, target_name, points, payloads)
+                obj = build_world_object(
+                    source_obj, target_collection, target_name, points, payloads,
+                    use_cube_instancer=kind in LORES_SOURCE_KINDS,
+                )
                 created[state].append(obj.name)
                 log(
                     "WORLD_OBJECT_DONE",
@@ -1021,7 +986,10 @@ def build_world_attributes(scene: bpy.types.Scene | None = None) -> dict[str, li
                     scenario=state,
                 )
                 target_name = make_world_object_name(kind, site, mode, state, year)
-                obj = build_world_object(source_obj, target_collection, target_name, points, payloads)
+                obj = build_world_object(
+                    source_obj, target_collection, target_name, points, payloads,
+                    use_cube_instancer=kind in LORES_SOURCE_KINDS,
+                )
                 created[state].append(obj.name)
                 log(
                     "WORLD_OBJECT_DONE",

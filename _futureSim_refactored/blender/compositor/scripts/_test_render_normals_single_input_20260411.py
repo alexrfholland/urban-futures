@@ -27,10 +27,21 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import sys
 from pathlib import Path
 
 import bpy
+
+
+# Load the sibling EXR header helper without relying on package imports
+# (this script is run via `blender --background --python ...` which does not
+# put the script's directory on sys.path as a package).
+_HELPER_PATH = Path(__file__).resolve().parent / "_exr_header.py"
+_spec = importlib.util.spec_from_file_location("_exr_header", _HELPER_PATH)
+_exr_header = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_exr_header)
+read_exr_dimensions = _exr_header.read_exr_dimensions
 
 
 SCENE_NAME = "Current"
@@ -123,10 +134,16 @@ def relabel_file_slots(fout: bpy.types.Node, stem: str) -> None:
 
 
 def detect_resolution(exr_path: Path) -> tuple[int, int]:
-    img = bpy.data.images.load(str(exr_path), check_existing=True)
-    w, h = int(img.size[0]), int(img.size[1])
+    """Read the true EXR displayWindow and return (width, height).
+
+    Raises loudly if the file cannot be parsed. NEVER falls back to a
+    hardcoded resolution — a silent fallback would mean an 8K EXR gets
+    rendered at 4K with no warning (this has happened once; don't repeat
+    it). See COMPOSITOR_TEMPLATE_CONTRACT.md § Input resolution rule.
+    """
+    w, h = read_exr_dimensions(exr_path)
     if w <= 0 or h <= 0:
-        return 3840, 2160
+        raise RuntimeError(f"EXR {exr_path.name} reports invalid dims {w}x{h}")
     return w, h
 
 

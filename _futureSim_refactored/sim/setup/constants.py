@@ -47,3 +47,34 @@ INTERVENTION_SUPPORT = {
     DEPLOY_FULL_UPGRADE: "full",
     DEPLOY_GROUND_DEADWOOD: "full",
 }
+
+
+# -- Bioenvelope PLY classification colours ---------------------------------
+# RGB tuples for the proposal-based bioenvelope classification.
+# Used by export_proposal_envelopes and any downstream visualisation.
+BIOENVELOPE_PLY_COLORS: dict[str, tuple[int, int, int]] = {
+    RECRUIT_FULL:            (142, 216, 200),  # mint    #8ED8C8
+    RECRUIT_PARTIAL:         (240, 220, 144),  # butter  #F0DC90
+    COLONISE_FULL_ENVELOPE:  (184, 232, 108),  # lime    #B8E86C
+    COLONISE_PARTIAL_ENVELOPE: (208, 160,  64),  # ochre   #D0A040
+    COLONISE_FULL_GROUND:    (142, 216, 200),  # mint    #8ED8C8
+    DECAY_FULL:              (240, 220, 144),  # butter  #F0DC90
+    "deploy-any":            (220, 192, 144),  # sand    #DCC090
+    "buffer-feature+depaved": (220, 120, 160),  # pink    #DC78A0
+    "none":                  (255, 255, 255),  # white
+}
+
+# -- Bioenvelope PLY int mapping --------------------------------------------
+# Single-channel integer encoding for ``intervention_bioenvelope_ply-int``.
+# 0 = none.  Higher values follow the priority order.
+BIOENVELOPE_PLY_INT: dict[str, int] = {
+    "none":                    0,
+    "deploy-any":              1,
+    DECAY_FULL:                2,
+    COLONISE_FULL_GROUND:      3,
+    COLONISE_PARTIAL_ENVELOPE: 4,
+    COLONISE_FULL_ENVELOPE:    5,
+    RECRUIT_PARTIAL:           6,
+    RECRUIT_FULL:              7,
+    "buffer-feature+depaved":  8,
+}

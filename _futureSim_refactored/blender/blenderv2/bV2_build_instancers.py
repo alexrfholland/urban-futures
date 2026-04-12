@@ -106,13 +106,6 @@ TIMELINE_SITE_SPECS = {
     },
 }
 
-DATA_BUNDLE_ROOT_ENV_NAMES = (
-    "BV2_DATA_BUNDLE_ROOTS",
-    "BV2_DATA_BUNDLE_ROOT",
-    "B2026_DATA_BUNDLE_ROOTS",
-    "B2026_DATA_BUNDLE_ROOT",
-)
-
 ASSET_SITE_ALIASES = {"street": "uni"}
 
 STATE_TO_COLLECTION_ROLE = {
@@ -179,31 +172,10 @@ def canonicalize_asset_site(site: str) -> str:
     return ASSET_SITE_ALIASES.get(site, site)
 
 
-def iter_existing_bundle_roots() -> Iterable[Path]:
-    seen: set[Path] = set()
-    for env_name in DATA_BUNDLE_ROOT_ENV_NAMES:
-        raw_value = os.environ.get(env_name, "").strip()
-        if not raw_value:
-            continue
-        for raw_path in raw_value.split(os.pathsep):
-            candidate = Path(raw_path.strip())
-            if not raw_path.strip() or candidate in seen:
-                continue
-            if candidate.exists():
-                seen.add(candidate)
-                yield candidate
-
-    for candidate in iter_blender_input_roots():
-        if candidate in seen:
-            continue
-        seen.add(candidate)
-        yield candidate
-
-
 def resolve_feature_csv_path(site: str, scenario: str, year: int) -> Path:
     asset_site = canonicalize_asset_site(site)
     bundle_name = f"{asset_site}_{scenario}_1_nodeDF_yr{year}.csv"
-    for root in iter_existing_bundle_roots():
+    for root in iter_blender_input_roots():
         for relative in (
             Path("feature-locations") / asset_site / bundle_name,
             Path("node-dfs") / asset_site / bundle_name,
@@ -227,7 +199,7 @@ def resolve_feature_csv_path(site: str, scenario: str, year: int) -> Path:
 
 
 def resolve_tree_ply_folder() -> Path:
-    for root in iter_existing_bundle_roots():
+    for root in iter_blender_input_roots():
         candidate = root / "treeMeshesPly"
         if candidate.exists():
             return candidate
@@ -241,7 +213,7 @@ def resolve_tree_ply_folder() -> Path:
 
 
 def resolve_log_ply_folder() -> Path:
-    for root in iter_existing_bundle_roots():
+    for root in iter_blender_input_roots():
         for folder_name in ("logMeshesPly", "logMeshesPLY"):
             candidate = root / folder_name
             if candidate.exists():
@@ -285,6 +257,11 @@ def get_runtime_config(scene: bpy.types.Scene | None = None) -> dict[str, object
 def get_active_years(site: str, mode: str, year: int | None) -> tuple[int, ...]:
     if mode == "timeline":
         return TIMELINE_YEARS
+    if mode == "baseline" and year is None:
+        # Baseline feature CSVs on disk live at yr-180 across all sites; the
+        # baseline is conceptually year-agnostic so we default to that source
+        # year when the caller does not pin one explicitly.
+        return (-180,)
     if year is None:
         raise ValueError(f"{mode} instancer build requires a year")
     return (int(year),)

@@ -14,7 +14,6 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Iterable
 
 import bpy
 import bmesh
@@ -69,6 +68,7 @@ VISUAL_STRIP_POSITION_OVERRIDES = {
 LOG_PATH = os.environ.get("BV2_LOG_PATH", "").strip()
 ENVELOPE_AOV_ATTRIBUTE_NAMES = (
     ("source-year", "source-year"),
+    ("intervention_bioenvelope_ply-int", "intervention_bioenvelope_ply-int"),
     ("proposal-decay", "blender_proposal-decay"),
     ("proposal-release-control", "blender_proposal-release-control"),
     ("proposal-recruit", "blender_proposal-recruit"),
@@ -143,15 +143,6 @@ def canonicalize_asset_site(site: str) -> str:
     return ASSET_SITE_ALIASES.get(site, site)
 
 
-def iter_existing_bundle_roots() -> Iterable[Path]:
-    seen: set[Path] = set()
-    for candidate in iter_blender_input_roots():
-        if candidate in seen:
-            continue
-        seen.add(candidate)
-        yield candidate
-
-
 def get_active_scene() -> bpy.types.Scene:
     scene = bpy.context.scene
     if scene is None:
@@ -209,7 +200,7 @@ def get_timeline_translate(site: str, display_year: int) -> tuple[float, float, 
 def resolve_bioenvelope_ply_path(site: str, scenario: str, year: int) -> Path:
     asset_site = canonicalize_asset_site(site)
     bundle_name = f"{asset_site}_{scenario}_1_envelope_scenarioYR{year}.ply"
-    for root in iter_existing_bundle_roots():
+    for root in iter_blender_input_roots():
         for relative in (
             Path("bioenvelopes") / asset_site / bundle_name,
             Path("envelopes") / asset_site / bundle_name,

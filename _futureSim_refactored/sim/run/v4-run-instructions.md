@@ -28,7 +28,7 @@ The batch runner script is:
 _futureSim_refactored/sim/run/run_full_v3_batch.py
 ```
 
-All pipeline steps use this single entry point with different flags (`--node-only`, `--vtk-only`, `--compile-stats-only`, `--baselines-only`, `--multiple-agent`).
+All pipeline steps use this single entry point with different flags (`--node-only`, `--vtk-only`, `--compile-stats-only`, `--baselines-only`, `--bioenvelope-only`, `--multiple-agent`).
 
 ---
 
@@ -130,10 +130,60 @@ REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-n
 - `{root}/output/vtks/{site}/{site}_{scenario}_1_yr{year}_state_with_indicators.vtk`
 - `{root}/output/feature-locations/{site}/{site}_{scenario}_1_nodeDF_yr{year}.csv`
 - `{root}/output/stats/per-state/{site}/{site}_{scenario}_1_yr{year}_v4_indicators.csv`
+- `{root}/output/bioenvelopes/{site}/{site}_{scenario}_1_envelope_scenarioYR{year}.ply` (proposal-based; yr0 produces no output)
 - `{root}/temp/validation/renders/{site}_{scenario}_yr{year}_proposal-and-interventions_with-legend.png`
 - `{root}/temp/validation/renders/debugRecruit/{site}_{scenario}_yr{year}_*_with-legend.png` (years 10, 60, 180 only)
 
-**Verify**: 54 scenario VTKs (3 sites x 2 scenarios x 9 years), 54 nodeDF CSVs, 54 V4 indicator CSVs, 54 proposal renders, and 18 debug recruit sets (3 sites x 2 scenarios x 3 years).
+**Verify**: 54 scenario VTKs (3 sites x 2 scenarios x 9 years), 54 nodeDF CSVs, 54 V4 indicator CSVs, 48 bioenvelope PLYs (no yr0), 54 proposal renders, and 18 debug recruit sets (3 sites x 2 scenarios x 3 years).
+
+### Bioenvelope generation
+
+The VTK step generates bioenvelope PLY meshes inline from each in-memory state polydata. The default generator (`export_proposal_envelopes`) classifies voxels by proposal intervention priority, extracts per-category isosurfaces with single-voxel gap filling, merges them, and writes a PLY with `intervention_bioenvelope_ply-int` and per-family `blender_proposal-*` framebuffers.
+
+To use the old `scenario_bioEnvelope`-based generator, pass `--old-envelopes`.
+
+To regenerate bioenvelopes from existing VTKs without rerunning the full pipeline:
+
+```bash
+REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-name> \
+  uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py \
+  --bioenvelope-only
+```
+
+This reads state VTKs from `{root}/output/vtks/` and writes PLYs to `{root}/output/bioenvelopes/`. Parallelise across sites the same way as VTK generation:
+
+```bash
+export REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-name>
+
+for site in trimmed-parade city uni; do
+  for scenario in positive trending; do
+    for year in 0 1 10 30 60 90 120 150 180; do
+      uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py \
+        --bioenvelope-only --sites "$site" --scenarios "$scenario" --years "$year" \
+        > /tmp/bioenv_${site}_${scenario}_${year}.log 2>&1 &
+    done
+  done
+  wait
+done
+```
+
+Classification priority (highest to lowest):
+
+| Priority | Label | Int code |
+|---|---|---|
+| 1 | buffer-feature+depaved (decay buffer on depaved ground) | 8 |
+| 2 | rewild-larger-patch (recruit) | 7 |
+| 3 | rewild-smaller-patch (recruit) | 6 |
+| 4 | enrich-envelope (colonise) | 5 |
+| 5 | roughen-envelope (colonise) | 4 |
+| 6 | larger-patches-rewild (colonise) | 3 |
+| 7 | buffer-feature (decay) | 2 |
+| 8 | deploy-any | 1 |
+| -- | none | 0 |
+
+Only voxels with `scenario_bioEnvelope != 'none'` are eligible. Year 0 has no proposals and produces no PLY.
+
+Colours and int codes are defined in `_futureSim_refactored/sim/setup/constants.py` (`BIOENVELOPE_PLY_COLORS`, `BIOENVELOPE_PLY_INT`).
 
 ---
 
@@ -414,6 +464,7 @@ After a full run, verify these file counts:
 | Baseline `state_with_indicators.vtk` | 3 (one per site) |
 | Integrated `nodeDF` CSVs | 54 |
 | Interim `treeDF` CSVs | 54 |
+| Bioenvelope PLYs | 48 (3 sites x 2 scenarios x 8 years; yr0 has no proposals) |
 | Per-state indicator stats CSVs | 114 (57 scenario + 57 scenario action + 3 baseline + 3 baseline action... actually: (54 scenario + 3 baseline) x 2 files = 114) |
 | Merged site stats CSVs | 6 (3 sites x 2 types: indicator + action) |
 | Proposal render PNGs | 57 (3 sites x (2 scenarios x 9 years + 1 baseline)) |

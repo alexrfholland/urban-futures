@@ -42,7 +42,7 @@ def append_run_log(
     stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(_LOG_PATH, "a", newline="") as f:
         csv.writer(f).writerow([stamp, name, output_root, description])
-    print(f"Run log → {_LOG_PATH}")
+    print(f"Run log -> {_LOG_PATH}")
 
 
 def get_last_output_root() -> str | None:

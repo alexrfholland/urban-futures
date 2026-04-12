@@ -151,6 +151,46 @@ When the request is:
   - a direct headless Blender command is acceptable
   - do not turn every inspection into a durable repo script
 
+## Input Resolution Rule
+
+Render resolution must come from the true EXR dimensions, not a guess.
+
+When a runner needs to set `scene.render.resolution_x/y` to match the input
+EXR, it must read the EXR's `displayWindow` directly (e.g. via the pure-Python
+`_exr_header.read_exr_dimensions` helper). It must NOT rely on
+`bpy.data.images.load(path).size` — that returns `(0, 0)` in Blender 4.x
+until something forces a decode, and reading it too early gives a zero back.
+
+Silent fallbacks to a hardcoded resolution (e.g. `return 3840, 2160` when
+`img.size` is zero) are forbidden. They have caused an entire batch of 8K
+EXRs to be rendered at 4K with no warning. If the true resolution cannot be
+read, the runner must raise.
+
+The rule:
+
+- read the EXR header directly
+- never default to a hardcoded resolution
+- raise on failure; do not continue with a guess
+
+This rule applies to every runner that repaths an EXR input and then
+renders.
+
+## Hidden Fallback Rule
+
+Runners and migration scripts must not contain silent fallbacks that mask
+upstream errors. This includes, but is not limited to:
+
+- defaulting `scene.render.resolution_x/y` when the source dimensions could
+  not be read
+- substituting a placeholder image when an input file is missing
+- silently remapping an asset path when the declared one does not resolve
+- swallowing exceptions around node lookups, socket wiring, or image loads
+
+When the correct input cannot be established, raise. A loud failure is
+strictly better than a quiet downgrade. If a fallback is genuinely needed,
+it must be explicit, opt-in (e.g. a `--allow-fallback-res WxH` flag), and
+logged clearly at render time.
+
 ## Mist And Depth Rule
 
 Mist and depth outliner should follow the same contract as other workflows.

@@ -3,9 +3,17 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import bpy
+
+# Make _exr_header importable alongside this script
+_THIS = Path(__file__).resolve()
+_SCRIPTS_DIR = _THIS.parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+from _exr_header import read_exr_dimensions  # noqa: E402
 
 REPO_ROOT = Path("/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia")
 COMPOSITOR_ROOT = REPO_ROOT / "_futureSim_refactored" / "blender" / "compositor"
@@ -132,24 +140,28 @@ def repath_exr_node(node: bpy.types.Node, filepath: Path) -> None:
 
 
 def detect_resolution(exr_paths: list[Path], images: list[bpy.types.Image]) -> tuple[int, int]:
+    """Read the true displayWindow directly from the EXR header.
+
+    Per the Input Resolution Rule in COMPOSITOR_TEMPLATE_CONTRACT.md, this
+    must NOT fall back to a hardcoded resolution or to image.size (which
+    returns (0, 0) in Blender 4.x until pixels are forced to decode).
+    Raise loudly instead.
+    """
+    seen: list[tuple[int, int]] = []
     for path in exr_paths:
-        try:
-            result = subprocess.run(
-                ["oiiotool", "--info", "-v", str(path)],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            match = re.search(r"(\d+)\s*x\s*(\d+)", result.stdout)
-            if match:
-                return int(match.group(1)), int(match.group(2))
-        except Exception:
+        if not path.exists():
             continue
-    for image in images:
-        width, height = image.size[:]
-        if width > 0 and height > 0:
-            return width, height
-    return 3840, 2160
+        w, h = read_exr_dimensions(str(path))
+        seen.append((w, h))
+    if not seen:
+        raise RuntimeError(
+            f"detect_resolution: could not read any EXR headers from {exr_paths}"
+        )
+    if len(set(seen)) != 1:
+        raise RuntimeError(
+            f"detect_resolution: EXR dimensions disagree across inputs: {seen}"
+        )
+    return seen[0]
 
 
 def rename_output(rendered_path: Path) -> Path:

@@ -17,6 +17,13 @@ try:
     from .bV2_build_bioenvelopes import build_bioenvelopes
     from .bV2_build_instancers import build_instancers
     from .bV2_build_world_attributes import build_world_attributes
+    from .bV2_setup_template import (
+        BUILD_MODE_POINTS as TEMPLATE_BUILD_MODE_POINTS,
+        BUILD_MODE_SPLIT as TEMPLATE_BUILD_MODE_SPLIT,
+        ensure_scene_aovs as ensure_template_scene_aovs,
+        reset_site as reset_template_site,
+        verify_site as verify_template_site,
+    )
     from .bV2_init_scene import init_scene
     from .bV2_scene_contract import TEMPLATE_BLEND_NAME
     from .bV2_setup_render_outputs import (
@@ -34,7 +41,12 @@ try:
 except ImportError:
     import sys
 
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    _THIS_FILE = Path(__file__).resolve()
+    _REPO_ROOT = next(
+        parent.parent for parent in _THIS_FILE.parents if parent.name == "_futureSim_refactored"
+    )
+    sys.path.insert(0, str(_REPO_ROOT))
+    sys.path.insert(0, str(_THIS_FILE.parent))
     from _futureSim_refactored.paths import (
         BLENDERV2_BLENDS_ROOT,
         blenderv2_scene_blend_path,
@@ -43,6 +55,13 @@ except ImportError:
     from bV2_build_bioenvelopes import build_bioenvelopes  # type: ignore
     from bV2_build_instancers import build_instancers  # type: ignore
     from bV2_build_world_attributes import build_world_attributes  # type: ignore
+    from bV2_setup_template import (  # type: ignore
+        BUILD_MODE_POINTS as TEMPLATE_BUILD_MODE_POINTS,
+        BUILD_MODE_SPLIT as TEMPLATE_BUILD_MODE_SPLIT,
+        ensure_scene_aovs as ensure_template_scene_aovs,
+        reset_site as reset_template_site,
+        verify_site as verify_template_site,
+    )
     from bV2_init_scene import init_scene  # type: ignore
     from bV2_scene_contract import TEMPLATE_BLEND_NAME  # type: ignore
     from bV2_setup_render_outputs import (  # type: ignore
@@ -90,10 +109,45 @@ def get_required_env(name: str) -> str:
     return value
 
 
+def resolve_template_blend_path() -> Path:
+    override = os.environ.get("BV2_TEMPLATE_BLEND", "").strip()
+    if override:
+        return Path(override).resolve()
+    return TEMPLATE_BLEND
+
+
 def open_template_blend() -> None:
-    if not TEMPLATE_BLEND.exists():
-        raise FileNotFoundError(f"Could not find bV2 template blend at {TEMPLATE_BLEND}")
-    bpy.ops.wm.open_mainfile(filepath=str(TEMPLATE_BLEND), load_ui=False)
+    template_blend = resolve_template_blend_path()
+    if not template_blend.exists():
+        raise FileNotFoundError(f"Could not find bV2 template blend at {template_blend}")
+    bpy.ops.wm.open_mainfile(filepath=str(template_blend), load_ui=False)
+
+
+def get_template_setup_build_mode() -> str:
+    raw = os.environ.get("BV2_POINTSORCUBES", "").strip().lower()
+    if raw in {"", "points", "point"}:
+        return TEMPLATE_BUILD_MODE_POINTS
+    if raw in {"cubes", "split"}:
+        return TEMPLATE_BUILD_MODE_SPLIT
+    raise RuntimeError(
+        f"Unsupported BV2_POINTSORCUBES={raw!r}. Expected one of: points, point, cubes, split"
+    )
+
+
+def run_optional_template_setup(site: str) -> dict[str, object] | None:
+    if not env_bool("BV2_RUN_TEMPLATE_SETUP", False):
+        return None
+
+    build_mode = get_template_setup_build_mode()
+    ensure_template_scene_aovs()
+    setup_summary = reset_template_site(site, build_mode=build_mode)
+    verification_summary = verify_template_site(site, build_mode=build_mode)
+    if not verification_summary.get("ok", False):
+        raise RuntimeError(
+            f"Template setup verification failed for {site}: {verification_summary.get('errors', [])}"
+        )
+    log("TEMPLATE_SETUP_DONE", {"result": setup_summary, "verification": verification_summary})
+    return {"result": setup_summary, "verification": verification_summary}
 
 
 def build_scene(
@@ -118,6 +172,7 @@ def build_scene(
     is_baseline = mode == "baseline"
     log("BUILD_SCENE_START", "site=", site, "mode=", mode, "year=", year, "render_exrs=", render_exrs)
     open_template_blend()
+    template_setup_summary = run_optional_template_setup(site)
     scene = init_scene(site=site, mode=mode, year=year, camera_name=camera_name)
     instancer_summary = build_instancers(scene)
     if is_baseline:
@@ -205,6 +260,7 @@ def build_scene(
         "instancers": instancer_summary,
         "bioenvelopes": bio_summary,
         "world": world_summary,
+        "template_setup": template_setup_summary or {},
         "validation": validation_summary,
         "render": render_summary,
         "rendered_paths": [str(path) for path in rendered_paths],

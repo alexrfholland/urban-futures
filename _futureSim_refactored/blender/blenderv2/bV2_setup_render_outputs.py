@@ -81,6 +81,8 @@ def get_runtime_case_tag(scene: bpy.types.Scene) -> str:
     if mode == "timeline":
         return f"{site_label}_timeline"
     if mode == "baseline":
+        if year is None:
+            return f"{site_label}_baseline"
         return f"{site_label}_baseline_yr{year}"
     return f"{site_label}_single-state_yr{year}"
 

@@ -1,0 +1,14 @@
+OPEN D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\temp_blends\template_instantiations\compositor_proposal-colored-depth__city_single-state_yr180__20260411_234840.blend
+SCENE 'ProposalColoredDepthOutlines'  capturing 5 slots...
+  [0] 'proposal-depth-colour_colonise_' <- [('Set Alpha', 'Image')]
+  [1] 'proposal-depth-colour_decay_' <- [('Set Alpha.002', 'Image')]
+  [2] 'proposal-depth-colour_deploy-structure_' <- [('Set Alpha.003', 'Image')]
+  [3] 'proposal-depth-colour_recruit_' <- [('Set Alpha.004', 'Image')]
+  [4] 'proposal-depth-colour_release_control_' <- [('Set Alpha.001', 'Image')]
+REBUILT node with 5 slots
+Info: Saved "compositor_proposal-colored-depth__city_single-state_yr180__20260411_234840.blend"
+SAVED D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\temp_blends\template_instantiations\compositor_proposal-colored-depth__city_single-state_yr180__20260411_234840.blend
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\temp_blends\template_instantiations\compositor_proposal-colored-depth__city_single-state_yr180__20260411_234840.blend"
+
+Blender quit

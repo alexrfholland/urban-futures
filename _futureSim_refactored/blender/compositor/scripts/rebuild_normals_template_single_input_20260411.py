@@ -7,16 +7,13 @@ New template shape (for scene `Current`):
 
     EXR Image --+--> IndexOB ----> IDMask(idx=3) --> [mask alpha]
                 |
-                +--> Normal (RGBA) --+-> Separate RGBA
-                                     |      |
-                                     |      +-- R -> *0.5 -> +0.5 -> SetAlpha(mask) -> slot normal_x_
-                                     |      +-- G -> *0.5 -> +0.5 -> SetAlpha(mask) -> slot normal_y_
-                                     |      +-- B -> *0.5 -> +0.5 -> SetAlpha(mask) -> slot normal_z_
-                                     |
-                                     +-> Separate RGBA
-                                            +-- R -> *Lx ----,
-                                            +-- G -> *Ly ----+-> Add -> Add -> Max(0) -> SetAlpha(mask) -> slot shading_
-                                            +-- B -> *Lz ----'
+                +--> Normal (RGBA) ---> Separate RGBA
+                                             |
+                                             +-- R -> *0.5 -> +0.5 -> SetAlpha(mask) -> slot normal_x_
+                                             +-- G -> *0.5 -> +0.5 -> SetAlpha(mask) -> slot normal_y_
+                                             +-- B -> *0.5 -> +0.5 -> SetAlpha(mask) -> slot normal_z_
+
+    RGB(0,0,0) -------------------------------------> SetAlpha(mask) -> slot shading_
 
 Four File Output slots:
     normal_x_
@@ -28,8 +25,18 @@ All four use the tree IDMask as alpha. The mask source is a single link so a
 runner that wants whole-scene output can relink `SetAlpha.Alpha` from the
 IDMask output to the EXR `Alpha` output.
 
-Default sun vector L = (0.612, 0.612, 0.5) — ~30 deg NE elevation, chosen as
-the one that reads best on the current top-down ortho city view.
+`shading_` is intentionally a flat black RGB, not a Lambert N.L dot product.
+The N.L approach was tried and discarded because the bV2 Normal pass shows a
+systematic gradient in the Y channel across screen X (the Normal pass is
+camera-space, not world-space, on a camera that is not a perfectly axis-
+aligned top-down ortho). The resulting shading had a false left-to-right
+darkening that made no sense on a top-down city view.
+
+Instead, `shading_` is a uniform black overlay with the tree mask as alpha.
+Drop it on a Photoshop layer above the beauty render at Multiply and dial
+the layer opacity for the darkening strength. For any directional shading,
+use the per-axis normal_* slabs as PS adjustment sources (the x/y/z slabs
+are angle-independent — the Lambert math is moved from Blender to PS).
 
 Contract: this is an explicit template-edit operation. It is NOT a runtime
 script. It rebuilds the `Current` scene's compositor tree from scratch.

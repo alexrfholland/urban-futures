@@ -89,6 +89,38 @@ the EXR files inside still look like:
 - `city_timeline__positive_state__8k64s.exr`
 - `city_timeline__trending_state__8k64s.exr`
 
+## Input Wiring On Mismatch
+
+When the available EXR set does not match a canonical blend's EXR input
+hooks 1:1 (wrong count, missing a view-layer the blend expects, extra
+EXRs, ambiguous naming), runners and agents must not auto-resolve the
+wiring. Silent remapping is how the wrong view-layer ends up feeding
+the wrong hook without anyone noticing.
+
+Instead the runner or agent should:
+
+1. Open the canonical blend headless and **enumerate its EXR input hooks**. For each hook, report:
+   - an index number
+   - the input node name
+   - the view-layer / semantic label the hook expects (e.g. `positive_state`, `arboreal_positive_mask`, `existing_condition`)
+2. **Enumerate the available EXRs** in the chosen EXR family. For each EXR, report:
+   - an index number
+   - the filename
+   - the view-layer it was rendered from
+3. **Ask the user** which EXR fills which hook, or which hooks to leave empty. Present it as a numbered wiring choice and wait for the user's decision before rendering.
+
+When the EXR set matches the hooks unambiguously (same count, same
+view-layer names), the runner may proceed without asking.
+
+This rule exists because:
+
+- the user will always be the one triggering the final render, so pausing to confirm has no speed cost
+- baseline EXR families legitimately lack trending and bioenvelope inputs; a suite blend built around a 7-input contract cannot be silently fed a 3-input baseline
+- the same canonical blend may be run against several EXR families (baseline, single-state, timeline) whose shape differs
+
+It is the concrete runtime expression of the Hidden Fallback Rule from
+[COMPOSITOR_TEMPLATE_CONTRACT.md](COMPOSITOR_TEMPLATE_CONTRACT.md).
+
 ## Compositor Run
 
 The compositor run name should be:

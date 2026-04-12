@@ -230,6 +230,13 @@ Current canonical bV2 `case` forms are:
 
 - `<site_label>_timeline`
 - `<site_label>_single-state_yr<year>`
+- `<site_label>_baseline`
+- `<site_label>_baseline_yr<year>` (optional — only when a specific baseline year is meaningful)
+
+The baseline `yr<year>` suffix is optional because the simulation baseline
+source data is year-agnostic for most sites (one baseline state per site).
+A year should only be included when a workflow genuinely needs to distinguish
+multiple baselines for the same site.
 
 Important current rule:
 
@@ -251,6 +258,8 @@ Examples:
 - `city_timeline__hero-view-test`
 - `city_single-state_yr180`
 - `city_single-state_yr180__hero-camera`
+- `city_baseline`
+- `city_baseline__hero-view-test`
 - `parade_timeline__cuda-rerender`
 
 Implementation note:
@@ -315,6 +324,19 @@ The intended Mediaflux tree should mirror the local lineage:
         <exr_family>/
           <compositor_run>/
             ...
+    _library/
+      blender_exrs/
+        <asset_family>/
+          exr/
+            <asset_token>_<view>.exr
+          previews/
+            <asset_token>_<view>.png
+      compositor_pngs/
+        <asset_family>/
+          <compositor_run>/
+            *.png
+    _site/
+      ...
 ```
 
 Current code-side selectors now align with this shape:
@@ -328,6 +350,94 @@ Current code-side selectors now align with this shape:
   - `COMPOSITOR_FAMILY`
   - optional `COMPOSITOR_RUN_TIMESTAMP`
   - optional `COMPOSITOR_RUN_NOTE`
+
+## Non-Simulation-State Roots
+
+Not every artefact in this project is tied to a simulation run. The
+`pipeline/` namespace carries both simulation runs (under plain `<sim_root>`
+names like `4.9`, `4.10`) and non-simulation-state areas whose names start
+with an underscore.
+
+Naming rule:
+
+- non-simulation-state roots live **under `pipeline/`** alongside
+  `<sim_root>` entries — they are peers of sim roots, not peers of `pipeline/`
+- their names always start with `_`
+- the underscore marks them as outside the sim lineage contract
+
+Examples:
+
+- `pipeline/_library/` — reusable asset renders and asset-library outputs
+  that are not tied to a specific simulation run (e.g. per-tree library
+  renders keyed by the tree PLY library identity such as
+  `precolonial.True_size.large_control.park-tree_id.11`)
+- `pipeline/_site/` — site-level reference material that is not produced by
+  a sim run
+
+Rules for `_`-prefixed roots under `pipeline/`:
+
+- they are **not** governed by the sim → exr_family → compositor_run lineage
+- each `pipeline/_<category>/` subtree defines its own internal layout
+- nothing under a `_`-prefixed root should be addressed via `BV2_SIM_ROOT`,
+  `COMPOSITOR_SIM_ROOT`, `COMPOSITOR_EXR_FAMILY`, or any other selector whose
+  semantics assume a simulation root
+- new non-lineage artefacts should go into a `_`-prefixed root rather than be
+  forced into `pipeline/<sim_root>/`
+
+### `_library/` internal layout
+
+The current `pipeline/_library/` layout (observed on Mediaflux 2026-04-11):
+
+```text
+pipeline/_library/
+  blender_exrs/
+    <asset_family>/
+      exr/
+        <asset_token>_<view>.exr
+      previews/
+        <asset_token>_<view>.png
+  compositor_pngs/              # planned — not yet populated on remote
+    <asset_family>/
+      <compositor_run>/
+        *.png
+```
+
+Naming notes for `_library/`:
+
+- `<asset_family>` is a timestamped descriptive run label, e.g.
+  `20260407_232744_ply-library-exr-4sides-large-senescing-snag_el20_4k64s`
+- Each asset family is one batch of library renders with a consistent
+  render setting (resolution/samples/workflow)
+- `<asset_token>` for per-tree renders is the PLY library identity:
+  `precolonial.<bool>_size.<category>_control.<control>-tree_id.<id>`
+- `<view>` for the current 4-sides library renders is one of
+  `north`, `south`, `east`, `west`
+- Inside each asset family, `exr/` and `previews/` are parallel mirrors
+  (one PNG preview per EXR). This is a `_library/`-specific shape — the
+  sim-side `pipeline/<sim_root>/blender_exrs/<exr_family>/` does not have
+  this `exr/` + `previews/` split.
+- The compositor sibling (`pipeline/_library/compositor_pngs/`) mirrors the
+  sim-side `pipeline/<sim_root>/compositor_pngs/` shape: one
+  `<compositor_run>` folder per run, child of `<asset_family>`.
+
+Local mirror for `_library/`:
+
+```text
+_data-refactored/blenderv2/output/_library/
+  <asset_family>/
+    exr/
+      *.exr
+    previews/
+      *.png
+_data-refactored/compositor/outputs/_library/
+  <asset_family>/
+    <compositor_run>/
+      *.png
+```
+
+The local mirror drops the `blender_exrs/` / `compositor_pngs/` category
+level the same way sim-side local paths drop them — local `blenderv2/output`
+and `compositor/outputs` already imply the category.
 
 ## Provenance
 

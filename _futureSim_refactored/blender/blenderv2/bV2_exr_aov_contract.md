@@ -147,8 +147,26 @@ it writes these AOVs:
 
 ### World
 
-`bV2_build_world_attributes.py` currently transfers these key attrs onto roads
-and buildings:
+`bV2_build_world_attributes.py` currently transfers these key attrs onto
+buildings, hires roads, and lores roads:
+
+**Road split architecture:** Road PLYs have a `scale` attribute (0.5 = hires,
+1.0 = lores). Each site's roads are split into two source objects:
+
+- `<site>_roads_source_hires` — 0.5m spacing, rendered as point cloud via
+  `v2WorldPoints` geometry nodes (same as buildings)
+- `<site>_roads_source_lores` — 1.0m spacing, rendered as 1x1x0.25m cube
+  instances via `v2WorldCubes`-style geometry nodes
+
+Both use the `v2WorldAOV` material so all AOVs transfer correctly. The split is
+defined in `bV2_scene_contract.py` (`SITE_CONTRACTS`) and the cube instancer
+path is controlled by `LORES_SOURCE_KINDS` in `bV2_build_world_attributes.py`.
+
+Source PLYs live at `_data-refactored/model_inputs/world/`. Use
+`bV2_setup_template.py --reset <sites>` to reimport from PLY into the
+template world-source payload.
+
+Transferred attributes:
 
 - `sim_Turns`
 - `sim_Nodes`
@@ -288,3 +306,9 @@ Optional geometry flags can also be enabled for that path when needed:
 
 - `isSenescent`
 - `isTerminal`
+
+## Compositor consumption
+
+See
+[EXR_INPUT_GUIDE.md](../compositor/EXR_INPUT_GUIDE.md)
+for the compositor-side lookup of which view layers feed which blends.

@@ -1,0 +1,17 @@
+=== [11:46:01] mist ===
+  [11:46:02] mist pathway <- positive_state
+    moved 3 PNGs (prefix 'pathway__')
+  [11:46:31] mist priority <- positive_priority_state
+    moved 3 PNGs (prefix 'priority__')
+  [11:47:01] mist trending <- trending_state
+    moved 3 PNGs (prefix 'trending__')
+  mist total PNGs: 9
+=== [11:47:31] depth_outliner ===
+  [11:47:32] depth_outliner pathway <- positive_state
+    moved 1 PNGs (prefix 'pathway__')
+  [11:47:47] depth_outliner priority <- positive_priority_state
+    moved 1 PNGs (prefix 'priority__')
+  [11:48:03] depth_outliner trending <- trending_state
+    moved 1 PNGs (prefix 'trending__')
+  depth_outliner total PNGs: 3
+=== [11:48:19] DONE fail=0 ===

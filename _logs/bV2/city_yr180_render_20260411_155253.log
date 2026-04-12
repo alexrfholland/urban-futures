@@ -1,0 +1,362 @@
+[2026-04-11 15:52:58] BUILD_SCENE_START site= city mode= single_state year= 180 render_exrs= True
+[2026-04-11 15:53:01] INIT_SCENE scene_name= bV2_city_single_state_yr180 site= city mode= single_state year= 180 camera= None
+[2026-04-11 15:53:01] INIT_USE_TEMPLATE_SCENE_START bV2_template -> bV2_city_single_state_yr180
+[2026-04-11 15:53:01] INIT_USE_TEMPLATE_SCENE_DONE active_scene= bV2_city_single_state_yr180
+[2026-04-11 15:53:01] INIT_TOP_LEVEL_COLLECTIONS_START cameras,world,instancers,bioenvelopes,build
+[2026-04-11 15:53:01] INIT_TOP_LEVEL_COLLECTIONS_DONE count= 5 names= bioenvelopes,build,cameras,instancers,world
+[2026-04-11 15:53:01] INIT_SECOND_LEVEL_COLLECTIONS_START
+[2026-04-11 15:53:01] INIT_SECOND_LEVEL_COLLECTIONS_DONE count= 9 names= bioenvelope_positive,bioenvelope_trending,helpers,positive_instances,positive_priority_instances,trending_instances,world_positive_attributes,world_sources,world_trending_attributes
+[2026-04-11 15:53:01] INIT_POPULATE_SITE_SOURCES_START site= city mode= single_state camera= city-yr180-hero-image
+[2026-04-11 15:53:01] INIT_POPULATE_SITE_SOURCES_DONE world= city_buildings_source.001,city_roads_source.001 cameras= city - camera - time slice - zoom.001,city-yr180-hero-image.001
+[2026-04-11 15:53:01] INIT_VIEW_LAYERS_START
+[2026-04-11 15:53:01] INIT_VIEW_LAYERS_DONE names= existing_condition_positive,existing_condition_trending,positive_state,positive_priority_state,trending_state,bioenvelope_positive,bioenvelope_trending
+[2026-04-11 15:53:01] INIT_AOV_RESET_START layer_count= 7 aov_count= 27
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_START existing_condition_positive
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_DONE existing_condition_positive count= 27
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_START existing_condition_trending
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_DONE existing_condition_trending count= 27
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_START positive_state
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_DONE positive_state count= 27
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_START positive_priority_state
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_DONE positive_priority_state count= 27
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_START trending_state
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_DONE trending_state count= 27
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_START bioenvelope_positive
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_DONE bioenvelope_positive count= 27
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_START bioenvelope_trending
+[2026-04-11 15:53:01] INIT_AOV_RESET_LAYER_DONE bioenvelope_trending count= 27
+[2026-04-11 15:53:01] INIT_NEUTRAL_SCENE_STATE_START
+[2026-04-11 15:53:01] INIT_NEUTRAL_SCENE_STATE_DONE
+[2026-04-11 15:53:01] INIT_REMOVE_TEMPLATE_COLLECTIONS_START world_sources,camera_sources
+[2026-04-11 15:53:01] INIT_REMOVE_TEMPLATE_COLLECTIONS_DONE
+[2026-04-11 15:53:01] INIT_NORMALIZE_NAMES_START
+[2026-04-11 15:53:01] INIT_NORMALIZE_NAMES_DONE
+[2026-04-11 15:53:01] INIT_NORMALIZE_VISIBILITY_START
+[2026-04-11 15:53:01] INIT_NORMALIZE_VISIBILITY_DONE
+[2026-04-11 15:53:01] INIT_WRITE_METADATA_START
+[2026-04-11 15:53:01] INIT_WRITE_METADATA_DONE
+[2026-04-11 15:53:01] INIT_ASSIGN_CAMERA_START city-yr180-hero-image
+[2026-04-11 15:53:01] INIT_ASSIGN_CAMERA_DONE scene_camera= city-yr180-hero-image
+[2026-04-11 15:53:01] INIT_UI_WORKSPACE_STEPS_SKIPPED
+[2026-04-11 15:53:01] INIT_APPLY_VIEW_LAYER_SEMANTICS_START
+[2026-04-11 15:53:01] INIT_APPLY_VIEW_LAYER_SEMANTICS_DONE
+[2026-04-11 15:53:01] INIT_SCENE_DONE bV2_city_single_state_yr180
+[2026-04-11 15:53:01] Building bV2 instancers for scene=bV2_city_single_state_yr180, site=city, mode=single_state, year=180
+[2026-04-11 15:53:01] BUILD_INSTANCERS_LOAD_POSITIVE_START
+[2026-04-11 15:53:01] LOAD_SCENARIO_START site= city scenario= positive mode= single_state years= (180,)
+[2026-04-11 15:53:01] LOAD_SCENARIO_YEAR_START positive 180 D:\2026 Arboreal Futures\urban-futures\_data-refactored\model-outputs\generated-states\4.9\output\feature-locations\city\city_positive_1_nodeDF_yr180.csv
+[2026-04-11 15:53:01] LOAD_SCENARIO_YEAR_DONE positive 180 rows= 1197
+[2026-04-11 15:53:01] LOAD_SCENARIO_DONE positive rows= 1197
+[2026-04-11 15:53:01] BUILD_INSTANCERS_LOAD_POSITIVE_DONE rows= 1197
+[2026-04-11 15:53:01] BUILD_INSTANCERS_LOAD_TRENDING_START
+[2026-04-11 15:53:01] LOAD_SCENARIO_START site= city scenario= trending mode= single_state years= (180,)
+[2026-04-11 15:53:01] LOAD_SCENARIO_YEAR_START trending 180 D:\2026 Arboreal Futures\urban-futures\_data-refactored\model-outputs\generated-states\4.9\output\feature-locations\city\city_trending_1_nodeDF_yr180.csv
+[2026-04-11 15:53:01] LOAD_SCENARIO_YEAR_DONE trending 180 rows= 474
+[2026-04-11 15:53:01] LOAD_SCENARIO_DONE trending rows= 474
+[2026-04-11 15:53:01] BUILD_INSTANCERS_LOAD_TRENDING_DONE rows= 474
+[2026-04-11 15:53:01] BUILD_INSTANCERS_DERIVE_PRIORITY_START
+[2026-04-11 15:53:01] BUILD_INSTANCERS_DERIVE_PRIORITY_DONE rows= 883
+[2026-04-11 15:53:01] BUILD_INSTANCERS_STATE_START positive families= logs,trees
+[2026-04-11 15:53:01] BUILD_INSTANCERS_FAMILY_START state= positive family= trees rows= 378
+[2026-04-11 15:53:01] BUILD_STATE_START family= trees state= positive rows= 378
+[2026-04-11 15:53:02] IMPORT_START trees precolonial.False_size.fallen_control.improved-tree_id.11.ply
+[2026-04-11 15:53:02] IMPORT_DONE trees precolonial.False_size.fallen_control.improved-tree_id.11.ply seconds 0.12
+[2026-04-11 15:53:02] IMPORT_START trees precolonial.False_size.fallen_control.improved-tree_id.12.ply
+[2026-04-11 15:53:02] IMPORT_DONE trees precolonial.False_size.fallen_control.improved-tree_id.12.ply seconds 0.09
+[2026-04-11 15:53:02] IMPORT_START trees precolonial.False_size.fallen_control.improved-tree_id.13.ply
+[2026-04-11 15:53:02] IMPORT_DONE trees precolonial.False_size.fallen_control.improved-tree_id.13.ply seconds 0.05
+[2026-04-11 15:53:02] IMPORT_START trees precolonial.False_size.fallen_control.improved-tree_id.14.ply
+[2026-04-11 15:53:02] IMPORT_DONE trees precolonial.False_size.fallen_control.improved-tree_id.14.ply seconds 0.07
+[2026-04-11 15:53:02] IMPORT_START trees precolonial.False_size.fallen_control.improved-tree_id.7.ply
+[2026-04-11 15:53:02] IMPORT_DONE trees precolonial.False_size.fallen_control.improved-tree_id.7.ply seconds 0.11
+[2026-04-11 15:53:02] IMPORT_START trees precolonial.False_size.fallen_control.improved-tree_id.8.ply
+[2026-04-11 15:53:02] IMPORT_DONE trees precolonial.False_size.fallen_control.improved-tree_id.8.ply seconds 0.09
+[2026-04-11 15:53:02] IMPORT_START trees precolonial.False_size.fallen_control.improved-tree_id.9.ply
+[2026-04-11 15:53:02] IMPORT_DONE trees precolonial.False_size.fallen_control.improved-tree_id.9.ply seconds 0.1
+[2026-04-11 15:53:02] IMPORT_START trees precolonial.False_size.senescing_control.improved-tree_id.1.ply
+[2026-04-11 15:53:03] IMPORT_DONE trees precolonial.False_size.senescing_control.improved-tree_id.1.ply seconds 0.54
+[2026-04-11 15:53:03] IMPORT_START trees precolonial.False_size.senescing_control.improved-tree_id.2.ply
+[2026-04-11 15:53:04] IMPORT_DONE trees precolonial.False_size.senescing_control.improved-tree_id.2.ply seconds 0.72
+[2026-04-11 15:53:04] IMPORT_START trees precolonial.False_size.senescing_control.improved-tree_id.3.ply
+[2026-04-11 15:53:04] IMPORT_DONE trees precolonial.False_size.senescing_control.improved-tree_id.3.ply seconds 0.6
+[2026-04-11 15:53:04] IMPORT_START trees precolonial.False_size.senescing_control.improved-tree_id.9.ply
+[2026-04-11 15:53:06] IMPORT_DONE trees precolonial.False_size.senescing_control.improved-tree_id.9.ply seconds 1.36
+[2026-04-11 15:53:06] IMPORT_START trees precolonial.False_size.snag_control.improved-tree_id.10.ply
+[2026-04-11 15:53:06] IMPORT_DONE trees precolonial.False_size.snag_control.improved-tree_id.10.ply seconds 0.07
+[2026-04-11 15:53:06] IMPORT_START trees precolonial.False_size.snag_control.improved-tree_id.11.ply
+[2026-04-11 15:53:06] IMPORT_DONE trees precolonial.False_size.snag_control.improved-tree_id.11.ply seconds 0.11
+[2026-04-11 15:53:06] IMPORT_START trees precolonial.False_size.snag_control.improved-tree_id.12.ply
+[2026-04-11 15:53:06] IMPORT_DONE trees precolonial.False_size.snag_control.improved-tree_id.12.ply seconds 0.08
+[2026-04-11 15:53:06] IMPORT_START trees precolonial.False_size.snag_control.improved-tree_id.13.ply
+[2026-04-11 15:53:06] IMPORT_DONE trees precolonial.False_size.snag_control.improved-tree_id.13.ply seconds 0.07
+[2026-04-11 15:53:06] IMPORT_START trees precolonial.False_size.snag_control.improved-tree_id.14.ply
+[2026-04-11 15:53:06] IMPORT_DONE trees precolonial.False_size.snag_control.improved-tree_id.14.ply seconds 0.09
+[2026-04-11 15:53:06] IMPORT_START trees precolonial.False_size.snag_control.improved-tree_id.7.ply
+[2026-04-11 15:53:06] IMPORT_DONE trees precolonial.False_size.snag_control.improved-tree_id.7.ply seconds 0.2
+[2026-04-11 15:53:06] IMPORT_START trees precolonial.False_size.snag_control.improved-tree_id.8.ply
+[2026-04-11 15:53:06] IMPORT_DONE trees precolonial.False_size.snag_control.improved-tree_id.8.ply seconds 0.05
+[2026-04-11 15:53:06] IMPORT_START trees precolonial.False_size.snag_control.improved-tree_id.9.ply
+[2026-04-11 15:53:06] IMPORT_DONE trees precolonial.False_size.snag_control.improved-tree_id.9.ply seconds 0.09
+[2026-04-11 15:53:06] IMPORT_START trees precolonial.True_size.large_control.park-tree_id.11.ply
+[2026-04-11 15:53:07] IMPORT_DONE trees precolonial.True_size.large_control.park-tree_id.11.ply seconds 0.31
+[2026-04-11 15:53:07] IMPORT_START trees precolonial.True_size.large_control.park-tree_id.12.ply
+[2026-04-11 15:53:07] IMPORT_DONE trees precolonial.True_size.large_control.park-tree_id.12.ply seconds 0.18
+[2026-04-11 15:53:07] IMPORT_START trees precolonial.True_size.large_control.park-tree_id.14.ply
+[2026-04-11 15:53:07] IMPORT_DONE trees precolonial.True_size.large_control.park-tree_id.14.ply seconds 0.16
+[2026-04-11 15:53:07] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.11.ply
+[2026-04-11 15:53:07] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.11.ply seconds 0.42
+[2026-04-11 15:53:07] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.12.ply
+[2026-04-11 15:53:08] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.12.ply seconds 0.19
+[2026-04-11 15:53:08] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.14.ply
+[2026-04-11 15:53:08] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.14.ply seconds 0.21
+[2026-04-11 15:53:08] IMPORT_START trees precolonial.True_size.large_control.reserve-tree_id.15.ply
+[2026-04-11 15:53:08] IMPORT_DONE trees precolonial.True_size.large_control.reserve-tree_id.15.ply seconds 0.19
+[2026-04-11 15:53:08] IMPORT_START trees precolonial.True_size.medium_control.park-tree_id.10.ply
+[2026-04-11 15:53:08] IMPORT_DONE trees precolonial.True_size.medium_control.park-tree_id.10.ply seconds 0.26
+[2026-04-11 15:53:08] IMPORT_START trees precolonial.True_size.medium_control.park-tree_id.5.ply
+[2026-04-11 15:53:08] IMPORT_DONE trees precolonial.True_size.medium_control.park-tree_id.5.ply seconds 0.12
+[2026-04-11 15:53:08] IMPORT_START trees precolonial.True_size.medium_control.park-tree_id.6.ply
+[2026-04-11 15:53:09] IMPORT_DONE trees precolonial.True_size.medium_control.park-tree_id.6.ply seconds 0.14
+[2026-04-11 15:53:09] IMPORT_START trees precolonial.True_size.medium_control.park-tree_id.7.ply
+[2026-04-11 15:53:09] IMPORT_DONE trees precolonial.True_size.medium_control.park-tree_id.7.ply seconds 0.17
+[2026-04-11 15:53:09] IMPORT_START trees precolonial.True_size.medium_control.park-tree_id.8.ply
+[2026-04-11 15:53:09] IMPORT_DONE trees precolonial.True_size.medium_control.park-tree_id.8.ply seconds 0.24
+[2026-04-11 15:53:09] IMPORT_START trees precolonial.True_size.medium_control.park-tree_id.9.ply
+[2026-04-11 15:53:09] IMPORT_DONE trees precolonial.True_size.medium_control.park-tree_id.9.ply seconds 0.27
+[2026-04-11 15:53:09] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.10.ply
+[2026-04-11 15:53:10] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.10.ply seconds 0.27
+[2026-04-11 15:53:10] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.5.ply
+[2026-04-11 15:53:10] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.5.ply seconds 0.18
+[2026-04-11 15:53:10] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.6.ply
+[2026-04-11 15:53:10] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.6.ply seconds 0.16
+[2026-04-11 15:53:10] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.7.ply
+[2026-04-11 15:53:10] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.7.ply seconds 0.1
+[2026-04-11 15:53:10] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.8.ply
+[2026-04-11 15:53:10] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.8.ply seconds 0.2
+[2026-04-11 15:53:10] IMPORT_START trees precolonial.True_size.medium_control.reserve-tree_id.9.ply
+[2026-04-11 15:53:10] IMPORT_DONE trees precolonial.True_size.medium_control.reserve-tree_id.9.ply seconds 0.26
+[2026-04-11 15:53:10] IMPORT_START trees precolonial.True_size.medium_control.street-tree_id.10.ply
+[2026-04-11 15:53:11] IMPORT_DONE trees precolonial.True_size.medium_control.street-tree_id.10.ply seconds 0.29
+[2026-04-11 15:53:11] IMPORT_START trees precolonial.True_size.medium_control.street-tree_id.5.ply
+[2026-04-11 15:53:11] IMPORT_DONE trees precolonial.True_size.medium_control.street-tree_id.5.ply seconds 0.17
+[2026-04-11 15:53:11] IMPORT_START trees precolonial.True_size.medium_control.street-tree_id.6.ply
+[2026-04-11 15:53:11] IMPORT_DONE trees precolonial.True_size.medium_control.street-tree_id.6.ply seconds 0.15
+[2026-04-11 15:53:11] IMPORT_START trees precolonial.True_size.medium_control.street-tree_id.7.ply
+[2026-04-11 15:53:11] IMPORT_DONE trees precolonial.True_size.medium_control.street-tree_id.7.ply seconds 0.15
+[2026-04-11 15:53:11] IMPORT_START trees precolonial.True_size.medium_control.street-tree_id.8.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.medium_control.street-tree_id.8.ply seconds 0.22
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.medium_control.street-tree_id.9.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.medium_control.street-tree_id.9.ply seconds 0.29
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.11.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.11.ply seconds 0.11
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.12.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.12.ply seconds 0.07
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.13.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.13.ply seconds 0.07
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.14.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.14.ply seconds 0.04
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.15.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.15.ply seconds 0.11
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.senescing_control.improved-tree_id.16.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.senescing_control.improved-tree_id.16.ply seconds 0.06
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.small_control.park-tree_id.1.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.small_control.park-tree_id.1.ply seconds 0.02
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.small_control.park-tree_id.2.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.small_control.park-tree_id.2.ply seconds 0.02
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.small_control.park-tree_id.3.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.small_control.park-tree_id.3.ply seconds 0.08
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.small_control.park-tree_id.4.ply
+[2026-04-11 15:53:12] IMPORT_DONE trees precolonial.True_size.small_control.park-tree_id.4.ply seconds 0.04
+[2026-04-11 15:53:12] IMPORT_START trees precolonial.True_size.small_control.reserve-tree_id.1.ply
+[2026-04-11 15:53:13] IMPORT_DONE trees precolonial.True_size.small_control.reserve-tree_id.1.ply seconds 0.03
+[2026-04-11 15:53:13] IMPORT_START trees precolonial.True_size.small_control.reserve-tree_id.2.ply
+[2026-04-11 15:53:13] IMPORT_DONE trees precolonial.True_size.small_control.reserve-tree_id.2.ply seconds 0.03
+[2026-04-11 15:53:13] IMPORT_START trees precolonial.True_size.small_control.reserve-tree_id.3.ply
+[2026-04-11 15:53:13] IMPORT_DONE trees precolonial.True_size.small_control.reserve-tree_id.3.ply seconds 0.11
+[2026-04-11 15:53:13] IMPORT_START trees precolonial.True_size.small_control.reserve-tree_id.4.ply
+[2026-04-11 15:53:13] IMPORT_DONE trees precolonial.True_size.small_control.reserve-tree_id.4.ply seconds 0.06
+[2026-04-11 15:53:13] IMPORT_START trees precolonial.True_size.small_control.street-tree_id.1.ply
+[2026-04-11 15:53:13] IMPORT_DONE trees precolonial.True_size.small_control.street-tree_id.1.ply seconds 0.02
+[2026-04-11 15:53:13] IMPORT_START trees precolonial.True_size.small_control.street-tree_id.2.ply
+[2026-04-11 15:53:13] IMPORT_DONE trees precolonial.True_size.small_control.street-tree_id.2.ply seconds 0.01
+[2026-04-11 15:53:13] IMPORT_START trees precolonial.True_size.small_control.street-tree_id.3.ply
+[2026-04-11 15:53:13] IMPORT_DONE trees precolonial.True_size.small_control.street-tree_id.3.ply seconds 0.06
+[2026-04-11 15:53:13] IMPORT_START trees precolonial.True_size.small_control.street-tree_id.4.ply
+[2026-04-11 15:53:13] IMPORT_DONE trees precolonial.True_size.small_control.street-tree_id.4.ply seconds 0.03
+[2026-04-11 15:53:13] BUILD_STATE_MODELS_DONE family= trees state= positive rows= 378 models= 62
+[2026-04-11 15:53:13] BUILD_STATE_DONE family= trees state= positive point_name= trees_positions_city_yr180_positive points= 378
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_DONE state= positive family= trees
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_START state= positive family= logs rows= 819
+[2026-04-11 15:53:13] BUILD_STATE_START family= logs state= positive rows= 819
+[2026-04-11 15:53:13] IMPORT_START logs size.medium.log.26.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.medium.log.26.ply seconds 0.01
+[2026-04-11 15:53:13] IMPORT_START logs size.medium.log.27.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.medium.log.27.ply seconds 0.01
+[2026-04-11 15:53:13] IMPORT_START logs size.large.log.5.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.large.log.5.ply seconds 0.04
+[2026-04-11 15:53:13] IMPORT_START logs size.small.log.23.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.small.log.23.ply seconds 0.01
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.27.ply
+[2026-04-11 15:53:13] IMPORT_START logs size.small.log.11.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.small.log.11.ply seconds 0.0
+[2026-04-11 15:53:13] IMPORT_START logs size.medium.log.25.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.medium.log.25.ply seconds 0.01
+[2026-04-11 15:53:13] IMPORT_START logs size.small.log.6.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.small.log.6.ply seconds 0.0
+[2026-04-11 15:53:13] IMPORT_START logs size.medium.log.22.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.medium.log.22.ply seconds 0.01
+[2026-04-11 15:53:13] IMPORT_START logs size.medium.log.15.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.medium.log.15.ply seconds 0.0
+[2026-04-11 15:53:13] IMPORT_START logs size.small.log.18.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.small.log.18.ply seconds 0.0
+[2026-04-11 15:53:13] CACHE_HIT logs size.large.log.5.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.18.ply
+[2026-04-11 15:53:13] IMPORT_START logs size.medium.log.24.ply
+[2026-04-11 15:53:13] IMPORT_DONE logs size.medium.log.24.ply seconds 0.01
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.25.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.11.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.11.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.6.ply
+[2026-04-11 15:53:13] BUILD_STATE_MODELS_DONE family= logs state= positive rows= 819 models= 18
+[2026-04-11 15:53:13] BUILD_STATE_DONE family= logs state= positive point_name= logs_positions_city_yr180_positive points= 819
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_DONE state= positive family= logs
+[2026-04-11 15:53:13] BUILD_INSTANCERS_STATE_DONE positive
+[2026-04-11 15:53:13] BUILD_INSTANCERS_STATE_START positive_priority families= logs,trees
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_START state= positive_priority family= trees rows= 64
+[2026-04-11 15:53:13] BUILD_STATE_START family= trees state= positive_priority rows= 64
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.fallen_control.improved-tree_id.11.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.fallen_control.improved-tree_id.12.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.fallen_control.improved-tree_id.13.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.fallen_control.improved-tree_id.14.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.fallen_control.improved-tree_id.7.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.fallen_control.improved-tree_id.8.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.fallen_control.improved-tree_id.9.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.senescing_control.improved-tree_id.1.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.senescing_control.improved-tree_id.2.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.senescing_control.improved-tree_id.3.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.senescing_control.improved-tree_id.9.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.snag_control.improved-tree_id.10.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.snag_control.improved-tree_id.11.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.snag_control.improved-tree_id.12.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.snag_control.improved-tree_id.13.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.snag_control.improved-tree_id.14.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.snag_control.improved-tree_id.7.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.snag_control.improved-tree_id.8.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.snag_control.improved-tree_id.9.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.11.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.12.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.13.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.14.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.15.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.16.ply
+[2026-04-11 15:53:13] BUILD_STATE_MODELS_DONE family= trees state= positive_priority rows= 64 models= 25
+[2026-04-11 15:53:13] BUILD_STATE_DONE family= trees state= positive_priority point_name= trees_positions_city_yr180_positive_priority points= 64
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_DONE state= positive_priority family= trees
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_START state= positive_priority family= logs rows= 819
+[2026-04-11 15:53:13] BUILD_STATE_START family= logs state= positive_priority rows= 819
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.26.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.27.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.large.log.5.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.23.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.27.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.11.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.25.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.6.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.22.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.15.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.18.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.large.log.5.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.18.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.24.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.25.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.11.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.11.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.6.ply
+[2026-04-11 15:53:13] BUILD_STATE_MODELS_DONE family= logs state= positive_priority rows= 819 models= 18
+[2026-04-11 15:53:13] BUILD_STATE_DONE family= logs state= positive_priority point_name= logs_positions_city_yr180_positive_priority points= 819
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_DONE state= positive_priority family= logs
+[2026-04-11 15:53:13] BUILD_INSTANCERS_STATE_DONE positive_priority
+[2026-04-11 15:53:13] BUILD_INSTANCERS_STATE_START trending families= logs,trees
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_START state= trending family= trees rows= 281
+[2026-04-11 15:53:13] BUILD_STATE_START family= trees state= trending rows= 281
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.fallen_control.improved-tree_id.12.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.False_size.senescing_control.improved-tree_id.2.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.medium_control.reserve-tree_id.10.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.medium_control.reserve-tree_id.7.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.medium_control.street-tree_id.10.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.medium_control.street-tree_id.5.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.medium_control.street-tree_id.6.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.medium_control.street-tree_id.7.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.medium_control.street-tree_id.8.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.medium_control.street-tree_id.9.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.11.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.senescing_control.improved-tree_id.13.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.small_control.reserve-tree_id.2.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.small_control.street-tree_id.1.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.small_control.street-tree_id.2.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.small_control.street-tree_id.3.ply
+[2026-04-11 15:53:13] CACHE_HIT trees precolonial.True_size.small_control.street-tree_id.4.ply
+[2026-04-11 15:53:13] BUILD_STATE_MODELS_DONE family= trees state= trending rows= 281 models= 17
+[2026-04-11 15:53:13] BUILD_STATE_DONE family= trees state= trending point_name= trees_positions_city_yr180_trending points= 281
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_DONE state= trending family= trees
+[2026-04-11 15:53:13] BUILD_INSTANCERS_FAMILY_START state= trending family= logs rows= 193
+[2026-04-11 15:53:13] BUILD_STATE_START family= logs state= trending rows= 193
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.26.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.27.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.large.log.5.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.23.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.27.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.11.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.25.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.6.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.22.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.medium.log.15.ply
+[2026-04-11 15:53:13] CACHE_HIT logs size.small.log.18.ply
+[2026-04-11 15:53:14] CACHE_HIT logs size.large.log.5.ply
+[2026-04-11 15:53:14] CACHE_HIT logs size.small.log.18.ply
+[2026-04-11 15:53:14] CACHE_HIT logs size.medium.log.24.ply
+[2026-04-11 15:53:14] CACHE_HIT logs size.medium.log.25.ply
+[2026-04-11 15:53:14] CACHE_HIT logs size.small.log.11.ply
+[2026-04-11 15:53:14] CACHE_HIT logs size.small.log.11.ply
+[2026-04-11 15:53:14] CACHE_HIT logs size.small.log.6.ply
+[2026-04-11 15:53:14] BUILD_STATE_MODELS_DONE family= logs state= trending rows= 193 models= 18
+[2026-04-11 15:53:14] BUILD_STATE_DONE family= logs state= trending point_name= logs_positions_city_yr180_trending points= 193
+[2026-04-11 15:53:14] BUILD_INSTANCERS_FAMILY_DONE state= trending family= logs
+[2026-04-11 15:53:14] BUILD_INSTANCERS_STATE_DONE trending
+[2026-04-11 15:53:14] Instancer build summary: {'scene': 'bV2_city_single_state_yr180', 'site': 'city', 'mode': 'single_state', 'year': 180, 'results': [{'family': 'trees', 'state': 'positive', 'row_count': 378, 'model_count': 62, 'point_object': 'trees_positions_city_yr180_positive', 'models_collection': 'trees_models_city_yr180_positive'}, {'family': 'logs', 'state': 'positive', 'row_count': 819, 'model_count': 18, 'point_object': 'logs_positions_city_yr180_positive', 'models_collection': 'logs_models_city_yr180_positive'}, {'family': 'trees', 'state': 'positive_priority', 'row_count': 64, 'model_count': 25, 'point_object': 'trees_positions_city_yr180_positive_priority', 'models_collection': 'trees_models_city_yr180_positive_priority'}, {'family': 'logs', 'state': 'positive_priority', 'row_count': 819, 'model_count': 18, 'point_object': 'logs_positions_city_yr180_positive_priority', 'models_collection': 'logs_models_city_yr180_positive_priority'}, {'family': 'trees', 'state': 'trending', 'row_count': 281, 'model_count': 17, 'point_object': 'trees_positions_city_yr180_trending', 'models_collection': 'trees_models_city_yr180_trending'}, {'family': 'logs', 'state': 'trending', 'row_count': 193, 'model_count': 18, 'point_object': 'logs_positions_city_yr180_trending', 'models_collection': 'logs_models_city_yr180_trending'}], 'positive_rows': 1197, 'priority_rows': 883, 'trending_rows': 474}
+[2026-04-11 15:53:14] BIOENV_BUILD_START scene= bV2_city_single_state_yr180 site= city mode= single_state year= 180
+[2026-04-11 15:53:14] BIOENV_MISSING_SOURCE site= city state= positive year= 180
+[2026-04-11 15:53:14] BIOENV_NO_SOURCE_GEOMETRY site= city state= positive mode= single_state year= 180
+[2026-04-11 15:53:14] BIOENV_STATE_DONE {'state': 'positive', 'object': 'bioenvelope_city_yr180_positive', 'vertex_count': 0, 'source_years': (), 'missing_years': (180,)}
+[2026-04-11 15:53:14] BIOENV_MISSING_SOURCE site= city state= trending year= 180
+[2026-04-11 15:53:14] BIOENV_NO_SOURCE_GEOMETRY site= city state= trending mode= single_state year= 180
+[2026-04-11 15:53:14] BIOENV_STATE_DONE {'state': 'trending', 'object': 'bioenvelope_city_yr180_trending', 'vertex_count': 0, 'source_years': (), 'missing_years': (180,)}
+[2026-04-11 15:53:14] BIOENV_BUILD_DONE {'scene': 'bV2_city_single_state_yr180', 'site': 'city', 'mode': 'single_state', 'year': 180, 'results': [{'state': 'positive', 'object': 'bioenvelope_city_yr180_positive', 'vertex_count': 0, 'source_years': (), 'missing_years': (180,)}, {'state': 'trending', 'object': 'bioenvelope_city_yr180_trending', 'vertex_count': 0, 'source_years': (), 'missing_years': (180,)}]}
+[2026-04-11 15:53:14] WORLD_BUILD_START bV2_city_single_state_yr180 city single_state 180
+[2026-04-11 15:53:39] WORLD_OBJECT_DONE bV2_city_single_state_yr180 buildings_city_yr180_positive points=9502575 matched=9486061
+[2026-04-11 15:53:42] WORLD_OBJECT_DONE bV2_city_single_state_yr180 roads_city_yr180_positive points=2503671 matched=2498253
+[2026-04-11 15:53:56] WORLD_OBJECT_DONE bV2_city_single_state_yr180 buildings_city_yr180_trending points=9502575 matched=9486061
+[2026-04-11 15:54:00] WORLD_OBJECT_DONE bV2_city_single_state_yr180 roads_city_yr180_trending points=2503671 matched=2498253
+[2026-04-11 15:54:00] WORLD_BUILD_DONE bV2_city_single_state_yr180 {'positive': ['buildings_city_yr180_positive', 'roads_city_yr180_positive'], 'trending': ['buildings_city_yr180_trending', 'roads_city_yr180_trending']}
+[2026-04-11 15:54:00] VALIDATE_SCENE {'scene': 'bV2_city_single_state_yr180', 'site': 'city', 'mode': 'single_state', 'year': 180, 'errors': [], 'warnings': ["Bioenvelope 'bioenvelope_city_yr180_positive' is empty", "Bioenvelope 'bioenvelope_city_yr180_trending' is empty"], 'ok': True}
+[2026-04-11 15:54:02] BUILD_SCENE_BLEND_SAVED D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\blends\4.9\city_single-state_yr180__full_pipeline.blend
+[2026-04-11 15:54:02] MIST_APPLIED profile=city_single_state_hero camera=city-yr180-hero-image use_mist=False start=60.0 depth=420.0 falloff=LINEAR
+[2026-04-11 15:54:02] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+[2026-04-11 15:54:02] RENDER_SETUP_DONE {'scene': 'bV2_city_single_state_yr180', 'output_root': 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180', 'resolution': (7680, 4320, 100), 'samples': 64, 'tag': '8k64s'}
+[2026-04-11 15:54:04] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+[2026-04-11 15:54:45] RENDER_EXR_DONE existing_condition_positive D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_single-state_yr180\city_single-state_yr180__existing_condition_positive__8k64s.exr
+[2026-04-11 15:54:45] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+[2026-04-11 15:55:23] RENDER_EXR_DONE existing_condition_trending D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_single-state_yr180\city_single-state_yr180__existing_condition_trending__8k64s.exr
+[2026-04-11 15:55:23] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+[2026-04-11 15:56:11] RENDER_EXR_DONE positive_state D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_single-state_yr180\city_single-state_yr180__positive_state__8k64s.exr
+[2026-04-11 15:56:11] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+[2026-04-11 15:56:54] RENDER_EXR_DONE positive_priority_state D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_single-state_yr180\city_single-state_yr180__positive_priority_state__8k64s.exr
+[2026-04-11 15:56:54] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+[2026-04-11 15:57:36] RENDER_EXR_DONE trending_state D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_single-state_yr180\city_single-state_yr180__trending_state__8k64s.exr
+[2026-04-11 15:57:36] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+[2026-04-11 15:58:17] RENDER_EXR_DONE bioenvelope_positive D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_single-state_yr180\city_single-state_yr180__bioenvelope_positive__8k64s.exr
+[2026-04-11 15:58:17] CYCLES_GPU_ENABLED backend=OPTIX devices=('NVIDIA A40-24Q|OPTIX', 'NVIDIA L40-24Q|CUDA', 'NVIDIA L40-24Q|OPTIX')
+[2026-04-11 15:58:56] RENDER_EXR_DONE bioenvelope_trending D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_single-state_yr180\city_single-state_yr180__bioenvelope_trending__8k64s.exr
+[2026-04-11 15:58:56] MEDIAFLUX_UPLOAD_START D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_single-state_yr180 -> pipeline\4.9\blender_exrs\city_single-state_yr180
+[2026-04-11 15:59:21] MEDIAFLUX_UPLOAD_DONE D:\2026 Arboreal Futures\urban-futures\_data-refactored\blenderv2\output\4.9\city_single-state_yr180 -> pipeline\4.9\blender_exrs\city_single-state_yr180
+[2026-04-11 15:59:21] BUILD_SCENE_DONE {'scene': 'bV2_city_single_state_yr180', 'site': 'city', 'mode': 'single_state', 'year': 180, 'blend_output_path': 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\blends\\4.9\\city_single-state_yr180__full_pipeline.blend', 'render_output_root': 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180', 'remote_subpath': 'pipeline\\4.9\\blender_exrs\\city_single-state_yr180', 'instancers': {'scene': 'bV2_city_single_state_yr180', 'site': 'city', 'mode': 'single_state', 'year': 180, 'results': [{'family': 'trees', 'state': 'positive', 'row_count': 378, 'model_count': 62, 'point_object': 'trees_positions_city_yr180_positive', 'models_collection': 'trees_models_city_yr180_positive'}, {'family': 'logs', 'state': 'positive', 'row_count': 819, 'model_count': 18, 'point_object': 'logs_positions_city_yr180_positive', 'models_collection': 'logs_models_city_yr180_positive'}, {'family': 'trees', 'state': 'positive_priority', 'row_count': 64, 'model_count': 25, 'point_object': 'trees_positions_city_yr180_positive_priority', 'models_collection': 'trees_models_city_yr180_positive_priority'}, {'family': 'logs', 'state': 'positive_priority', 'row_count': 819, 'model_count': 18, 'point_object': 'logs_positions_city_yr180_positive_priority', 'models_collection': 'logs_models_city_yr180_positive_priority'}, {'family': 'trees', 'state': 'trending', 'row_count': 281, 'model_count': 17, 'point_object': 'trees_positions_city_yr180_trending', 'models_collection': 'trees_models_city_yr180_trending'}, {'family': 'logs', 'state': 'trending', 'row_count': 193, 'model_count': 18, 'point_object': 'logs_positions_city_yr180_trending', 'models_collection': 'logs_models_city_yr180_trending'}], 'positive_rows': 1197, 'priority_rows': 883, 'trending_rows': 474}, 'bioenvelopes': {'scene': 'bV2_city_single_state_yr180', 'site': 'city', 'mode': 'single_state', 'year': 180, 'results': [{'state': 'positive', 'object': 'bioenvelope_city_yr180_positive', 'vertex_count': 0, 'source_years': (), 'missing_years': (180,)}, {'state': 'trending', 'object': 'bioenvelope_city_yr180_trending', 'vertex_count': 0, 'source_years': (), 'missing_years': (180,)}]}, 'world': {'positive': ['buildings_city_yr180_positive', 'roads_city_yr180_positive'], 'trending': ['buildings_city_yr180_trending', 'roads_city_yr180_trending']}, 'validation': {'scene': 'bV2_city_single_state_yr180', 'site': 'city', 'mode': 'single_state', 'year': 180, 'errors': [], 'warnings': ["Bioenvelope 'bioenvelope_city_yr180_positive' is empty", "Bioenvelope 'bioenvelope_city_yr180_trending' is empty"], 'ok': True}, 'render': {'scene': 'bV2_city_single_state_yr180', 'output_root': 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180', 'resolution': (7680, 4320, 100), 'samples': 64, 'tag': '8k64s'}, 'rendered_paths': ['D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180\\city_single-state_yr180__existing_condition_positive__8k64s.exr', 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180\\city_single-state_yr180__existing_condition_trending__8k64s.exr', 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180\\city_single-state_yr180__positive_state__8k64s.exr', 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180\\city_single-state_yr180__positive_priority_state__8k64s.exr', 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180\\city_single-state_yr180__trending_state__8k64s.exr', 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180\\city_single-state_yr180__bioenvelope_positive__8k64s.exr', 'D:\\2026 Arboreal Futures\\urban-futures\\_data-refactored\\blenderv2\\output\\4.9\\city_single-state_yr180\\city_single-state_yr180__bioenvelope_trending__8k64s.exr']}

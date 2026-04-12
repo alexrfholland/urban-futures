@@ -41,9 +41,15 @@ from _futureSim_refactored.sim.setup import a_scenario_initialiseDS, params_v3
 
 from _futureSim_refactored.paths import (
     engine_output_validation_dir,
+    engine_output_state_vtk_path,
 )
-from _futureSim_refactored.outputs.report import render_proposal_v4, render_debug_recruit
+try:
+    from _futureSim_refactored.outputs.report import render_proposal_v4, render_debug_recruit
+except ImportError:
+    render_proposal_v4 = None  # type: ignore[assignment]
+    render_debug_recruit = None  # type: ignore[assignment]
 from _futureSim_refactored.blender.bexport import export_rewilded_envelopes
+from _futureSim_refactored.blender.bexport import export_proposal_envelopes
 from _futureSim_refactored.sim.v4_indicator_extract import compute_indicators, format_site_table, INDICATOR_ORDER, write_v4_indicator_csv
 from _futureSim_refactored.sim.run.run_log import append_run_log
 
@@ -137,6 +143,16 @@ def parse_args() -> argparse.Namespace:
         help="Save raw scenario state VTKs during VTK generation.",
     )
     parser.add_argument(
+        "--bioenvelope-only",
+        action="store_true",
+        help="Regenerate bioenvelope PLYs from existing state VTKs only; no scenario or VTK generation.",
+    )
+    parser.add_argument(
+        "--old-envelopes",
+        action="store_true",
+        help="Use the old scenario_bioEnvelope-based envelope generation instead of the proposal-based default.",
+    )
+    parser.add_argument(
         "--description",
         default="",
         help="One-sentence description appended to the run log.",
@@ -174,6 +190,7 @@ def run_site_scenario(
     multiple_agent: bool = False,
     save_raw_vtk: bool = False,
     indicator_counts: dict | None = None,
+    old_envelopes: bool = False,
 ) -> None:
     print(f"\n===== V3: {site} / {scenario} =====\n")
 
@@ -282,7 +299,8 @@ def run_site_scenario(
 
             # Inline bioenvelope export (from in-memory polydata)
             try:
-                export_rewilded_envelopes.export_target(
+                envelope_exporter = export_rewilded_envelopes if old_envelopes else export_proposal_envelopes
+                envelope_exporter.export_target(
                     site, scenario, year, vtk_path=None,
                     output_mode="validation", voxel_size=voxel_size, mesh=state_polydata,
                 )
@@ -384,7 +402,7 @@ def main() -> None:
 
     # Log to the run log only when an explicit root is set
     _explicit_root = os.environ.get("REFACTOR_RUN_OUTPUT_ROOT")
-    _mode = "node-only" if args.node_only else "vtk-only" if args.vtk_only else "stats-only" if args.compile_stats_only else "baselines-only" if args.baselines_only else "full"
+    _mode = "node-only" if args.node_only else "vtk-only" if args.vtk_only else "stats-only" if args.compile_stats_only else "baselines-only" if args.baselines_only else "bioenvelope-only" if args.bioenvelope_only else "full"
     _name = f"{'-'.join(sites)}_{'-'.join(scenarios)}_{_mode}"
     append_run_log(
         name=_name,
@@ -402,6 +420,25 @@ def main() -> None:
         run_baselines(sites, voxel_size=args.voxel_size)
         return
 
+    if args.bioenvelope_only:
+        print("\n===== V3: Bioenvelope-only mode =====\n")
+        envelope_exporter = export_rewilded_envelopes if args.old_envelopes else export_proposal_envelopes
+        for site in sites:
+            for scenario in scenarios:
+                for year in years:
+                    vtk_path = engine_output_state_vtk_path(site, scenario, year, args.voxel_size, "validation")
+                    if not vtk_path.exists():
+                        print(f"Skipping missing VTK: {vtk_path}")
+                        continue
+                    try:
+                        envelope_exporter.export_target(
+                            site, scenario, year, vtk_path,
+                            output_mode="validation", voxel_size=args.voxel_size,
+                        )
+                    except Exception as e:
+                        print(f"  Bioenvelope export failed ({site}/{scenario}/yr{year}): {e}")
+        return
+
     # Collect V4 indicator counts per (site, scenario) during VTK generation
     indicator_counts: dict[tuple[str, str], dict] = {}
 
@@ -417,6 +454,7 @@ def main() -> None:
                 multiple_agent=args.multiple_agent,
                 save_raw_vtk=args.save_raw_vtk,
                 indicator_counts=indicator_counts,
+                old_envelopes=args.old_envelopes,
             )
 
     if args.node_only:
