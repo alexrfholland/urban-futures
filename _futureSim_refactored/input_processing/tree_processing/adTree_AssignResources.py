@@ -13,6 +13,7 @@ from scipy.spatial import cKDTree
 import aa_tree_helper_functions
 import sys
 from pathlib import Path
+from _futureSim_refactored.paths import SHARED_INPUTS_ROOT
 
 CODE_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent.name == "_futureSim_refactored")
 if str(CODE_ROOT.parent) not in sys.path:
@@ -586,7 +587,7 @@ def assign_logs(voxelDF, logValue, logColumnName, control, size, seed=42):
     np.random.seed(seed) 
 
     #Step 0: get log library
-    logLibrary = pd.read_pickle('data/treeOutputs/logLibrary.pkl')
+    logLibrary = pd.read_pickle(SHARED_INPUTS_ROOT / 'logLibrary.pkl')
 
     print(f'first bit of log library is {logLibrary.head()}')
     # Group by logNo and count rows

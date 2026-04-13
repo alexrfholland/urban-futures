@@ -5,6 +5,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 from pyproj import Transformer
 import matplotlib.pyplot as plt
+from _futureSim_refactored.paths import SHARED_INPUTS_ROOT
 
 def parse_kml(kml_path):
     tree = ET.parse(kml_path)
@@ -50,7 +51,7 @@ def find_nearest_tile(target, tiles):
 
 def get_site_coordinates(site_name):
     # Read the CSV file using pandas
-    df = pd.read_csv('data/revised/csv/site_locations.csv')
+    df = pd.read_csv(SHARED_INPUTS_ROOT / 'site_locations.csv')
     
     # Find the row corresponding to the given site_name
     site_row = df[df['Name'] == site_name]

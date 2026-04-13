@@ -50,7 +50,9 @@ except ImportError:
     render_debug_recruit = None  # type: ignore[assignment]
 from _futureSim_refactored.blender.bexport import export_rewilded_envelopes
 from _futureSim_refactored.blender.bexport import export_proposal_envelopes
-from _futureSim_refactored.sim.v4_indicator_extract import compute_indicators, format_site_table, INDICATOR_ORDER, write_v4_indicator_csv
+from _futureSim_refactored.sim.v4_indicator_extract import compute_indicators, format_site_table, INDICATOR_ORDER
+from _futureSim_refactored.outputs.stats.vtk_to_stat_counts import process_state as write_vtk_stats
+from _futureSim_refactored.outputs.stats import schema_v4_indicators, schema_v4_interventions, schema_v4_decisions  # noqa: F401 — register schemas
 from _futureSim_refactored.sim.run.run_log import append_run_log
 
 import pandas as pd
@@ -160,10 +162,13 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _write_v4_indicator_csv(polydata, site: str, scenario: str, year: int, is_baseline: bool = False) -> None:
-    """Write per-state V4 indicator counts to a CSV alongside the V3 stats."""
-    path = write_v4_indicator_csv(polydata, site, scenario, year, is_baseline=is_baseline)
-    print(f"  V4 indicators → {path}")
+def _write_vtk_stats(polydata, site: str, scenario: str, year: int, is_baseline: bool = False) -> None:
+    """Write all registered VTK stat schemas (indicators, interventions, decisions)."""
+    from _futureSim_refactored.paths import engine_output_root
+    root = engine_output_root()
+    paths = write_vtk_stats(polydata, site, scenario, year, output_root=root, is_baseline=is_baseline)
+    for p in paths:
+        print(f"  VTK stats → {p}")
 
 
 def _prepare_subset_dataset(site: str, voxel_size: int, *, write_cache: bool = True):
@@ -308,8 +313,8 @@ def run_site_scenario(
             except Exception as e:
                 print(f"  Bioenvelope export failed: {e}")
 
-            # Write per-state V4 indicator CSV
-            _write_v4_indicator_csv(state_polydata, site, scenario, year)
+            # Write all per-state VTK stats (indicators, interventions, decisions)
+            _write_vtk_stats(state_polydata, site, scenario, year)
 
             # Collect V4 indicator counts for the final year
             if indicator_counts is not None and year == max(years):
@@ -343,7 +348,7 @@ def run_baselines(sites: list[str], *, voxel_size: int = 1) -> None:
             save_stats=False,
             output_mode="validation",
         )
-        _write_v4_indicator_csv(baseline_polydata, site, "baseline", -180, is_baseline=True)
+        _write_vtk_stats(baseline_polydata, site, "baseline", -180, is_baseline=True)
 
 
 def run_capabilities(sites: list[str], scenarios: list[str], years: list[int], *, voxel_size: int = 1) -> None:

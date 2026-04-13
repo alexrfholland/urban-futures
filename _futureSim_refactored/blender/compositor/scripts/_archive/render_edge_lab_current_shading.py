@@ -114,10 +114,10 @@ def set_standard_view(scene: bpy.types.Scene) -> None:
 def repath_exr_node(node: bpy.types.Node, filepath: Path) -> None:
     if not filepath.exists():
         raise FileNotFoundError(f"EXR not found: {filepath}")
-    if node.image is None:
-        raise ValueError(f"Node '{node.name}' has no image")
-    node.image.filepath = str(filepath)
-    node.image.reload()
+    # Force a fresh image datablock load. After interrupted/partial downloads,
+    # Blender can keep an EXR in a bad cached state where reload() still hits
+    # decompression/read errors on the old in-memory handle.
+    node.image = bpy.data.images.load(str(filepath), check_existing=False)
 
 
 def detect_resolution(exr_paths: list[Path], images: list[bpy.types.Image]) -> tuple[int, int]:

@@ -107,6 +107,21 @@
       "notes": "Needs rebuild_file_output due to Group→FO slot-miss bug (§7d)."
     },
     {
+      "name": "mist_complex_outlines",
+      "blend": "_futureSim_refactored/blender/compositor/canonical_templates/compositor_mist_complex_outlines.blend",
+      "runner": "_futureSim_refactored/blender/compositor/scripts/render_current_mist_complex_outlines.py",
+      "n_exr_inputs": 1,
+      "n_iterations_per_flow": 1,
+      "per_branch": true,
+      "scene_name": "Current",
+      "file_output_node": "MistComplexOutlines::Outputs",
+      "rebuild_file_output": true,
+      "env_vars": ["COMPOSITOR_EXR", "COMPOSITOR_OUTPUT_DIR", "COMPOSITOR_BLEND_PATH", "COMPOSITOR_SCENE_NAME"],
+      "required_exr_passes": [],
+      "use_arboreal_mark": null,
+      "notes": "Single-input canonical outline family. Runtime slot name is derived from the EXR stem. Needs rebuild_file_output due to Group→FO slot-miss bug (§7d)."
+    },
+    {
       "name": "normals",
       "blend": "_futureSim_refactored/blender/compositor/canonical_templates/compositor_normals.blend",
       "runner": "_futureSim_refactored/blender/compositor/scripts/render_current_normals.py",

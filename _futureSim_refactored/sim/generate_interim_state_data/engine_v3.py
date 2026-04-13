@@ -33,6 +33,7 @@ from _futureSim_refactored.paths import (  # noqa: E402
     scenario_output_root,
     scenario_pole_df_path,
     scenario_tree_df_path,
+    site_subset_dataset_path,
 )
 from _futureSim_refactored.sim.setup.structure_ids import (  # noqa: E402
     assign_log_structure_ids,
@@ -2238,7 +2239,7 @@ def log_run_stats(
     size_order = ["small", "medium", "large", "senescing", "snag", "fallen", "decayed"]
 
     # Load ds for ground area computation
-    ds_path = Path("data/revised/final") / site / f"{site}_{voxel_size}_subsetForScenarios.nc"
+    ds_path = site_subset_dataset_path(site, voxel_size)
     ds = xr.open_dataset(ds_path) if ds_path.exists() else None
 
     thresholds_dict = params_v3.get_scenario_parameters().get(

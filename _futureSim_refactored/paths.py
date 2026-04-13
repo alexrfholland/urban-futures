@@ -23,6 +23,8 @@ BLENDERV2_LOGS_ROOT = BLENDERV2_ROOT / "logs"
 COMPOSITOR_ROOT = REFACTORED_DATA_ROOT / "compositor"
 COMPOSITOR_OUTPUTS_ROOT = COMPOSITOR_ROOT / "outputs"
 COMPOSITOR_TEMP_BLENDS_ROOT = COMPOSITOR_ROOT / "temp_blends"
+SITE_INPUTS_ROOT = MODEL_INPUTS_ROOT / "sites"
+SHARED_INPUTS_ROOT = MODEL_INPUTS_ROOT / "shared"
 TREE_LIBRARY_ROOT = MODEL_INPUTS_ROOT / "tree_libraries"
 TREE_LIBRARY_BASE_ROOT = TREE_LIBRARY_ROOT / "base" / "trees"
 TREE_LIBRARY_EXPORT_ROOT = MODEL_INPUTS_ROOT / "tree_library_exports"
@@ -286,7 +288,7 @@ def _engine_output_write_path(relpath: str | Path, output_mode: str | None = Non
 # 2. Site Information
 
 def site_inputs_dir(site: str) -> Path:
-    return LEGACY_DATA_ROOT / "revised" / "final" / site
+    return SITE_INPUTS_ROOT / site
 
 
 def site_subset_dataset_path(site: str, voxel_size: float | int = 1) -> Path:
@@ -334,7 +336,7 @@ def site_world_reference_vtk_path(site: str, kind: str) -> Path:
     }
     if kind not in suffix_map:
         raise ValueError(f"Unknown world reference kind: {kind}")
-    return LEGACY_DATA_ROOT / "revised" / "final" / suffix_map[kind]
+    return site_inputs_dir(site) / suffix_map[kind]
 
 
 def scenario_site_dir(site: str, output_mode: str | None = None) -> Path:

@@ -17,6 +17,7 @@ from _futureSim_refactored.sim.voxel import voxel_a_helper_functions as a_helper
 from _futureSim_refactored.input_processing.tree_processing import a_resource_distributor_dataframes
 
 from _futureSim_refactored.paths import (
+    SHARED_INPUTS_ROOT,
     engine_output_baseline_terrain_vtk_path,
     engine_output_baseline_trees_csv_path,
     site_subset_dataset_path,
@@ -357,7 +358,7 @@ def generate_baseline(site, voxel_size=1, output_folder=None, visualize=False):
     tuple: Paths to the generated files (trees_csv, resource_vtk, terrain_vtk, combined_vtk)
     """
     # Load and process baseline densities
-    baselineDensities = pd.read_csv('data/csvs/tree-baseline-density.csv')
+    baselineDensities = pd.read_csv(SHARED_INPUTS_ROOT / 'tree-baseline-density.csv')
     baselineDensities = baselineDensities.rename(columns={'Size': 'diameter_breast_height'})
     print('\nBaseline Densities:')
     print(baselineDensities.to_string(index=False))

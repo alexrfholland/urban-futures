@@ -16,10 +16,10 @@ import pandas as pd
 import pyvista as pv
 import numpy as np
 import os
-from _futureSim_refactored.paths import log_mesh_vtk_dir
+from _futureSim_refactored.paths import log_mesh_vtk_dir, SHARED_INPUTS_ROOT
 
 # Load log library
-logLibrary = pd.read_pickle('data/treeOutputs/logLibrary.pkl')
+logLibrary = pd.read_pickle(SHARED_INPUTS_ROOT / 'logLibrary.pkl')
 
 # Filter out specific log numbers and add resource column
 logLibraryDF = logLibrary[~logLibrary['logNo'].isin([1, 2, 3, 4])]

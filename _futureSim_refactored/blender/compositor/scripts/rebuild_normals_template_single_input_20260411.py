@@ -13,7 +13,7 @@ New template shape (for scene `Current`):
                                              +-- G -> *0.5 -> +0.5 -> SetAlpha(mask) -> slot normal_y_
                                              +-- B -> *0.5 -> +0.5 -> SetAlpha(mask) -> slot normal_z_
 
-    RGB(0,0,0) -------------------------------------> SetAlpha(mask) -> slot shading_
+    max(0, N . L) ----------------------------------> SetAlpha(mask) -> slot shading_
 
 Four File Output slots:
     normal_x_
@@ -25,18 +25,14 @@ All four use the tree IDMask as alpha. The mask source is a single link so a
 runner that wants whole-scene output can relink `SetAlpha.Alpha` from the
 IDMask output to the EXR `Alpha` output.
 
-`shading_` is intentionally a flat black RGB, not a Lambert N.L dot product.
-The N.L approach was tried and discarded because the bV2 Normal pass shows a
-systematic gradient in the Y channel across screen X (the Normal pass is
-camera-space, not world-space, on a camera that is not a perfectly axis-
-aligned top-down ortho). The resulting shading had a false left-to-right
-darkening that made no sense on a top-down city view.
+`shading_` is a prebaked Lambert N.L dot product from the EXR Normal pass.
+This single-input builder now matches the later remap migration path:
 
-Instead, `shading_` is a uniform black overlay with the tree mask as alpha.
-Drop it on a Photoshop layer above the beauty render at Multiply and dial
-the layer opacity for the darkening strength. For any directional shading,
-use the per-axis normal_* slabs as PS adjustment sources (the x/y/z slabs
-are angle-independent — the Lambert math is moved from Blender to PS).
+- shading = `max(0, N . L)`
+- `L = normalize(0.3, 0.3, 0.9)`
+
+That higher sun elevation gives a softer top-down daylight read than the older
+low-elevation NE vector that exaggerated left-to-right falloff in city views.
 
 Contract: this is an explicit template-edit operation. It is NOT a runtime
 script. It rebuilds the `Current` scene's compositor tree from scratch.
@@ -58,7 +54,9 @@ import bpy
 
 
 TREE_ID = 3
-SUN = (0.6123724356957946, 0.6123724356957946, 0.49999999999999994)  # 30 deg NE
+SUN_RAW = (0.3, 0.3, 0.9)
+_SUN_LEN = math.sqrt(sum(c * c for c in SUN_RAW))
+SUN = tuple(c / _SUN_LEN for c in SUN_RAW)
 
 SCENE_NAME = "Current"
 EXR_NODE_NAME = "EXR Input"

@@ -16,6 +16,8 @@ from pathlib import Path
 import os
 import sys
 
+from _futureSim_refactored.paths import SHARED_INPUTS_ROOT
+
 CODE_ROOT = next(parent for parent in Path(__file__).resolve().parents if parent.name == "_futureSim_refactored")
 if str(CODE_ROOT.parent) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT.parent))
@@ -104,7 +106,7 @@ def preprocess_logLibrary():
     Preprocesses the log library to match the tree resource format.
     """
     #Step 0: get log library
-    logLibrary = pd.read_pickle('data/treeOutputs/logLibrary.pkl')
+    logLibrary = pd.read_pickle(SHARED_INPUTS_ROOT / 'logLibrary.pkl')
 
     print(f'first bit of log library is {logLibrary.head()}')
     # Group by logNo and count rows

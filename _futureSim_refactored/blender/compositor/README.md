@@ -57,6 +57,7 @@ Standalone workflow canonicals:
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_shading.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_depth_outliner.blend`
 - `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_mist.blend`
+- `/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/blender/compositor/canonical_templates/compositor_mist_complex_outlines.blend`
 
 Helper canonicals:
 
@@ -273,6 +274,17 @@ Current notable cases:
     - `mist_kirsch_thin.png`
     - `mist_kirsch_fine.png`
     - `mist_kirsch_extra_thin.png`
+
+- `mist_complex_outlines`
+  - standalone blend is single-input
+  - accepts one EXR input
+  - keeps one generic arboreal mask inside the canonical
+  - one output stem:
+    - `whole_forest_outline_v8_t10.png`
+  - runtime output filename is derived from the EXR input name, e.g.:
+    - `positive_state__whole_forest_outline_v8_t10.png`
+    - `positive_priority_state__whole_forest_outline_v8_t10.png`
+    - `trending_state__whole_forest_outline_v8_t10.png`
 
 - `shading`
   - standalone blend exists

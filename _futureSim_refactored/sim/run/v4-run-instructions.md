@@ -216,6 +216,10 @@ REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-n
   uv run python _futureSim_refactored/sim/v4_indicator_extract.py
 ```
 
+> **Note**: The standalone comparison table above is still useful for quick yr-180
+> checks.  For per-state CSV extraction (indicators, interventions, decisions),
+> use `vtk_to_stat_counts` (Step 4b) which is also called inline during Step 2.
+
 ### V4 indicators extracted
 
 | ID | VTK query |
@@ -253,6 +257,72 @@ Each indicator value shown as percentage of baseline and as multiples between sc
 `{root}/comparison/v4_indicator_comparison.md`
 
 Full indicator definitions: `_futureSim_refactored/sim/v4_indicator_definitions.md`
+
+---
+
+## Step 4b: Extract all VTK stats (standalone batch)
+
+During Step 2 the batch runner writes per-state CSVs for all registered schemas
+(indicators, interventions, decisions) inline from each in-memory mesh.  If you
+need to regenerate them standalone (e.g. for an older run), use:
+
+### Parallel execution
+
+Launch all slices for a site in parallel, same pattern as VTK generation.
+Batch by site (18 processes each).
+
+```bash
+for site in trimmed-parade city uni; do
+  for scenario in positive trending; do
+    for year in 0 1 10 30 60 90 120 150 180; do
+      uv run python -m _futureSim_refactored.outputs.stats.vtk_to_stat_counts \
+        --root _data-refactored/model-outputs/generated-states/<root-name> \
+        --sites "$site" --scenarios "$scenario" --years "$year" --no-baselines \
+        > /tmp/stats_${site}_${scenario}_${year}.log 2>&1 &
+    done
+  done
+  wait
+done
+```
+
+Subset of schemas only (e.g. just decisions):
+
+```bash
+uv run python -m _futureSim_refactored.outputs.stats.vtk_to_stat_counts \
+    --root ... --schemas v4_decisions,v4_decision_subgroups \
+    --sites trimmed-parade --scenarios positive --years 60
+```
+
+### Registered schemas
+
+| Schema | Output suffix | What it extracts |
+|---|---|---|
+| `v4_indicators` | `*_v4_indicators.csv` | 21 capability indicator voxel counts |
+| `v4_interventions` | `*_v4_interventions.csv` | Per-intervention voxel counts by proposal family |
+| `v4_decisions` | `*_v4_decisions.csv` | Rejected/accepted_full/accepted_partial per proposal |
+| `v4_decision_subgroups` | `*_v4_decision_subgroups.csv` | Fine-grained subgroup breakdowns (colonise by bioenvelope, deploy by type, recruit by urban element) |
+
+### Output
+
+Per-state CSVs under `{root}/output/stats/per-state/{site}/`.
+
+### Downstream graph scripts
+
+These scripts read the per-state CSVs — no VTK loading needed:
+
+```bash
+# Capability stream graphs
+uv run python -m _futureSim_refactored.outputs.graphs.stream_graph_v4 \
+    --root _data-refactored/model-outputs/generated-states/<root-name>
+
+# Proposal intervention stream graphs
+uv run python -m _futureSim_refactored.outputs.graphs.proposal_stream_graph_v4 \
+    --root _data-refactored/model-outputs/generated-states/<root-name>
+
+# Proposal decision pie charts
+uv run python -m _futureSim_refactored.outputs.graphs.proposal_decision_pies_v4 \
+    --root _data-refactored/model-outputs/generated-states/<root-name> --site trimmed-parade
+```
 
 ---
 

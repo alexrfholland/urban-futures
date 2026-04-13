@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import math
 import sys
 from pathlib import Path
 
@@ -49,6 +50,11 @@ EXR_NODE_NAME = "EXR Input"
 IDMASK_NODE_NAME = "Arboreal IDMask"
 SEPARATE_NODE_NAME = "Separate Normal"
 FILE_OUTPUT_NAME = "Normals::Outputs"
+SHADING_NODE_NAMES = {
+    "x": "Shading::Lx",
+    "y": "Shading::Ly",
+    "z": "Shading::Lz",
+}
 
 # Base slot path suffixes defined by the template rebuild.
 SLOT_SUFFIXES = ("normal_x_", "normal_y_", "normal_z_", "shading_")
@@ -69,6 +75,22 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--exr", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--stem", required=True, help="e.g. pathway_tree, priority_tree, existing_condition")
+    p.add_argument(
+        "--mode",
+        choices=("full", "shading-only"),
+        default="full",
+        help="Render all outputs, or only the shading PNG for a sun sweep.",
+    )
+    p.add_argument(
+        "--shading-label",
+        default=None,
+        help="Optional suffix label for shading-only output naming, e.g. top_left_soft.",
+    )
+    p.add_argument(
+        "--sun",
+        default=None,
+        help="Optional Lambert sun vector as 'x,y,z'. Will be normalized before patching runtime shading nodes.",
+    )
     return p.parse_args(argv)
 
 
@@ -114,23 +136,61 @@ def wire_exr_sockets(tree: bpy.types.NodeTree) -> None:
     log("  wired IndexOB -> IDMask, Normal -> Separate")
 
 
-def relabel_file_slots(fout: bpy.types.Node, stem: str) -> None:
-    """Rename the File Output slot paths to use a scenario stem prefix.
+def relabel_file_slots(
+    tree: bpy.types.NodeTree,
+    fout: bpy.types.Node,
+    stem: str,
+    mode: str,
+    shading_label: str | None,
+) -> None:
+    """Rename or prune File Output slots for full or shading-only renders.
 
     Template slot paths are `normal_x_`, `normal_y_`, `normal_z_`, `shading_`.
-    We rewrite them to `{stem}_normal_x_`, `{stem}_shading_`, etc.
+    Full mode rewrites them to `{stem}_normal_x_`, `{stem}_shading_`, etc.
+    Shading-only mode disconnects the three normals slots and writes only
+    `{stem}_shading__{label}_`.
     """
-    mapping = {
+    full_mapping = {
         "normal_x_": f"{stem}_normal_x_",
         "normal_y_": f"{stem}_normal_y_",
         "normal_z_": f"{stem}_normal_z_",
         "shading_": f"{stem}_shading_",
     }
-    for slot in fout.file_slots:
-        new_path = mapping.get(slot.path)
+    shading_path = f"{stem}_shading__{shading_label}_" if shading_label else f"{stem}_shading_"
+    for idx, slot in enumerate(fout.file_slots):
+        if mode == "shading-only" and slot.path != "shading_":
+            for link in list(fout.inputs[idx].links):
+                tree.links.remove(link)
+            slot.path = f"_disabled_{idx}_"
+            continue
+        new_path = shading_path if slot.path == "shading_" else full_mapping.get(slot.path)
         if new_path is not None:
             slot.path = new_path
-    log(f"  relabeled file slots with stem {stem!r}")
+    if mode == "shading-only":
+        log(f"  configured shading-only output with label {shading_label!r}")
+    else:
+        log(f"  relabeled file slots with stem {stem!r}")
+
+
+def parse_sun_vector(raw: str) -> tuple[float, float, float]:
+    parts = [p.strip() for p in raw.split(",")]
+    if len(parts) != 3:
+        raise ValueError(f"--sun must have 3 comma-separated values, got: {raw!r}")
+    xyz = tuple(float(p) for p in parts)
+    length = math.sqrt(sum(v * v for v in xyz))
+    if length <= 0.0:
+        raise ValueError(f"--sun must not be zero-length, got: {raw!r}")
+    return tuple(v / length for v in xyz)
+
+
+def patch_sun_vector(tree: bpy.types.NodeTree, sun: tuple[float, float, float]) -> None:
+    for axis, idx in (("x", 0), ("y", 1), ("z", 2)):
+        node = tree.nodes.get(SHADING_NODE_NAMES[axis])
+        if node is None:
+            raise RuntimeError(f"runtime shading node {SHADING_NODE_NAMES[axis]!r} not found")
+        node.inputs[1].default_value = sun[idx]
+        node.label = f"{axis.upper()} * L{axis.upper()} ({sun[idx]:.3f})"
+    log(f"  patched Lambert sun to ({sun[0]:.3f}, {sun[1]:.3f}, {sun[2]:.3f})")
 
 
 def detect_resolution(exr_path: Path) -> tuple[int, int]:
@@ -186,11 +246,14 @@ def main() -> None:
     log("wiring EXR sockets")
     wire_exr_sockets(tree)
 
+    if args.sun:
+        patch_sun_vector(tree, parse_sun_vector(args.sun))
+
     fout = tree.nodes.get(FILE_OUTPUT_NAME)
     if fout is None:
         raise RuntimeError(f"{FILE_OUTPUT_NAME!r} not found")
     fout.base_path = str(out_dir)
-    relabel_file_slots(fout, stem)
+    relabel_file_slots(tree, fout, stem, args.mode, args.shading_label)
     log(f"File Output base_path = {fout.base_path}")
 
     w, h = detect_resolution(exr_path)

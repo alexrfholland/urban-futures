@@ -6,7 +6,7 @@ Practical how-to for running the compositor. For deeper rules see:
 - [COMPOSITOR_SYNC_CONTRACT.md](COMPOSITOR_SYNC_CONTRACT.md) — sim_root / exr_family / compositor_run path lineage.
 - [MEDIAFLUX_SYNC_CONTRACT.md](/_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md) — remote upload/download layout.
 
-`COMPOSITOR_RUN.md` is the older reflex-order note and uses the legacy `render_edge_lab_current_*` names. Prefer this file.
+`COMPOSITOR_RUN.md` is the shorter reflex-order note. This file is the fuller reference.
 
 ---
 
@@ -53,6 +53,7 @@ EXR (bV2 output)  →  canonical .blend  →  runner (env-driven)  →  PNG slot
 | `shading`                         | `render_current_shading.py`                     | `compositor_shading.blend`                 | 6 EXRs              |
 | `base`                            | `render_current_base.py`                        | `compositor_base.blend`                    | 1 EXR               |
 | `mist`                            | `render_current_mist.py`                        | `compositor_mist.blend`                    | 1 EXR (per branch)  |
+| `mist_complex_outlines`           | `render_current_mist_complex_outlines.py`       | `compositor_mist_complex_outlines.blend`   | 1 EXR (per branch)  |
 | `depth_outliner`                  | `render_current_depth_outliner.py`              | `compositor_depth_outliner.blend`          | 1 EXR (per branch)  |
 | `intervention_int`                | `render_current_intervention_int.py`            | `compositor_intervention_int.blend`        | 1 EXR (bio)         |
 | `proposal_only`                   | `render_current_proposal_only.py`               | `proposal_only_layers.blend`               | 1 EXR (per branch)  |
@@ -73,7 +74,7 @@ _data-refactored/blenderv2/output/<sim_root>/<exr_family>/*.exr         ← inpu
 _data-refactored/compositor/outputs/<sim_root>/<exr_family>/<run>/      ← output PNGs
 
 pipeline/<sim_root>/blender_exrs/<exr_family>/                          ← remote EXRs
-pipeline/<sim_root>/compositor_pngs/<exr_family>/<family>/<run>/        ← remote PNGs
+pipeline/<sim_root>/compositor_pngs/<exr_family>/<run>/                 ← remote PNGs
 ```
 
 `<run>` = `<family>__<timestamp>[__<branch>]`, e.g. `mist__20260413_114049__positive`.
@@ -259,6 +260,7 @@ When a saved `CompositorNodeOutputFile` slot is fed **directly** from a `Composi
 This rebuilds the File Output node fresh in-memory (same slot paths, same links, same format) before rendering. `_fast_runner_core._rebuild_file_output()` handles it. Turn it on per-runner when needed — currently used by:
 
 - `render_current_mist.py`
+- `render_current_mist_complex_outlines.py`
 - `render_current_depth_outliner.py`
 - `render_current_proposal_and_interventions.py`
 

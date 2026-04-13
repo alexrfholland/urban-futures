@@ -9,7 +9,7 @@ For mortality, we use two Le Roux data values that are described as derived from
 - `annual_tree_death_urban = 0.06`. Roughly 61% of trees survive over 8 years.[^leroux]
 - `annual_tree_death_nature-reserves = 0.03`. Roughly 78% of trees survive over 8 years.[^leroux]
 
-We use `annual_tree_death_urban` by default and `annual_tree_death_nature-reserves` for tree mortality in larger rewilded areas to reflect these different conditions of proposals under recruit that are partially supported (smaller nodes, higher mortality) and fully supported (rewilded nodes, lower mortality).
+We use `annual_tree_death_urban` by default and `annual_tree_death_nature-reserves` for tree mortality in larger rewilded areas to reflect these different conditions of proposals under recruit that are partially supported (smaller nodes, higher mortality) and fully supported (rewilded nodes, lower mortality). We also increase the density of plantings in the larger recruitment zones to reflect the increased support available in those areas.
 
 In the current v4 implementation, we follow Le Roux's cohort-thinning logic, keep their standard `0.06` urban and `0.03` nature-reserve annual mortality values as anchors, and apply DBH-cohort survival curves based on their assessments of tree survival across successive cohorts.
 

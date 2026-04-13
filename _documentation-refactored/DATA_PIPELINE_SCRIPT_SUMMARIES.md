@@ -5,7 +5,7 @@ This file gives one structured entry per script or key step in the Blender data 
 ## 2. State And Baseline Products
 
 Section note:
-- Use the step codes below for cross-reference.
+- Use the step codes belah yeow for cross-reference.
 - The envelope branch in `2.4` diverges from the state branch after `2.2-SCENARIO-3`.
 
 ### 2.1. World Preparation

@@ -5,7 +5,7 @@ this file is the first thing to read.
 
 ## 1. Reflex order
 
-1. **Look for an existing `render_edge_lab_current_*.py`** in [scripts/](scripts/) that matches
+1. **Look for an existing `render_current_*.py`** in [scripts/](scripts/) that matches
    the family. Reuse it. Do not write a new runner.
 2. If the blend's EXR hooks don't line up 1:1 with the available EXRs,
    **ask the user** how to wire them (see [COMPOSITOR_SYNC_CONTRACT.md](COMPOSITOR_SYNC_CONTRACT.md) → *Input Wiring On Mismatch*).
@@ -15,16 +15,17 @@ this file is the first thing to read.
 
 | Family        | Runner                                  | Canonical blend                          |
 |---------------|-----------------------------------------|------------------------------------------|
-| `ao`          | `render_edge_lab_current_core_outputs.py` | `compositor_ao.blend`                    |
-| `normals`     | `render_edge_lab_current_core_outputs.py` | `compositor_normals.blend`               |
-| `resources`   | `render_edge_lab_current_core_outputs.py` | `compositor_resources.blend`             |
-| `base`        | `render_edge_lab_current_base.py`         | `compositor_base.blend`                  |
-| `shading`     | `render_edge_lab_current_shading.py`      | `compositor_shading.blend`               |
-| `bioenvelope` | `render_edge_lab_current_bioenvelopes.py` | `compositor_bioenvelope.blend`           |
-| `sizes`       | `render_edge_lab_current_sizes.py`        | `compositor_sizes.blend`                 |
-| `mist`        | `render_edge_lab_current_mist.py`         | `compositor_mist.blend`                  |
-| `depth_outliner` | `render_edge_lab_current_depth_outliner.py` | `compositor_depth_outliner.blend`   |
-| `proposals`   | `render_edge_lab_current_proposals.py`    | `compositor_proposal_masks.blend`        |
+| `ao`          | `render_current_ao.py`                    | `compositor_ao.blend`                    |
+| `normals`     | `render_current_normals.py`               | `compositor_normals.blend`               |
+| `resources`   | `render_current_resources.py`             | `compositor_resources.blend`             |
+| `base`        | `render_current_base.py`                  | `compositor_base.blend`                  |
+| `shading`     | `render_current_shading.py`               | `compositor_shading.blend`               |
+| `bioenvelope` | `render_current_bioenvelope.py`           | `compositor_bioenvelope.blend`           |
+| `sizes`       | `render_current_sizes_single_input.py`    | `compositor_sizes_single_input.blend`    |
+| `mist`        | `render_current_mist.py`                  | `compositor_mist.blend`                  |
+| `mist_complex_outlines` | `render_current_mist_complex_outlines.py` | `compositor_mist_complex_outlines.blend` |
+| `depth_outliner` | `render_current_depth_outliner.py`    | `compositor_depth_outliner.blend`        |
+| `proposals`   | `render_current_proposal_only.py` / friends | proposal blends                       |
 
 The canonical `.blend` owns the graph. The runner is a thin wrapper that repaths inputs and
 renders. **Never rebuild graph logic in the runner.**
@@ -71,6 +72,6 @@ Baseline has **no trending, no bioenvelope** — only `existing_condition_positi
 
 1. Copy canonical blend → working copy under `_data-refactored/compositor/temp_blends/template_instantiations/`.
 2. Set env vars (section 4).
-3. Run: `blender --background --factory-startup --python scripts/render_edge_lab_current_<family>.py`.
+3. Run: `blender --background --factory-startup --python scripts/render_current_<family>.py`.
 4. Verify PNGs landed in `COMPOSITOR_OUTPUT_DIR`.
 5. If the user says upload: `mediafluxsync upload-project --create-parents --exclude-parent --project-dir . <local> <remote>`.
