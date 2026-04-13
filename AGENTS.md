@@ -1,390 +1,394 @@
 # AGENTS
 
-## Environment Rule
+## 0. Runtime Setup
 
-Always use `uv` and the repo-local `.venv`.
+- Branch: `engine-v4`
+- Always use `uv` and the repo-local `.venv`
+  - `uv run python ...` for project Python commands
+  - `./.venv/bin/python` if invoking the interpreter directly
+  - Do not use system `python` / `python3`
+- All commands run from repo root (the directory containing `_futureSim_refactored/`)
 
-- use `uv run python ...` for project Python commands
-- if invoking the interpreter directly, use `./.venv/bin/python`
-- do not use the system `python` / `python3` for this repo unless there is a specific reason and it is stated explicitly
-- treat the local `.venv` as the canonical Python environment for shell work, validation runs, and debugging
+### Stale documentation warning
 
-## Current Simulation Stack
+All current code lives in `_futureSim_refactored/`. Anything in `final/`, `data/`, `_code-refactored/` is legacy/stale. Documentation under `_documentation-refactored/` is mixed — some files reference old paths and are outdated. The authoritative docs for each pipeline stage are the ones linked from this file. If you find a doc that references `final/` or `data/revised/` paths, treat it as historical context only.
 
-There are multiple generations of the simulation core and multiple tree-template libraries in this repo.
+## 0a. Contracts and Inputs
 
-Do not guess which one is current.
+### Simulation Inputs
 
-### Branch Meaning
+All simulation inputs live under `_data-refactored/model-inputs/`:
 
-- `engine-v1`
-  - practical pre-v2 baseline branch
-  - use this only as the old pre-refactor reference
-- `master`
-  - old canonical v2 branch
-  - use this as the accepted pre-v3 reference
-- `engine-v3`
-  - current canonical branch
-  - this is the latest accepted simulation core
+- `sites/{site}/` — per-site voxel arrays, node CSVs, world reference VTKs
+- `shared/` — cross-site reference data (baseline density, log library, site coords)
+- `tree_libraries/` — base tree template library
+- `tree_variants/` — variant template sets and approved template root
 
-### Current Canonical V3
+Full specification: [v4-input-contract.md](_futureSim_refactored/sim/run/v4-input-contract.md)
 
-Canonical v3 currently means:
+### Simulation Outputs
 
-- branch: `engine-v3`
-- scenario outputs: [data/revised/final-v3](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v3)
-- engine outputs: [_data-refactored/v3engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v3engine_outputs)
-- statistics: [_statistics-refactored-v3](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored-v3)
+Outputs go to `_data-refactored/model-outputs/generated-states/<root>/` via `REFACTOR_RUN_OUTPUT_ROOT`.
 
-Canonical v3 template configuration means:
-
-- `fallens_use = nonpre-direct`
-- `snags_use = elm-snags-old`
-- include the `decayed-small-fallen` variant bundle
-- `voxel_size = 1`
-
-Approved canonical template root:
-
-- [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
-
-### Required Rule For Simulation Runs
-
-If you are running or validating candidate simulation outputs, explicitly set the template root.
-
-Use:
-
-- `TREE_TEMPLATE_ROOT`
-
-Do not rely on the loader default.
-
-The default fallback path:
-
-- [_data-refactored/model-inputs/tree_libraries/base/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees)
-
-is not sufficient to guarantee the canonical accepted deadwood template bundle.
+Output lineage (simulation -> EXR families -> compositor runs) and Mediaflux sync rules: [MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md)
 
 ### Environment Variables
 
-`TREE_TEMPLATE_ROOT`
-
-- controls which tree-template library is used by resource distribution / VTK export
-- must be set explicitly for candidate simulation runs and validation runs
-- current approved canonical value:
-  - [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
-- default fallback:
-  - [_data-refactored/model-inputs/tree_libraries/base/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees)
-
-Rule:
-
-- do not rely on the fallback for canonical or candidate validation work
-
-`TREE_TEMPLATE_BASE_ROOT`
-
-- optional override for the canonical base template-library root
-- current default value:
-  - [_data-refactored/model-inputs/tree_libraries/base/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_libraries/base/trees)
-- legacy alias still accepted by the builder/loader:
-  - `BASE_TREE_TEMPLATES_ROOT`
-
-`TREE_TEMPLATE_VARIANTS_ROOT`
-
-- optional override for the tree-variant root used by the variant builder
-- current default value:
-  - [_data-refactored/model-inputs/tree_variants](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants)
-
 `REFACTOR_RUN_OUTPUT_ROOT`
 
-- the only supported override for candidate run outputs
-- used by [_futureSim_refactored/paths.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/paths.py)
-- a run written to this root is split as:
-  - `temp/interim-data`
-  - `temp/validation`
-  - `output`
-- durable postprocessed outputs for rendering/validation live under:
-  - `output/vtks`
-  - `output/feature-locations`
-  - `output/bioenvelopes`
-- old split vars are removed:
-  - `REFACTOR_SCENARIO_OUTPUT_ROOT`
-  - `REFACTOR_ENGINE_OUTPUT_ROOT`
-  - `REFACTOR_STATISTICS_ROOT`
-
-### How To Get The Latest Accepted Setup
-
-If you need the latest accepted simulation core and accepted templates:
-
-1. use branch `engine-v3`
-2. use the canonical v3 roots:
-   - [data/revised/final-v3](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final-v3)
-   - [_data-refactored/v3engine_outputs](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/v3engine_outputs)
-   - [_statistics-refactored-v3](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_statistics-refactored-v3)
-3. set `TREE_TEMPLATE_ROOT` to:
-   - [_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_data-refactored/model-inputs/tree_variants/template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen/trees)
-4. read these docs before changing anything:
-   - [_documentation-refactored/scenario_engine_v3_status.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_status.md)
-   - [_documentation-refactored/scenario_engine_v3_validation.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_documentation-refactored/scenario_engine_v3_validation.md)
-
-### V3 Rule
-
-If you are working on v3:
-
-- treat v3 outputs as canonical outputs
-- use the `engine-v3` branch
-- use the canonical v3 roots unless you are intentionally creating a scratch candidate root
-- still inherit the approved canonical template root unless an explicitly approved new template bundle is being tested
-- if a run does not record its template root in metadata, treat that as a validation failure
-
-### V3 Batch Modes
-
-The main non-interactive batch runner is:
-
-- [_futureSim_refactored/scenario/runtime/run_full_v3_batch.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/runtime/run_full_v3_batch.py)
-
-Default behavior:
-
-- runs scenario generation
-- writes interim scenario CSVs
-- builds the final integrated `nodeDF`
-- builds the final `state_with_indicators.vtk`
-- does **not** regenerate baselines unless explicitly asked
-- does **not** run the stats pass unless explicitly asked
-- does **not** write intermediate `urban_features.vtk` files in the normal path
-
-Important flags:
-
-- `--node-only`
-  - write scenario CSV/dataframe outputs only
-  - skip VTK generation
-  - skip baseline regeneration
-  - skip capability / indicator generation
-  - writes:
-    - `treeDF`
-    - `logDF` if present
-    - `poleDF` if present
+- The only supported output root override. Set this every run.
+- Splits output as: `temp/interim-data`, `temp/validation`, `output/`
+- Old split vars (`REFACTOR_SCENARIO_OUTPUT_ROOT`, `REFACTOR_ENGINE_OUTPUT_ROOT`, `REFACTOR_STATISTICS_ROOT`) are rejected at startup.
 
-- `--vtk-only`
-  - skip scenario CSV generation
-  - load saved `treeDF` / `logDF` / `poleDF`
-  - rebuild `possibility_space_ds`
-  - build final enriched `state_with_indicators.vtk` and final integrated `nodeDF` from saved CSVs
+`TREE_TEMPLATE_ROOT` — defaults to the approved canonical template set. No need to set unless explicitly asked. Details in [v4-input-contract.md](_futureSim_refactored/sim/run/v4-input-contract.md).
 
-- `--baselines-only`
-  - regenerate baseline outputs only
-  - write final baseline `state_with_indicators.vtk`
-  - do not run pathway generation or stats
+---
 
-- `--regenerate-baselines`
-  - opt-in baseline regeneration
-  - default is off
+## Pipeline Overview
 
-- `--compile-stats-only`
-  - read final `state_with_indicators.vtk` files
-  - write per-state stats
-  - merge site-level stats CSVs
-  - do no scenario or VTK generation
+The full pipeline is: **Simulation → Blender EXRs → Compositor PNGs → Mediaflux sync**. Each stage is independent — you will usually be asked to run just one. The simulation stage itself has sub-steps (1a–1h below) that must run in order.
 
-- `--multiple-agent`
-  - intended for split parallel work
-  - runs only the requested site / scenario / year slice
-  - respects `--vtk-only`
-  - keeps stats for a later explicit `--compile-stats-only` pass
+---
 
-- `--save-raw-vtk`
-  - writes raw scenario state VTKs in addition to the normal downstream outputs
+## 1. Simulation Pipeline
 
-Useful selector flags:
+**Entry point**: `_futureSim_refactored/sim/run/run_full_v3_batch.py`
+**Full reference**: [v4-run-instructions.md](_futureSim_refactored/sim/run/v4-run-instructions.md) — read this before running any simulation step.
 
-- `--sites`
-- `--scenarios`
-- `--years`
-- `--voxel-size`
+**A full simulation run** = Steps 1a → 1b → 1c → 1d → 1g (mandatory, in order). Steps 1e, 1f, 1h are optional re-renders/regeneration — only run if asked. Steps 2–4 (Blender, Compositor, Mediaflux) are separate pipelines that consume simulation outputs.
 
-### Saved-CSV VTK Workflow
+**Defaults** (no need to pass explicitly unless subsetting):
 
-If scenario CSVs already exist and you only want to regenerate VTK-side outputs:
+- Sites: `trimmed-parade`, `city`, `uni`
+- Scenarios: `positive`, `trending`
+- Years: `0, 1, 10, 30, 60, 90, 120, 150, 180`
 
-1. set the explicit roots and `TREE_TEMPLATE_ROOT`
-2. use `run_full_v3_batch.py --vtk-only`
-3. add `--multiple-agent` if you are intentionally splitting the years across agents
-4. add `--save-raw-vtk` if you want the raw scenario VTKs written too
+**Before any step**: Ask the user for the output root name. Set it as:
 
-This workflow still requires:
+```bash
+export REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root-name>
+```
 
-- saved `treeDF` / `logDF` / `poleDF`
-- rebuilt `possibility_space_ds`
-- the approved template root
+Do not invent a root name. Do not set `TREE_TEMPLATE_ROOT` or `SIM_OUTPUT_ROOT`.
 
-It does **not** rerun the scenario engine.
+### 1a. Node-only (treeDFs + nodeDFs)
 
-Normal outputs under the unified run root are:
+Runs the scenario engine to produce tree/log/pole DataFrames. Must complete before all other steps.
 
-- `temp/interim-data`
-  - interim `treeDF` / `logDF` / `poleDF`
-- `temp/validation`
-  - metadata, timing logs, validation renders
-- `output/vtks`
-  - final `state_with_indicators.vtk`
-- `output/feature-locations`
-  - final integrated `nodeDF`
-- `output/stats/per-state`
-  - per-state indicator and action counts
-- `output/stats/csv`
-  - merged site-level indicator and action counts
+```bash
+REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root> \
+  uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py --node-only
+```
 
-### Never Assume
+**Outputs** (in `{root}/temp/interim-data/{site}/`): `{site}_{scenario}_1_treeDF_{year}.csv` (+ logDF, poleDF), recruit telemetry/stats CSVs, size stats CSV.
 
-Never assume that:
+**Verify**: 18 treeDF files per site (9 years × 2 scenarios).
 
-- `engine-v1` is the latest branch
-- `data/revised/trees` contains the approved canonical deadwood templates
-- a run is valid just because the VTKs and renders were generated
+### 1b. VTK generation
 
-Always verify:
+Reads saved treeDFs and builds VTK point clouds with indicators, proposals, bioenvelopes, and renders. **Slowest step.**
 
-- branch
-- output roots
-- template root
-- verification note
-- current canonical status document
+**Always use `--multiple-agent`** — this skips the cross-state capability pass so slices can run in parallel. The capability pass runs separately in Step 1g.
 
-## TODO
+Single slice:
 
-### SIMULATION
+```bash
+REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root> \
+  uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py \
+  --vtk-only --multiple-agent --sites trimmed-parade --scenarios positive --years 180
+```
 
-#### Ticket 1. Year 0 Scenario Behaviour
+All sites (parallel, batch by site — 18 processes each):
 
-Completed.
+```bash
+export REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root>
+for site in trimmed-parade city uni; do
+  for scenario in positive trending; do
+    for year in 0 1 10 30 60 90 120 150 180; do
+      uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py \
+        --vtk-only --multiple-agent --sites "$site" --scenarios "$scenario" --years "$year" \
+        > /tmp/vtk_${site}_${scenario}_${year}.log 2>&1 &
+    done
+  done
+  wait  # finish site before starting next
+done
+```
 
-High amount of release control in trending because `reduce_control_of_trees(...)` in [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/runtime/a_scenario_runscenario.py#L204) assigns trees in positive to `street-tree`.
+**Outputs per slice**: state VTK, nodeDF CSV, V4 indicator CSV, bioenvelope PLY (no yr0), proposal render PNG, debug recruit PNGs (yrs 10/60/180 only).
 
-Specifics:
+**Verify (full run)**: 54 VTKs, 54 nodeDFs, 54 indicator CSVs, 48 PLYs, 54 proposal renders.
 
-Because year `0` is already a scenario run, not a shared untouched baseline.
+### 1c. Baselines
 
-Starting `trimmed-parade` tree controls in the base [trimmed-parade_1_treeDF.csv](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/data/revised/final/trimmed-parade/trimmed-parade_1_treeDF.csv):
+Generates woodland baseline VTKs and nodeDFs. Requires Step 1a (uses same cached `.nc` subset).
 
-- `park-tree`: `315`
-- `street-tree`: `141`
+```bash
+REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root> \
+  uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py --baselines-only
+```
 
-After the year-0 run:
+**Verify**: 3 baseline VTKs, 3 baseline V4 indicator CSVs.
 
-- `positive`: `454 street-tree`, `399 reserve-tree`, `2 park-tree`
-- `trending`: `298 park-tree`, `158 street-tree`
+### 1d. V4 indicator comparisons
 
-Why this happens:
+Extracts V4 indicators from yr 180 VTKs and produces a markdown comparison table. Requires Steps 1b + 1c.
 
-- both scenarios start from the same base treeDF via [a_scenario_initialiseDS.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/runtime/a_scenario_initialiseDS.py#L325)
-- then year `0` still runs `run_scenario(...)` via [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/runtime/a_scenario_runscenario.py#L648)
-- in `reduce_control_of_trees(...)` via [a_scenario_runscenario.py](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/_futureSim_refactored/scenario/runtime/a_scenario_runscenario.py#L204), any non-senescent tree that falls under the rewild/depave mask gets its control reassigned from `unmanagedCount`
-- at year `0`, `unmanagedCount` is `0`, so that reassignment lands in `street-tree`
+```bash
+REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root> \
+  uv run python _futureSim_refactored/sim/v4_indicator_extract.py
+```
 
-Why positive gets hit much harder:
+**Output**: `{root}/comparison/v4_indicator_comparison.md`
 
-- `positive` thresholds are broad in the v3 parameters:
-- `maximum-tree-support-threshold = 10`
-- `moderate-tree-support-threshold = 50`
-- `trending` thresholds are much tighter:
-- `maximum-tree-support-threshold = 0`
-- `moderate-tree-support-threshold = 1`
+### 1e. Proposal renders (optional re-render)
 
-So in `positive`, many more trees enter that mask and get reassigned to `street-tree` at year `0`.
-In `trending`, far fewer do, so most original `park-tree` canopy stays `park-tree`.
+Re-renders proposal visualisations from existing VTKs. Only needed if re-rendering — Step 1b already produces these inline.
 
-That is why:
+```bash
+export REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root>
+for site in trimmed-parade city uni; do
+  for scenario in positive trending; do
+    for year in 0 1 10 30 60 90 120 150 180; do
+      uv run python _futureSim_refactored/outputs/report/render_proposal_v4.py \
+        --site "$site" --scenario "$scenario" --year "$year" \
+        > /tmp/render_proposal_${site}_${scenario}_${year}.log 2>&1 &
+    done
+  done
+done
+wait
+```
+
+### 1f. Debug recruit renders (optional re-render)
 
-- `trending` has much more `Release-Control -> Brace-Feature`
-- `positive` has much more `street-tree`
-- year `0` is not a neutral shared baseline for this metric
+Re-renders diagnostic recruit images. Only needed if re-rendering — Step 1b already produces these inline for years 10, 60, 180.
+
+```bash
+export REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root>
+for site in trimmed-parade city uni; do
+  for scenario in positive trending; do
+    for year in 10 60 180; do
+      uv run python _futureSim_refactored/outputs/report/render_debug_recruit.py \
+        --site "$site" --scenario "$scenario" --years "$year" \
+        > /tmp/render_debug_${site}_${scenario}_${year}.log 2>&1 &
+    done
+  done
+done
+wait
+```
+
+### 1g. Compile stats (merge site-level CSVs)
+
+Merges per-state indicator and action CSVs into site-level CSVs with `pct_of_baseline`. Fast CSV-only pass.
+
+```bash
+REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root> \
+  uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py --compile-stats-only
+```
+
+**Verify**: 6 merged CSVs (3 sites × 2 types: indicator + action) in `{root}/output/stats/csv/`.
+
+### 1h. Bioenvelope regeneration (optional)
 
-#### Ticket 2. Rename Release-Control Buffer / Brace
+Regenerates bioenvelope PLYs from existing VTKs without rerunning the full pipeline.
 
-Completed.
+```bash
+export REFACTOR_RUN_OUTPUT_ROOT=_data-refactored/model-outputs/generated-states/<root>
+for site in trimmed-parade city uni; do
+  for scenario in positive trending; do
+    for year in 0 1 10 30 60 90 120 150 180; do
+      uv run python _futureSim_refactored/sim/run/run_full_v3_batch.py \
+        --bioenvelope-only --sites "$site" --scenarios "$scenario" --years "$year" \
+        > /tmp/bioenv_${site}_${scenario}_${year}.log 2>&1 &
+    done
+  done
+  wait
+done
+```
 
-Rename `Release-Control -> Buffer-Feature` and `Release-Control -> Brace-Feature` to:
+---
+
+## 2. Generate EXRs via Blender v2
+
+Headless Blender pipeline that imports simulation VTKs/PLYs and renders multi-layer EXR image sets per camera/view-layer.
+
+**Current code**: `_futureSim_refactored/blender/blenderv2/bV2_*.py` — these are the only current scripts. Anything prefixed `b2026_unified_*`, `b2026_timeline_*`, or under `timeline/` is **stale**. The `blenderv2/AGENTS.md` is also partially outdated.
+
+**This code works.** If you get wrong paths, missing files, or Blender errors, you are doing something wrong — do not assume the code is broken.
+
+### Contract
 
-- `Release-Control -> Eliminate-Pruning`
-- `Release-Control -> Reduce-Pruning`
+`bV2_scene_contract.py` is the single source of truth for naming conventions, valid values, and scene structure. Read it before making any changes. It defines:
+
+- **Sites**: `city`, `trimmed-parade`, `uni` (never use `street`)
+- **Modes**: `single_state`, `timeline`, `baseline`
+- **View layers**: `existing_condition_positive`, `positive_state`, `positive_priority_state`, `existing_condition_trending`, `trending_state`, `bioenvelope_positive`, `bioenvelope_trending` (baseline uses only the first three)
+- **Collection tree**: `cameras`, `world`, `instancers`, `bioenvelopes`, `build`
+- All canonical naming functions: `make_scene_name()`, `make_position_object_name()`, `make_bioenvelope_object_name()`, etc.
 
-#### Ticket 3. Parade Tree / Reproduce Follow-Up
+### Entry point
 
-Completed.
+There is **one entry point**: `bV2_build_scene.py`. It orchestrates everything. Do not call the sub-modules directly.
 
-The Parade `yr180 / Tree / Reproduce` divergence has been investigated, re-run, and incorporated into the current v3 comparison outputs.
+```bash
+BV2_SITE=city BV2_MODE=single_state BV2_YEAR=180 BV2_SIM_ROOT=<sim_root> BV2_RENDER_EXRS=1 \
+  blender --background _data-refactored/blenderv2/bV2_template.blend \
+  --python _futureSim_refactored/blender/blenderv2/bV2_build_scene.py
+```
+
+### What it does (in order)
 
-#### Ticket 4. Fallen / Decayed Resource Classification
+1. Opens the template blend
+2. `init_scene` — creates scene, collection shells, view layers, AOVs from contract
+3. `build_instancers` — builds tree/log/pole point clouds with framebuffer positioning
+4. `build_bioenvelopes` — imports bioenvelope PLYs (skipped for baseline)
+5. `build_world_attributes` — rebuilds world geometry with source-year attributes
+6. `validate_scene` — structural validation (collections, AOVs, cameras)
+7. Saves .blend (if `BV2_SAVE_BLEND=1`, default)
+8. `setup_render_outputs` + render EXRs (if `BV2_RENDER_EXRS=1`)
+9. Upload to Mediaflux (if `BV2_UPLOAD_TO_MEDIAFLUX=1`)
+
+### Required env vars
+
+```bash
+BV2_SITE=city                    # city | trimmed-parade | uni
+BV2_MODE=single_state            # single_state | timeline | baseline
+BV2_YEAR=180                     # required for single_state mode
+BV2_SIM_ROOT=<sim_root>          # simulation output root name
+```
 
-Open.
+### Optional env vars
 
-Need to decide whether `fallen` and `decayed` are counted primarily as `fallen log` or `dead branch`.
+```bash
+BV2_RENDER_EXRS=1                # trigger EXR render after build (default: off)
+BV2_SAVE_BLEND=1                 # save the built .blend file (default: on)
+BV2_UPLOAD_TO_MEDIAFLUX=1        # upload EXRs after render
+BV2_RES_X=7680                   # render resolution (default: 7680 = 8K)
+BV2_RES_Y=4320                   # (default: 4320)
+BV2_RES_PERCENT=100              # resolution percentage
+BV2_SAMPLES=64                   # Cycles samples (default: 64)
+BV2_RENDER_TAG=8k                # output subfolder tag (default: "8k")
+BV2_CAMERA_NAME=<name>           # override camera (defaults per contract)
+BV2_LOG_PATH=<path>              # write build log to file
+```
 
-Current issue:
+### Inputs
 
-- `fallen` is still dominated by `stat_dead branch`, while `stat_fallen log` remains sparse
-- `resource_dead branch` and `resource_fallen log` are both relatively low compared with the visible deadwood footprint
-- `decayed` has minimal resource presence across both `resource_*` and `stat_*`
+- Template blend: `_data-refactored/blenderv2/bV2_template.blend`
+- State VTKs from Step 1b: `_data-refactored/model-outputs/generated-states/<root>/output/vtks/{site}/`
+- Bioenvelope PLYs from Step 1b: `_data-refactored/model-outputs/generated-states/<root>/output/bioenvelopes/{site}/`
+- NodeDF CSVs from Step 1b: `_data-refactored/model-outputs/generated-states/<root>/output/feature-locations/{site}/`
 
-Current reference stats for `trimmed-parade / positive / yr180`:
+### Outputs
 
-Fallen
+- Scene blend: `_data-refactored/blenderv2/blends/` (or sim-root-derived path when `BV2_SIM_ROOT` is set)
+- Multi-layer EXRs: `_data-refactored/blenderv2/output/<sim_root>/<exr_family>/`
 
-- voxel count: `88,053`
-- `resource_dead branch`: `2,316`
-- `resource_epiphyte`: `50`
-- `resource_fallen log`: `276`
-- `resource_hollow`: `49`
-- `resource_other`: `107,568`
-- `resource_peeling bark`: `843`
-- `resource_perch branch`: `2,768`
-- `stat_dead branch`: `108,172`
-- `stat_epiphyte`: `26`
-- `stat_fallen log`: `276`
-- `stat_hollow`: `24`
-- `stat_other`: `106,316`
-- `stat_peeling bark`: `775`
-- `stat_perch branch`: `2,734`
+---
 
-Decayed
+## 3. Generate PNGs via Compositor
 
-- voxel count: `11,512`
-- `resource_dead branch`: `98`
-- `resource_epiphyte`: `0`
-- `resource_fallen log`: `79`
-- `resource_hollow`: `1`
-- `resource_other`: `13,126`
-- `resource_peeling bark`: `46`
-- `resource_perch branch`: `741`
-- `stat_dead branch`: `1,353`
-- `stat_epiphyte`: `1`
-- `stat_fallen log`: `79`
-- `stat_hollow`: `0`
-- `stat_other`: `1,287`
-- `stat_peeling bark`: `45`
-- `stat_perch branch`: `98`
+Blender compositor pipeline that takes EXR families and produces final PNG outputs per compositor template.
 
-#### Ticket 5. Simplify Tree Variant Data Structure
+**This code works.** If you get wrong paths, missing files, or Blender errors, you are doing something wrong — do not assume the code is broken.
 
-Open.
+**Start here**: [COMPOSITOR_RUN.md](_futureSim_refactored/blender/compositor/COMPOSITOR_RUN.md) — quick-start with family→script→blend mapping.
+**Directory structure + workflow**: [README.md](_futureSim_refactored/blender/compositor/README.md)
+**Template contract**: [COMPOSITOR_TEMPLATE_CONTRACT.md](_futureSim_refactored/blender/compositor/COMPOSITOR_TEMPLATE_CONTRACT.md)
 
-Current tree-variant storage is too confusing, too bloated, and still carries unnecessary test/debug artifacts.
+### Family → script → blend
 
-To do:
+| Family | Runner | Canonical blend |
+|---|---|---|
+| `ao` | `render_edge_lab_current_core_outputs.py` | `compositor_ao.blend` |
+| `normals` | `render_edge_lab_current_core_outputs.py` | `compositor_normals.blend` |
+| `resources` | `render_edge_lab_current_core_outputs.py` | `compositor_resources.blend` |
+| `base` | `render_edge_lab_current_base.py` | `compositor_base.blend` |
+| `shading` | `render_edge_lab_current_shading.py` | `compositor_shading.blend` |
+| `bioenvelope` | `render_edge_lab_current_bioenvelopes.py` | `compositor_bioenvelope.blend` |
+| `sizes` | `render_edge_lab_current_sizes.py` | `compositor_sizes.blend` |
+| `mist` | `render_edge_lab_current_mist.py` | `compositor_mist.blend` |
+| `depth_outliner` | `render_edge_lab_current_depth_outliner.py` | `compositor_depth_outliner.blend` |
+| `proposals` | `render_edge_lab_current_proposals.py` | `compositor_proposal_masks.blend` |
 
-- simplify the tree variant data structure
-- remove unnecessary duplicated derivative files where possible
-- reduce legacy test/debug artifacts stored alongside live inputs
+Scripts live in: `_futureSim_refactored/blender/compositor/scripts/`
+Canonical blends live in: `_futureSim_refactored/blender/compositor/canonical_templates/`
 
-#### Ticket 6. Remove Old Proposal Layers
+### Inputs and outputs
 
-Open.
+- **Input EXRs**: `_data-refactored/blenderv2/output/<sim_root>/<exr_family>/`
+- **Output PNGs**: `_data-refactored/compositor/outputs/<sim_root>/<exr_family>/<compositor_run>/`
+- `<compositor_run>` = `<family>__<timestamp>` (optional `__<note>`)
 
-Current issue:
+### Env var pattern
 
-- both the older proposal point-data layers and the later `V3` proposal/intervention layers still exist in the codebase
-- the older proposal layer creation still logs during VTK generation even though the downstream validation / Blender path is keyed to the `V3` arrays
-- this makes the proposal pipeline harder to read and easier to misinterpret during validation runs
+Runners read env vars — set these, don't edit paths in code:
 
-To do:
+```bash
+COMPOSITOR_BLEND_PATH=<path to working copy of canonical blend>
+COMPOSITOR_OUTPUT_DIR=<full output dir for this run>
+COMPOSITOR_SCENE_NAME=Current
+COMPOSITOR_PATHWAY_EXR=<path>       # positive_state
+COMPOSITOR_PRIORITY_EXR=<path>      # positive_priority_state
+COMPOSITOR_EXISTING_EXR=<path>      # existing_condition_positive
+COMPOSITOR_TRENDING_EXR=<path>      # trending_state (omit for baseline)
+COMPOSITOR_BIOENVELOPE_EXR=<path>   # bioenvelope_positive (omit for baseline)
+```
 
-- confirm which old non-`V3` proposal arrays are no longer used downstream
-- remove the old proposal layer generation path
-- keep the `V3` proposal/intervention arrays as the canonical path if they are the only live downstream dependency
+### Typical flow
+
+1. Copy canonical blend → working copy in `_data-refactored/compositor/temp_blends/template_instantiations/`
+2. Set env vars (above)
+3. Run: `blender --background --factory-startup --python scripts/render_edge_lab_current_<family>.py`
+4. Verify PNGs landed in `COMPOSITOR_OUTPUT_DIR`
+
+### Key rules
+
+- **Canonical blend owns the graph.** Runners only repath inputs and render — never rebuild graph logic in a runner.
+- **No hidden fallbacks.** If a resolution, EXR, or node is missing, raise — don't hardcode.
+- **Positive and trending are separate branches.** Never combine them in one run.
+- **Working copies go in `temp_blends/`** — never save over the canonical blend.
+- **Read EXR dimensions from the header** (`_exr_header.py`) — `image.size` returns `(0, 0)` in Blender 4.x.
+
+---
+
+## 4. Sync to Mediaflux
+
+Upload/download simulation outputs, EXR families, and compositor runs to the University of Melbourne Mediaflux research archive.
+
+**Contract**: [MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md)
+**Full rules**: see `CLAUDE.md` Mediaflux section — this is the authoritative reference for all sync commands.
+
+### Remote path mapping
+
+| Local path under `_data-refactored/` | Remote subpath |
+|---|---|
+| `model-outputs/generated-states/<sim_root>/output/` | `pipeline/<sim_root>/simulation_outputs/output` |
+| `blenderv2/output/<sim_root>/<exr_family>/` | `pipeline/<sim_root>/blender_exrs/<exr_family>` |
+| `compositor/outputs/<sim_root>/<exr_family>/<compositor_run>/` | `pipeline/<sim_root>/compositor_pngs/<exr_family>/<compositor_run>` |
+
+### Simulation-specific helper
+
+```bash
+# Upload a full sim run
+uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync upload <sim_root>
+
+# Download a full sim run
+uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync download <sim_root>
+
+# Include temp/ and comparison/ debug artifacts
+uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync upload <sim_root> --include-debug
+```
+
+### Key rules
+
+- **Always use `mediafluxsync`** — never `rsync`, `cp`, or raw `unimelb-mf-download`, even when Mediaflux is mounted locally.
+- **`--out` is the parent directory** — the client creates a subfolder inside it.
+- **Remote subpath always starts with `pipeline/`** — never upload to a bare path.
+- **Append `--dry-run`** to preview any transfer without executing it.
+- Browse remote contents via the mounted-volume browser: `uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --last 5`
+
+## Utilities
+
+### vtk_extract — fast partial VTK reader
+
+`_futureSim_refactored.sim.vtk_extract` extracts individual point-data arrays from legacy binary VTK files without loading the full mesh (~10x faster than `pv.read`). Refer to the module docstring and `KNOWN_COLUMNS` registry in [vtk_extract.py](_futureSim_refactored/sim/vtk_extract.py) for API details and supported dtypes.
