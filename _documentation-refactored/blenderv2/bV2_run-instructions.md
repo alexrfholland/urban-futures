@@ -5,28 +5,52 @@ Entry point for Step 2 (generate EXRs):
 
 The script runs end-to-end: opens the template, initializes the scene,
 builds instancers/bioenvelopes/world attributes from the sim bundle,
-validates against [bV2_scene_contract.py](../../_futureSim_refactored/blender/blenderv2/bV2_scene_contract.py),
+validates scene structure and naming using the rules defined in [bV2_scene_contract.py](../../_futureSim_refactored/blender/blenderv2/bV2_scene_contract.py),
 saves the pipeline `.blend`, renders one EXR per view layer, optionally
 uploads to Mediaflux.
 
 ## The correct invocation
 
-Use the checked-in launcher from repo root.
+Run Blender directly from repo root with the required environment variables set in the current shell.
 
 Windows PowerShell:
 
 ```powershell
-.\scripts\run-bv2.ps1 -Site trimmed-parade -Mode timeline -SimRoot 4.10 -DataBundleRoot .\_data-refactored\model-outputs\generated-states\4.10\output
+$repoRoot = "D:\2026 Arboreal Futures\urban-futures"
+$venvSitePackages = & "$repoRoot\uv.cmd" run python -c "import site; print(site.getsitepackages()[0])"
+$env:PYTHONPATH = "$repoRoot;$venvSitePackages"
+$env:BV2_SITE = "trimmed-parade"
+$env:BV2_MODE = "timeline"
+$env:BV2_SIM_ROOT = "4.10"
+$env:BV2_DATA_BUNDLE_ROOT = "D:\2026 Arboreal Futures\urban-futures\_data-refactored\model-outputs\generated-states\4.10\output"
+$env:BV2_SAVE_BLEND = "1"
+$env:BV2_RENDER_EXRS = "1"
+
+& "C:\Program Files\Blender Foundation\Blender 4.2\blender.exe" `
+  --background `
+  --python "$repoRoot\_futureSim_refactored\blender\blenderv2\bV2_build_scene.py"
 ```
 
 macOS / Linux:
 
 ```bash
-./scripts/run-bv2.sh --site trimmed-parade --mode timeline --sim-root 4.10 --data-bundle-root ./_data-refactored/model-outputs/generated-states/4.10/output
+export REPO_ROOT="/path/to/urban-futures"
+export VENV_SITE_PACKAGES="$("$REPO_ROOT/uv" run python -c 'import site; print(site.getsitepackages()[0])')"
+export PYTHONPATH="$REPO_ROOT:$VENV_SITE_PACKAGES"
+export BV2_SITE="trimmed-parade"
+export BV2_MODE="timeline"
+export BV2_SIM_ROOT="4.10"
+export BV2_DATA_BUNDLE_ROOT="$REPO_ROOT/_data-refactored/model-outputs/generated-states/4.10/output"
+export BV2_SAVE_BLEND="1"
+export BV2_RENDER_EXRS="1"
+
+"/c/Program Files/Blender Foundation/Blender 4.2/blender.exe" \
+  --background \
+  --python "$REPO_ROOT/_futureSim_refactored/blender/blenderv2/bV2_build_scene.py"
 ```
 
-For `single_state` add `-Year 180` on Windows or `--year 180` on macOS / Linux.
-For `baseline`, year is optional.
+For `single_state`, also set `BV2_YEAR=180`.
+For `baseline`, `BV2_YEAR` is optional.
 
 ## Required inputs
 
@@ -46,8 +70,8 @@ For `baseline`, year is optional.
 Blender's `bpy` module only works inside a Blender process. The script must
 be executed via `blender.exe --background --python <script>`. `uv run` has
 no way to load `bpy`. The project `.venv` is *only* exposed via
-`PYTHONPATH` so that project imports resolve. The checked-in launcher sets
-`PYTHONPATH` for you.
+`PYTHONPATH` so that project imports resolve. Set `PYTHONPATH` yourself in
+the shell before launching Blender.
 
 ### DO NOT pass `--factory-startup` to Blender
 
@@ -82,7 +106,7 @@ explicitly when kicking off a run. Prior incident logged in
 ### DO NOT write a one-off wrapper shell script for every run
 
 Existing `_logs/rebuild_*.sh` files are historical; don't add to them.
-Use the checked-in launcher in `scripts/run-bv2.ps1` or `scripts/run-bv2.sh`.
+Run Blender directly with env vars set in the shell.
 Do not create a new ad-hoc script for each render.
 
 ### DO NOT use `parade` as `BV2_SITE`
@@ -118,7 +142,7 @@ It is written as `<exr_family>__manifest.txt` alongside the EXRs.
 
 `bV2_build_scene.py` imports `_futureSim_refactored.paths` and the sibling
 `bV2_*` modules. Without the repo root on `PYTHONPATH`, the import fails
-before any scene work starts. The checked-in launcher sets this for you.
+before any scene work starts.
 
 ---
 

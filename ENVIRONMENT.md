@@ -6,21 +6,7 @@ This repo now uses `uv` with a repo-root `.venv`.
 
 Start with [FIRST_MACHINE_SETUP.md](FIRST_MACHINE_SETUP.md).
 
-Bootstrap the repo shell first:
-
-Windows PowerShell:
-
-```powershell
-. .\scripts\dev-shell.ps1
-```
-
-macOS / Linux:
-
-```bash
-. ./scripts/dev-shell.sh
-```
-
-The repo-local `uv` wrapper is authoritative:
+Use the repo-local `uv` wrapper during bootstrap when `uv` is not already on `PATH`:
 
 - Windows: `uv.cmd` forwards to `.tools\uv\uv.exe`
 - macOS / Linux: `./uv` uses machine `uv` unless `UV_BIN` is set
@@ -45,6 +31,8 @@ Run commands through the repo environment:
 uv run python _futureSim_refactored/scenario/runtime/run_full_v3_batch.py --help
 uv run python _futureSim_refactored/scenario/runtime/run_saved_v3_vtks.py --help
 ```
+
+If `uv` is not on `PATH`, use `.\uv.cmd run python ...` on Windows or `./uv run python ...` on macOS / Linux.
 
 In VS Code, select the interpreter from the repo `.venv`.
 

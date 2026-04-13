@@ -4,10 +4,9 @@
 
 - Branch: `engine-v4`
 - Always use `uv` and the repo-local `.venv`
-  - `uv run python ...` for project Python commands
+  - `.\uv.cmd run python ...` on Windows or `./uv run python ...` on macOS/Linux for project Python commands
   - `./.venv/bin/python` if invoking the interpreter directly
   - Do not use system `python` / `python3`
-- If `uv` is not discoverable yet, use the repo wrapper. Windows: `uv.cmd`. macOS/Linux: `./uv`. Full setup: [FIRST_MACHINE_SETUP.md](FIRST_MACHINE_SETUP.md)
 - All commands run from repo root (the directory containing `_futureSim_refactored/`)
 
 ### Stale documentation warning
@@ -220,36 +219,7 @@ done
 
 Headless Blender pipeline that imports simulation VTKs/PLYs and renders multi-layer EXR image sets per camera/view-layer.
 
-
-Single entry point:
-[_futureSim_refactored/blender/blenderv2/bV2_build_scene.py](/_futureSim_refactored/blender/blenderv2/bV2_build_scene.py).
-Runs end-to-end: opens the template, builds the scene, validates against
-the contract, saves a pipeline `.blend`, renders one EXR per view layer.
-
-Minimum four inputs:
-
-- `BV2_SITE` — `city` | `trimmed-parade` | `uni`
-- `BV2_MODE` — `single_state` (needs `BV2_YEAR`) | `timeline` | `baseline`
-- `BV2_SIM_ROOT` — e.g. `4.10`
-- `BV2_DATA_BUNDLE_ROOT` — absolute path to the sim's `output/` folder
-  (VTKs / PLYs / nodeDFs). **Must be set or bioenvelopes come out empty.**
-
-The checked-in launcher invokes Blender directly — `uv run python` still cannot load `bpy`.
-Do **not** pass `--factory-startup` (strips pandas/vtk from USER_SITE).
-Do **not** pass the template `.blend` on the CLI (script opens it itself).
-
-Outputs (flat, no timestamp subdir):
-
-- blend: `_data-refactored/blenderv2/blends/<sim_root>/<exr_family>__full_pipeline.blend`
-- EXRs: `_data-refactored/blenderv2/output/<sim_root>/<exr_family>/<exr_family>__<view_layer>__<tag>.exr`
-
-Re-runs with the same `BV2_RENDER_TAG` overwrite the EXRs in place; bump the tag (e.g. `8k64s` → `8k64s-v2`) to keep old and new side-by-side.
-
-`<exr_family>` is computed by `get_runtime_exr_family(scene)` — don't guess
-it (e.g. `trimmed-parade` timeline resolves to `parade_timeline`, not
-`trimmed-parade_timeline`).
-
-Full guide and mistakes-to-avoid list:
+Authoritative contract and run instructions:
 [_documentation-refactored/blenderv2/bV2_run-instructions.md](/_documentation-refactored/blenderv2/bV2_run-instructions.md).
 
 
