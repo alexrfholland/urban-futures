@@ -1,0 +1,47 @@
+"""Fast runner for compositor_depth_outliner.blend.
+
+Single-input runner: one state EXR. Run once per branch (positive_state,
+trending_state, positive_priority_state).
+
+Environment variables:
+    COMPOSITOR_EXR           state EXR to render (required)
+    COMPOSITOR_OUTPUT_DIR    output directory (required)
+"""
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+_THIS = Path(__file__).resolve()
+_SCRIPTS_DIR = _THIS.parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+from _fast_runner_core import CANONICAL_ROOT, FastRunnerConfig, run_fast_render  # noqa: E402
+
+NAME = "render_current_depth_outliner"
+BLEND_DEFAULT = CANONICAL_ROOT / "compositor_depth_outliner.blend"
+
+
+def main() -> None:
+    exr = os.environ.get("COMPOSITOR_EXR", "")
+    out = os.environ.get("COMPOSITOR_OUTPUT_DIR", "")
+    if not (exr and out):
+        raise ValueError("Required env vars: COMPOSITOR_EXR, COMPOSITOR_OUTPUT_DIR")
+    blend = os.environ.get("COMPOSITOR_BLEND_PATH", str(BLEND_DEFAULT))
+    scene = os.environ.get("COMPOSITOR_SCENE_NAME", "Current")
+
+    config = FastRunnerConfig(
+        name=NAME,
+        blend_path=Path(blend),
+        scene_name=scene,
+        exr_inputs={"DepthOutliner::EXR Input": Path(exr)},
+        file_output_node="DepthOutliner::Outputs",
+        output_dir=Path(out),
+        rebuild_file_output=True,
+    )
+    run_fast_render(config)
+
+
+if __name__ == "__main__":
+    main()

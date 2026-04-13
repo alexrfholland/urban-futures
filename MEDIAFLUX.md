@@ -214,6 +214,17 @@ For simulation run roots specifically, prefer the repo helper:
 Add `--include-debug` only when you intentionally want `temp/` and
 `comparison/` uploaded as well.
 
+For bV2 EXR families specifically, prefer the repo helper so the default
+transfer is EXR-only:
+
+```powershell
+uv run python -m _futureSim_refactored.blender.blenderv2.bV2_mediaflux_sync download 4.10 parade_single-state_yr180
+uv run python -m _futureSim_refactored.blender.blenderv2.bV2_mediaflux_sync upload 4.10 parade_single-state_yr180
+```
+
+Add `--include-metadata` only when you intentionally want sidecars such as
+`__full_pipeline.blend` and `__manifest.txt`.
+
 ## Current Upload Example
 
 ```powershell

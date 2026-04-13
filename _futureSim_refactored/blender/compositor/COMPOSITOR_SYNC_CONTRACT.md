@@ -136,6 +136,7 @@ Examples:
 - `mist__20260411_1730`
 - `mist__20260411_1730__mask-fix`
 - `final-template__20260411_1805`
+- `intervention_int__20260412_1400`
 
 ## Public Selectors
 
@@ -169,6 +170,38 @@ then the default output root becomes:
 and the default EXR input root becomes:
 
 - `_data-refactored/blenderv2/output/v4.9/city_timeline__hero-test/`
+
+## Single-Input Compositor Families
+
+Some compositor families read a single bioenvelope EXR rather than the full
+suite of state EXRs. These follow the same lineage and path contract but
+their runner takes one EXR via `COMPOSITOR_EXR` instead of the multi-input
+pathway/priority/trending set.
+
+### intervention_int
+
+- Canonical blend: `compositor_intervention_int.blend`
+- Runner: `render_edge_lab_current_intervention_int.py`
+- Rebuild: `rebuild_intervention_int_template_20260412.py`
+- Input: one bioenvelope EXR (e.g. `bioenvelope_positive` or
+  `bioenvelope_trending`)
+- AOV consumed: `intervention_bioenvelope_ply-int` (integer 0–8)
+- Outputs: 1 combined + 8 per-category RGBA PNGs
+
+Environment:
+
+- `COMPOSITOR_EXR` — path to the bioenvelope EXR
+- `COMPOSITOR_OUTPUT_DIR` — output directory
+- `COMPOSITOR_BLEND_PATH` — optional override for the canonical blend
+
+### mist
+
+- Canonical blend: `compositor_mist.blend`
+- Runner: `render_edge_lab_current_mist.py`
+- Input: single EXR via `COMPOSITOR_MIST_EXR` (or multi-input
+  pathway/priority/trending)
+- AOV consumed: `Mist` standard pass
+- Outputs: mist outline PNGs
 
 ## Scope Rule
 

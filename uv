@@ -1,0 +1,42 @@
+#!/usr/bin/env sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+find_system_uv() {
+  local dir
+  local old_ifs
+  old_ifs=$IFS
+  IFS=:
+  for dir in $PATH; do
+    [ -n "$dir" ] || continue
+    [ "$dir" = "$SCRIPT_DIR" ] && continue
+    if [ -x "$dir/uv" ]; then
+      printf '%s\n' "$dir/uv"
+      IFS=$old_ifs
+      return 0
+    fi
+  done
+  IFS=$old_ifs
+  return 1
+}
+
+if [ -n "${UV_BIN:-}" ] && [ -x "${UV_BIN}" ]; then
+  exec "${UV_BIN}" "$@"
+fi
+
+if system_uv=$(find_system_uv); then
+  exec "$system_uv" "$@"
+fi
+
+if [ -x "${SCRIPT_DIR}/.tools/uv/uv" ]; then
+  exec "${SCRIPT_DIR}/.tools/uv/uv" "$@"
+fi
+
+if [ -x "${SCRIPT_DIR}/.tools/uv/uv.exe" ]; then
+  exec "${SCRIPT_DIR}/.tools/uv/uv.exe" "$@"
+fi
+
+echo "No uv executable found for this repo." >&2
+echo "Install uv on this machine or set UV_BIN, then see FIRST_MACHINE_SETUP.md." >&2
+exit 1

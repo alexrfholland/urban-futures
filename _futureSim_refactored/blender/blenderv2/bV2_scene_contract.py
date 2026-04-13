@@ -160,13 +160,11 @@ SITE_CONTRACTS: Final[dict[str, dict[str, object]]] = {
     "city": {
         "world_sources": {
             "buildings": "city_buildings_source",
-            "roads_hires": "city_roads_source_hires",
-            "roads_lores": "city_roads_source_lores",
+            "roads": "city_roads_source",
         },
         "world_source_aliases": {
             "buildings": ("city_buildings_source",),
-            "roads": ("city_roads_source", "city_roads_source_hires"),
-            "roads_cubes": ("city_roads_source_lores",),
+            "roads": ("city_roads_source",),
         },
         "cameras": {
             "timeline": "city - camera - time slice - zoom",
@@ -177,13 +175,11 @@ SITE_CONTRACTS: Final[dict[str, dict[str, object]]] = {
     "trimmed-parade": {
         "world_sources": {
             "buildings": "trimmed-parade_buildings_source",
-            "roads_hires": "trimmed-parade_roads_source_hires",
-            "roads_lores": "trimmed-parade_roads_source_lores",
+            "roads": "trimmed-parade_roads_source",
         },
         "world_source_aliases": {
             "buildings": ("trimmed-parade_buildings_source",),
-            "roads": ("trimmed-parade_roads_source", "trimmed-parade_roads_source_hires"),
-            "roads_cubes": ("trimmed-parade_roads_source_lores",),
+            "roads": ("trimmed-parade_roads_source",),
         },
         "cameras": {
             "timeline": "parade - camera - time slice - zoom",
@@ -194,13 +190,11 @@ SITE_CONTRACTS: Final[dict[str, dict[str, object]]] = {
     "uni": {
         "world_sources": {
             "buildings": "uni_buildings_source",
-            "roads_hires": "uni_roads_source_hires",
-            "roads_lores": "uni_roads_source_lores",
+            "roads": "uni_roads_source",
         },
         "world_source_aliases": {
             "buildings": ("uni_buildings_source",),
-            "roads": ("uni_roads_source", "uni_roads_source_hires"),
-            "roads_cubes": ("uni_roads_source_lores",),
+            "roads": ("uni_roads_source",),
         },
         "cameras": {
             "timeline": "uni - camera - time slice - zoom",
@@ -210,8 +204,8 @@ SITE_CONTRACTS: Final[dict[str, dict[str, object]]] = {
 }
 
 REQUIRED_WORLD_SOURCE_ROLES: Final[tuple[str, ...]] = ("buildings", "roads")
-OPTIONAL_WORLD_SOURCE_ROLES: Final[tuple[str, ...]] = ("roads_cubes",)
-WORLD_SOURCE_RUNTIME_MODES: Final[tuple[str, ...]] = ("cubes", "points")
+OPTIONAL_WORLD_SOURCE_ROLES: Final[tuple[str, ...]] = ()
+WORLD_SOURCE_RUNTIME_MODES: Final[tuple[str, ...]] = ("points",)
 
 GLOBAL_RULES: Final[dict[str, object]] = {
     "canonical_scenario_branches": ("positive", "trending"),
@@ -396,22 +390,21 @@ def get_world_source_runtime_mode() -> str:
     if raw in {"", "points", "point"}:
         return "points"
     if raw in {"cubes", "split"}:
-        return "cubes"
-    supported = ", ".join(WORLD_SOURCE_RUNTIME_MODES)
+        raise RuntimeError(
+            "BV2_POINTSORCUBES=cubes is currently disabled. "
+            "TODO: changing modes requires a full template refresh; implement later if cube mode is revived."
+        )
     raise RuntimeError(
-        f"Unsupported BV2_POINTSORCUBES={raw!r}. Expected one of: points, point, {supported}, split"
+        f"Unsupported BV2_POINTSORCUBES={raw!r}. Expected one of: points, point"
     )
 
 
 def resolve_source_world_object_names(site: str, available_names: set[str]) -> dict[str, str]:
     """Resolve required/optional world sources against the available object names."""
 
-    runtime_mode = get_world_source_runtime_mode()
     resolved: dict[str, str] = {}
     missing_required: list[str] = []
     for role, candidates in get_source_world_object_aliases(site).items():
-        if runtime_mode == "points" and role == "roads_cubes":
-            continue
         match = next((name for name in candidates if name in available_names), None)
         if match is not None:
             resolved[role] = match

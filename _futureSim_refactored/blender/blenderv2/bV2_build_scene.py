@@ -19,7 +19,6 @@ try:
     from .bV2_build_world_attributes import build_world_attributes
     from .bV2_setup_template import (
         BUILD_MODE_POINTS as TEMPLATE_BUILD_MODE_POINTS,
-        BUILD_MODE_SPLIT as TEMPLATE_BUILD_MODE_SPLIT,
         ensure_scene_aovs as ensure_template_scene_aovs,
         reset_site as reset_template_site,
         verify_site as verify_template_site,
@@ -32,6 +31,7 @@ try:
         get_runtime_exr_family,
         get_runtime_case_tag,
         render_all_isolated_exrs,
+        save_mainfile,
         save_scene_copy,
         setup_render_outputs,
         upload_folder_to_mediaflux,
@@ -57,7 +57,6 @@ except ImportError:
     from bV2_build_world_attributes import build_world_attributes  # type: ignore
     from bV2_setup_template import (  # type: ignore
         BUILD_MODE_POINTS as TEMPLATE_BUILD_MODE_POINTS,
-        BUILD_MODE_SPLIT as TEMPLATE_BUILD_MODE_SPLIT,
         ensure_scene_aovs as ensure_template_scene_aovs,
         reset_site as reset_template_site,
         verify_site as verify_template_site,
@@ -70,6 +69,7 @@ except ImportError:
         get_runtime_exr_family,
         get_runtime_case_tag,
         render_all_isolated_exrs,
+        save_mainfile,
         save_scene_copy,
         setup_render_outputs,
         upload_folder_to_mediaflux,
@@ -128,9 +128,12 @@ def get_template_setup_build_mode() -> str:
     if raw in {"", "points", "point"}:
         return TEMPLATE_BUILD_MODE_POINTS
     if raw in {"cubes", "split"}:
-        return TEMPLATE_BUILD_MODE_SPLIT
+        raise RuntimeError(
+            "BV2_POINTSORCUBES=cubes is currently disabled. "
+            "TODO: changing modes requires a full template refresh; implement later if cube mode is revived."
+        )
     raise RuntimeError(
-        f"Unsupported BV2_POINTSORCUBES={raw!r}. Expected one of: points, point, cubes, split"
+        f"Unsupported BV2_POINTSORCUBES={raw!r}. Expected one of: points, point"
     )
 
 
@@ -195,8 +198,7 @@ def build_scene(
             blend_output_path
             or default_blend_path
         ).resolve()
-        blend_output_path.parent.mkdir(parents=True, exist_ok=True)
-        bpy.ops.wm.save_as_mainfile(filepath=str(blend_output_path), copy=True)
+        save_mainfile(blend_output_path, copy=True)
         log("BUILD_SCENE_BLEND_SAVED", blend_output_path)
     else:
         blend_output_path = None

@@ -2,21 +2,22 @@
 
 Scope of this template setup stage:
 - import site/building PLYs
-- import road PLYs
-- split roads into hires and lores by scale/size
-- optionally build legacy point-only roads from highres road PLYs
+- import highres road PLYs as point clouds
 - assign canonical object names, collection placement, pass indices
-- rebuild the canonical world material / GN names with the working debug setup
+- rebuild the canonical world material / GN names with the working setup
 
 This version keeps the simple `Col -> Emission` display path, but also
 recreates the existing bV2 world AOV contract without importing the production
 material. The AOV contract is hard-coded from inspection so the script remains
 small and explicit.
 
+TODO: changing modes requires a full template refresh. If cube mode is ever
+revived, implement it as an explicit later pass rather than switching at
+runtime.
+
 Usage:
-  blender --background bv2_debug_template.blend --python bV2_setup_template.py -- --reset trimmed-parade
-  blender --background bv2_debug_template.blend --python bV2_setup_template.py -- --reset city trimmed-parade uni --output-blend D:\\path\\to\\copy.blend
-  blender --background bv2_debug_template.blend --python bV2_setup_template.py -- --reset trimmed-parade --use-points
+  blender --background _data-refactored/blenderv2/bV2_template.blend --python _futureSim_refactored/blender/blenderv2/bV2_setup_template.py -- --reset trimmed-parade
+  blender --background _data-refactored/blenderv2/bV2_template.blend --python _futureSim_refactored/blender/blenderv2/bV2_setup_template.py -- --reset city trimmed-parade uni
 """
 
 from __future__ import annotations
@@ -36,8 +37,7 @@ while REPO_ROOT.name != "urban-futures":
 
 PLY_DIR = REPO_ROOT / "_data-refactored" / "model_inputs" / "world" / "originals"
 HIGHRES_PLY_DIR = REPO_ROOT / "_data-refactored" / "model_inputs" / "world" / "highres"
-DEBUG_OUTPUT_DIR = REPO_ROOT / "_data-refactored" / "blenderv2" / "output" / "_debug"
-INPUT_TEMPLATE_PATH = DEBUG_OUTPUT_DIR / "bv2_debug_template.blend"
+INPUT_TEMPLATE_PATH = REPO_ROOT / "_data-refactored" / "blenderv2" / "bV2_template.blend"
 DEFAULT_OUTPUT_BLEND = INPUT_TEMPLATE_PATH
 
 WORLD_SOURCES_COLLECTION = "world_sources"
@@ -46,7 +46,6 @@ TEMPLATE_VIEW_LAYER_NAME = "template_base"
 
 DEBUG_MATERIAL_NAME = "v2WorldAOV"
 DEBUG_POINT_GN_NAME = "v2WorldPoints"
-DEBUG_CUBE_GN_NAME = "v2WorldCubes"
 
 SCENE_AOV_SPECS = [
     ("proposal-decay", "VALUE"),
@@ -96,8 +95,6 @@ MATERIAL_AOV_ATTRIBUTE_MAP = [
 PASS_INDEX = {
     "buildings": 2,
     "roads": 1,
-    "roads_hires": 1,
-    "roads_lores": 1,
 }
 
 SITE_PLY_MAP = {
@@ -122,21 +119,30 @@ SITE_OBJECT_NAMES = {
     "city": {
         "buildings": "city_buildings_source",
         "roads": "city_roads_source",
-        "roads_hires": "city_roads_source_hires",
-        "roads_lores": "city_roads_source_lores",
     },
     "trimmed-parade": {
         "buildings": "trimmed-parade_buildings_source",
         "roads": "trimmed-parade_roads_source",
-        "roads_hires": "trimmed-parade_roads_source_hires",
-        "roads_lores": "trimmed-parade_roads_source_lores",
     },
     "uni": {
         "buildings": "uni_buildings_source",
         "roads": "uni_roads_source",
-        "roads_hires": "uni_roads_source_hires",
-        "roads_lores": "uni_roads_source_lores",
     },
+}
+
+LEGACY_SITE_OBJECT_NAMES = {
+    "city": (
+        "city_roads_source_hires",
+        "city_roads_source_lores",
+    ),
+    "trimmed-parade": (
+        "trimmed-parade_roads_source_hires",
+        "trimmed-parade_roads_source_lores",
+    ),
+    "uni": (
+        "uni_roads_source_hires",
+        "uni_roads_source_lores",
+    ),
 }
 
 EXPECTED_INPUT_COLLECTIONS = {
@@ -160,7 +166,6 @@ EXPECTED_PERSISTENT_MATERIALS = {
 }
 EXPECTED_PERSISTENT_NODE_GROUPS = {
     "v2WorldPoints",
-    "v2WorldCubes",
     "instance_template",
     "Envelope",
 }
@@ -172,7 +177,6 @@ ALLOWED_CAMERA_COLLECTIONS = {
     "camera_uni_timeline",
 }
 
-BUILD_MODE_SPLIT = "split"
 BUILD_MODE_POINTS = "points"
 
 
@@ -180,7 +184,7 @@ def log(*args: object) -> None:
     print(f"[{time.strftime('%H:%M:%S')}]", *args, flush=True)
 
 
-def verify_debug_input_template() -> None:
+def verify_input_template() -> None:
     opened_path = Path(bpy.data.filepath).resolve()
     if opened_path != INPUT_TEMPLATE_PATH.resolve():
         raise RuntimeError(
@@ -210,6 +214,9 @@ def verify_debug_input_template() -> None:
         )
 
     allowed_world_object_names = set().union(*[set(names.values()) for names in SITE_OBJECT_NAMES.values()])
+    allowed_world_object_names.update(
+        name for names in LEGACY_SITE_OBJECT_NAMES.values() for name in names
+    )
     for obj in bpy.data.objects:
         if obj.type != "CAMERA" and obj.name not in allowed_world_object_names:
             log("warning: ignoring unexpected object in input template", obj.name)
@@ -274,6 +281,14 @@ def remove_object(name: str) -> None:
 def remove_site_objects(site: str) -> None:
     for name in SITE_OBJECT_NAMES[site].values():
         remove_object(name)
+    for name in LEGACY_SITE_OBJECT_NAMES[site]:
+        remove_object(name)
+
+
+def remove_blend_backup_versions(blend_path: Path) -> None:
+    for backup_path in blend_path.parent.glob(f"{blend_path.name}[0-9]*"):
+        if backup_path.is_file():
+            backup_path.unlink()
 
 
 def import_ply(filepath: Path) -> bpy.types.Object:
@@ -418,54 +433,6 @@ def ensure_debug_point_gn(material: bpy.types.Material) -> bpy.types.NodeTree:
     return node_group
 
 
-def ensure_debug_cube_gn(material: bpy.types.Material) -> bpy.types.NodeTree:
-    node_group = bpy.data.node_groups.get(DEBUG_CUBE_GN_NAME)
-    if node_group is None:
-        node_group = bpy.data.node_groups.new(DEBUG_CUBE_GN_NAME, "GeometryNodeTree")
-    elif node_group.bl_idname != "GeometryNodeTree":
-        bpy.data.node_groups.remove(node_group)
-        node_group = bpy.data.node_groups.new(DEBUG_CUBE_GN_NAME, "GeometryNodeTree")
-
-    node_group.interface.clear()
-    for node in list(node_group.nodes):
-        node_group.nodes.remove(node)
-
-    node_group.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
-    node_group.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
-
-    group_input = node_group.nodes.new("NodeGroupInput")
-    group_input.location = (-620, 0)
-
-    mesh_to_points = node_group.nodes.new("GeometryNodeMeshToPoints")
-    mesh_to_points.location = (-400, 0)
-    mesh_to_points.inputs["Radius"].default_value = 0.25
-
-    cube = node_group.nodes.new("GeometryNodeMeshCube")
-    cube.location = (-400, -220)
-    cube.inputs["Size"].default_value = (1.0, 1.0, 0.25)
-
-    instance_on_points = node_group.nodes.new("GeometryNodeInstanceOnPoints")
-    instance_on_points.location = (-160, 0)
-
-    realize = node_group.nodes.new("GeometryNodeRealizeInstances")
-    realize.location = (60, 0)
-
-    set_material = node_group.nodes.new("GeometryNodeSetMaterial")
-    set_material.location = (280, 0)
-    set_material.inputs["Material"].default_value = material
-
-    group_output = node_group.nodes.new("NodeGroupOutput")
-    group_output.location = (520, 0)
-
-    node_group.links.new(group_input.outputs["Geometry"], mesh_to_points.inputs["Mesh"])
-    node_group.links.new(mesh_to_points.outputs["Points"], instance_on_points.inputs["Points"])
-    node_group.links.new(cube.outputs["Mesh"], instance_on_points.inputs["Instance"])
-    node_group.links.new(instance_on_points.outputs["Instances"], realize.inputs["Geometry"])
-    node_group.links.new(realize.outputs["Geometry"], set_material.inputs["Geometry"])
-    node_group.links.new(set_material.outputs["Geometry"], group_output.inputs["Geometry"])
-    return node_group
-
-
 def build_mesh(name: str, positions: np.ndarray, attrs: dict[str, dict[str, object]]) -> bpy.types.Mesh:
     mesh = bpy.data.meshes.new(name)
     count = len(positions)
@@ -547,13 +514,16 @@ def filter_attrs(attrs: dict[str, dict[str, object]], mask: np.ndarray) -> dict[
     return result
 
 
-def reset_site(site: str, *, build_mode: str = BUILD_MODE_SPLIT) -> dict[str, object]:
+def reset_site(site: str, *, build_mode: str = BUILD_MODE_POINTS) -> dict[str, object]:
     log("resetting", site, f"mode={build_mode}")
+    if build_mode != BUILD_MODE_POINTS:
+        raise RuntimeError(
+            "Cube mode is currently disabled. TODO: changing modes requires a full template refresh; implement later if cube mode is revived."
+        )
     remove_site_objects(site)
     target_collection = ensure_site_collection(site)
     material = ensure_debug_material()
     point_gn = ensure_debug_point_gn(material)
-    cube_gn = ensure_debug_cube_gn(material)
 
     names = SITE_OBJECT_NAMES[site]
     ply_map = SITE_PLY_MAP[site]
@@ -569,70 +539,14 @@ def reset_site(site: str, *, build_mode: str = BUILD_MODE_SPLIT) -> dict[str, ob
         point_gn=point_gn,
     )
 
-    if build_mode == BUILD_MODE_POINTS:
-        highres_road_ply = HIGHRES_PLY_DIR / ply_map["road_ply"]
-        roads = build_point_world_object(
-            filepath=highres_road_ply,
-            object_name=names["roads"],
-            target_collection=target_collection,
-            pass_index=PASS_INDEX["roads"],
-            material=material,
-            point_gn=point_gn,
-        )
-        return {
-            "site": site,
-            "mode": build_mode,
-            "collection": target_collection.name,
-            "buildings": {"name": buildings.name, "verts": len(buildings.data.vertices)},
-            "roads": {"name": roads.name, "verts": len(roads.data.vertices)},
-        }
-
-    # Roads
-    road_ply = PLY_DIR / ply_map["road_ply"]
-    imported_roads = import_ply(road_ply)
-    ensure_imported_color(imported_roads.data)
-    ensure_float_alias(imported_roads.data, "scale", "size")
-    positions = extract_positions(imported_roads.data)
-    attrs = extract_point_attributes(imported_roads.data)
-
-    size_values = np.empty(len(imported_roads.data.vertices), dtype=np.float32)
-    imported_roads.data.attributes["size"].data.foreach_get("value", size_values)
-    hires_mask = size_values <= 0.75
-    lores_mask = ~hires_mask
-
-    road_mesh = imported_roads.data
-    bpy.data.objects.remove(imported_roads, do_unlink=True)
-    if road_mesh.users == 0:
-        bpy.data.meshes.remove(road_mesh)
-
-    hires_mesh = build_mesh(
-        f"{names['roads_hires']}_mesh",
-        positions[hires_mask],
-        filter_attrs(attrs, hires_mask),
-    )
-    hires_obj = bpy.data.objects.new(names["roads_hires"], hires_mesh)
-    assign_object_state(
-        hires_obj,
+    highres_road_ply = HIGHRES_PLY_DIR / ply_map["road_ply"]
+    roads = build_point_world_object(
+        filepath=highres_road_ply,
+        object_name=names["roads"],
         target_collection=target_collection,
-        pass_index=PASS_INDEX["roads_hires"],
+        pass_index=PASS_INDEX["roads"],
         material=material,
-        node_group=point_gn,
-        modifier_name=DEBUG_POINT_GN_NAME,
-    )
-
-    lores_mesh = build_mesh(
-        f"{names['roads_lores']}_mesh",
-        positions[lores_mask],
-        filter_attrs(attrs, lores_mask),
-    )
-    lores_obj = bpy.data.objects.new(names["roads_lores"], lores_mesh)
-    assign_object_state(
-        lores_obj,
-        target_collection=target_collection,
-        pass_index=PASS_INDEX["roads_lores"],
-        material=material,
-        node_group=cube_gn,
-        modifier_name=DEBUG_CUBE_GN_NAME,
+        point_gn=point_gn,
     )
 
     return {
@@ -640,13 +554,16 @@ def reset_site(site: str, *, build_mode: str = BUILD_MODE_SPLIT) -> dict[str, ob
         "mode": build_mode,
         "collection": target_collection.name,
         "buildings": {"name": buildings.name, "verts": len(buildings.data.vertices)},
-        "roads_hires": {"name": hires_obj.name, "verts": len(hires_obj.data.vertices)},
-        "roads_lores": {"name": lores_obj.name, "verts": len(lores_obj.data.vertices)},
+        "roads": {"name": roads.name, "verts": len(roads.data.vertices)},
     }
 
 
-def verify_site(site: str, *, build_mode: str = BUILD_MODE_SPLIT) -> dict[str, object]:
+def verify_site(site: str, *, build_mode: str = BUILD_MODE_POINTS) -> dict[str, object]:
     errors: list[str] = []
+    if build_mode != BUILD_MODE_POINTS:
+        raise RuntimeError(
+            "Cube mode is currently disabled. TODO: changing modes requires a full template refresh; implement later if cube mode is revived."
+        )
     names = SITE_OBJECT_NAMES[site]
     collection_name = SITE_PLY_MAP[site]["collection"]
 
@@ -656,17 +573,10 @@ def verify_site(site: str, *, build_mode: str = BUILD_MODE_SPLIT) -> dict[str, o
     elif bpy.context.view_layer.name != TEMPLATE_VIEW_LAYER_NAME:
         pass
 
-    if build_mode == BUILD_MODE_POINTS:
-        expected = {
-            "buildings": (names["buildings"], DEBUG_POINT_GN_NAME, PASS_INDEX["buildings"]),
-            "roads": (names["roads"], DEBUG_POINT_GN_NAME, PASS_INDEX["roads"]),
-        }
-    else:
-        expected = {
-            "buildings": (names["buildings"], DEBUG_POINT_GN_NAME, PASS_INDEX["buildings"]),
-            "roads_hires": (names["roads_hires"], DEBUG_POINT_GN_NAME, PASS_INDEX["roads_hires"]),
-            "roads_lores": (names["roads_lores"], DEBUG_CUBE_GN_NAME, PASS_INDEX["roads_lores"]),
-        }
+    expected = {
+        "buildings": (names["buildings"], DEBUG_POINT_GN_NAME, PASS_INDEX["buildings"]),
+        "roads": (names["roads"], DEBUG_POINT_GN_NAME, PASS_INDEX["roads"]),
+    }
 
     for role, (object_name, modifier_name, pass_index) in expected.items():
         obj = bpy.data.objects.get(object_name)
@@ -689,9 +599,6 @@ def verify_site(site: str, *, build_mode: str = BUILD_MODE_SPLIT) -> dict[str, o
             errors.append(f"{object_name}: wrong collection {collections}")
         if obj.data.attributes.get("Col") is None:
             errors.append(f"{object_name}: missing attr Col")
-        if build_mode == BUILD_MODE_SPLIT and role != "buildings" and obj.data.attributes.get("size") is None:
-            errors.append(f"{object_name}: missing attr size")
-
     return {"site": site, "ok": len(errors) == 0, "errors": errors}
 
 
@@ -699,7 +606,13 @@ def parse_args(argv: list[str]) -> tuple[list[str], Path | None, str]:
     args = argv[argv.index("--") + 1:] if "--" in argv else []
     sites: list[str] = []
     output_blend: Path | None = None
-    build_mode = BUILD_MODE_POINTS if "--use-points" in args else BUILD_MODE_SPLIT
+    build_mode = BUILD_MODE_POINTS
+    if "--use-points" in args:
+        log("info: --use-points is now the default and can be omitted")
+    if "--use-cubes" in args or "--use-split" in args:
+        raise RuntimeError(
+            "Cube mode is currently disabled. TODO: changing modes requires a full template refresh; implement later if cube mode is revived."
+        )
 
     if "--reset" in args:
         index = args.index("--reset")
@@ -723,10 +636,10 @@ def parse_args(argv: list[str]) -> tuple[list[str], Path | None, str]:
 def main() -> None:
     sites, output_blend, build_mode = parse_args(sys.argv)
     if not sites:
-        log("No sites specified. Usage: -- --reset city trimmed-parade uni [--output-blend path] [--use-points]")
+        log("No sites specified. Usage: -- --reset city trimmed-parade uni [--output-blend path]")
         return
 
-    verify_debug_input_template()
+    verify_input_template()
     ensure_scene_aovs()
     results = {}
     verification = {}
@@ -739,6 +652,7 @@ def main() -> None:
     save_path = output_blend or DEFAULT_OUTPUT_BLEND
     save_path.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(save_path))
+    remove_blend_backup_versions(save_path)
     log("saved", save_path)
 
     print("\n===RESET_REPORT_START===")

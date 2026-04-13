@@ -1,0 +1,2350 @@
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_ao.blend"
+Fra:1 Mem:16717.54M (Peak 16717.54M) | Time:00:00.00 | Compositing
+Fra:1 Mem:16717.54M (Peak 16717.54M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:16717.55M (Peak 16717.55M) | Time:00:00.00 | Compositing | Operation 2-23
+Fra:1 Mem:16717.55M (Peak 16717.55M) | Time:00:00.00 | Compositing | Operation 3-23
+Fra:1 Mem:17730.12M (Peak 17730.12M) | Time:00:00.36 | Compositing | Operation 4-23
+Fra:1 Mem:17856.68M (Peak 17856.68M) | Time:00:00.39 | Compositing | Operation 5-23
+Fra:1 Mem:17983.24M (Peak 17983.24M) | Time:00:00.49 | Compositing | Operation 6-23
+Fra:1 Mem:17983.24M (Peak 18109.81M) | Time:00:00.58 | Compositing | Operation 7-23
+Fra:1 Mem:17983.24M (Peak 18109.81M) | Time:00:00.67 | Compositing | Operation 8-23
+Fra:1 Mem:18362.93M (Peak 18489.49M) | Time:00:00.76 | Compositing | Operation 9-23
+Fra:1 Mem:18742.62M (Peak 18869.18M) | Time:00:00.85 | Compositing | Operation 10-23
+Fra:1 Mem:18742.62M (Peak 20008.24M) | Time:00:01.39 | Compositing | Operation 11-23
+Fra:1 Mem:18742.62M (Peak 20008.24M) | Time:00:01.94 | Compositing | Operation 12-23
+Fra:1 Mem:18742.62M (Peak 20008.24M) | Time:00:01.94 | Compositing | Operation 13-23
+Fra:1 Mem:18362.93M (Peak 20008.24M) | Time:00:01.99 | Compositing | Operation 14-23
+Fra:1 Mem:17983.24M (Peak 20008.24M) | Time:00:02.03 | Compositing | Operation 15-23
+Fra:1 Mem:18489.49M (Peak 20008.24M) | Time:00:02.11 | Compositing | Operation 16-23
+Fra:1 Mem:18489.49M (Peak 20008.24M) | Time:00:02.15 | Compositing | Operation 17-23
+Fra:1 Mem:18995.74M (Peak 20008.24M) | Time:00:02.22 | Compositing | Operation 18-23
+Fra:1 Mem:19122.31M (Peak 20008.24M) | Time:00:02.24 | Compositing | Operation 19-23
+Fra:1 Mem:19628.56M (Peak 20008.24M) | Time:00:02.32 | Compositing | Operation 20-23
+Fra:1 Mem:19501.99M (Peak 20134.81M) | Time:00:02.41 | Compositing | Operation 21-23
+Fra:1 Mem:19375.43M (Peak 20134.81M) | Time:00:02.50 | Compositing | Operation 22-23
+Fra:1 Mem:19248.87M (Peak 20134.81M) | Time:00:02.64 | Compositing | Operation 23-23
+Fra:1 Mem:19248.88M (Peak 20767.62M) | Time:00:03.20 | Compositing | Operation 24-23
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\ao__20260413_105430\pathway_ao_masked_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\ao__20260413_105430\existing_condition_ao_full_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\ao__20260413_105430\priority_ao_masked_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\ao__20260413_105430\_discard_render.png0001.png'
+Time: 00:15.65 (Saving: 00:02.80)
+
+[render_current_ao] repathed 'AO::EXR Existing' -> parade_timeline__existing_condition_positive__8k.exr
+[render_current_ao] repathed 'AO::EXR Pathway' -> parade_timeline__positive_state__8k.exr
+[render_current_ao] repathed 'AO::EXR Priority' -> parade_timeline__positive_priority_state__8k.exr
+[render_current_ao] resolution 7680x4320 from parade_timeline__existing_condition_positive__8k.exr
+[render_current_ao] rendering animation (frame 1, 3 slots)...
+[render_current_ao] render done
+[render_current_ao] renamed existing_condition_ao_full_0001.png -> existing_condition_ao_full.png
+[render_current_ao] renamed pathway_ao_masked_0001.png -> pathway_ao_masked.png
+[render_current_ao] renamed priority_ao_masked_0001.png -> priority_ao_masked.png
+[render_current_ao] 3/3 slots present
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_normals.blend"
+Fra:1 Mem:16717.54M (Peak 16717.54M) | Time:00:00.00 | Compositing
+Fra:1 Mem:16717.55M (Peak 16717.55M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:16717.55M (Peak 16717.55M) | Time:00:00.00 | Compositing | Operation 2-26
+Fra:1 Mem:16717.55M (Peak 16717.55M) | Time:00:00.00 | Compositing | Operation 3-26
+Fra:1 Mem:17730.12M (Peak 17730.12M) | Time:00:00.38 | Compositing | Operation 4-26
+Fra:1 Mem:17856.68M (Peak 17856.68M) | Time:00:00.40 | Compositing | Operation 5-26
+Fra:1 Mem:17983.24M (Peak 17983.24M) | Time:00:00.51 | Compositing | Operation 6-26
+Fra:1 Mem:17983.24M (Peak 18109.81M) | Time:00:00.61 | Compositing | Operation 7-26
+Fra:1 Mem:17983.24M (Peak 18109.81M) | Time:00:00.69 | Compositing | Operation 8-26
+Fra:1 Mem:18362.93M (Peak 18489.49M) | Time:00:00.77 | Compositing | Operation 9-26
+Fra:1 Mem:18742.62M (Peak 18869.18M) | Time:00:00.85 | Compositing | Operation 10-26
+Fra:1 Mem:18742.62M (Peak 20008.24M) | Time:00:01.35 | Compositing | Operation 11-26
+Fra:1 Mem:18742.62M (Peak 20008.24M) | Time:00:01.83 | Compositing | Operation 12-26
+Fra:1 Mem:19122.31M (Peak 20008.24M) | Time:00:01.87 | Compositing | Operation 13-26
+Fra:1 Mem:19122.31M (Peak 20008.24M) | Time:00:01.87 | Compositing | Operation 14-26
+Fra:1 Mem:18742.62M (Peak 20008.24M) | Time:00:01.91 | Compositing | Operation 15-26
+Fra:1 Mem:18362.93M (Peak 20008.24M) | Time:00:01.95 | Compositing | Operation 16-26
+Fra:1 Mem:18742.62M (Peak 20008.24M) | Time:00:01.99 | Compositing | Operation 17-26
+Fra:1 Mem:19122.31M (Peak 20008.24M) | Time:00:02.03 | Compositing | Operation 18-26
+Fra:1 Mem:19248.87M (Peak 20008.24M) | Time:00:02.10 | Compositing | Operation 19-26
+Fra:1 Mem:19248.87M (Peak 20008.24M) | Time:00:02.12 | Compositing | Operation 20-26
+Fra:1 Mem:19375.43M (Peak 20008.24M) | Time:00:02.19 | Compositing | Operation 21-26
+Fra:1 Mem:19501.99M (Peak 20008.24M) | Time:00:02.20 | Compositing | Operation 22-26
+Fra:1 Mem:19628.56M (Peak 20008.24M) | Time:00:02.27 | Compositing | Operation 23-26
+Fra:1 Mem:19501.99M (Peak 20134.81M) | Time:00:02.34 | Compositing | Operation 24-26
+Fra:1 Mem:19375.43M (Peak 20134.81M) | Time:00:02.42 | Compositing | Operation 25-26
+Fra:1 Mem:19248.87M (Peak 20134.81M) | Time:00:02.50 | Compositing | Operation 26-26
+Fra:1 Mem:19248.88M (Peak 20767.62M) | Time:00:03.01 | Compositing | Operation 27-26
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\normals__20260413_105430\pathway_tree_normal_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\normals__20260413_105430\priority_tree_normal_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\normals__20260413_105430\existing_condition_normal_full_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\normals__20260413_105430\_discard_render.png0001.png'
+Time: 00:16.93 (Saving: 00:02.78)
+
+[render_current_normals] repathed 'Normals::EXR Existing' -> parade_timeline__existing_condition_positive__8k.exr
+[render_current_normals] repathed 'Normals::EXR Pathway' -> parade_timeline__positive_state__8k.exr
+[render_current_normals] repathed 'Normals::EXR Priority' -> parade_timeline__positive_priority_state__8k.exr
+[render_current_normals] resolution 7680x4320 from parade_timeline__existing_condition_positive__8k.exr
+[render_current_normals] rendering animation (frame 1, 3 slots)...
+[render_current_normals] render done
+[render_current_normals] renamed existing_condition_normal_full_0001.png -> existing_condition_normal_full.png
+[render_current_normals] renamed pathway_tree_normal_0001.png -> pathway_tree_normal.png
+[render_current_normals] renamed priority_tree_normal_0001.png -> priority_tree_normal.png
+[render_current_normals] 3/3 slots present
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_resources.blend"
+Fra:1 Mem:16719.17M (Peak 16719.17M) | Time:00:00.00 | Compositing
+Fra:1 Mem:16719.22M (Peak 16719.22M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:16719.28M (Peak 16719.28M) | Time:00:00.00 | Compositing | Operation 2-207
+Fra:1 Mem:16719.28M (Peak 16719.28M) | Time:00:00.00 | Compositing | Operation 3-207
+Fra:1 Mem:17731.85M (Peak 17731.85M) | Time:00:00.32 | Compositing | Operation 4-207
+Fra:1 Mem:17858.42M (Peak 17858.42M) | Time:00:00.34 | Compositing | Operation 5-207
+Fra:1 Mem:17984.98M (Peak 17984.98M) | Time:00:00.40 | Compositing | Operation 6-207
+Fra:1 Mem:17984.98M (Peak 18111.54M) | Time:00:00.47 | Compositing | Operation 7-207
+Fra:1 Mem:17984.98M (Peak 18111.54M) | Time:00:00.55 | Compositing | Operation 8-207
+Fra:1 Mem:18111.54M (Peak 18111.54M) | Time:00:00.57 | Compositing | Operation 9-207
+Fra:1 Mem:18491.23M (Peak 18617.79M) | Time:00:00.64 | Compositing | Operation 10-207
+Fra:1 Mem:18870.92M (Peak 18997.48M) | Time:00:00.72 | Compositing | Operation 11-207
+Fra:1 Mem:18870.92M (Peak 18997.48M) | Time:00:00.79 | Compositing | Operation 12-207
+Fra:1 Mem:18870.92M (Peak 20136.54M) | Time:00:01.28 | Compositing | Operation 13-207
+Fra:1 Mem:18870.92M (Peak 20136.54M) | Time:00:01.76 | Compositing | Operation 14-207
+Fra:1 Mem:19250.60M (Peak 20136.54M) | Time:00:01.80 | Compositing | Operation 15-207
+Fra:1 Mem:19250.60M (Peak 20136.54M) | Time:00:01.80 | Compositing | Operation 16-207
+Fra:1 Mem:18870.92M (Peak 20136.54M) | Time:00:01.83 | Compositing | Operation 17-207
+Fra:1 Mem:18491.23M (Peak 20136.54M) | Time:00:01.87 | Compositing | Operation 18-207
+Fra:1 Mem:18491.23M (Peak 20136.54M) | Time:00:02.36 | Compositing | Operation 19-207
+Fra:1 Mem:18491.23M (Peak 20136.54M) | Time:00:02.36 | Compositing | Operation 20-207
+Fra:1 Mem:18617.79M (Peak 20136.54M) | Time:00:02.37 | Compositing | Operation 21-207
+Fra:1 Mem:18617.79M (Peak 20136.54M) | Time:00:02.39 | Compositing | Operation 22-207
+Fra:1 Mem:18617.79M (Peak 20136.54M) | Time:00:02.39 | Compositing | Operation 23-207
+Fra:1 Mem:19124.04M (Peak 20136.54M) | Time:00:02.44 | Compositing | Operation 24-207
+Fra:1 Mem:19124.04M (Peak 20136.54M) | Time:00:02.44 | Compositing | Operation 25-207
+Fra:1 Mem:19124.04M (Peak 20136.54M) | Time:00:02.44 | Compositing | Operation 26-207
+Fra:1 Mem:19250.60M (Peak 20136.54M) | Time:00:02.45 | Compositing | Operation 27-207
+Fra:1 Mem:19250.60M (Peak 20136.54M) | Time:00:02.45 | Compositing | Operation 28-207
+Fra:1 Mem:19250.60M (Peak 20136.54M) | Time:00:02.45 | Compositing | Operation 29-207
+Fra:1 Mem:19250.60M (Peak 20136.54M) | Time:00:02.45 | Compositing | Operation 30-207
+Fra:1 Mem:19377.17M (Peak 20136.54M) | Time:00:02.46 | Compositing | Operation 31-207
+Fra:1 Mem:18997.48M (Peak 20136.54M) | Time:00:02.49 | Compositing | Operation 32-207
+Fra:1 Mem:18997.48M (Peak 20136.54M) | Time:00:02.49 | Compositing | Operation 33-207
+Fra:1 Mem:19503.73M (Peak 20136.54M) | Time:00:02.54 | Compositing | Operation 34-207
+Fra:1 Mem:19503.73M (Peak 20136.54M) | Time:00:02.54 | Compositing | Operation 35-207
+Fra:1 Mem:19503.73M (Peak 20136.54M) | Time:00:02.54 | Compositing | Operation 36-207
+Fra:1 Mem:19630.29M (Peak 20136.54M) | Time:00:02.55 | Compositing | Operation 37-207
+Fra:1 Mem:19630.29M (Peak 20136.54M) | Time:00:02.55 | Compositing | Operation 38-207
+Fra:1 Mem:19630.29M (Peak 20136.54M) | Time:00:02.55 | Compositing | Operation 39-207
+Fra:1 Mem:19630.29M (Peak 20136.54M) | Time:00:02.55 | Compositing | Operation 40-207
+Fra:1 Mem:19756.85M (Peak 20136.54M) | Time:00:02.56 | Compositing | Operation 41-207
+Fra:1 Mem:19756.85M (Peak 20136.54M) | Time:00:02.56 | Compositing | Operation 42-207
+Fra:1 Mem:20263.10M (Peak 20263.10M) | Time:00:02.60 | Compositing | Operation 43-207
+Fra:1 Mem:20263.10M (Peak 20263.10M) | Time:00:02.60 | Compositing | Operation 44-207
+Fra:1 Mem:20263.10M (Peak 20263.10M) | Time:00:02.60 | Compositing | Operation 45-207
+Fra:1 Mem:20389.67M (Peak 20389.67M) | Time:00:02.61 | Compositing | Operation 46-207
+Fra:1 Mem:20389.67M (Peak 20389.67M) | Time:00:02.61 | Compositing | Operation 47-207
+Fra:1 Mem:20389.67M (Peak 20389.67M) | Time:00:02.61 | Compositing | Operation 48-207
+Fra:1 Mem:20389.67M (Peak 20389.67M) | Time:00:02.61 | Compositing | Operation 49-207
+Fra:1 Mem:20516.23M (Peak 20516.23M) | Time:00:02.62 | Compositing | Operation 50-207
+Fra:1 Mem:20516.23M (Peak 20516.23M) | Time:00:02.62 | Compositing | Operation 51-207
+Fra:1 Mem:20516.23M (Peak 20516.23M) | Time:00:02.62 | Compositing | Operation 52-207
+Fra:1 Mem:20516.23M (Peak 20642.79M) | Time:00:02.64 | Compositing | Operation 53-207
+Fra:1 Mem:21022.48M (Peak 21022.48M) | Time:00:02.70 | Compositing | Operation 54-207
+Fra:1 Mem:21022.48M (Peak 21149.04M) | Time:00:02.73 | Compositing | Operation 55-207
+Fra:1 Mem:21528.73M (Peak 21528.73M) | Time:00:02.77 | Compositing | Operation 56-207
+Fra:1 Mem:21528.73M (Peak 21528.73M) | Time:00:02.77 | Compositing | Operation 57-207
+Fra:1 Mem:21655.29M (Peak 21655.29M) | Time:00:02.78 | Compositing | Operation 58-207
+Fra:1 Mem:21655.29M (Peak 21655.29M) | Time:00:02.78 | Compositing | Operation 59-207
+Fra:1 Mem:21655.29M (Peak 21655.29M) | Time:00:02.78 | Compositing | Operation 60-207
+Fra:1 Mem:21655.29M (Peak 21781.85M) | Time:00:02.81 | Compositing | Operation 61-207
+Fra:1 Mem:22161.54M (Peak 22161.54M) | Time:00:02.85 | Compositing | Operation 62-207
+Fra:1 Mem:22161.54M (Peak 22288.10M) | Time:00:02.87 | Compositing | Operation 63-207
+Fra:1 Mem:22667.79M (Peak 22667.79M) | Time:00:02.91 | Compositing | Operation 64-207
+Fra:1 Mem:22667.79M (Peak 22667.79M) | Time:00:02.91 | Compositing | Operation 65-207
+Fra:1 Mem:22794.35M (Peak 22794.35M) | Time:00:02.92 | Compositing | Operation 66-207
+Fra:1 Mem:22794.35M (Peak 22794.35M) | Time:00:02.92 | Compositing | Operation 67-207
+Fra:1 Mem:22794.35M (Peak 22794.35M) | Time:00:02.92 | Compositing | Operation 68-207
+Fra:1 Mem:22794.35M (Peak 22920.92M) | Time:00:02.94 | Compositing | Operation 69-207
+Fra:1 Mem:23300.60M (Peak 23300.60M) | Time:00:02.99 | Compositing | Operation 70-207
+Fra:1 Mem:23300.60M (Peak 23427.17M) | Time:00:03.01 | Compositing | Operation 71-207
+Fra:1 Mem:23806.85M (Peak 23806.85M) | Time:00:03.05 | Compositing | Operation 72-207
+Fra:1 Mem:23806.85M (Peak 23806.85M) | Time:00:03.05 | Compositing | Operation 73-207
+Fra:1 Mem:23933.42M (Peak 23933.42M) | Time:00:03.06 | Compositing | Operation 74-207
+Fra:1 Mem:23933.42M (Peak 23933.42M) | Time:00:03.06 | Compositing | Operation 75-207
+Fra:1 Mem:23933.42M (Peak 23933.42M) | Time:00:03.06 | Compositing | Operation 76-207
+Fra:1 Mem:23933.42M (Peak 24059.98M) | Time:00:03.08 | Compositing | Operation 77-207
+Fra:1 Mem:24439.67M (Peak 24439.67M) | Time:00:03.12 | Compositing | Operation 78-207
+Fra:1 Mem:24313.10M (Peak 24945.92M) | Time:00:03.18 | Compositing | Operation 79-207
+Fra:1 Mem:24186.54M (Peak 24945.92M) | Time:00:03.25 | Compositing | Operation 80-207
+Fra:1 Mem:24186.54M (Peak 24945.92M) | Time:00:03.25 | Compositing | Operation 81-207
+Fra:1 Mem:24186.54M (Peak 24945.92M) | Time:00:03.25 | Compositing | Operation 82-207
+Fra:1 Mem:24313.10M (Peak 24945.92M) | Time:00:03.26 | Compositing | Operation 83-207
+Fra:1 Mem:24313.10M (Peak 24945.92M) | Time:00:03.26 | Compositing | Operation 84-207
+Fra:1 Mem:24313.10M (Peak 24945.92M) | Time:00:03.26 | Compositing | Operation 85-207
+Fra:1 Mem:24313.10M (Peak 24945.92M) | Time:00:03.29 | Compositing | Operation 86-207
+Fra:1 Mem:24819.35M (Peak 24945.92M) | Time:00:03.34 | Compositing | Operation 87-207
+Fra:1 Mem:24692.79M (Peak 25325.60M) | Time:00:03.40 | Compositing | Operation 88-207
+Fra:1 Mem:24566.23M (Peak 25325.60M) | Time:00:03.47 | Compositing | Operation 89-207
+Fra:1 Mem:24566.23M (Peak 25325.60M) | Time:00:03.47 | Compositing | Operation 90-207
+Fra:1 Mem:24566.23M (Peak 25325.60M) | Time:00:03.47 | Compositing | Operation 91-207
+Fra:1 Mem:24692.79M (Peak 25325.60M) | Time:00:03.48 | Compositing | Operation 92-207
+Fra:1 Mem:24692.79M (Peak 25325.60M) | Time:00:03.48 | Compositing | Operation 93-207
+Fra:1 Mem:24692.79M (Peak 25325.60M) | Time:00:03.48 | Compositing | Operation 94-207
+Fra:1 Mem:24692.79M (Peak 25325.60M) | Time:00:03.51 | Compositing | Operation 95-207
+Fra:1 Mem:25199.04M (Peak 25325.60M) | Time:00:03.56 | Compositing | Operation 96-207
+Fra:1 Mem:25072.48M (Peak 25705.29M) | Time:00:03.62 | Compositing | Operation 97-207
+Fra:1 Mem:24945.92M (Peak 25705.29M) | Time:00:03.73 | Compositing | Operation 98-207
+Fra:1 Mem:24945.92M (Peak 25705.29M) | Time:00:03.73 | Compositing | Operation 99-207
+Fra:1 Mem:24945.92M (Peak 25705.29M) | Time:00:03.73 | Compositing | Operation 100-207
+Fra:1 Mem:25072.48M (Peak 25705.29M) | Time:00:03.75 | Compositing | Operation 101-207
+Fra:1 Mem:25072.48M (Peak 25705.29M) | Time:00:03.75 | Compositing | Operation 102-207
+Fra:1 Mem:25072.48M (Peak 25705.29M) | Time:00:03.75 | Compositing | Operation 103-207
+Fra:1 Mem:25072.48M (Peak 25705.29M) | Time:00:03.79 | Compositing | Operation 104-207
+Fra:1 Mem:25578.73M (Peak 25705.29M) | Time:00:03.85 | Compositing | Operation 105-207
+Fra:1 Mem:25452.17M (Peak 26084.98M) | Time:00:03.92 | Compositing | Operation 106-207
+Fra:1 Mem:25958.42M (Peak 26084.98M) | Time:00:03.98 | Compositing | Operation 107-207
+Fra:1 Mem:25958.42M (Peak 26084.98M) | Time:00:03.98 | Compositing | Operation 108-207
+Fra:1 Mem:25958.42M (Peak 26084.98M) | Time:00:03.98 | Compositing | Operation 109-207
+Fra:1 Mem:26084.98M (Peak 26084.98M) | Time:00:04.00 | Compositing | Operation 110-207
+Fra:1 Mem:26084.98M (Peak 26084.98M) | Time:00:04.00 | Compositing | Operation 111-207
+Fra:1 Mem:26084.98M (Peak 26084.98M) | Time:00:04.00 | Compositing | Operation 112-207
+Fra:1 Mem:26084.98M (Peak 26211.54M) | Time:00:04.04 | Compositing | Operation 113-207
+Fra:1 Mem:26591.23M (Peak 26591.23M) | Time:00:04.09 | Compositing | Operation 114-207
+Fra:1 Mem:26464.67M (Peak 27097.48M) | Time:00:04.16 | Compositing | Operation 115-207
+Fra:1 Mem:26970.92M (Peak 27097.48M) | Time:00:04.21 | Compositing | Operation 116-207
+Fra:1 Mem:26970.92M (Peak 27097.48M) | Time:00:04.21 | Compositing | Operation 117-207
+Fra:1 Mem:26970.92M (Peak 27097.48M) | Time:00:04.21 | Compositing | Operation 118-207
+Fra:1 Mem:27097.48M (Peak 27097.48M) | Time:00:04.22 | Compositing | Operation 119-207
+Fra:1 Mem:27097.48M (Peak 27097.48M) | Time:00:04.22 | Compositing | Operation 120-207
+Fra:1 Mem:27097.48M (Peak 27097.48M) | Time:00:04.22 | Compositing | Operation 121-207
+Fra:1 Mem:27097.48M (Peak 27224.04M) | Time:00:04.25 | Compositing | Operation 122-207
+Fra:1 Mem:27603.73M (Peak 27603.73M) | Time:00:04.30 | Compositing | Operation 123-207
+Fra:1 Mem:27477.17M (Peak 28109.98M) | Time:00:04.36 | Compositing | Operation 124-207
+Fra:1 Mem:27983.42M (Peak 28109.98M) | Time:00:04.41 | Compositing | Operation 125-207
+Fra:1 Mem:27983.42M (Peak 28109.98M) | Time:00:04.41 | Compositing | Operation 126-207
+Fra:1 Mem:27983.42M (Peak 28109.98M) | Time:00:04.41 | Compositing | Operation 127-207
+Fra:1 Mem:28109.98M (Peak 28109.98M) | Time:00:04.42 | Compositing | Operation 128-207
+Fra:1 Mem:28109.98M (Peak 28109.98M) | Time:00:04.42 | Compositing | Operation 129-207
+Fra:1 Mem:28109.98M (Peak 28109.98M) | Time:00:04.42 | Compositing | Operation 130-207
+Fra:1 Mem:28109.98M (Peak 28236.54M) | Time:00:04.45 | Compositing | Operation 131-207
+Fra:1 Mem:28616.23M (Peak 28616.23M) | Time:00:04.50 | Compositing | Operation 132-207
+Fra:1 Mem:28489.67M (Peak 29122.48M) | Time:00:04.57 | Compositing | Operation 133-207
+Fra:1 Mem:28489.67M (Peak 29122.48M) | Time:00:04.64 | Compositing | Operation 134-207
+Fra:1 Mem:28489.67M (Peak 29122.48M) | Time:00:04.64 | Compositing | Operation 135-207
+Fra:1 Mem:28489.67M (Peak 29122.48M) | Time:00:04.64 | Compositing | Operation 136-207
+Fra:1 Mem:28616.23M (Peak 29122.48M) | Time:00:04.65 | Compositing | Operation 137-207
+Fra:1 Mem:28616.23M (Peak 29122.48M) | Time:00:04.65 | Compositing | Operation 138-207
+Fra:1 Mem:28616.23M (Peak 29122.48M) | Time:00:04.65 | Compositing | Operation 139-207
+Fra:1 Mem:28616.23M (Peak 29122.48M) | Time:00:04.69 | Compositing | Operation 140-207
+Fra:1 Mem:29122.48M (Peak 29122.48M) | Time:00:04.75 | Compositing | Operation 141-207
+Fra:1 Mem:28995.92M (Peak 29628.73M) | Time:00:04.82 | Compositing | Operation 142-207
+Fra:1 Mem:28995.92M (Peak 29628.73M) | Time:00:04.88 | Compositing | Operation 143-207
+Fra:1 Mem:28995.92M (Peak 29628.73M) | Time:00:04.88 | Compositing | Operation 144-207
+Fra:1 Mem:28995.92M (Peak 29628.73M) | Time:00:04.88 | Compositing | Operation 145-207
+Fra:1 Mem:29122.48M (Peak 29628.73M) | Time:00:04.90 | Compositing | Operation 146-207
+Fra:1 Mem:29122.48M (Peak 29628.73M) | Time:00:04.90 | Compositing | Operation 147-207
+Fra:1 Mem:29122.48M (Peak 29628.73M) | Time:00:04.90 | Compositing | Operation 148-207
+Fra:1 Mem:29122.48M (Peak 29628.73M) | Time:00:04.93 | Compositing | Operation 149-207
+Fra:1 Mem:29628.73M (Peak 29628.73M) | Time:00:04.98 | Compositing | Operation 150-207
+Fra:1 Mem:29502.17M (Peak 30134.98M) | Time:00:05.05 | Compositing | Operation 151-207
+Fra:1 Mem:29502.17M (Peak 30134.98M) | Time:00:05.11 | Compositing | Operation 152-207
+Fra:1 Mem:29502.17M (Peak 30134.98M) | Time:00:05.11 | Compositing | Operation 153-207
+Fra:1 Mem:29502.17M (Peak 30134.98M) | Time:00:05.11 | Compositing | Operation 154-207
+Fra:1 Mem:29628.73M (Peak 30134.98M) | Time:00:05.12 | Compositing | Operation 155-207
+Fra:1 Mem:29628.73M (Peak 30134.98M) | Time:00:05.12 | Compositing | Operation 156-207
+Fra:1 Mem:29628.73M (Peak 30134.98M) | Time:00:05.12 | Compositing | Operation 157-207
+Fra:1 Mem:29628.73M (Peak 30134.98M) | Time:00:05.16 | Compositing | Operation 158-207
+Fra:1 Mem:30134.98M (Peak 30134.98M) | Time:00:05.21 | Compositing | Operation 159-207
+Fra:1 Mem:30008.42M (Peak 30641.23M) | Time:00:05.27 | Compositing | Operation 160-207
+Fra:1 Mem:30008.42M (Peak 30641.23M) | Time:00:05.34 | Compositing | Operation 161-207
+Fra:1 Mem:30008.42M (Peak 30641.23M) | Time:00:05.34 | Compositing | Operation 162-207
+Fra:1 Mem:30008.42M (Peak 30641.23M) | Time:00:05.34 | Compositing | Operation 163-207
+Fra:1 Mem:30134.98M (Peak 30641.23M) | Time:00:05.35 | Compositing | Operation 164-207
+Fra:1 Mem:30134.98M (Peak 30641.23M) | Time:00:05.35 | Compositing | Operation 165-207
+Fra:1 Mem:30134.98M (Peak 30641.23M) | Time:00:05.35 | Compositing | Operation 166-207
+Fra:1 Mem:30134.98M (Peak 30641.23M) | Time:00:05.39 | Compositing | Operation 167-207
+Fra:1 Mem:30641.23M (Peak 30641.23M) | Time:00:05.44 | Compositing | Operation 168-207
+Fra:1 Mem:30514.67M (Peak 31147.48M) | Time:00:05.51 | Compositing | Operation 169-207
+Fra:1 Mem:30514.67M (Peak 31147.48M) | Time:00:05.58 | Compositing | Operation 170-207
+Fra:1 Mem:30514.67M (Peak 31147.48M) | Time:00:05.58 | Compositing | Operation 171-207
+Fra:1 Mem:30514.67M (Peak 31147.48M) | Time:00:05.58 | Compositing | Operation 172-207
+Fra:1 Mem:30641.23M (Peak 31147.48M) | Time:00:05.60 | Compositing | Operation 173-207
+Fra:1 Mem:30641.23M (Peak 31147.48M) | Time:00:05.60 | Compositing | Operation 174-207
+Fra:1 Mem:30641.23M (Peak 31147.48M) | Time:00:05.60 | Compositing | Operation 175-207
+Fra:1 Mem:30641.23M (Peak 31147.48M) | Time:00:05.63 | Compositing | Operation 176-207
+Fra:1 Mem:31147.48M (Peak 31147.48M) | Time:00:05.69 | Compositing | Operation 177-207
+Fra:1 Mem:31020.92M (Peak 31653.73M) | Time:00:05.76 | Compositing | Operation 178-207
+Fra:1 Mem:31020.92M (Peak 31653.73M) | Time:00:05.84 | Compositing | Operation 179-207
+Fra:1 Mem:31020.92M (Peak 31653.73M) | Time:00:05.84 | Compositing | Operation 180-207
+Fra:1 Mem:30894.35M (Peak 31653.73M) | Time:00:05.89 | Compositing | Operation 181-207
+Fra:1 Mem:30894.35M (Peak 31653.73M) | Time:00:05.97 | Compositing | Operation 182-207
+Fra:1 Mem:30767.79M (Peak 31653.73M) | Time:00:06.05 | Compositing | Operation 183-207
+Fra:1 Mem:30767.79M (Peak 31653.73M) | Time:00:06.12 | Compositing | Operation 184-207
+Fra:1 Mem:30767.79M (Peak 31653.73M) | Time:00:06.12 | Compositing | Operation 185-207
+Fra:1 Mem:30641.23M (Peak 31653.73M) | Time:00:06.17 | Compositing | Operation 186-207
+Fra:1 Mem:30641.23M (Peak 31653.73M) | Time:00:06.26 | Compositing | Operation 187-207
+Fra:1 Mem:30514.67M (Peak 31653.73M) | Time:00:06.35 | Compositing | Operation 188-207
+Fra:1 Mem:30514.67M (Peak 31653.73M) | Time:00:06.43 | Compositing | Operation 189-207
+Fra:1 Mem:30514.67M (Peak 31653.73M) | Time:00:06.43 | Compositing | Operation 190-207
+Fra:1 Mem:30388.10M (Peak 31653.73M) | Time:00:06.47 | Compositing | Operation 191-207
+Fra:1 Mem:30388.10M (Peak 31653.73M) | Time:00:06.56 | Compositing | Operation 192-207
+Fra:1 Mem:30261.54M (Peak 31653.73M) | Time:00:06.64 | Compositing | Operation 193-207
+Fra:1 Mem:30261.54M (Peak 31653.73M) | Time:00:06.72 | Compositing | Operation 194-207
+Fra:1 Mem:30261.54M (Peak 31653.73M) | Time:00:06.72 | Compositing | Operation 195-207
+Fra:1 Mem:30134.98M (Peak 31653.73M) | Time:00:06.83 | Compositing | Operation 196-207
+Fra:1 Mem:30134.98M (Peak 31653.73M) | Time:00:06.94 | Compositing | Operation 197-207
+Fra:1 Mem:30134.98M (Peak 31653.73M) | Time:00:06.94 | Compositing | Operation 198-207
+Fra:1 Mem:30008.42M (Peak 31653.73M) | Time:00:07.02 | Compositing | Operation 199-207
+Fra:1 Mem:30008.42M (Peak 31653.73M) | Time:00:07.09 | Compositing | Operation 200-207
+Fra:1 Mem:30008.42M (Peak 31653.73M) | Time:00:07.09 | Compositing | Operation 201-207
+Fra:1 Mem:29881.85M (Peak 31653.73M) | Time:00:07.16 | Compositing | Operation 202-207
+Fra:1 Mem:29881.85M (Peak 31653.73M) | Time:00:07.25 | Compositing | Operation 203-207
+Fra:1 Mem:29881.85M (Peak 31653.73M) | Time:00:07.25 | Compositing | Operation 204-207
+Fra:1 Mem:29881.85M (Peak 31653.73M) | Time:00:07.33 | Compositing | Operation 205-207
+Fra:1 Mem:29881.85M (Peak 31653.73M) | Time:00:07.40 | Compositing | Operation 206-207
+Fra:1 Mem:29881.85M (Peak 31653.73M) | Time:00:07.48 | Compositing | Operation 207-207
+Fra:1 Mem:29881.89M (Peak 42031.85M) | Time:00:12.77 | Compositing | Operation 208-207
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\trending_dead_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\trending_perch_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\pathway_perch_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\pathway_hollow_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\priority_perch_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\priority_hollow_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\trending_hollow_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\pathway_fallen_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\trending_resource_combined_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\priority_fallen_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\pathway_resource_combined_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\priority_resource_combined_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\pathway_dead_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\trending_fallen_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\pathway_epiphyte_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\priority_dead_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\priority_epiphyte_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\trending_other_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\trending_peeling_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\pathway_other_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\pathway_peeling_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\trending_epiphyte_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\priority_other_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\priority_peeling_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430\_discard_render.png0001.png'
+Time: 01:28.78 (Saving: 00:03.09)
+
+[render_current_resources] repathed 'Resources::EXR Pathway' -> parade_timeline__positive_state__8k.exr
+[render_current_resources] repathed 'Resources::EXR Priority' -> parade_timeline__positive_priority_state__8k.exr
+[render_current_resources] repathed 'Resources::EXR Trending' -> parade_timeline__trending_state__8k.exr
+[render_current_resources] resolution 7680x4320 from parade_timeline__positive_state__8k.exr
+[render_current_resources] rendering animation (frame 1, 24 slots)...
+[render_current_resources] render done
+[render_current_resources] renamed pathway_dead_0001.png -> pathway_dead.png
+[render_current_resources] renamed pathway_epiphyte_0001.png -> pathway_epiphyte.png
+[render_current_resources] renamed pathway_fallen_0001.png -> pathway_fallen.png
+[render_current_resources] renamed pathway_hollow_0001.png -> pathway_hollow.png
+[render_current_resources] renamed pathway_other_0001.png -> pathway_other.png
+[render_current_resources] renamed pathway_peeling_0001.png -> pathway_peeling.png
+[render_current_resources] renamed pathway_perch_0001.png -> pathway_perch.png
+[render_current_resources] renamed pathway_resource_combined_0001.png -> pathway_resource_combined.png
+[render_current_resources] renamed priority_dead_0001.png -> priority_dead.png
+[render_current_resources] renamed priority_epiphyte_0001.png -> priority_epiphyte.png
+[render_current_resources] renamed priority_fallen_0001.png -> priority_fallen.png
+[render_current_resources] renamed priority_hollow_0001.png -> priority_hollow.png
+[render_current_resources] renamed priority_other_0001.png -> priority_other.png
+[render_current_resources] renamed priority_peeling_0001.png -> priority_peeling.png
+[render_current_resources] renamed priority_perch_0001.png -> priority_perch.png
+[render_current_resources] renamed priority_resource_combined_0001.png -> priority_resource_combined.png
+[render_current_resources] renamed trending_dead_0001.png -> trending_dead.png
+[render_current_resources] renamed trending_epiphyte_0001.png -> trending_epiphyte.png
+[render_current_resources] renamed trending_fallen_0001.png -> trending_fallen.png
+[render_current_resources] renamed trending_hollow_0001.png -> trending_hollow.png
+[render_current_resources] renamed trending_other_0001.png -> trending_other.png
+[render_current_resources] renamed trending_peeling_0001.png -> trending_peeling.png
+[render_current_resources] renamed trending_perch_0001.png -> trending_perch.png
+[render_current_resources] renamed trending_resource_combined_0001.png -> trending_resource_combined.png
+[render_current_resources] 24/24 slots present
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_bioenvelope.blend"
+Fra:1 Mem:16719.24M (Peak 16719.24M) | Time:00:00.00 | Compositing
+Fra:1 Mem:16719.26M (Peak 16719.26M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:16719.32M (Peak 16719.32M) | Time:00:00.00 | Compositing | Operation 2-248
+Fra:1 Mem:16719.32M (Peak 16719.32M) | Time:00:00.00 | Compositing | Operation 3-248
+Fra:1 Mem:17731.88M (Peak 17731.88M) | Time:00:00.26 | Compositing | Operation 4-248
+Fra:1 Mem:17858.45M (Peak 17858.45M) | Time:00:00.28 | Compositing | Operation 5-248
+Fra:1 Mem:17985.01M (Peak 17985.01M) | Time:00:00.38 | Compositing | Operation 6-248
+Fra:1 Mem:17985.01M (Peak 18111.57M) | Time:00:00.45 | Compositing | Operation 7-248
+Fra:1 Mem:17985.01M (Peak 18111.57M) | Time:00:00.45 | Compositing | Operation 8-248
+Fra:1 Mem:17985.01M (Peak 18111.57M) | Time:00:00.45 | Compositing | Operation 9-248
+Fra:1 Mem:18111.57M (Peak 18111.57M) | Time:00:00.47 | Compositing | Operation 10-248
+Fra:1 Mem:18111.57M (Peak 18238.14M) | Time:00:00.53 | Compositing | Operation 11-248
+Fra:1 Mem:18491.26M (Peak 18617.82M) | Time:00:00.59 | Compositing | Operation 12-248
+Fra:1 Mem:18617.82M (Peak 18617.82M) | Time:00:00.60 | Compositing | Operation 13-248
+Fra:1 Mem:18744.39M (Peak 18744.39M) | Time:00:00.63 | Compositing | Operation 14-248
+Fra:1 Mem:18744.39M (Peak 18744.39M) | Time:00:00.63 | Compositing | Operation 15-248
+Fra:1 Mem:18870.95M (Peak 18870.95M) | Time:00:00.64 | Compositing | Operation 16-248
+Fra:1 Mem:19250.64M (Peak 19377.20M) | Time:00:00.69 | Compositing | Operation 17-248
+Fra:1 Mem:19377.20M (Peak 19377.20M) | Time:00:00.70 | Compositing | Operation 18-248
+Fra:1 Mem:19377.20M (Peak 19377.20M) | Time:00:00.70 | Compositing | Operation 19-248
+Fra:1 Mem:19377.20M (Peak 19377.20M) | Time:00:00.70 | Compositing | Operation 20-248
+Fra:1 Mem:19377.20M (Peak 19377.20M) | Time:00:00.70 | Compositing | Operation 21-248
+Fra:1 Mem:19377.20M (Peak 19377.20M) | Time:00:00.70 | Compositing | Operation 22-248
+Fra:1 Mem:19377.20M (Peak 19377.20M) | Time:00:00.70 | Compositing | Operation 23-248
+Fra:1 Mem:19377.20M (Peak 19377.20M) | Time:00:00.70 | Compositing | Operation 24-248
+Fra:1 Mem:19503.76M (Peak 19503.76M) | Time:00:00.71 | Compositing | Operation 25-248
+Fra:1 Mem:19503.76M (Peak 19503.76M) | Time:00:00.71 | Compositing | Operation 26-248
+Fra:1 Mem:19503.76M (Peak 19503.76M) | Time:00:00.71 | Compositing | Operation 27-248
+Fra:1 Mem:19503.76M (Peak 19503.76M) | Time:00:00.71 | Compositing | Operation 28-248
+Fra:1 Mem:19503.76M (Peak 19503.76M) | Time:00:00.71 | Compositing | Operation 29-248
+Fra:1 Mem:19630.32M (Peak 19630.32M) | Time:00:00.72 | Compositing | Operation 30-248
+Fra:1 Mem:19630.32M (Peak 19630.32M) | Time:00:00.72 | Compositing | Operation 31-248
+Fra:1 Mem:19630.32M (Peak 19630.32M) | Time:00:00.72 | Compositing | Operation 32-248
+Fra:1 Mem:19630.32M (Peak 20895.95M) | Time:00:01.20 | Compositing | Operation 33-248
+Fra:1 Mem:19630.32M (Peak 20895.95M) | Time:00:01.27 | Compositing | Operation 34-248
+Fra:1 Mem:20010.01M (Peak 20895.95M) | Time:00:01.32 | Compositing | Operation 35-248
+Fra:1 Mem:20010.01M (Peak 20895.95M) | Time:00:01.38 | Compositing | Operation 36-248
+Fra:1 Mem:20010.01M (Peak 21275.64M) | Time:00:01.88 | Compositing | Operation 37-248
+Fra:1 Mem:20010.01M (Peak 21275.64M) | Time:00:01.94 | Compositing | Operation 38-248
+Fra:1 Mem:20010.01M (Peak 21275.64M) | Time:00:01.94 | Compositing | Operation 39-248
+Fra:1 Mem:20010.01M (Peak 21275.64M) | Time:00:01.94 | Compositing | Operation 40-248
+Fra:1 Mem:20136.57M (Peak 21275.64M) | Time:00:01.96 | Compositing | Operation 41-248
+Fra:1 Mem:20136.57M (Peak 21275.64M) | Time:00:01.96 | Compositing | Operation 42-248
+Fra:1 Mem:20263.14M (Peak 21275.64M) | Time:00:01.98 | Compositing | Operation 43-248
+Fra:1 Mem:20263.14M (Peak 21275.64M) | Time:00:01.98 | Compositing | Operation 44-248
+Fra:1 Mem:20263.14M (Peak 21275.64M) | Time:00:01.98 | Compositing | Operation 45-248
+Fra:1 Mem:20263.14M (Peak 21275.64M) | Time:00:01.98 | Compositing | Operation 46-248
+Fra:1 Mem:20389.70M (Peak 21275.64M) | Time:00:02.01 | Compositing | Operation 47-248
+Fra:1 Mem:20389.70M (Peak 21275.64M) | Time:00:02.01 | Compositing | Operation 48-248
+Fra:1 Mem:20516.26M (Peak 21275.64M) | Time:00:02.03 | Compositing | Operation 49-248
+Fra:1 Mem:20516.26M (Peak 21275.64M) | Time:00:02.03 | Compositing | Operation 50-248
+Fra:1 Mem:20516.26M (Peak 21275.64M) | Time:00:02.03 | Compositing | Operation 51-248
+Fra:1 Mem:20516.26M (Peak 21275.64M) | Time:00:02.03 | Compositing | Operation 52-248
+Fra:1 Mem:20642.82M (Peak 21275.64M) | Time:00:02.05 | Compositing | Operation 53-248
+Fra:1 Mem:20642.82M (Peak 21275.64M) | Time:00:02.05 | Compositing | Operation 54-248
+Fra:1 Mem:20769.39M (Peak 21275.64M) | Time:00:02.07 | Compositing | Operation 55-248
+Fra:1 Mem:20769.39M (Peak 21275.64M) | Time:00:02.07 | Compositing | Operation 56-248
+Fra:1 Mem:20389.70M (Peak 21275.64M) | Time:00:02.11 | Compositing | Operation 57-248
+Fra:1 Mem:20769.39M (Peak 21275.64M) | Time:00:02.16 | Compositing | Operation 58-248
+Fra:1 Mem:20895.95M (Peak 21275.64M) | Time:00:02.18 | Compositing | Operation 59-248
+Fra:1 Mem:21275.64M (Peak 21402.20M) | Time:00:02.23 | Compositing | Operation 60-248
+Fra:1 Mem:20895.95M (Peak 21402.20M) | Time:00:02.26 | Compositing | Operation 61-248
+Fra:1 Mem:21275.64M (Peak 21402.20M) | Time:00:02.32 | Compositing | Operation 62-248
+Fra:1 Mem:21275.64M (Peak 21402.20M) | Time:00:02.32 | Compositing | Operation 63-248
+Fra:1 Mem:21275.64M (Peak 21402.20M) | Time:00:02.32 | Compositing | Operation 64-248
+Fra:1 Mem:21402.20M (Peak 21402.20M) | Time:00:02.34 | Compositing | Operation 65-248
+Fra:1 Mem:21402.20M (Peak 21402.20M) | Time:00:02.34 | Compositing | Operation 66-248
+Fra:1 Mem:21781.89M (Peak 21908.45M) | Time:00:02.39 | Compositing | Operation 67-248
+Fra:1 Mem:22161.57M (Peak 22288.14M) | Time:00:02.44 | Compositing | Operation 68-248
+Fra:1 Mem:22161.57M (Peak 22288.14M) | Time:00:02.44 | Compositing | Operation 69-248
+Fra:1 Mem:22161.57M (Peak 22288.14M) | Time:00:02.44 | Compositing | Operation 70-248
+Fra:1 Mem:22161.57M (Peak 22288.14M) | Time:00:02.44 | Compositing | Operation 71-248
+Fra:1 Mem:22288.14M (Peak 22288.14M) | Time:00:02.46 | Compositing | Operation 72-248
+Fra:1 Mem:22288.14M (Peak 22288.14M) | Time:00:02.46 | Compositing | Operation 73-248
+Fra:1 Mem:22667.82M (Peak 22794.39M) | Time:00:02.51 | Compositing | Operation 74-248
+Fra:1 Mem:23047.51M (Peak 23174.07M) | Time:00:02.55 | Compositing | Operation 75-248
+Fra:1 Mem:23047.51M (Peak 23174.07M) | Time:00:02.55 | Compositing | Operation 76-248
+Fra:1 Mem:23047.51M (Peak 23174.07M) | Time:00:02.55 | Compositing | Operation 77-248
+Fra:1 Mem:23047.51M (Peak 23174.07M) | Time:00:02.55 | Compositing | Operation 78-248
+Fra:1 Mem:23174.07M (Peak 23174.07M) | Time:00:02.57 | Compositing | Operation 79-248
+Fra:1 Mem:23174.07M (Peak 23174.07M) | Time:00:02.57 | Compositing | Operation 80-248
+Fra:1 Mem:23553.76M (Peak 23680.32M) | Time:00:02.62 | Compositing | Operation 81-248
+Fra:1 Mem:23933.45M (Peak 24060.01M) | Time:00:02.66 | Compositing | Operation 82-248
+Fra:1 Mem:23933.45M (Peak 24060.01M) | Time:00:02.66 | Compositing | Operation 83-248
+Fra:1 Mem:23933.45M (Peak 24060.01M) | Time:00:02.66 | Compositing | Operation 84-248
+Fra:1 Mem:23933.45M (Peak 24439.70M) | Time:00:02.72 | Compositing | Operation 85-248
+Fra:1 Mem:23933.45M (Peak 24439.70M) | Time:00:02.72 | Compositing | Operation 86-248
+Fra:1 Mem:23933.45M (Peak 24439.70M) | Time:00:02.78 | Compositing | Operation 87-248
+Fra:1 Mem:23933.45M (Peak 24439.70M) | Time:00:02.78 | Compositing | Operation 88-248
+Fra:1 Mem:23933.45M (Peak 24439.70M) | Time:00:02.85 | Compositing | Operation 89-248
+Fra:1 Mem:24060.01M (Peak 24439.70M) | Time:00:02.87 | Compositing | Operation 90-248
+Fra:1 Mem:24060.01M (Peak 24439.70M) | Time:00:02.87 | Compositing | Operation 91-248
+Fra:1 Mem:24439.70M (Peak 24566.26M) | Time:00:02.92 | Compositing | Operation 92-248
+Fra:1 Mem:24439.70M (Peak 24945.95M) | Time:00:02.98 | Compositing | Operation 93-248
+Fra:1 Mem:24439.70M (Peak 24945.95M) | Time:00:02.98 | Compositing | Operation 94-248
+Fra:1 Mem:24439.70M (Peak 24945.95M) | Time:00:02.98 | Compositing | Operation 95-248
+Fra:1 Mem:24439.70M (Peak 24945.95M) | Time:00:02.98 | Compositing | Operation 96-248
+Fra:1 Mem:24566.26M (Peak 24945.95M) | Time:00:03.00 | Compositing | Operation 97-248
+Fra:1 Mem:24566.26M (Peak 24945.95M) | Time:00:03.00 | Compositing | Operation 98-248
+Fra:1 Mem:24945.95M (Peak 25072.51M) | Time:00:03.05 | Compositing | Operation 99-248
+Fra:1 Mem:24945.95M (Peak 25452.20M) | Time:00:03.11 | Compositing | Operation 100-248
+Fra:1 Mem:24945.95M (Peak 25452.20M) | Time:00:03.11 | Compositing | Operation 101-248
+Fra:1 Mem:24945.95M (Peak 25452.20M) | Time:00:03.11 | Compositing | Operation 102-248
+Fra:1 Mem:24945.95M (Peak 25452.20M) | Time:00:03.11 | Compositing | Operation 103-248
+Fra:1 Mem:25072.51M (Peak 25452.20M) | Time:00:03.13 | Compositing | Operation 104-248
+Fra:1 Mem:25072.51M (Peak 25452.20M) | Time:00:03.13 | Compositing | Operation 105-248
+Fra:1 Mem:25452.20M (Peak 25578.76M) | Time:00:03.18 | Compositing | Operation 106-248
+Fra:1 Mem:25452.20M (Peak 25958.45M) | Time:00:03.23 | Compositing | Operation 107-248
+Fra:1 Mem:25452.20M (Peak 25958.45M) | Time:00:03.23 | Compositing | Operation 108-248
+Fra:1 Mem:25452.20M (Peak 25958.45M) | Time:00:03.36 | Compositing | Operation 109-248
+Fra:1 Mem:25452.20M (Peak 25958.45M) | Time:00:03.50 | Compositing | Operation 110-248
+Fra:1 Mem:25452.20M (Peak 25958.45M) | Time:00:03.65 | Compositing | Operation 111-248
+Fra:1 Mem:25452.20M (Peak 25958.45M) | Time:00:03.65 | Compositing | Operation 112-248
+Fra:1 Mem:25452.20M (Peak 25958.45M) | Time:00:03.65 | Compositing | Operation 113-248
+Fra:1 Mem:25831.89M (Peak 25958.45M) | Time:00:03.71 | Compositing | Operation 114-248
+Fra:1 Mem:25831.89M (Peak 26338.14M) | Time:00:03.80 | Compositing | Operation 115-248
+Fra:1 Mem:25831.89M (Peak 26338.14M) | Time:00:03.80 | Compositing | Operation 116-248
+Fra:1 Mem:25831.89M (Peak 26338.14M) | Time:00:03.80 | Compositing | Operation 117-248
+Fra:1 Mem:25831.89M (Peak 26338.14M) | Time:00:03.80 | Compositing | Operation 118-248
+Fra:1 Mem:25958.45M (Peak 26338.14M) | Time:00:03.84 | Compositing | Operation 119-248
+Fra:1 Mem:25958.45M (Peak 26338.14M) | Time:00:03.84 | Compositing | Operation 120-248
+Fra:1 Mem:26338.14M (Peak 26464.70M) | Time:00:03.90 | Compositing | Operation 121-248
+Fra:1 Mem:26338.14M (Peak 26844.39M) | Time:00:03.97 | Compositing | Operation 122-248
+Fra:1 Mem:26338.14M (Peak 26844.39M) | Time:00:03.97 | Compositing | Operation 123-248
+Fra:1 Mem:26338.14M (Peak 26844.39M) | Time:00:03.97 | Compositing | Operation 124-248
+Fra:1 Mem:26338.14M (Peak 26844.39M) | Time:00:03.97 | Compositing | Operation 125-248
+Fra:1 Mem:26464.70M (Peak 26844.39M) | Time:00:04.00 | Compositing | Operation 126-248
+Fra:1 Mem:26464.70M (Peak 26844.39M) | Time:00:04.00 | Compositing | Operation 127-248
+Fra:1 Mem:26844.39M (Peak 26970.95M) | Time:00:04.05 | Compositing | Operation 128-248
+Fra:1 Mem:26844.39M (Peak 27350.64M) | Time:00:04.12 | Compositing | Operation 129-248
+Fra:1 Mem:26844.39M (Peak 27350.64M) | Time:00:04.12 | Compositing | Operation 130-248
+Fra:1 Mem:26464.70M (Peak 27350.64M) | Time:00:04.16 | Compositing | Operation 131-248
+Fra:1 Mem:26085.01M (Peak 27350.64M) | Time:00:04.20 | Compositing | Operation 132-248
+Fra:1 Mem:25705.32M (Peak 27350.64M) | Time:00:04.24 | Compositing | Operation 133-248
+Fra:1 Mem:25705.32M (Peak 27350.64M) | Time:00:04.24 | Compositing | Operation 134-248
+Fra:1 Mem:25705.32M (Peak 27350.64M) | Time:00:04.24 | Compositing | Operation 135-248
+Fra:1 Mem:25831.89M (Peak 27350.64M) | Time:00:04.28 | Compositing | Operation 136-248
+Fra:1 Mem:25831.89M (Peak 27350.64M) | Time:00:04.28 | Compositing | Operation 137-248
+Fra:1 Mem:25831.89M (Peak 27350.64M) | Time:00:04.35 | Compositing | Operation 138-248
+Fra:1 Mem:25831.89M (Peak 27350.64M) | Time:00:04.35 | Compositing | Operation 139-248
+Fra:1 Mem:25831.89M (Peak 27350.64M) | Time:00:04.35 | Compositing | Operation 140-248
+Fra:1 Mem:25831.89M (Peak 27350.64M) | Time:00:04.35 | Compositing | Operation 141-248
+Fra:1 Mem:25958.45M (Peak 27350.64M) | Time:00:04.38 | Compositing | Operation 142-248
+Fra:1 Mem:25958.45M (Peak 27350.64M) | Time:00:04.38 | Compositing | Operation 143-248
+Fra:1 Mem:26338.14M (Peak 27350.64M) | Time:00:04.42 | Compositing | Operation 144-248
+Fra:1 Mem:26338.14M (Peak 27350.64M) | Time:00:04.49 | Compositing | Operation 145-248
+Fra:1 Mem:26338.14M (Peak 27350.64M) | Time:00:04.49 | Compositing | Operation 146-248
+Fra:1 Mem:26338.14M (Peak 27350.64M) | Time:00:04.49 | Compositing | Operation 147-248
+Fra:1 Mem:26338.14M (Peak 27350.64M) | Time:00:04.49 | Compositing | Operation 148-248
+Fra:1 Mem:26464.70M (Peak 27350.64M) | Time:00:04.51 | Compositing | Operation 149-248
+Fra:1 Mem:26464.70M (Peak 27350.64M) | Time:00:04.51 | Compositing | Operation 150-248
+Fra:1 Mem:26844.39M (Peak 27350.64M) | Time:00:04.56 | Compositing | Operation 151-248
+Fra:1 Mem:26844.39M (Peak 27350.64M) | Time:00:04.63 | Compositing | Operation 152-248
+Fra:1 Mem:26844.39M (Peak 27350.64M) | Time:00:04.63 | Compositing | Operation 153-248
+Fra:1 Mem:26844.39M (Peak 27350.64M) | Time:00:04.63 | Compositing | Operation 154-248
+Fra:1 Mem:26970.95M (Peak 27350.64M) | Time:00:04.80 | Compositing | Operation 155-248
+Fra:1 Mem:27350.64M (Peak 27477.20M) | Time:00:04.85 | Compositing | Operation 156-248
+Fra:1 Mem:27350.64M (Peak 27477.20M) | Time:00:04.85 | Compositing | Operation 157-248
+Fra:1 Mem:27477.20M (Peak 27477.20M) | Time:00:05.00 | Compositing | Operation 158-248
+Fra:1 Mem:27856.89M (Peak 27983.45M) | Time:00:05.06 | Compositing | Operation 159-248
+Fra:1 Mem:27856.89M (Peak 27983.45M) | Time:00:05.06 | Compositing | Operation 160-248
+Fra:1 Mem:27983.45M (Peak 27983.45M) | Time:00:05.21 | Compositing | Operation 161-248
+Fra:1 Mem:28363.14M (Peak 28489.70M) | Time:00:05.26 | Compositing | Operation 162-248
+Fra:1 Mem:28363.14M (Peak 28489.70M) | Time:00:05.26 | Compositing | Operation 163-248
+Fra:1 Mem:28363.14M (Peak 28489.70M) | Time:00:05.26 | Compositing | Operation 164-248
+Fra:1 Mem:28489.70M (Peak 28489.70M) | Time:00:05.28 | Compositing | Operation 165-248
+Fra:1 Mem:28489.70M (Peak 28489.70M) | Time:00:05.28 | Compositing | Operation 166-248
+Fra:1 Mem:28869.39M (Peak 28995.95M) | Time:00:05.33 | Compositing | Operation 167-248
+Fra:1 Mem:28869.39M (Peak 29375.64M) | Time:00:05.40 | Compositing | Operation 168-248
+Fra:1 Mem:28869.39M (Peak 29375.64M) | Time:00:05.40 | Compositing | Operation 169-248
+Fra:1 Mem:28869.39M (Peak 29375.64M) | Time:00:05.40 | Compositing | Operation 170-248
+Fra:1 Mem:28869.39M (Peak 29375.64M) | Time:00:05.40 | Compositing | Operation 171-248
+Fra:1 Mem:28995.95M (Peak 29375.64M) | Time:00:05.43 | Compositing | Operation 172-248
+Fra:1 Mem:28995.95M (Peak 29375.64M) | Time:00:05.43 | Compositing | Operation 173-248
+Fra:1 Mem:29375.64M (Peak 29502.20M) | Time:00:05.48 | Compositing | Operation 174-248
+Fra:1 Mem:29375.64M (Peak 29881.89M) | Time:00:05.55 | Compositing | Operation 175-248
+Fra:1 Mem:29375.64M (Peak 29881.89M) | Time:00:05.55 | Compositing | Operation 176-248
+Fra:1 Mem:29375.64M (Peak 29881.89M) | Time:00:05.55 | Compositing | Operation 177-248
+Fra:1 Mem:29375.64M (Peak 29881.89M) | Time:00:05.55 | Compositing | Operation 178-248
+Fra:1 Mem:29502.20M (Peak 29881.89M) | Time:00:05.57 | Compositing | Operation 179-248
+Fra:1 Mem:29502.20M (Peak 29881.89M) | Time:00:05.57 | Compositing | Operation 180-248
+Fra:1 Mem:29881.89M (Peak 30008.45M) | Time:00:05.62 | Compositing | Operation 181-248
+Fra:1 Mem:29881.89M (Peak 30388.14M) | Time:00:05.69 | Compositing | Operation 182-248
+Fra:1 Mem:29881.89M (Peak 30388.14M) | Time:00:05.69 | Compositing | Operation 183-248
+Fra:1 Mem:29881.89M (Peak 30388.14M) | Time:00:05.69 | Compositing | Operation 184-248
+Fra:1 Mem:29881.89M (Peak 30388.14M) | Time:00:05.69 | Compositing | Operation 185-248
+Fra:1 Mem:29881.89M (Peak 30388.14M) | Time:00:05.71 | Compositing | Operation 186-248
+Fra:1 Mem:29881.89M (Peak 30388.14M) | Time:00:05.71 | Compositing | Operation 187-248
+Fra:1 Mem:29502.20M (Peak 30388.14M) | Time:00:05.75 | Compositing | Operation 188-248
+Fra:1 Mem:29502.20M (Peak 30388.14M) | Time:00:05.75 | Compositing | Operation 189-248
+Fra:1 Mem:29502.20M (Peak 30388.14M) | Time:00:05.75 | Compositing | Operation 190-248
+Fra:1 Mem:29502.20M (Peak 30388.14M) | Time:00:05.79 | Compositing | Operation 191-248
+Fra:1 Mem:29502.20M (Peak 30388.14M) | Time:00:05.79 | Compositing | Operation 192-248
+Fra:1 Mem:29122.51M (Peak 30388.14M) | Time:00:05.85 | Compositing | Operation 193-248
+Fra:1 Mem:29122.51M (Peak 30388.14M) | Time:00:05.85 | Compositing | Operation 194-248
+Fra:1 Mem:29122.51M (Peak 30388.14M) | Time:00:05.85 | Compositing | Operation 195-248
+Fra:1 Mem:29122.51M (Peak 30388.14M) | Time:00:05.88 | Compositing | Operation 196-248
+Fra:1 Mem:29122.51M (Peak 30388.14M) | Time:00:05.88 | Compositing | Operation 197-248
+Fra:1 Mem:28742.82M (Peak 30388.14M) | Time:00:05.93 | Compositing | Operation 198-248
+Fra:1 Mem:28869.39M (Peak 30388.14M) | Time:00:05.97 | Compositing | Operation 199-248
+Fra:1 Mem:28869.39M (Peak 30388.14M) | Time:00:05.97 | Compositing | Operation 200-248
+Fra:1 Mem:29249.07M (Peak 30388.14M) | Time:00:06.03 | Compositing | Operation 201-248
+Fra:1 Mem:29249.07M (Peak 30388.14M) | Time:00:06.10 | Compositing | Operation 202-248
+Fra:1 Mem:29249.07M (Peak 30388.14M) | Time:00:06.10 | Compositing | Operation 203-248
+Fra:1 Mem:29249.07M (Peak 30388.14M) | Time:00:06.13 | Compositing | Operation 204-248
+Fra:1 Mem:29249.07M (Peak 30388.14M) | Time:00:06.13 | Compositing | Operation 205-248
+Fra:1 Mem:29628.76M (Peak 30388.14M) | Time:00:06.18 | Compositing | Operation 206-248
+Fra:1 Mem:29628.76M (Peak 30388.14M) | Time:00:06.25 | Compositing | Operation 207-248
+Fra:1 Mem:29628.76M (Peak 30388.14M) | Time:00:06.25 | Compositing | Operation 208-248
+Fra:1 Mem:29628.76M (Peak 30388.14M) | Time:00:06.28 | Compositing | Operation 209-248
+Fra:1 Mem:29628.76M (Peak 30388.14M) | Time:00:06.28 | Compositing | Operation 210-248
+Fra:1 Mem:30008.45M (Peak 30388.14M) | Time:00:06.34 | Compositing | Operation 211-248
+Fra:1 Mem:30008.45M (Peak 30514.70M) | Time:00:06.41 | Compositing | Operation 212-248
+Fra:1 Mem:30008.45M (Peak 30514.70M) | Time:00:06.41 | Compositing | Operation 213-248
+Fra:1 Mem:30008.45M (Peak 30514.70M) | Time:00:06.41 | Compositing | Operation 214-248
+Fra:1 Mem:30008.45M (Peak 30514.70M) | Time:00:06.41 | Compositing | Operation 215-248
+Fra:1 Mem:30008.45M (Peak 30514.70M) | Time:00:06.44 | Compositing | Operation 216-248
+Fra:1 Mem:30008.45M (Peak 30514.70M) | Time:00:06.44 | Compositing | Operation 217-248
+Fra:1 Mem:29881.89M (Peak 30514.70M) | Time:00:06.48 | Compositing | Operation 218-248
+Fra:1 Mem:29881.89M (Peak 30514.70M) | Time:00:06.48 | Compositing | Operation 219-248
+Fra:1 Mem:29881.89M (Peak 30514.70M) | Time:00:06.52 | Compositing | Operation 220-248
+Fra:1 Mem:29881.89M (Peak 30514.70M) | Time:00:06.52 | Compositing | Operation 221-248
+Fra:1 Mem:29755.32M (Peak 30514.70M) | Time:00:06.56 | Compositing | Operation 222-248
+Fra:1 Mem:29755.32M (Peak 30514.70M) | Time:00:06.56 | Compositing | Operation 223-248
+Fra:1 Mem:29755.32M (Peak 30514.70M) | Time:00:06.59 | Compositing | Operation 224-248
+Fra:1 Mem:29755.32M (Peak 30514.70M) | Time:00:06.59 | Compositing | Operation 225-248
+Fra:1 Mem:29628.76M (Peak 30514.70M) | Time:00:06.63 | Compositing | Operation 226-248
+Fra:1 Mem:29628.76M (Peak 30514.70M) | Time:00:06.63 | Compositing | Operation 227-248
+Fra:1 Mem:30008.45M (Peak 30514.70M) | Time:00:06.69 | Compositing | Operation 228-248
+Fra:1 Mem:30008.45M (Peak 30514.70M) | Time:00:06.75 | Compositing | Operation 229-248
+Fra:1 Mem:30008.45M (Peak 30514.70M) | Time:00:06.75 | Compositing | Operation 230-248
+Fra:1 Mem:30388.14M (Peak 30514.70M) | Time:00:06.82 | Compositing | Operation 231-248
+Fra:1 Mem:30388.14M (Peak 30894.39M) | Time:00:06.91 | Compositing | Operation 232-248
+Fra:1 Mem:30388.14M (Peak 30894.39M) | Time:00:06.91 | Compositing | Operation 233-248
+Fra:1 Mem:30767.82M (Peak 30894.39M) | Time:00:06.97 | Compositing | Operation 234-248
+Fra:1 Mem:30767.82M (Peak 31274.07M) | Time:00:07.04 | Compositing | Operation 235-248
+Fra:1 Mem:30767.82M (Peak 31274.07M) | Time:00:07.04 | Compositing | Operation 236-248
+Fra:1 Mem:30767.82M (Peak 31274.07M) | Time:00:07.07 | Compositing | Operation 237-248
+Fra:1 Mem:31274.07M (Peak 31274.07M) | Time:00:07.12 | Compositing | Operation 238-248
+Fra:1 Mem:31653.76M (Peak 31780.32M) | Time:00:07.16 | Compositing | Operation 239-248
+Fra:1 Mem:32033.45M (Peak 32160.01M) | Time:00:07.21 | Compositing | Operation 240-248
+Fra:1 Mem:32413.14M (Peak 32539.70M) | Time:00:07.25 | Compositing | Operation 241-248
+Fra:1 Mem:32792.82M (Peak 32919.39M) | Time:00:07.30 | Compositing | Operation 242-248
+Fra:1 Mem:33172.51M (Peak 33299.07M) | Time:00:07.35 | Compositing | Operation 243-248
+Fra:1 Mem:33552.20M (Peak 33678.76M) | Time:00:07.40 | Compositing | Operation 244-248
+Fra:1 Mem:33552.20M (Peak 34058.45M) | Time:00:07.46 | Compositing | Operation 245-248
+Fra:1 Mem:33552.20M (Peak 34058.45M) | Time:00:07.53 | Compositing | Operation 246-248
+Fra:1 Mem:33552.20M (Peak 34058.45M) | Time:00:07.60 | Compositing | Operation 247-248
+Fra:1 Mem:33425.64M (Peak 34058.45M) | Time:00:07.68 | Compositing | Operation 248-248
+Fra:1 Mem:33425.69M (Peak 49119.38M) | Time:00:14.01 | Compositing | Operation 249-248
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_outlines-depth_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_full-image_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_outlines-simple_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_brownroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_exoskeleton_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_brownroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_greenroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_exoskeleton_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_outlines-simple_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_otherground_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_outlines-depth_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_livingfacade_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_rewilded_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_otherground_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_outlines-depth_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_brownroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_full-image_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_livingfacade_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_footprintdepaved_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_greenroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_outlines-simple_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_full-image_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_rewilded_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_otherground_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_footprintdepaved_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\envelope_voxels_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\trending_bioenvelope_exoskeleton_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_greenroof_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\base_bioenvelope_rewilded_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_livingfacade_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\positive_bioenvelope_footprintdepaved_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430\_discard_render.png0001.png'
+Time: 01:42.93 (Saving: 00:02.89)
+
+[render_current_bioenvelope] repathed 'Current BioEnvelope :: EXR Existing' -> parade_timeline__existing_condition_positive__8k.exr
+[render_current_bioenvelope] repathed 'Current BioEnvelope :: EXR BioEnvelope' -> parade_timeline__bioenvelope_positive__8k.exr
+[render_current_bioenvelope] repathed 'Current BioEnvelope :: EXR Trending' -> parade_timeline__bioenvelope_trending__8k.exr
+[render_current_bioenvelope] resolution 7680x4320 from parade_timeline__existing_condition_positive__8k.exr
+[render_current_bioenvelope] rendering animation (frame 1, 31 slots)...
+[render_current_bioenvelope] render done
+[render_current_bioenvelope] renamed base_bioenvelope_brownroof_0001.png -> base_bioenvelope_brownroof.png
+[render_current_bioenvelope] renamed base_bioenvelope_exoskeleton_0001.png -> base_bioenvelope_exoskeleton.png
+[render_current_bioenvelope] renamed base_bioenvelope_footprintdepaved_0001.png -> base_bioenvelope_footprintdepaved.png
+[render_current_bioenvelope] renamed base_bioenvelope_full-image_0001.png -> base_bioenvelope_full-image.png
+[render_current_bioenvelope] renamed base_bioenvelope_greenroof_0001.png -> base_bioenvelope_greenroof.png
+[render_current_bioenvelope] renamed base_bioenvelope_livingfacade_0001.png -> base_bioenvelope_livingfacade.png
+[render_current_bioenvelope] renamed base_bioenvelope_otherground_0001.png -> base_bioenvelope_otherground.png
+[render_current_bioenvelope] renamed base_bioenvelope_outlines-depth_0001.png -> base_bioenvelope_outlines-depth.png
+[render_current_bioenvelope] renamed base_bioenvelope_outlines-simple_0001.png -> base_bioenvelope_outlines-simple.png
+[render_current_bioenvelope] renamed base_bioenvelope_rewilded_0001.png -> base_bioenvelope_rewilded.png
+[render_current_bioenvelope] renamed envelope_voxels_0001.png -> envelope_voxels.png
+[render_current_bioenvelope] renamed positive_bioenvelope_brownroof_0001.png -> positive_bioenvelope_brownroof.png
+[render_current_bioenvelope] renamed positive_bioenvelope_exoskeleton_0001.png -> positive_bioenvelope_exoskeleton.png
+[render_current_bioenvelope] renamed positive_bioenvelope_footprintdepaved_0001.png -> positive_bioenvelope_footprintdepaved.png
+[render_current_bioenvelope] renamed positive_bioenvelope_full-image_0001.png -> positive_bioenvelope_full-image.png
+[render_current_bioenvelope] renamed positive_bioenvelope_greenroof_0001.png -> positive_bioenvelope_greenroof.png
+[render_current_bioenvelope] renamed positive_bioenvelope_livingfacade_0001.png -> positive_bioenvelope_livingfacade.png
+[render_current_bioenvelope] renamed positive_bioenvelope_otherground_0001.png -> positive_bioenvelope_otherground.png
+[render_current_bioenvelope] renamed positive_bioenvelope_outlines-depth_0001.png -> positive_bioenvelope_outlines-depth.png
+[render_current_bioenvelope] renamed positive_bioenvelope_outlines-simple_0001.png -> positive_bioenvelope_outlines-simple.png
+[render_current_bioenvelope] renamed positive_bioenvelope_rewilded_0001.png -> positive_bioenvelope_rewilded.png
+[render_current_bioenvelope] renamed trending_bioenvelope_brownroof_0001.png -> trending_bioenvelope_brownroof.png
+[render_current_bioenvelope] renamed trending_bioenvelope_exoskeleton_0001.png -> trending_bioenvelope_exoskeleton.png
+[render_current_bioenvelope] renamed trending_bioenvelope_footprintdepaved_0001.png -> trending_bioenvelope_footprintdepaved.png
+[render_current_bioenvelope] renamed trending_bioenvelope_full-image_0001.png -> trending_bioenvelope_full-image.png
+[render_current_bioenvelope] renamed trending_bioenvelope_greenroof_0001.png -> trending_bioenvelope_greenroof.png
+[render_current_bioenvelope] renamed trending_bioenvelope_livingfacade_0001.png -> trending_bioenvelope_livingfacade.png
+[render_current_bioenvelope] renamed trending_bioenvelope_otherground_0001.png -> trending_bioenvelope_otherground.png
+[render_current_bioenvelope] renamed trending_bioenvelope_outlines-depth_0001.png -> trending_bioenvelope_outlines-depth.png
+[render_current_bioenvelope] renamed trending_bioenvelope_outlines-simple_0001.png -> trending_bioenvelope_outlines-simple.png
+[render_current_bioenvelope] renamed trending_bioenvelope_rewilded_0001.png -> trending_bioenvelope_rewilded.png
+[render_current_bioenvelope] 31/31 slots present
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_shading.blend"
+Fra:1 Mem:38993.56M (Peak 38993.56M) | Time:00:00.00 | Compositing
+Fra:1 Mem:38993.60M (Peak 38993.60M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:38993.62M (Peak 38993.62M) | Time:00:00.00 | Compositing | Operation 2-92
+Fra:1 Mem:38993.62M (Peak 38993.62M) | Time:00:00.00 | Compositing | Operation 3-92
+Fra:1 Mem:40006.19M (Peak 40006.19M) | Time:00:00.31 | Compositing | Operation 4-92
+Fra:1 Mem:40385.88M (Peak 40385.88M) | Time:00:00.38 | Compositing | Operation 5-92
+Fra:1 Mem:40765.57M (Peak 40765.57M) | Time:00:00.44 | Compositing | Operation 6-92
+Fra:1 Mem:41145.25M (Peak 41145.25M) | Time:00:00.48 | Compositing | Operation 7-92
+Fra:1 Mem:41524.94M (Peak 41524.94M) | Time:00:00.53 | Compositing | Operation 8-92
+Fra:1 Mem:41524.94M (Peak 41524.94M) | Time:00:00.53 | Compositing | Operation 9-92
+Fra:1 Mem:41524.94M (Peak 41904.63M) | Time:00:13.08 | Compositing | Operation 10-92
+Fra:1 Mem:42031.19M (Peak 42031.19M) | Time:00:13.18 | Compositing | Operation 11-92
+Fra:1 Mem:42031.19M (Peak 42031.19M) | Time:00:13.18 | Compositing | Operation 12-92
+Fra:1 Mem:42031.19M (Peak 42410.88M) | Time:00:26.21 | Compositing | Operation 13-92
+Fra:1 Mem:42537.44M (Peak 42537.44M) | Time:00:26.30 | Compositing | Operation 14-92
+Fra:1 Mem:42664.00M (Peak 42664.00M) | Time:00:26.32 | Compositing | Operation 15-92
+Fra:1 Mem:42790.57M (Peak 42790.57M) | Time:00:26.35 | Compositing | Operation 16-92
+Fra:1 Mem:42790.57M (Peak 42790.57M) | Time:00:26.35 | Compositing | Operation 17-92
+Fra:1 Mem:42790.57M (Peak 43170.25M) | Time:00:39.42 | Compositing | Operation 18-92
+Fra:1 Mem:43296.82M (Peak 43296.82M) | Time:00:39.51 | Compositing | Operation 19-92
+Fra:1 Mem:43296.82M (Peak 43296.82M) | Time:00:39.51 | Compositing | Operation 20-92
+Fra:1 Mem:43296.82M (Peak 43676.50M) | Time:00:52.10 | Compositing | Operation 21-92
+Fra:1 Mem:43803.07M (Peak 43803.07M) | Time:00:52.19 | Compositing | Operation 22-92
+Fra:1 Mem:43929.63M (Peak 43929.63M) | Time:00:52.21 | Compositing | Operation 23-92
+Fra:1 Mem:43549.94M (Peak 44435.88M) | Time:00:57.89 | Compositing | Operation 24-92
+Fra:1 Mem:43170.25M (Peak 44435.88M) | Time:01:03.75 | Compositing | Operation 25-92
+Fra:1 Mem:43170.25M (Peak 44435.88M) | Time:01:03.86 | Compositing | Operation 26-92
+Fra:1 Mem:43170.25M (Peak 44435.88M) | Time:01:03.98 | Compositing | Operation 27-92
+Fra:1 Mem:42790.57M (Peak 44435.88M) | Time:01:09.79 | Compositing | Operation 28-92
+Fra:1 Mem:42917.13M (Peak 44435.88M) | Time:01:09.81 | Compositing | Operation 29-92
+Fra:1 Mem:42537.44M (Peak 44435.88M) | Time:01:15.55 | Compositing | Operation 30-92
+Fra:1 Mem:42664.00M (Peak 44435.88M) | Time:01:15.56 | Compositing | Operation 31-92
+Fra:1 Mem:42664.00M (Peak 44435.88M) | Time:01:15.66 | Compositing | Operation 32-92
+Fra:1 Mem:42284.32M (Peak 44435.88M) | Time:01:15.76 | Compositing | Operation 33-92
+Fra:1 Mem:41904.63M (Peak 44435.88M) | Time:01:15.86 | Compositing | Operation 34-92
+Fra:1 Mem:42284.32M (Peak 44435.88M) | Time:01:15.96 | Compositing | Operation 35-92
+Fra:1 Mem:42664.00M (Peak 44435.88M) | Time:01:16.02 | Compositing | Operation 36-92
+Fra:1 Mem:42284.32M (Peak 44435.88M) | Time:01:16.11 | Compositing | Operation 37-92
+Fra:1 Mem:42284.32M (Peak 44435.88M) | Time:01:16.19 | Compositing | Operation 38-92
+Fra:1 Mem:41904.63M (Peak 44435.88M) | Time:01:16.28 | Compositing | Operation 39-92
+Fra:1 Mem:41904.63M (Peak 44435.88M) | Time:01:16.37 | Compositing | Operation 40-92
+Fra:1 Mem:42284.32M (Peak 44435.88M) | Time:01:16.45 | Compositing | Operation 41-92
+Fra:1 Mem:42284.32M (Peak 44435.88M) | Time:01:16.45 | Compositing | Operation 42-92
+Fra:1 Mem:42790.57M (Peak 44435.88M) | Time:01:16.52 | Compositing | Operation 43-92
+Fra:1 Mem:42790.57M (Peak 44435.88M) | Time:01:16.52 | Compositing | Operation 44-92
+Fra:1 Mem:42790.57M (Peak 44435.88M) | Time:01:16.52 | Compositing | Operation 45-92
+Fra:1 Mem:43170.25M (Peak 44435.88M) | Time:01:16.60 | Compositing | Operation 46-92
+Fra:1 Mem:43170.25M (Peak 44435.88M) | Time:01:16.60 | Compositing | Operation 47-92
+Fra:1 Mem:43170.25M (Peak 44435.88M) | Time:01:17.21 | Compositing | Operation 48-92
+Fra:1 Mem:43170.25M (Peak 44435.88M) | Time:01:17.80 | Compositing | Operation 49-92
+Fra:1 Mem:43170.25M (Peak 44435.88M) | Time:01:17.80 | Compositing | Operation 50-92
+Fra:1 Mem:43549.94M (Peak 44435.88M) | Time:01:17.87 | Compositing | Operation 51-92
+Fra:1 Mem:43549.94M (Peak 44435.88M) | Time:01:17.87 | Compositing | Operation 52-92
+Fra:1 Mem:43929.63M (Peak 44435.88M) | Time:01:17.94 | Compositing | Operation 53-92
+Fra:1 Mem:43929.63M (Peak 44435.88M) | Time:01:17.94 | Compositing | Operation 54-92
+Fra:1 Mem:44309.32M (Peak 44435.88M) | Time:01:18.01 | Compositing | Operation 55-92
+Fra:1 Mem:44309.32M (Peak 44435.88M) | Time:01:18.01 | Compositing | Operation 56-92
+Fra:1 Mem:44689.00M (Peak 44815.57M) | Time:01:18.08 | Compositing | Operation 57-92
+Fra:1 Mem:44689.00M (Peak 44815.57M) | Time:01:18.08 | Compositing | Operation 58-92
+Fra:1 Mem:45068.69M (Peak 45195.25M) | Time:01:18.18 | Compositing | Operation 59-92
+Fra:1 Mem:45068.69M (Peak 45195.25M) | Time:01:18.18 | Compositing | Operation 60-92
+Fra:1 Mem:45068.69M (Peak 46334.32M) | Time:01:18.77 | Compositing | Operation 61-92
+Fra:1 Mem:45195.25M (Peak 46334.32M) | Time:01:18.79 | Compositing | Operation 62-92
+Fra:1 Mem:45195.25M (Peak 46334.32M) | Time:01:18.91 | Compositing | Operation 63-92
+Fra:1 Mem:45321.82M (Peak 46334.32M) | Time:01:18.94 | Compositing | Operation 64-92
+Fra:1 Mem:45321.82M (Peak 46334.32M) | Time:01:19.08 | Compositing | Operation 65-92
+Fra:1 Mem:45321.82M (Peak 46334.32M) | Time:01:19.08 | Compositing | Operation 66-92
+Fra:1 Mem:44942.13M (Peak 46334.32M) | Time:01:19.18 | Compositing | Operation 67-92
+Fra:1 Mem:44562.44M (Peak 46334.32M) | Time:01:19.30 | Compositing | Operation 68-92
+Fra:1 Mem:44689.00M (Peak 46334.32M) | Time:01:19.34 | Compositing | Operation 69-92
+Fra:1 Mem:44689.00M (Peak 46334.32M) | Time:01:19.46 | Compositing | Operation 70-92
+Fra:1 Mem:44689.00M (Peak 46334.32M) | Time:01:20.03 | Compositing | Operation 71-92
+Fra:1 Mem:44815.57M (Peak 46334.32M) | Time:01:20.08 | Compositing | Operation 72-92
+Fra:1 Mem:44815.57M (Peak 46334.32M) | Time:01:20.22 | Compositing | Operation 73-92
+Fra:1 Mem:44815.57M (Peak 46334.32M) | Time:01:20.81 | Compositing | Operation 74-92
+Fra:1 Mem:44815.57M (Peak 46334.32M) | Time:01:20.95 | Compositing | Operation 75-92
+Fra:1 Mem:44435.88M (Peak 46334.32M) | Time:01:21.07 | Compositing | Operation 76-92
+Fra:1 Mem:44435.88M (Peak 46334.32M) | Time:01:21.20 | Compositing | Operation 77-92
+Fra:1 Mem:44309.32M (Peak 46334.32M) | Time:01:21.36 | Compositing | Operation 78-92
+Fra:1 Mem:44309.32M (Peak 46334.32M) | Time:01:21.43 | Compositing | Operation 79-92
+Fra:1 Mem:44182.75M (Peak 46334.32M) | Time:01:21.57 | Compositing | Operation 80-92
+Fra:1 Mem:44309.32M (Peak 46334.32M) | Time:01:21.60 | Compositing | Operation 81-92
+Fra:1 Mem:44815.57M (Peak 46334.32M) | Time:01:21.68 | Compositing | Operation 82-92
+Fra:1 Mem:44435.88M (Peak 46334.32M) | Time:01:21.75 | Compositing | Operation 83-92
+Fra:1 Mem:44309.32M (Peak 46334.32M) | Time:01:21.87 | Compositing | Operation 84-92
+Fra:1 Mem:43929.63M (Peak 46334.32M) | Time:01:21.97 | Compositing | Operation 85-92
+Fra:1 Mem:43803.07M (Peak 46334.32M) | Time:01:22.09 | Compositing | Operation 86-92
+Fra:1 Mem:43676.50M (Peak 46334.32M) | Time:01:22.24 | Compositing | Operation 87-92
+Fra:1 Mem:43549.94M (Peak 46334.32M) | Time:01:22.37 | Compositing | Operation 88-92
+Fra:1 Mem:43423.38M (Peak 46334.32M) | Time:01:22.50 | Compositing | Operation 89-92
+Fra:1 Mem:43296.82M (Peak 46334.32M) | Time:01:22.64 | Compositing | Operation 90-92
+Fra:1 Mem:43170.25M (Peak 46334.32M) | Time:01:22.83 | Compositing | Operation 91-92
+Fra:1 Mem:43043.69M (Peak 46334.32M) | Time:01:22.94 | Compositing | Operation 92-92
+Fra:1 Mem:43043.70M (Peak 46334.32M) | Time:01:24.32 | Compositing | Operation 93-92
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\shading__20260413_105430\positive_bioenvelope_shading_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\shading__20260413_105430\trending_shading_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\shading__20260413_105430\pathway_shading_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\shading__20260413_105430\trending_bioenvelope_shading_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\shading__20260413_105430\priority_shading_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\shading__20260413_105430\existing_condition_ao_full_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\shading__20260413_105430\_discard_render.png0001.png'
+Time: 01:43.76 (Saving: 00:02.78)
+
+[render_current_shading] repathed 'AO::EXR Existing' -> parade_timeline__existing_condition_positive__8k.exr
+[render_current_shading] repathed 'AO::EXR Pathway' -> parade_timeline__positive_state__8k.exr
+[render_current_shading] repathed 'AO::EXR Priority' -> parade_timeline__positive_priority_state__8k.exr
+[render_current_shading] repathed 'Current BioEnvelope :: EXR BioEnvelope' -> parade_timeline__bioenvelope_positive__8k.exr
+[render_current_shading] repathed 'Current BioEnvelope :: EXR Trending' -> parade_timeline__bioenvelope_trending__8k.exr
+[render_current_shading] repathed 'Current Shading :: BioEnvelope Helper :: EXR Existing Positive' -> parade_timeline__existing_condition_positive__8k.exr
+[render_current_shading] repathed 'Current Shading :: BioEnvelope Helper :: EXR Existing Trending' -> parade_timeline__existing_condition_trending__8k.exr
+[render_current_shading] resolution 7680x4320 from parade_timeline__existing_condition_positive__8k.exr
+[render_current_shading] rendering animation (frame 1, 6 slots)...
+[render_current_shading] render done
+[render_current_shading] renamed existing_condition_ao_full_0001.png -> existing_condition_ao_full.png
+[render_current_shading] renamed pathway_shading_0001.png -> pathway_shading.png
+[render_current_shading] renamed positive_bioenvelope_shading_0001.png -> positive_bioenvelope_shading.png
+[render_current_shading] renamed priority_shading_0001.png -> priority_shading.png
+[render_current_shading] renamed trending_bioenvelope_shading_0001.png -> trending_bioenvelope_shading.png
+[render_current_shading] renamed trending_shading_0001.png -> trending_shading.png
+[render_current_shading] 6/6 slots present
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_base.blend"
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.00 | Compositing | Operation 2-3
+Fra:1 Mem:6089.32M (Peak 6089.32M) | Time:00:00.05 | Compositing | Operation 3-3
+Fra:1 Mem:6595.58M (Peak 7101.82M) | Time:00:00.31 | Compositing | Operation 4-3
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_rgb.png'
+Time: 00:03.67 (Saving: 00:03.35)
+
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.01 | Compositing | Initializing execution
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.01 | Compositing | Operation 2-3
+Fra:1 Mem:6089.33M (Peak 6089.33M) | Time:00:00.09 | Compositing | Operation 3-3
+Fra:1 Mem:6595.58M (Peak 7101.83M) | Time:00:00.41 | Compositing | Operation 4-3
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_white_render.png'
+Time: 00:03.61 (Saving: 00:03.19)
+
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.01 | Compositing | Initializing execution
+Fra:1 Mem:5709.64M (Peak 5709.64M) | Time:00:00.03 | Compositing | Operation 2-12
+Fra:1 Mem:5709.64M (Peak 5836.20M) | Time:00:00.12 | Compositing | Operation 3-12
+Fra:1 Mem:5709.64M (Peak 5836.20M) | Time:00:00.12 | Compositing | Operation 4-12
+Fra:1 Mem:6089.33M (Peak 6215.89M) | Time:00:00.21 | Compositing | Operation 5-12
+Fra:1 Mem:6089.33M (Peak 6595.58M) | Time:00:00.35 | Compositing | Operation 6-12
+Fra:1 Mem:5709.64M (Peak 6595.58M) | Time:00:00.39 | Compositing | Operation 7-12
+Fra:1 Mem:6089.33M (Peak 6595.58M) | Time:00:00.46 | Compositing | Operation 8-12
+Fra:1 Mem:5709.64M (Peak 6595.58M) | Time:00:00.50 | Compositing | Operation 9-12
+Fra:1 Mem:5709.64M (Peak 6595.58M) | Time:00:00.50 | Compositing | Operation 10-12
+Fra:1 Mem:5709.64M (Peak 6595.58M) | Time:00:00.50 | Compositing | Operation 11-12
+Fra:1 Mem:6089.33M (Peak 6595.58M) | Time:00:00.56 | Compositing | Operation 12-12
+Fra:1 Mem:6595.58M (Peak 7101.83M) | Time:00:00.86 | Compositing | Operation 13-12
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_outlines.png'
+Time: 00:03.44 (Saving: 00:02.58)
+
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.01 | Compositing | Initializing execution
+Fra:1 Mem:5709.64M (Peak 5709.64M) | Time:00:00.03 | Compositing | Operation 2-9
+Fra:1 Mem:5709.64M (Peak 5709.64M) | Time:00:00.03 | Compositing | Operation 3-9
+Fra:1 Mem:5709.64M (Peak 5709.64M) | Time:00:00.03 | Compositing | Operation 4-9
+Fra:1 Mem:5836.21M (Peak 5836.21M) | Time:00:00.14 | Compositing | Operation 5-9
+Fra:1 Mem:5836.21M (Peak 5962.77M) | Time:00:00.21 | Compositing | Operation 6-9
+Fra:1 Mem:6215.89M (Peak 6342.46M) | Time:00:00.29 | Compositing | Operation 7-9
+Fra:1 Mem:6215.89M (Peak 6342.46M) | Time:00:00.29 | Compositing | Operation 8-9
+Fra:1 Mem:6089.33M (Peak 6722.14M) | Time:00:00.36 | Compositing | Operation 9-9
+Fra:1 Mem:6595.58M (Peak 7101.83M) | Time:00:00.62 | Compositing | Operation 10-9
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_sim-turns.png'
+Time: 00:03.55 (Saving: 00:02.91)
+
+Fra:1 Mem:5583.01M (Peak 5583.01M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5709.65M (Peak 5709.65M) | Time:00:00.03 | Compositing | Operation 2-10
+Fra:1 Mem:5709.65M (Peak 5709.65M) | Time:00:00.03 | Compositing | Operation 3-10
+Fra:1 Mem:5709.65M (Peak 5709.65M) | Time:00:00.03 | Compositing | Operation 4-10
+Fra:1 Mem:5836.21M (Peak 5836.21M) | Time:00:00.06 | Compositing | Operation 5-10
+Fra:1 Mem:5836.21M (Peak 5962.77M) | Time:00:00.19 | Compositing | Operation 6-10
+Fra:1 Mem:5836.21M (Peak 5962.77M) | Time:00:00.24 | Compositing | Operation 7-10
+Fra:1 Mem:6215.90M (Peak 6342.46M) | Time:00:00.32 | Compositing | Operation 8-10
+Fra:1 Mem:6215.90M (Peak 6342.46M) | Time:00:00.32 | Compositing | Operation 9-10
+Fra:1 Mem:6089.33M (Peak 6722.15M) | Time:00:00.40 | Compositing | Operation 10-10
+Fra:1 Mem:6595.59M (Peak 7101.83M) | Time:00:00.71 | Compositing | Operation 11-10
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_sim-nodes.png'
+Time: 00:03.96 (Saving: 00:03.25)
+
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.01 | Compositing | Initializing execution
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.01 | Compositing | Operation 2-12
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.01 | Compositing | Operation 3-12
+Fra:1 Mem:5709.65M (Peak 5709.65M) | Time:00:00.03 | Compositing | Operation 4-12
+Fra:1 Mem:5836.21M (Peak 5836.21M) | Time:00:00.09 | Compositing | Operation 5-12
+Fra:1 Mem:5836.21M (Peak 5836.21M) | Time:00:00.09 | Compositing | Operation 6-12
+Fra:1 Mem:5836.21M (Peak 5836.21M) | Time:00:00.09 | Compositing | Operation 7-12
+Fra:1 Mem:5836.21M (Peak 5962.77M) | Time:00:00.20 | Compositing | Operation 8-12
+Fra:1 Mem:5836.21M (Peak 5962.77M) | Time:00:00.25 | Compositing | Operation 9-12
+Fra:1 Mem:6215.90M (Peak 6342.46M) | Time:00:00.34 | Compositing | Operation 10-12
+Fra:1 Mem:6215.90M (Peak 6342.46M) | Time:00:00.34 | Compositing | Operation 11-12
+Fra:1 Mem:6089.33M (Peak 6722.15M) | Time:00:00.42 | Compositing | Operation 12-12
+Fra:1 Mem:6595.59M (Peak 7101.83M) | Time:00:00.72 | Compositing | Operation 13-12
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_sim-turns_ripple-effect.png'
+Time: 00:03.74 (Saving: 00:03.01)
+
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.01 | Compositing | Initializing execution
+Fra:1 Mem:5709.68M (Peak 5709.68M) | Time:00:00.04 | Compositing | Operation 2-120
+Fra:1 Mem:5836.24M (Peak 5836.24M) | Time:00:00.11 | Compositing | Operation 3-120
+Fra:1 Mem:5836.24M (Peak 5962.80M) | Time:00:00.18 | Compositing | Operation 4-120
+Fra:1 Mem:6215.93M (Peak 6342.49M) | Time:00:00.25 | Compositing | Operation 5-120
+Fra:1 Mem:6215.93M (Peak 6342.49M) | Time:00:00.25 | Compositing | Operation 6-120
+Fra:1 Mem:6215.93M (Peak 6342.49M) | Time:00:00.25 | Compositing | Operation 7-120
+Fra:1 Mem:6342.49M (Peak 6342.49M) | Time:00:00.26 | Compositing | Operation 8-120
+Fra:1 Mem:6342.49M (Peak 6342.49M) | Time:00:00.26 | Compositing | Operation 9-120
+Fra:1 Mem:6342.49M (Peak 6342.49M) | Time:00:00.26 | Compositing | Operation 10-120
+Fra:1 Mem:6722.18M (Peak 6848.74M) | Time:00:00.31 | Compositing | Operation 11-120
+Fra:1 Mem:6722.18M (Peak 6848.74M) | Time:00:00.31 | Compositing | Operation 12-120
+Fra:1 Mem:6722.18M (Peak 6848.74M) | Time:00:00.31 | Compositing | Operation 13-120
+Fra:1 Mem:6722.18M (Peak 7987.80M) | Time:00:00.81 | Compositing | Operation 14-120
+Fra:1 Mem:6722.18M (Peak 7987.80M) | Time:00:00.81 | Compositing | Operation 15-120
+Fra:1 Mem:6722.18M (Peak 7987.80M) | Time:00:00.81 | Compositing | Operation 16-120
+Fra:1 Mem:6848.74M (Peak 7987.80M) | Time:00:00.83 | Compositing | Operation 17-120
+Fra:1 Mem:6848.74M (Peak 7987.80M) | Time:00:00.83 | Compositing | Operation 18-120
+Fra:1 Mem:6848.74M (Peak 7987.80M) | Time:00:00.83 | Compositing | Operation 19-120
+Fra:1 Mem:6975.30M (Peak 7987.80M) | Time:00:00.85 | Compositing | Operation 20-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.34 | Compositing | Operation 21-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.34 | Compositing | Operation 22-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.34 | Compositing | Operation 23-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.37 | Compositing | Operation 24-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.37 | Compositing | Operation 25-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.40 | Compositing | Operation 26-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.43 | Compositing | Operation 27-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.43 | Compositing | Operation 28-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.45 | Compositing | Operation 29-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.45 | Compositing | Operation 30-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.49 | Compositing | Operation 31-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.52 | Compositing | Operation 32-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.52 | Compositing | Operation 33-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.54 | Compositing | Operation 34-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.54 | Compositing | Operation 35-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.57 | Compositing | Operation 36-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.57 | Compositing | Operation 37-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.60 | Compositing | Operation 38-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.66 | Compositing | Operation 39-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.72 | Compositing | Operation 40-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:01.77 | Compositing | Operation 41-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.82 | Compositing | Operation 42-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.86 | Compositing | Operation 43-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.90 | Compositing | Operation 44-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.96 | Compositing | Operation 45-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.02 | Compositing | Operation 46-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.08 | Compositing | Operation 47-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.12 | Compositing | Operation 48-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:02.16 | Compositing | Operation 49-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:02.20 | Compositing | Operation 50-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:02.20 | Compositing | Operation 51-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:02.26 | Compositing | Operation 52-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:02.26 | Compositing | Operation 53-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.32 | Compositing | Operation 54-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.32 | Compositing | Operation 55-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.37 | Compositing | Operation 56-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.49 | Compositing | Operation 57-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.62 | Compositing | Operation 58-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.74 | Compositing | Operation 59-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.79 | Compositing | Operation 60-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:02.84 | Compositing | Operation 61-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:02.88 | Compositing | Operation 62-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:02.95 | Compositing | Operation 63-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:03.04 | Compositing | Operation 64-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:03.14 | Compositing | Operation 65-120
+Fra:1 Mem:6722.18M (Peak 8240.93M) | Time:00:03.22 | Compositing | Operation 66-120
+Fra:1 Mem:7101.87M (Peak 8240.93M) | Time:00:03.30 | Compositing | Operation 67-120
+Fra:1 Mem:7608.12M (Peak 8240.93M) | Time:00:03.37 | Compositing | Operation 68-120
+Fra:1 Mem:7987.80M (Peak 8240.93M) | Time:00:03.43 | Compositing | Operation 69-120
+Fra:1 Mem:8494.05M (Peak 8494.05M) | Time:00:03.49 | Compositing | Operation 70-120
+Fra:1 Mem:8873.74M (Peak 9000.30M) | Time:00:03.55 | Compositing | Operation 71-120
+Fra:1 Mem:8494.05M (Peak 9000.30M) | Time:00:03.59 | Compositing | Operation 72-120
+Fra:1 Mem:8114.37M (Peak 9000.30M) | Time:00:03.63 | Compositing | Operation 73-120
+Fra:1 Mem:7734.68M (Peak 9000.30M) | Time:00:03.67 | Compositing | Operation 74-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:03.72 | Compositing | Operation 75-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:03.78 | Compositing | Operation 76-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:03.83 | Compositing | Operation 77-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:03.83 | Compositing | Operation 78-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:03.98 | Compositing | Operation 79-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.14 | Compositing | Operation 80-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.14 | Compositing | Operation 81-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.26 | Compositing | Operation 82-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.42 | Compositing | Operation 83-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.42 | Compositing | Operation 84-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.58 | Compositing | Operation 85-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.74 | Compositing | Operation 86-120
+Fra:1 Mem:6469.05M (Peak 9000.30M) | Time:00:04.78 | Compositing | Operation 87-120
+Fra:1 Mem:6342.49M (Peak 9000.30M) | Time:00:04.82 | Compositing | Operation 88-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:04.86 | Compositing | Operation 89-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:04.86 | Compositing | Operation 90-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.92 | Compositing | Operation 91-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.92 | Compositing | Operation 92-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:04.98 | Compositing | Operation 93-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:04.98 | Compositing | Operation 94-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.04 | Compositing | Operation 95-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.04 | Compositing | Operation 96-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.12 | Compositing | Operation 97-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.12 | Compositing | Operation 98-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.19 | Compositing | Operation 99-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.19 | Compositing | Operation 100-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.26 | Compositing | Operation 101-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.34 | Compositing | Operation 102-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.42 | Compositing | Operation 103-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.50 | Compositing | Operation 104-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.50 | Compositing | Operation 105-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:05.54 | Compositing | Operation 106-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:05.54 | Compositing | Operation 107-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:05.57 | Compositing | Operation 108-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:05.57 | Compositing | Operation 109-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:05.63 | Compositing | Operation 110-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:05.63 | Compositing | Operation 111-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:05.67 | Compositing | Operation 112-120
+Fra:1 Mem:6089.37M (Peak 9000.30M) | Time:00:05.72 | Compositing | Operation 113-120
+Fra:1 Mem:6089.37M (Peak 9000.30M) | Time:00:05.72 | Compositing | Operation 114-120
+Fra:1 Mem:5962.80M (Peak 9000.30M) | Time:00:05.77 | Compositing | Operation 115-120
+Fra:1 Mem:5836.24M (Peak 9000.30M) | Time:00:05.83 | Compositing | Operation 116-120
+Fra:1 Mem:5709.68M (Peak 9000.30M) | Time:00:05.88 | Compositing | Operation 117-120
+Fra:1 Mem:5709.68M (Peak 9000.30M) | Time:00:05.88 | Compositing | Operation 118-120
+Fra:1 Mem:5709.68M (Peak 9000.30M) | Time:00:05.88 | Compositing | Operation 119-120
+Fra:1 Mem:6089.37M (Peak 9000.30M) | Time:00:05.94 | Compositing | Operation 120-120
+Fra:1 Mem:6595.61M (Peak 9000.30M) | Time:00:06.22 | Compositing | Operation 121-120
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_depth_windowed_balanced_refined.png'
+Time: 00:09.03 (Saving: 00:02.80)
+
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.01 | Compositing | Initializing execution
+Fra:1 Mem:5709.71M (Peak 5709.71M) | Time:00:00.04 | Compositing | Operation 2-156
+Fra:1 Mem:5836.27M (Peak 5836.27M) | Time:00:00.10 | Compositing | Operation 3-156
+Fra:1 Mem:6215.96M (Peak 6342.52M) | Time:00:00.18 | Compositing | Operation 4-156
+Fra:1 Mem:6215.96M (Peak 6342.52M) | Time:00:00.18 | Compositing | Operation 5-156
+Fra:1 Mem:6215.96M (Peak 6342.52M) | Time:00:00.18 | Compositing | Operation 6-156
+Fra:1 Mem:6342.52M (Peak 6342.52M) | Time:00:00.20 | Compositing | Operation 7-156
+Fra:1 Mem:6342.52M (Peak 6342.52M) | Time:00:00.20 | Compositing | Operation 8-156
+Fra:1 Mem:6342.52M (Peak 6342.52M) | Time:00:00.20 | Compositing | Operation 9-156
+Fra:1 Mem:6342.52M (Peak 6469.08M) | Time:00:00.25 | Compositing | Operation 10-156
+Fra:1 Mem:6342.52M (Peak 6469.08M) | Time:00:00.25 | Compositing | Operation 11-156
+Fra:1 Mem:6342.52M (Peak 6469.08M) | Time:00:00.25 | Compositing | Operation 12-156
+Fra:1 Mem:6342.52M (Peak 7608.14M) | Time:00:00.77 | Compositing | Operation 13-156
+Fra:1 Mem:6342.52M (Peak 7608.14M) | Time:00:00.77 | Compositing | Operation 14-156
+Fra:1 Mem:6342.52M (Peak 7608.14M) | Time:00:00.77 | Compositing | Operation 15-156
+Fra:1 Mem:6469.08M (Peak 7608.14M) | Time:00:00.80 | Compositing | Operation 16-156
+Fra:1 Mem:6469.08M (Peak 7608.14M) | Time:00:00.80 | Compositing | Operation 17-156
+Fra:1 Mem:6469.08M (Peak 7608.14M) | Time:00:00.80 | Compositing | Operation 18-156
+Fra:1 Mem:6595.64M (Peak 7608.14M) | Time:00:00.82 | Compositing | Operation 19-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.87 | Compositing | Operation 20-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.87 | Compositing | Operation 21-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.87 | Compositing | Operation 22-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.87 | Compositing | Operation 23-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.87 | Compositing | Operation 24-156
+Fra:1 Mem:7101.89M (Peak 7608.14M) | Time:00:00.89 | Compositing | Operation 25-156
+Fra:1 Mem:7101.89M (Peak 7608.14M) | Time:00:00.89 | Compositing | Operation 26-156
+Fra:1 Mem:6722.21M (Peak 7608.14M) | Time:00:00.93 | Compositing | Operation 27-156
+Fra:1 Mem:6722.21M (Peak 7608.14M) | Time:00:00.96 | Compositing | Operation 28-156
+Fra:1 Mem:6722.21M (Peak 7608.14M) | Time:00:00.96 | Compositing | Operation 29-156
+Fra:1 Mem:6722.21M (Peak 7608.14M) | Time:00:00.99 | Compositing | Operation 30-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.49 | Compositing | Operation 31-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.49 | Compositing | Operation 32-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.49 | Compositing | Operation 33-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.51 | Compositing | Operation 34-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.51 | Compositing | Operation 35-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.54 | Compositing | Operation 36-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.54 | Compositing | Operation 37-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.56 | Compositing | Operation 38-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.56 | Compositing | Operation 39-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.60 | Compositing | Operation 40-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.60 | Compositing | Operation 41-156
+Fra:1 Mem:6342.52M (Peak 7987.83M) | Time:00:01.65 | Compositing | Operation 42-156
+Fra:1 Mem:6342.52M (Peak 7987.83M) | Time:00:01.68 | Compositing | Operation 43-156
+Fra:1 Mem:6342.52M (Peak 7987.83M) | Time:00:01.68 | Compositing | Operation 44-156
+Fra:1 Mem:6342.52M (Peak 7987.83M) | Time:00:01.72 | Compositing | Operation 45-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.78 | Compositing | Operation 46-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:01.84 | Compositing | Operation 47-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:01.84 | Compositing | Operation 48-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:01.87 | Compositing | Operation 49-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:01.93 | Compositing | Operation 50-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:01.96 | Compositing | Operation 51-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.00 | Compositing | Operation 52-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.06 | Compositing | Operation 53-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.10 | Compositing | Operation 54-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.17 | Compositing | Operation 55-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.23 | Compositing | Operation 56-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.27 | Compositing | Operation 57-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.34 | Compositing | Operation 58-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.38 | Compositing | Operation 59-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.42 | Compositing | Operation 60-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.50 | Compositing | Operation 61-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.54 | Compositing | Operation 62-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.54 | Compositing | Operation 63-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.60 | Compositing | Operation 64-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.60 | Compositing | Operation 65-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.67 | Compositing | Operation 66-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.73 | Compositing | Operation 67-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.73 | Compositing | Operation 68-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.80 | Compositing | Operation 69-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.94 | Compositing | Operation 70-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:03.08 | Compositing | Operation 71-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:03.08 | Compositing | Operation 72-156
+Fra:1 Mem:7861.27M (Peak 7987.83M) | Time:00:03.15 | Compositing | Operation 73-156
+Fra:1 Mem:7861.27M (Peak 8367.52M) | Time:00:03.28 | Compositing | Operation 74-156
+Fra:1 Mem:7481.58M (Peak 8367.52M) | Time:00:03.32 | Compositing | Operation 75-156
+Fra:1 Mem:7101.89M (Peak 8367.52M) | Time:00:03.37 | Compositing | Operation 76-156
+Fra:1 Mem:7101.89M (Peak 8367.52M) | Time:00:03.52 | Compositing | Operation 77-156
+Fra:1 Mem:6722.21M (Peak 8367.52M) | Time:00:03.56 | Compositing | Operation 78-156
+Fra:1 Mem:6722.21M (Peak 8367.52M) | Time:00:03.66 | Compositing | Operation 79-156
+Fra:1 Mem:6722.21M (Peak 8367.52M) | Time:00:03.77 | Compositing | Operation 80-156
+Fra:1 Mem:6342.52M (Peak 8367.52M) | Time:00:03.83 | Compositing | Operation 81-156
+Fra:1 Mem:6342.52M (Peak 8367.52M) | Time:00:03.92 | Compositing | Operation 82-156
+Fra:1 Mem:6848.77M (Peak 8367.52M) | Time:00:03.99 | Compositing | Operation 83-156
+Fra:1 Mem:7228.46M (Peak 8367.52M) | Time:00:04.06 | Compositing | Operation 84-156
+Fra:1 Mem:7734.71M (Peak 8367.52M) | Time:00:04.11 | Compositing | Operation 85-156
+Fra:1 Mem:8114.39M (Peak 8367.52M) | Time:00:04.17 | Compositing | Operation 86-156
+Fra:1 Mem:8114.39M (Peak 8367.52M) | Time:00:04.23 | Compositing | Operation 87-156
+Fra:1 Mem:8620.64M (Peak 8620.64M) | Time:00:04.30 | Compositing | Operation 88-156
+Fra:1 Mem:9000.33M (Peak 9126.89M) | Time:00:04.36 | Compositing | Operation 89-156
+Fra:1 Mem:8620.64M (Peak 9126.89M) | Time:00:04.40 | Compositing | Operation 90-156
+Fra:1 Mem:8240.96M (Peak 9126.89M) | Time:00:04.44 | Compositing | Operation 91-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:04.49 | Compositing | Operation 92-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:04.54 | Compositing | Operation 93-156
+Fra:1 Mem:7987.83M (Peak 9126.89M) | Time:00:04.62 | Compositing | Operation 94-156
+Fra:1 Mem:8367.52M (Peak 9126.89M) | Time:00:04.71 | Compositing | Operation 95-156
+Fra:1 Mem:7987.83M (Peak 9126.89M) | Time:00:04.75 | Compositing | Operation 96-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:04.79 | Compositing | Operation 97-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:04.79 | Compositing | Operation 98-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:04.97 | Compositing | Operation 99-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:05.13 | Compositing | Operation 100-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:05.13 | Compositing | Operation 101-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:05.28 | Compositing | Operation 102-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:05.42 | Compositing | Operation 103-156
+Fra:1 Mem:7228.46M (Peak 9126.89M) | Time:00:05.46 | Compositing | Operation 104-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:05.49 | Compositing | Operation 105-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:05.49 | Compositing | Operation 106-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:05.65 | Compositing | Operation 107-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:05.79 | Compositing | Operation 108-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:05.81 | Compositing | Operation 109-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:05.85 | Compositing | Operation 110-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:05.85 | Compositing | Operation 111-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:05.98 | Compositing | Operation 112-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:06.11 | Compositing | Operation 113-156
+Fra:1 Mem:6469.08M (Peak 9126.89M) | Time:00:06.14 | Compositing | Operation 114-156
+Fra:1 Mem:6469.08M (Peak 9126.89M) | Time:00:06.14 | Compositing | Operation 115-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:06.20 | Compositing | Operation 116-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:06.20 | Compositing | Operation 117-156
+Fra:1 Mem:7228.46M (Peak 9126.89M) | Time:00:06.25 | Compositing | Operation 118-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:06.28 | Compositing | Operation 119-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:06.28 | Compositing | Operation 120-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.33 | Compositing | Operation 121-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.33 | Compositing | Operation 122-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.40 | Compositing | Operation 123-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.40 | Compositing | Operation 124-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.47 | Compositing | Operation 125-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.47 | Compositing | Operation 126-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.52 | Compositing | Operation 127-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.52 | Compositing | Operation 128-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.59 | Compositing | Operation 129-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.69 | Compositing | Operation 130-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.79 | Compositing | Operation 131-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.79 | Compositing | Operation 132-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.87 | Compositing | Operation 133-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.96 | Compositing | Operation 134-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.96 | Compositing | Operation 135-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:07.01 | Compositing | Operation 136-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:07.01 | Compositing | Operation 137-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:07.05 | Compositing | Operation 138-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:07.15 | Compositing | Operation 139-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:07.15 | Compositing | Operation 140-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.20 | Compositing | Operation 141-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.20 | Compositing | Operation 142-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.25 | Compositing | Operation 143-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.30 | Compositing | Operation 144-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.30 | Compositing | Operation 145-156
+Fra:1 Mem:6342.52M (Peak 9126.89M) | Time:00:07.34 | Compositing | Operation 146-156
+Fra:1 Mem:6342.52M (Peak 9126.89M) | Time:00:07.34 | Compositing | Operation 147-156
+Fra:1 Mem:6215.96M (Peak 9126.89M) | Time:00:07.39 | Compositing | Operation 148-156
+Fra:1 Mem:6089.39M (Peak 9126.89M) | Time:00:07.44 | Compositing | Operation 149-156
+Fra:1 Mem:6089.39M (Peak 9126.89M) | Time:00:07.44 | Compositing | Operation 150-156
+Fra:1 Mem:5962.83M (Peak 9126.89M) | Time:00:07.49 | Compositing | Operation 151-156
+Fra:1 Mem:5836.27M (Peak 9126.89M) | Time:00:07.53 | Compositing | Operation 152-156
+Fra:1 Mem:5709.71M (Peak 9126.89M) | Time:00:07.58 | Compositing | Operation 153-156
+Fra:1 Mem:5709.71M (Peak 9126.89M) | Time:00:07.58 | Compositing | Operation 154-156
+Fra:1 Mem:5709.71M (Peak 9126.89M) | Time:00:07.58 | Compositing | Operation 155-156
+Fra:1 Mem:6089.39M (Peak 9126.89M) | Time:00:07.67 | Compositing | Operation 156-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:08.00 | Compositing | Operation 157-156
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_depth_windowed_internal_refined.png'
+Time: 00:11.02 (Saving: 00:03.01)
+
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.01 | Compositing | Initializing execution
+Fra:1 Mem:5709.71M (Peak 5709.71M) | Time:00:00.04 | Compositing | Operation 2-156
+Fra:1 Mem:5836.27M (Peak 5836.27M) | Time:00:00.13 | Compositing | Operation 3-156
+Fra:1 Mem:6215.96M (Peak 6342.52M) | Time:00:00.22 | Compositing | Operation 4-156
+Fra:1 Mem:6215.96M (Peak 6342.52M) | Time:00:00.22 | Compositing | Operation 5-156
+Fra:1 Mem:6215.96M (Peak 6342.52M) | Time:00:00.22 | Compositing | Operation 6-156
+Fra:1 Mem:6342.52M (Peak 6342.52M) | Time:00:00.24 | Compositing | Operation 7-156
+Fra:1 Mem:6342.52M (Peak 6342.52M) | Time:00:00.24 | Compositing | Operation 8-156
+Fra:1 Mem:6342.52M (Peak 6342.52M) | Time:00:00.24 | Compositing | Operation 9-156
+Fra:1 Mem:6342.52M (Peak 6469.08M) | Time:00:00.31 | Compositing | Operation 10-156
+Fra:1 Mem:6342.52M (Peak 6469.08M) | Time:00:00.31 | Compositing | Operation 11-156
+Fra:1 Mem:6342.52M (Peak 6469.08M) | Time:00:00.31 | Compositing | Operation 12-156
+Fra:1 Mem:6342.52M (Peak 7608.14M) | Time:00:00.84 | Compositing | Operation 13-156
+Fra:1 Mem:6342.52M (Peak 7608.14M) | Time:00:00.84 | Compositing | Operation 14-156
+Fra:1 Mem:6342.52M (Peak 7608.14M) | Time:00:00.84 | Compositing | Operation 15-156
+Fra:1 Mem:6469.08M (Peak 7608.14M) | Time:00:00.87 | Compositing | Operation 16-156
+Fra:1 Mem:6469.08M (Peak 7608.14M) | Time:00:00.87 | Compositing | Operation 17-156
+Fra:1 Mem:6469.08M (Peak 7608.14M) | Time:00:00.87 | Compositing | Operation 18-156
+Fra:1 Mem:6595.64M (Peak 7608.14M) | Time:00:00.89 | Compositing | Operation 19-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.95 | Compositing | Operation 20-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.95 | Compositing | Operation 21-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.95 | Compositing | Operation 22-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.95 | Compositing | Operation 23-156
+Fra:1 Mem:6975.33M (Peak 7608.14M) | Time:00:00.95 | Compositing | Operation 24-156
+Fra:1 Mem:7101.89M (Peak 7608.14M) | Time:00:00.97 | Compositing | Operation 25-156
+Fra:1 Mem:7101.89M (Peak 7608.14M) | Time:00:00.97 | Compositing | Operation 26-156
+Fra:1 Mem:6722.21M (Peak 7608.14M) | Time:00:01.00 | Compositing | Operation 27-156
+Fra:1 Mem:6722.21M (Peak 7608.14M) | Time:00:01.04 | Compositing | Operation 28-156
+Fra:1 Mem:6722.21M (Peak 7608.14M) | Time:00:01.04 | Compositing | Operation 29-156
+Fra:1 Mem:6722.21M (Peak 7608.14M) | Time:00:01.06 | Compositing | Operation 30-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.58 | Compositing | Operation 31-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.58 | Compositing | Operation 32-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.58 | Compositing | Operation 33-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.61 | Compositing | Operation 34-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.61 | Compositing | Operation 35-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.64 | Compositing | Operation 36-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.64 | Compositing | Operation 37-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.67 | Compositing | Operation 38-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.67 | Compositing | Operation 39-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.69 | Compositing | Operation 40-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.69 | Compositing | Operation 41-156
+Fra:1 Mem:6342.52M (Peak 7987.83M) | Time:00:01.72 | Compositing | Operation 42-156
+Fra:1 Mem:6342.52M (Peak 7987.83M) | Time:00:01.75 | Compositing | Operation 43-156
+Fra:1 Mem:6342.52M (Peak 7987.83M) | Time:00:01.75 | Compositing | Operation 44-156
+Fra:1 Mem:6342.52M (Peak 7987.83M) | Time:00:01.78 | Compositing | Operation 45-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:01.83 | Compositing | Operation 46-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:01.88 | Compositing | Operation 47-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:01.88 | Compositing | Operation 48-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:01.91 | Compositing | Operation 49-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:01.96 | Compositing | Operation 50-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.00 | Compositing | Operation 51-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.03 | Compositing | Operation 52-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.09 | Compositing | Operation 53-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.12 | Compositing | Operation 54-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.17 | Compositing | Operation 55-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.23 | Compositing | Operation 56-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.27 | Compositing | Operation 57-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.33 | Compositing | Operation 58-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.37 | Compositing | Operation 59-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.41 | Compositing | Operation 60-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.47 | Compositing | Operation 61-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.51 | Compositing | Operation 62-156
+Fra:1 Mem:6722.21M (Peak 7987.83M) | Time:00:02.51 | Compositing | Operation 63-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.57 | Compositing | Operation 64-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.57 | Compositing | Operation 65-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.63 | Compositing | Operation 66-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.70 | Compositing | Operation 67-156
+Fra:1 Mem:7101.89M (Peak 7987.83M) | Time:00:02.70 | Compositing | Operation 68-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.77 | Compositing | Operation 69-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:02.92 | Compositing | Operation 70-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:03.06 | Compositing | Operation 71-156
+Fra:1 Mem:7481.58M (Peak 7987.83M) | Time:00:03.06 | Compositing | Operation 72-156
+Fra:1 Mem:7861.27M (Peak 7987.83M) | Time:00:03.13 | Compositing | Operation 73-156
+Fra:1 Mem:7861.27M (Peak 8367.52M) | Time:00:03.25 | Compositing | Operation 74-156
+Fra:1 Mem:7481.58M (Peak 8367.52M) | Time:00:03.29 | Compositing | Operation 75-156
+Fra:1 Mem:7101.89M (Peak 8367.52M) | Time:00:03.33 | Compositing | Operation 76-156
+Fra:1 Mem:7101.89M (Peak 8367.52M) | Time:00:03.46 | Compositing | Operation 77-156
+Fra:1 Mem:6722.21M (Peak 8367.52M) | Time:00:03.50 | Compositing | Operation 78-156
+Fra:1 Mem:6722.21M (Peak 8367.52M) | Time:00:03.60 | Compositing | Operation 79-156
+Fra:1 Mem:6722.21M (Peak 8367.52M) | Time:00:03.68 | Compositing | Operation 80-156
+Fra:1 Mem:6342.52M (Peak 8367.52M) | Time:00:03.73 | Compositing | Operation 81-156
+Fra:1 Mem:6342.52M (Peak 8367.52M) | Time:00:03.80 | Compositing | Operation 82-156
+Fra:1 Mem:6848.77M (Peak 8367.52M) | Time:00:03.88 | Compositing | Operation 83-156
+Fra:1 Mem:7228.46M (Peak 8367.52M) | Time:00:03.94 | Compositing | Operation 84-156
+Fra:1 Mem:7734.71M (Peak 8367.52M) | Time:00:04.00 | Compositing | Operation 85-156
+Fra:1 Mem:8114.39M (Peak 8367.52M) | Time:00:04.06 | Compositing | Operation 86-156
+Fra:1 Mem:8114.39M (Peak 8367.52M) | Time:00:04.18 | Compositing | Operation 87-156
+Fra:1 Mem:8620.64M (Peak 8620.64M) | Time:00:04.25 | Compositing | Operation 88-156
+Fra:1 Mem:9000.33M (Peak 9126.89M) | Time:00:04.33 | Compositing | Operation 89-156
+Fra:1 Mem:8620.64M (Peak 9126.89M) | Time:00:04.37 | Compositing | Operation 90-156
+Fra:1 Mem:8240.96M (Peak 9126.89M) | Time:00:04.41 | Compositing | Operation 91-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:04.47 | Compositing | Operation 92-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:04.52 | Compositing | Operation 93-156
+Fra:1 Mem:7987.83M (Peak 9126.89M) | Time:00:04.60 | Compositing | Operation 94-156
+Fra:1 Mem:8367.52M (Peak 9126.89M) | Time:00:04.68 | Compositing | Operation 95-156
+Fra:1 Mem:7987.83M (Peak 9126.89M) | Time:00:04.73 | Compositing | Operation 96-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:04.79 | Compositing | Operation 97-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:04.79 | Compositing | Operation 98-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:04.95 | Compositing | Operation 99-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:05.10 | Compositing | Operation 100-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:05.10 | Compositing | Operation 101-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:05.24 | Compositing | Operation 102-156
+Fra:1 Mem:7608.14M (Peak 9126.89M) | Time:00:05.37 | Compositing | Operation 103-156
+Fra:1 Mem:7228.46M (Peak 9126.89M) | Time:00:05.41 | Compositing | Operation 104-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:05.45 | Compositing | Operation 105-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:05.45 | Compositing | Operation 106-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:05.60 | Compositing | Operation 107-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:05.74 | Compositing | Operation 108-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:05.77 | Compositing | Operation 109-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:05.81 | Compositing | Operation 110-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:05.81 | Compositing | Operation 111-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:05.94 | Compositing | Operation 112-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:06.07 | Compositing | Operation 113-156
+Fra:1 Mem:6469.08M (Peak 9126.89M) | Time:00:06.10 | Compositing | Operation 114-156
+Fra:1 Mem:6469.08M (Peak 9126.89M) | Time:00:06.10 | Compositing | Operation 115-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:06.15 | Compositing | Operation 116-156
+Fra:1 Mem:6848.77M (Peak 9126.89M) | Time:00:06.15 | Compositing | Operation 117-156
+Fra:1 Mem:7228.46M (Peak 9126.89M) | Time:00:06.19 | Compositing | Operation 118-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:06.22 | Compositing | Operation 119-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:06.22 | Compositing | Operation 120-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.27 | Compositing | Operation 121-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.27 | Compositing | Operation 122-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.34 | Compositing | Operation 123-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.34 | Compositing | Operation 124-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.41 | Compositing | Operation 125-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.41 | Compositing | Operation 126-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.47 | Compositing | Operation 127-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.47 | Compositing | Operation 128-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.55 | Compositing | Operation 129-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.66 | Compositing | Operation 130-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.75 | Compositing | Operation 131-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.75 | Compositing | Operation 132-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.84 | Compositing | Operation 133-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.94 | Compositing | Operation 134-156
+Fra:1 Mem:7861.27M (Peak 9126.89M) | Time:00:06.94 | Compositing | Operation 135-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.99 | Compositing | Operation 136-156
+Fra:1 Mem:7481.58M (Peak 9126.89M) | Time:00:06.99 | Compositing | Operation 137-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:07.05 | Compositing | Operation 138-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:07.16 | Compositing | Operation 139-156
+Fra:1 Mem:7101.89M (Peak 9126.89M) | Time:00:07.16 | Compositing | Operation 140-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.22 | Compositing | Operation 141-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.22 | Compositing | Operation 142-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.27 | Compositing | Operation 143-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.32 | Compositing | Operation 144-156
+Fra:1 Mem:6722.21M (Peak 9126.89M) | Time:00:07.32 | Compositing | Operation 145-156
+Fra:1 Mem:6342.52M (Peak 9126.89M) | Time:00:07.38 | Compositing | Operation 146-156
+Fra:1 Mem:6342.52M (Peak 9126.89M) | Time:00:07.38 | Compositing | Operation 147-156
+Fra:1 Mem:6215.96M (Peak 9126.89M) | Time:00:07.43 | Compositing | Operation 148-156
+Fra:1 Mem:6089.39M (Peak 9126.89M) | Time:00:07.49 | Compositing | Operation 149-156
+Fra:1 Mem:6089.39M (Peak 9126.89M) | Time:00:07.49 | Compositing | Operation 150-156
+Fra:1 Mem:5962.83M (Peak 9126.89M) | Time:00:07.55 | Compositing | Operation 151-156
+Fra:1 Mem:5836.27M (Peak 9126.89M) | Time:00:07.62 | Compositing | Operation 152-156
+Fra:1 Mem:5709.71M (Peak 9126.89M) | Time:00:07.68 | Compositing | Operation 153-156
+Fra:1 Mem:5709.71M (Peak 9126.89M) | Time:00:07.68 | Compositing | Operation 154-156
+Fra:1 Mem:5709.71M (Peak 9126.89M) | Time:00:07.68 | Compositing | Operation 155-156
+Fra:1 Mem:6089.39M (Peak 9126.89M) | Time:00:07.75 | Compositing | Operation 156-156
+Fra:1 Mem:6595.64M (Peak 9126.89M) | Time:00:08.10 | Compositing | Operation 157-156
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_depth_windowed_internal_dense.png'
+Time: 00:10.78 (Saving: 00:02.67)
+
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5583.02M (Peak 5583.02M) | Time:00:00.01 | Compositing | Initializing execution
+Fra:1 Mem:5709.68M (Peak 5709.68M) | Time:00:00.03 | Compositing | Operation 2-120
+Fra:1 Mem:5836.24M (Peak 5836.24M) | Time:00:00.10 | Compositing | Operation 3-120
+Fra:1 Mem:5836.24M (Peak 5962.80M) | Time:00:00.19 | Compositing | Operation 4-120
+Fra:1 Mem:6215.93M (Peak 6342.49M) | Time:00:00.25 | Compositing | Operation 5-120
+Fra:1 Mem:6215.93M (Peak 6342.49M) | Time:00:00.25 | Compositing | Operation 6-120
+Fra:1 Mem:6215.93M (Peak 6342.49M) | Time:00:00.25 | Compositing | Operation 7-120
+Fra:1 Mem:6342.49M (Peak 6342.49M) | Time:00:00.27 | Compositing | Operation 8-120
+Fra:1 Mem:6342.49M (Peak 6342.49M) | Time:00:00.27 | Compositing | Operation 9-120
+Fra:1 Mem:6342.49M (Peak 6342.49M) | Time:00:00.27 | Compositing | Operation 10-120
+Fra:1 Mem:6722.18M (Peak 6848.74M) | Time:00:00.33 | Compositing | Operation 11-120
+Fra:1 Mem:6722.18M (Peak 6848.74M) | Time:00:00.33 | Compositing | Operation 12-120
+Fra:1 Mem:6722.18M (Peak 6848.74M) | Time:00:00.33 | Compositing | Operation 13-120
+Fra:1 Mem:6722.18M (Peak 7987.80M) | Time:00:00.83 | Compositing | Operation 14-120
+Fra:1 Mem:6722.18M (Peak 7987.80M) | Time:00:00.83 | Compositing | Operation 15-120
+Fra:1 Mem:6722.18M (Peak 7987.80M) | Time:00:00.83 | Compositing | Operation 16-120
+Fra:1 Mem:6848.74M (Peak 7987.80M) | Time:00:00.86 | Compositing | Operation 17-120
+Fra:1 Mem:6848.74M (Peak 7987.80M) | Time:00:00.86 | Compositing | Operation 18-120
+Fra:1 Mem:6848.74M (Peak 7987.80M) | Time:00:00.86 | Compositing | Operation 19-120
+Fra:1 Mem:6975.30M (Peak 7987.80M) | Time:00:00.88 | Compositing | Operation 20-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.38 | Compositing | Operation 21-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.38 | Compositing | Operation 22-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.38 | Compositing | Operation 23-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.41 | Compositing | Operation 24-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.41 | Compositing | Operation 25-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.45 | Compositing | Operation 26-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.47 | Compositing | Operation 27-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.47 | Compositing | Operation 28-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.50 | Compositing | Operation 29-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.50 | Compositing | Operation 30-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.53 | Compositing | Operation 31-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.56 | Compositing | Operation 32-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.56 | Compositing | Operation 33-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.59 | Compositing | Operation 34-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.59 | Compositing | Operation 35-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.62 | Compositing | Operation 36-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.62 | Compositing | Operation 37-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.64 | Compositing | Operation 38-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.70 | Compositing | Operation 39-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.76 | Compositing | Operation 40-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:01.81 | Compositing | Operation 41-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:01.88 | Compositing | Operation 42-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:01.92 | Compositing | Operation 43-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:01.96 | Compositing | Operation 44-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:02.02 | Compositing | Operation 45-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.08 | Compositing | Operation 46-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.14 | Compositing | Operation 47-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.17 | Compositing | Operation 48-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:02.21 | Compositing | Operation 49-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:02.25 | Compositing | Operation 50-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:02.25 | Compositing | Operation 51-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:02.30 | Compositing | Operation 52-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:02.30 | Compositing | Operation 53-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.36 | Compositing | Operation 54-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.36 | Compositing | Operation 55-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.41 | Compositing | Operation 56-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.52 | Compositing | Operation 57-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.64 | Compositing | Operation 58-120
+Fra:1 Mem:7354.99M (Peak 8240.93M) | Time:00:02.77 | Compositing | Operation 59-120
+Fra:1 Mem:6975.30M (Peak 8240.93M) | Time:00:02.82 | Compositing | Operation 60-120
+Fra:1 Mem:6595.62M (Peak 8240.93M) | Time:00:02.86 | Compositing | Operation 61-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:02.90 | Compositing | Operation 62-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:02.97 | Compositing | Operation 63-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:03.04 | Compositing | Operation 64-120
+Fra:1 Mem:6215.93M (Peak 8240.93M) | Time:00:03.11 | Compositing | Operation 65-120
+Fra:1 Mem:6722.18M (Peak 8240.93M) | Time:00:03.19 | Compositing | Operation 66-120
+Fra:1 Mem:7101.87M (Peak 8240.93M) | Time:00:03.26 | Compositing | Operation 67-120
+Fra:1 Mem:7608.12M (Peak 8240.93M) | Time:00:03.32 | Compositing | Operation 68-120
+Fra:1 Mem:7987.80M (Peak 8240.93M) | Time:00:03.38 | Compositing | Operation 69-120
+Fra:1 Mem:8494.05M (Peak 8494.05M) | Time:00:03.43 | Compositing | Operation 70-120
+Fra:1 Mem:8873.74M (Peak 9000.30M) | Time:00:03.49 | Compositing | Operation 71-120
+Fra:1 Mem:8494.05M (Peak 9000.30M) | Time:00:03.53 | Compositing | Operation 72-120
+Fra:1 Mem:8114.37M (Peak 9000.30M) | Time:00:03.57 | Compositing | Operation 73-120
+Fra:1 Mem:7734.68M (Peak 9000.30M) | Time:00:03.61 | Compositing | Operation 74-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:03.64 | Compositing | Operation 75-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:03.68 | Compositing | Operation 76-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:03.72 | Compositing | Operation 77-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:03.72 | Compositing | Operation 78-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:03.88 | Compositing | Operation 79-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.04 | Compositing | Operation 80-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.04 | Compositing | Operation 81-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.17 | Compositing | Operation 82-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.32 | Compositing | Operation 83-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.32 | Compositing | Operation 84-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.48 | Compositing | Operation 85-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.61 | Compositing | Operation 86-120
+Fra:1 Mem:6469.05M (Peak 9000.30M) | Time:00:04.64 | Compositing | Operation 87-120
+Fra:1 Mem:6342.49M (Peak 9000.30M) | Time:00:04.68 | Compositing | Operation 88-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:04.71 | Compositing | Operation 89-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:04.71 | Compositing | Operation 90-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.77 | Compositing | Operation 91-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:04.77 | Compositing | Operation 92-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:04.82 | Compositing | Operation 93-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:04.82 | Compositing | Operation 94-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:04.88 | Compositing | Operation 95-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:04.88 | Compositing | Operation 96-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:04.95 | Compositing | Operation 97-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:04.95 | Compositing | Operation 98-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.03 | Compositing | Operation 99-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.03 | Compositing | Operation 100-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.11 | Compositing | Operation 101-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.19 | Compositing | Operation 102-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.29 | Compositing | Operation 103-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.38 | Compositing | Operation 104-120
+Fra:1 Mem:7354.99M (Peak 9000.30M) | Time:00:05.38 | Compositing | Operation 105-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:05.42 | Compositing | Operation 106-120
+Fra:1 Mem:6975.30M (Peak 9000.30M) | Time:00:05.42 | Compositing | Operation 107-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:05.48 | Compositing | Operation 108-120
+Fra:1 Mem:6595.62M (Peak 9000.30M) | Time:00:05.48 | Compositing | Operation 109-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:05.54 | Compositing | Operation 110-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:05.54 | Compositing | Operation 111-120
+Fra:1 Mem:6215.93M (Peak 9000.30M) | Time:00:05.58 | Compositing | Operation 112-120
+Fra:1 Mem:6089.37M (Peak 9000.30M) | Time:00:05.64 | Compositing | Operation 113-120
+Fra:1 Mem:6089.37M (Peak 9000.30M) | Time:00:05.64 | Compositing | Operation 114-120
+Fra:1 Mem:5962.80M (Peak 9000.30M) | Time:00:05.69 | Compositing | Operation 115-120
+Fra:1 Mem:5836.24M (Peak 9000.30M) | Time:00:05.77 | Compositing | Operation 116-120
+Fra:1 Mem:5709.68M (Peak 9000.30M) | Time:00:05.85 | Compositing | Operation 117-120
+Fra:1 Mem:5709.68M (Peak 9000.30M) | Time:00:05.85 | Compositing | Operation 118-120
+Fra:1 Mem:5709.68M (Peak 9000.30M) | Time:00:05.85 | Compositing | Operation 119-120
+Fra:1 Mem:6089.37M (Peak 9000.30M) | Time:00:05.94 | Compositing | Operation 120-120
+Fra:1 Mem:6595.61M (Peak 9000.30M) | Time:00:06.23 | Compositing | Operation 121-120
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430\base_depth_windowed_balanced_dense.png'
+Time: 00:09.17 (Saving: 00:02.92)
+
+[render_current_base] loaded parade_timeline__existing_condition_positive__8k.exr -> 'Current Base Outputs :: EXR Existing'
+[render_current_base] resolution 7680x4320
+[render_current_base] wrote base_rgb.png
+[render_current_base] wrote base_white_render.png
+[render_current_base] wrote base_outlines.png
+[render_current_base] wrote base_sim-turns.png
+[render_current_base] wrote base_sim-nodes.png
+[render_current_base] wrote base_sim-turns_ripple-effect.png
+[render_current_base] wrote base_depth_windowed_balanced_refined.png
+[render_current_base] wrote base_depth_windowed_internal_refined.png
+[render_current_base] wrote base_depth_windowed_internal_dense.png
+[render_current_base] wrote base_depth_windowed_balanced_dense.png
+[render_current_base] 10/10 reroutes present
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_intervention_int.blend"
+Fra:1 Mem:5580.28M (Peak 5580.28M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5580.28M (Peak 5580.28M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5580.30M (Peak 5580.30M) | Time:00:00.00 | Compositing | Operation 2-55
+Fra:1 Mem:5580.30M (Peak 5580.30M) | Time:00:00.00 | Compositing | Operation 3-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 4-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 5-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 6-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 7-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 8-55
+Fra:1 Mem:5833.49M (Peak 5833.49M) | Time:00:00.08 | Compositing | Operation 9-55
+Fra:1 Mem:5833.49M (Peak 5833.49M) | Time:00:00.08 | Compositing | Operation 10-55
+Fra:1 Mem:5960.05M (Peak 5960.05M) | Time:00:00.10 | Compositing | Operation 11-55
+Fra:1 Mem:5960.05M (Peak 5960.05M) | Time:00:00.10 | Compositing | Operation 12-55
+Fra:1 Mem:5960.05M (Peak 5960.05M) | Time:00:00.10 | Compositing | Operation 13-55
+Fra:1 Mem:5960.05M (Peak 5960.05M) | Time:00:00.10 | Compositing | Operation 14-55
+Fra:1 Mem:6086.61M (Peak 6086.61M) | Time:00:00.13 | Compositing | Operation 15-55
+Fra:1 Mem:6086.61M (Peak 6086.61M) | Time:00:00.13 | Compositing | Operation 16-55
+Fra:1 Mem:6592.86M (Peak 6592.86M) | Time:00:00.18 | Compositing | Operation 17-55
+Fra:1 Mem:6972.55M (Peak 7099.11M) | Time:00:00.23 | Compositing | Operation 18-55
+Fra:1 Mem:6972.55M (Peak 7099.11M) | Time:00:00.23 | Compositing | Operation 19-55
+Fra:1 Mem:6972.55M (Peak 7099.11M) | Time:00:00.23 | Compositing | Operation 20-55
+Fra:1 Mem:7099.11M (Peak 7099.11M) | Time:00:00.25 | Compositing | Operation 21-55
+Fra:1 Mem:7099.11M (Peak 7099.11M) | Time:00:00.25 | Compositing | Operation 22-55
+Fra:1 Mem:7605.36M (Peak 7605.36M) | Time:00:00.29 | Compositing | Operation 23-55
+Fra:1 Mem:7985.05M (Peak 8111.61M) | Time:00:00.35 | Compositing | Operation 24-55
+Fra:1 Mem:7985.05M (Peak 8111.61M) | Time:00:00.35 | Compositing | Operation 25-55
+Fra:1 Mem:7985.05M (Peak 8111.61M) | Time:00:00.35 | Compositing | Operation 26-55
+Fra:1 Mem:8111.61M (Peak 8111.61M) | Time:00:00.36 | Compositing | Operation 27-55
+Fra:1 Mem:8111.61M (Peak 8111.61M) | Time:00:00.36 | Compositing | Operation 28-55
+Fra:1 Mem:8617.86M (Peak 8617.86M) | Time:00:00.41 | Compositing | Operation 29-55
+Fra:1 Mem:8491.30M (Peak 9124.11M) | Time:00:00.47 | Compositing | Operation 30-55
+Fra:1 Mem:8491.30M (Peak 9124.11M) | Time:00:00.47 | Compositing | Operation 31-55
+Fra:1 Mem:8491.30M (Peak 9124.11M) | Time:00:00.47 | Compositing | Operation 32-55
+Fra:1 Mem:8617.86M (Peak 9124.11M) | Time:00:00.50 | Compositing | Operation 33-55
+Fra:1 Mem:8617.86M (Peak 9124.11M) | Time:00:00.50 | Compositing | Operation 34-55
+Fra:1 Mem:9124.11M (Peak 9124.11M) | Time:00:00.54 | Compositing | Operation 35-55
+Fra:1 Mem:8997.55M (Peak 9630.36M) | Time:00:00.61 | Compositing | Operation 36-55
+Fra:1 Mem:8997.55M (Peak 9630.36M) | Time:00:00.61 | Compositing | Operation 37-55
+Fra:1 Mem:8997.55M (Peak 9630.36M) | Time:00:00.61 | Compositing | Operation 38-55
+Fra:1 Mem:9124.11M (Peak 9630.36M) | Time:00:00.62 | Compositing | Operation 39-55
+Fra:1 Mem:9124.11M (Peak 9630.36M) | Time:00:00.62 | Compositing | Operation 40-55
+Fra:1 Mem:9630.36M (Peak 9630.36M) | Time:00:00.67 | Compositing | Operation 41-55
+Fra:1 Mem:9503.80M (Peak 10136.61M) | Time:00:00.78 | Compositing | Operation 42-55
+Fra:1 Mem:9630.36M (Peak 10136.61M) | Time:00:00.80 | Compositing | Operation 43-55
+Fra:1 Mem:9630.36M (Peak 10136.61M) | Time:00:00.80 | Compositing | Operation 44-55
+Fra:1 Mem:10136.61M (Peak 10136.61M) | Time:00:00.86 | Compositing | Operation 45-55
+Fra:1 Mem:10010.05M (Peak 10642.86M) | Time:00:00.93 | Compositing | Operation 46-55
+Fra:1 Mem:10010.05M (Peak 10642.86M) | Time:00:00.93 | Compositing | Operation 47-55
+Fra:1 Mem:10010.05M (Peak 10642.86M) | Time:00:00.93 | Compositing | Operation 48-55
+Fra:1 Mem:10516.30M (Peak 10642.86M) | Time:00:00.97 | Compositing | Operation 49-55
+Fra:1 Mem:10389.74M (Peak 11022.55M) | Time:00:01.05 | Compositing | Operation 50-55
+Fra:1 Mem:10389.74M (Peak 11022.55M) | Time:00:01.07 | Compositing | Operation 51-55
+Fra:1 Mem:10263.18M (Peak 11022.55M) | Time:00:01.14 | Compositing | Operation 52-55
+Fra:1 Mem:10263.18M (Peak 11022.55M) | Time:00:01.14 | Compositing | Operation 53-55
+Fra:1 Mem:10136.61M (Peak 11022.55M) | Time:00:01.22 | Compositing | Operation 54-55
+Fra:1 Mem:11149.12M (Peak 11149.12M) | Time:00:01.48 | Compositing | Operation 55-55
+Fra:1 Mem:11149.13M (Peak 15705.37M) | Time:00:03.04 | Compositing | Operation 56-55
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\interventions_bioenvelope_colonise-partial_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\interventions_bioenvelope_colonise-ground_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\interventions_bioenvelope_depaved_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\interventions_bioenvelope_colonise-full_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\interventions_bioenvelope_recruit-full_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\interventions_bioenvelope_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\interventions_bioenvelope_deploy-any_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\interventions_bioenvelope_decay_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\interventions_bioenvelope_recruit-partial_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive\_discard_render.png0001.png'
+Time: 00:33.16 (Saving: 00:02.91)
+
+[render_current_intervention_int] loaded parade_timeline__bioenvelope_positive__8k.exr -> 'InterventionInt::EXR Input'
+[render_current_intervention_int] resolution 7680x4320 from parade_timeline__bioenvelope_positive__8k.exr
+[render_current_intervention_int] wired AOV 'intervention_bioenvelope_ply-' -> 'InterventionInt::Raw'
+[render_current_intervention_int] rendering animation (frame 1, 9 slots)...
+[render_current_intervention_int] render done
+[render_current_intervention_int] renamed interventions_bioenvelope_0001.png -> interventions_bioenvelope.png
+[render_current_intervention_int] renamed interventions_bioenvelope_colonise-full_0001.png -> interventions_bioenvelope_colonise-full.png
+[render_current_intervention_int] renamed interventions_bioenvelope_colonise-ground_0001.png -> interventions_bioenvelope_colonise-ground.png
+[render_current_intervention_int] renamed interventions_bioenvelope_colonise-partial_0001.png -> interventions_bioenvelope_colonise-partial.png
+[render_current_intervention_int] renamed interventions_bioenvelope_decay_0001.png -> interventions_bioenvelope_decay.png
+[render_current_intervention_int] renamed interventions_bioenvelope_depaved_0001.png -> interventions_bioenvelope_depaved.png
+[render_current_intervention_int] renamed interventions_bioenvelope_deploy-any_0001.png -> interventions_bioenvelope_deploy-any.png
+[render_current_intervention_int] renamed interventions_bioenvelope_recruit-full_0001.png -> interventions_bioenvelope_recruit-full.png
+[render_current_intervention_int] renamed interventions_bioenvelope_recruit-partial_0001.png -> interventions_bioenvelope_recruit-partial.png
+[render_current_intervention_int] 9/9 slots present
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_intervention_int.blend"
+Fra:1 Mem:5580.28M (Peak 5580.28M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5580.28M (Peak 5580.28M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5580.30M (Peak 5580.30M) | Time:00:00.00 | Compositing | Operation 2-55
+Fra:1 Mem:5580.30M (Peak 5580.30M) | Time:00:00.00 | Compositing | Operation 3-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 4-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 5-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 6-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 7-55
+Fra:1 Mem:5706.93M (Peak 5706.93M) | Time:00:00.06 | Compositing | Operation 8-55
+Fra:1 Mem:5833.49M (Peak 5833.49M) | Time:00:00.09 | Compositing | Operation 9-55
+Fra:1 Mem:5833.49M (Peak 5833.49M) | Time:00:00.09 | Compositing | Operation 10-55
+Fra:1 Mem:5960.05M (Peak 5960.05M) | Time:00:00.11 | Compositing | Operation 11-55
+Fra:1 Mem:5960.05M (Peak 5960.05M) | Time:00:00.11 | Compositing | Operation 12-55
+Fra:1 Mem:5960.05M (Peak 5960.05M) | Time:00:00.11 | Compositing | Operation 13-55
+Fra:1 Mem:5960.05M (Peak 5960.05M) | Time:00:00.11 | Compositing | Operation 14-55
+Fra:1 Mem:6086.61M (Peak 6086.61M) | Time:00:00.14 | Compositing | Operation 15-55
+Fra:1 Mem:6086.61M (Peak 6086.61M) | Time:00:00.14 | Compositing | Operation 16-55
+Fra:1 Mem:6592.86M (Peak 6592.86M) | Time:00:00.20 | Compositing | Operation 17-55
+Fra:1 Mem:6972.55M (Peak 7099.11M) | Time:00:00.26 | Compositing | Operation 18-55
+Fra:1 Mem:6972.55M (Peak 7099.11M) | Time:00:00.26 | Compositing | Operation 19-55
+Fra:1 Mem:6972.55M (Peak 7099.11M) | Time:00:00.26 | Compositing | Operation 20-55
+Fra:1 Mem:7099.11M (Peak 7099.11M) | Time:00:00.28 | Compositing | Operation 21-55
+Fra:1 Mem:7099.11M (Peak 7099.11M) | Time:00:00.28 | Compositing | Operation 22-55
+Fra:1 Mem:7605.36M (Peak 7605.36M) | Time:00:00.34 | Compositing | Operation 23-55
+Fra:1 Mem:7985.05M (Peak 8111.61M) | Time:00:00.40 | Compositing | Operation 24-55
+Fra:1 Mem:7985.05M (Peak 8111.61M) | Time:00:00.40 | Compositing | Operation 25-55
+Fra:1 Mem:7985.05M (Peak 8111.61M) | Time:00:00.40 | Compositing | Operation 26-55
+Fra:1 Mem:8111.61M (Peak 8111.61M) | Time:00:00.42 | Compositing | Operation 27-55
+Fra:1 Mem:8111.61M (Peak 8111.61M) | Time:00:00.42 | Compositing | Operation 28-55
+Fra:1 Mem:8617.86M (Peak 8617.86M) | Time:00:00.48 | Compositing | Operation 29-55
+Fra:1 Mem:8491.30M (Peak 9124.11M) | Time:00:00.55 | Compositing | Operation 30-55
+Fra:1 Mem:8491.30M (Peak 9124.11M) | Time:00:00.55 | Compositing | Operation 31-55
+Fra:1 Mem:8491.30M (Peak 9124.11M) | Time:00:00.55 | Compositing | Operation 32-55
+Fra:1 Mem:8617.86M (Peak 9124.11M) | Time:00:00.57 | Compositing | Operation 33-55
+Fra:1 Mem:8617.86M (Peak 9124.11M) | Time:00:00.57 | Compositing | Operation 34-55
+Fra:1 Mem:9124.11M (Peak 9124.11M) | Time:00:00.63 | Compositing | Operation 35-55
+Fra:1 Mem:8997.55M (Peak 9630.36M) | Time:00:00.71 | Compositing | Operation 36-55
+Fra:1 Mem:8997.55M (Peak 9630.36M) | Time:00:00.71 | Compositing | Operation 37-55
+Fra:1 Mem:8997.55M (Peak 9630.36M) | Time:00:00.71 | Compositing | Operation 38-55
+Fra:1 Mem:9124.11M (Peak 9630.36M) | Time:00:00.73 | Compositing | Operation 39-55
+Fra:1 Mem:9124.11M (Peak 9630.36M) | Time:00:00.73 | Compositing | Operation 40-55
+Fra:1 Mem:9630.36M (Peak 9630.36M) | Time:00:00.79 | Compositing | Operation 41-55
+Fra:1 Mem:9503.80M (Peak 10136.61M) | Time:00:00.88 | Compositing | Operation 42-55
+Fra:1 Mem:9630.36M (Peak 10136.61M) | Time:00:00.90 | Compositing | Operation 43-55
+Fra:1 Mem:9630.36M (Peak 10136.61M) | Time:00:00.90 | Compositing | Operation 44-55
+Fra:1 Mem:10136.61M (Peak 10136.61M) | Time:00:00.96 | Compositing | Operation 45-55
+Fra:1 Mem:10010.05M (Peak 10642.86M) | Time:00:01.06 | Compositing | Operation 46-55
+Fra:1 Mem:10010.05M (Peak 10642.86M) | Time:00:01.06 | Compositing | Operation 47-55
+Fra:1 Mem:10010.05M (Peak 10642.86M) | Time:00:01.06 | Compositing | Operation 48-55
+Fra:1 Mem:10516.30M (Peak 10642.86M) | Time:00:01.12 | Compositing | Operation 49-55
+Fra:1 Mem:10389.74M (Peak 11022.55M) | Time:00:01.21 | Compositing | Operation 50-55
+Fra:1 Mem:10389.74M (Peak 11022.55M) | Time:00:01.24 | Compositing | Operation 51-55
+Fra:1 Mem:10263.18M (Peak 11022.55M) | Time:00:01.33 | Compositing | Operation 52-55
+Fra:1 Mem:10263.18M (Peak 11022.55M) | Time:00:01.33 | Compositing | Operation 53-55
+Fra:1 Mem:10136.61M (Peak 11022.55M) | Time:00:01.41 | Compositing | Operation 54-55
+Fra:1 Mem:11149.12M (Peak 11149.12M) | Time:00:01.68 | Compositing | Operation 55-55
+Fra:1 Mem:11149.13M (Peak 15705.37M) | Time:00:03.42 | Compositing | Operation 56-55
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\interventions_bioenvelope_colonise-partial_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\interventions_bioenvelope_recruit-partial_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\interventions_bioenvelope_depaved_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\interventions_bioenvelope_colonise-ground_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\interventions_bioenvelope_colonise-full_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\interventions_bioenvelope_recruit-full_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\interventions_bioenvelope_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\interventions_bioenvelope_deploy-any_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\interventions_bioenvelope_decay_0001.png'
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending\_discard_render.png0001.png'
+Time: 00:32.27 (Saving: 00:02.89)
+
+[render_current_intervention_int] loaded parade_timeline__bioenvelope_trending__8k.exr -> 'InterventionInt::EXR Input'
+[render_current_intervention_int] resolution 7680x4320 from parade_timeline__bioenvelope_trending__8k.exr
+[render_current_intervention_int] wired AOV 'intervention_bioenvelope_ply-' -> 'InterventionInt::Raw'
+[render_current_intervention_int] rendering animation (frame 1, 9 slots)...
+[render_current_intervention_int] render done
+[render_current_intervention_int] renamed interventions_bioenvelope_0001.png -> interventions_bioenvelope.png
+[render_current_intervention_int] renamed interventions_bioenvelope_colonise-full_0001.png -> interventions_bioenvelope_colonise-full.png
+[render_current_intervention_int] renamed interventions_bioenvelope_colonise-ground_0001.png -> interventions_bioenvelope_colonise-ground.png
+[render_current_intervention_int] renamed interventions_bioenvelope_colonise-partial_0001.png -> interventions_bioenvelope_colonise-partial.png
+[render_current_intervention_int] renamed interventions_bioenvelope_decay_0001.png -> interventions_bioenvelope_decay.png
+[render_current_intervention_int] renamed interventions_bioenvelope_depaved_0001.png -> interventions_bioenvelope_depaved.png
+[render_current_intervention_int] renamed interventions_bioenvelope_deploy-any_0001.png -> interventions_bioenvelope_deploy-any.png
+[render_current_intervention_int] renamed interventions_bioenvelope_recruit-full_0001.png -> interventions_bioenvelope_recruit-full.png
+[render_current_intervention_int] renamed interventions_bioenvelope_recruit-partial_0001.png -> interventions_bioenvelope_recruit-partial.png
+[render_current_intervention_int] 9/9 slots present
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_mist.blend"
+Fra:1 Mem:5580.58M (Peak 5580.58M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5580.59M (Peak 5580.59M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5707.27M (Peak 5707.27M) | Time:00:00.02 | Compositing | Operation 2-139
+Fra:1 Mem:5833.84M (Peak 5833.84M) | Time:00:00.04 | Compositing | Operation 3-139
+Fra:1 Mem:5833.84M (Peak 5960.40M) | Time:00:00.10 | Compositing | Operation 4-139
+Fra:1 Mem:5833.84M (Peak 5960.40M) | Time:00:00.21 | Compositing | Operation 5-139
+Fra:1 Mem:6213.52M (Peak 6340.09M) | Time:00:00.31 | Compositing | Operation 6-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.41 | Compositing | Operation 7-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.41 | Compositing | Operation 8-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.41 | Compositing | Operation 9-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:00.44 | Compositing | Operation 10-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:00.44 | Compositing | Operation 11-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:00.44 | Compositing | Operation 12-139
+Fra:1 Mem:6340.09M (Peak 6719.77M) | Time:00:00.47 | Compositing | Operation 13-139
+Fra:1 Mem:6340.09M (Peak 6719.77M) | Time:00:00.47 | Compositing | Operation 14-139
+Fra:1 Mem:6340.09M (Peak 6719.77M) | Time:00:00.47 | Compositing | Operation 15-139
+Fra:1 Mem:6466.65M (Peak 6719.77M) | Time:00:00.50 | Compositing | Operation 16-139
+Fra:1 Mem:6466.65M (Peak 6719.77M) | Time:00:00.50 | Compositing | Operation 17-139
+Fra:1 Mem:6466.65M (Peak 6719.77M) | Time:00:00.50 | Compositing | Operation 18-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.54 | Compositing | Operation 19-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.54 | Compositing | Operation 20-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.54 | Compositing | Operation 21-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.57 | Compositing | Operation 22-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.57 | Compositing | Operation 23-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.57 | Compositing | Operation 24-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.62 | Compositing | Operation 25-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.62 | Compositing | Operation 26-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.62 | Compositing | Operation 27-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.65 | Compositing | Operation 28-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.65 | Compositing | Operation 29-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.65 | Compositing | Operation 30-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.69 | Compositing | Operation 31-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.69 | Compositing | Operation 32-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.69 | Compositing | Operation 33-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.76 | Compositing | Operation 34-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.76 | Compositing | Operation 35-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.76 | Compositing | Operation 36-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.84 | Compositing | Operation 37-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.84 | Compositing | Operation 38-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.84 | Compositing | Operation 39-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.91 | Compositing | Operation 40-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.91 | Compositing | Operation 41-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.91 | Compositing | Operation 42-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.99 | Compositing | Operation 43-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:01.03 | Compositing | Operation 44-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:01.06 | Compositing | Operation 45-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:01.09 | Compositing | Operation 46-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:01.13 | Compositing | Operation 47-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:01.21 | Compositing | Operation 48-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:01.23 | Compositing | Operation 49-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:01.23 | Compositing | Operation 50-139
+Fra:1 Mem:6593.21M (Peak 6719.77M) | Time:00:01.30 | Compositing | Operation 51-139
+Fra:1 Mem:7099.46M (Peak 7099.46M) | Time:00:01.44 | Compositing | Operation 52-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.47 | Compositing | Operation 53-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.47 | Compositing | Operation 54-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.47 | Compositing | Operation 55-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.58 | Compositing | Operation 56-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.65 | Compositing | Operation 57-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.76 | Compositing | Operation 58-139
+Fra:1 Mem:7226.02M (Peak 7226.02M) | Time:00:01.85 | Compositing | Operation 59-139
+Fra:1 Mem:7605.71M (Peak 7732.27M) | Time:00:01.94 | Compositing | Operation 60-139
+Fra:1 Mem:7226.02M (Peak 7732.27M) | Time:00:02.00 | Compositing | Operation 61-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:02.07 | Compositing | Operation 62-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:02.07 | Compositing | Operation 63-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:02.25 | Compositing | Operation 64-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:02.43 | Compositing | Operation 65-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.47 | Compositing | Operation 66-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.47 | Compositing | Operation 67-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.53 | Compositing | Operation 68-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.53 | Compositing | Operation 69-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.62 | Compositing | Operation 70-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.71 | Compositing | Operation 71-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.71 | Compositing | Operation 72-139
+Fra:1 Mem:7226.02M (Peak 7732.27M) | Time:00:02.73 | Compositing | Operation 73-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:02.77 | Compositing | Operation 74-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.81 | Compositing | Operation 75-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.81 | Compositing | Operation 76-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.81 | Compositing | Operation 77-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.88 | Compositing | Operation 78-139
+Fra:1 Mem:8111.96M (Peak 8111.96M) | Time:00:03.13 | Compositing | Operation 79-139
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\mist__20260413_105430__positive\_discard_render.png0001.png'
+Time: 00:06.38 (Saving: 00:03.16)
+
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_mist.py", line 45, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_mist.py", line 41, in main
+    run_fast_render(config)
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\_fast_runner_core.py", line 225, in run_fast_render
+    raise RuntimeError(
+RuntimeError: render_current_mist: 3 slots missing after render: ['mist_kirsch_thin', 'mist_kirsch_fine', 'mist_kirsch_extra_thin']
+[render_current_mist] repathed 'MistOutlines::EXR Input' -> parade_timeline__positive_state__8k.exr
+[render_current_mist] resolution 7680x4320 from parade_timeline__positive_state__8k.exr
+[render_current_mist] rendering animation (frame 1, 3 slots)...
+[render_current_mist] render done
+[render_current_mist] 0/3 slots present
+[render_current_mist] MISSING: ['mist_kirsch_thin', 'mist_kirsch_fine', 'mist_kirsch_extra_thin']
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_mist.blend"
+Fra:1 Mem:5580.58M (Peak 5580.58M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5580.59M (Peak 5580.59M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5707.27M (Peak 5707.27M) | Time:00:00.01 | Compositing | Operation 2-139
+Fra:1 Mem:5833.84M (Peak 5833.84M) | Time:00:00.03 | Compositing | Operation 3-139
+Fra:1 Mem:5833.84M (Peak 5960.40M) | Time:00:00.09 | Compositing | Operation 4-139
+Fra:1 Mem:5833.84M (Peak 5960.40M) | Time:00:00.22 | Compositing | Operation 5-139
+Fra:1 Mem:6213.52M (Peak 6340.09M) | Time:00:00.29 | Compositing | Operation 6-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.37 | Compositing | Operation 7-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.37 | Compositing | Operation 8-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.37 | Compositing | Operation 9-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:00.40 | Compositing | Operation 10-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:00.40 | Compositing | Operation 11-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:00.40 | Compositing | Operation 12-139
+Fra:1 Mem:6340.09M (Peak 6719.77M) | Time:00:00.42 | Compositing | Operation 13-139
+Fra:1 Mem:6340.09M (Peak 6719.77M) | Time:00:00.43 | Compositing | Operation 14-139
+Fra:1 Mem:6340.09M (Peak 6719.77M) | Time:00:00.43 | Compositing | Operation 15-139
+Fra:1 Mem:6466.65M (Peak 6719.77M) | Time:00:00.45 | Compositing | Operation 16-139
+Fra:1 Mem:6466.65M (Peak 6719.77M) | Time:00:00.45 | Compositing | Operation 17-139
+Fra:1 Mem:6466.65M (Peak 6719.77M) | Time:00:00.45 | Compositing | Operation 18-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.49 | Compositing | Operation 19-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.49 | Compositing | Operation 20-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.49 | Compositing | Operation 21-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.53 | Compositing | Operation 22-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.53 | Compositing | Operation 23-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.53 | Compositing | Operation 24-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.57 | Compositing | Operation 25-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.57 | Compositing | Operation 26-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.57 | Compositing | Operation 27-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.60 | Compositing | Operation 28-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.60 | Compositing | Operation 29-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.60 | Compositing | Operation 30-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.64 | Compositing | Operation 31-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.64 | Compositing | Operation 32-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.64 | Compositing | Operation 33-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.69 | Compositing | Operation 34-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.69 | Compositing | Operation 35-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.69 | Compositing | Operation 36-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.77 | Compositing | Operation 37-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.77 | Compositing | Operation 38-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.77 | Compositing | Operation 39-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.83 | Compositing | Operation 40-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.83 | Compositing | Operation 41-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.83 | Compositing | Operation 42-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.89 | Compositing | Operation 43-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.92 | Compositing | Operation 44-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.94 | Compositing | Operation 45-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:00.97 | Compositing | Operation 46-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:01.00 | Compositing | Operation 47-139
+Fra:1 Mem:6086.96M (Peak 6719.77M) | Time:00:01.07 | Compositing | Operation 48-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:01.09 | Compositing | Operation 49-139
+Fra:1 Mem:6213.52M (Peak 6719.77M) | Time:00:01.09 | Compositing | Operation 50-139
+Fra:1 Mem:6593.21M (Peak 6719.77M) | Time:00:01.15 | Compositing | Operation 51-139
+Fra:1 Mem:7099.46M (Peak 7099.46M) | Time:00:01.24 | Compositing | Operation 52-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.27 | Compositing | Operation 53-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.27 | Compositing | Operation 54-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.27 | Compositing | Operation 55-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.34 | Compositing | Operation 56-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.37 | Compositing | Operation 57-139
+Fra:1 Mem:6719.77M (Peak 7226.02M) | Time:00:01.44 | Compositing | Operation 58-139
+Fra:1 Mem:7226.02M (Peak 7226.02M) | Time:00:01.50 | Compositing | Operation 59-139
+Fra:1 Mem:7605.71M (Peak 7732.27M) | Time:00:01.57 | Compositing | Operation 60-139
+Fra:1 Mem:7226.02M (Peak 7732.27M) | Time:00:01.62 | Compositing | Operation 61-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:01.66 | Compositing | Operation 62-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:01.66 | Compositing | Operation 63-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:01.83 | Compositing | Operation 64-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:01.99 | Compositing | Operation 65-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.03 | Compositing | Operation 66-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.03 | Compositing | Operation 67-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.09 | Compositing | Operation 68-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.09 | Compositing | Operation 69-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.16 | Compositing | Operation 70-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.24 | Compositing | Operation 71-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.24 | Compositing | Operation 72-139
+Fra:1 Mem:7226.02M (Peak 7732.27M) | Time:00:02.26 | Compositing | Operation 73-139
+Fra:1 Mem:6846.34M (Peak 7732.27M) | Time:00:02.31 | Compositing | Operation 74-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.34 | Compositing | Operation 75-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.34 | Compositing | Operation 76-139
+Fra:1 Mem:6719.77M (Peak 7732.27M) | Time:00:02.34 | Compositing | Operation 77-139
+Fra:1 Mem:7099.46M (Peak 7732.27M) | Time:00:02.41 | Compositing | Operation 78-139
+Fra:1 Mem:8111.96M (Peak 8111.96M) | Time:00:02.71 | Compositing | Operation 79-139
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\mist__20260413_105430__trending\_discard_render.png0001.png'
+Time: 00:05.56 (Saving: 00:02.72)
+
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_mist.py", line 45, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_mist.py", line 41, in main
+    run_fast_render(config)
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\_fast_runner_core.py", line 225, in run_fast_render
+    raise RuntimeError(
+RuntimeError: render_current_mist: 3 slots missing after render: ['mist_kirsch_thin', 'mist_kirsch_fine', 'mist_kirsch_extra_thin']
+[render_current_mist] repathed 'MistOutlines::EXR Input' -> parade_timeline__trending_state__8k.exr
+[render_current_mist] resolution 7680x4320 from parade_timeline__trending_state__8k.exr
+[render_current_mist] rendering animation (frame 1, 3 slots)...
+[render_current_mist] render done
+[render_current_mist] 0/3 slots present
+[render_current_mist] MISSING: ['mist_kirsch_thin', 'mist_kirsch_fine', 'mist_kirsch_extra_thin']
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_depth_outliner.blend"
+Fra:1 Mem:5579.69M (Peak 5579.69M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5579.70M (Peak 5579.70M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5706.33M (Peak 5706.33M) | Time:00:00.02 | Compositing | Operation 2-23
+Fra:1 Mem:5706.33M (Peak 5832.89M) | Time:00:00.09 | Compositing | Operation 3-23
+Fra:1 Mem:5706.33M (Peak 5832.89M) | Time:00:00.09 | Compositing | Operation 4-23
+Fra:1 Mem:6086.02M (Peak 6212.58M) | Time:00:00.15 | Compositing | Operation 5-23
+Fra:1 Mem:6212.58M (Peak 6212.58M) | Time:00:00.21 | Compositing | Operation 6-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.35 | Compositing | Operation 7-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.35 | Compositing | Operation 8-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.40 | Compositing | Operation 9-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.40 | Compositing | Operation 10-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.45 | Compositing | Operation 11-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.45 | Compositing | Operation 12-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.45 | Compositing | Operation 13-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.50 | Compositing | Operation 14-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.58 | Compositing | Operation 15-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.58 | Compositing | Operation 16-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.62 | Compositing | Operation 17-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.68 | Compositing | Operation 18-23
+Fra:1 Mem:5706.33M (Peak 6718.83M) | Time:00:00.73 | Compositing | Operation 19-23
+Fra:1 Mem:5706.33M (Peak 6718.83M) | Time:00:00.73 | Compositing | Operation 20-23
+Fra:1 Mem:5706.33M (Peak 6718.83M) | Time:00:00.73 | Compositing | Operation 21-23
+Fra:1 Mem:6086.02M (Peak 6718.83M) | Time:00:00.80 | Compositing | Operation 22-23
+Fra:1 Mem:7098.52M (Peak 7098.52M) | Time:00:01.16 | Compositing | Operation 23-23
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\depth_outliner__20260413_105430__positive\_discard_render.png0001.png'
+Time: 00:04.60 (Saving: 00:03.41)
+
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_depth_outliner.py", line 46, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_depth_outliner.py", line 42, in main
+    run_fast_render(config)
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\_fast_runner_core.py", line 225, in run_fast_render
+    raise RuntimeError(
+RuntimeError: render_current_depth_outliner: 1 slots missing after render: ['depth_outliner']
+[render_current_depth_outliner] repathed 'DepthOutliner::EXR Input' -> parade_timeline__positive_state__8k.exr
+[render_current_depth_outliner] resolution 7680x4320 from parade_timeline__positive_state__8k.exr
+[render_current_depth_outliner] rendering animation (frame 1, 1 slots)...
+[render_current_depth_outliner] render done
+[render_current_depth_outliner] 0/1 slots present
+[render_current_depth_outliner] MISSING: ['depth_outliner']
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_depth_outliner.blend"
+Fra:1 Mem:5579.69M (Peak 5579.69M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5579.70M (Peak 5579.70M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5706.33M (Peak 5706.33M) | Time:00:00.02 | Compositing | Operation 2-23
+Fra:1 Mem:5706.33M (Peak 5832.89M) | Time:00:00.09 | Compositing | Operation 3-23
+Fra:1 Mem:5706.33M (Peak 5832.89M) | Time:00:00.09 | Compositing | Operation 4-23
+Fra:1 Mem:6086.02M (Peak 6212.58M) | Time:00:00.16 | Compositing | Operation 5-23
+Fra:1 Mem:6212.58M (Peak 6212.58M) | Time:00:00.23 | Compositing | Operation 6-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.40 | Compositing | Operation 7-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.40 | Compositing | Operation 8-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.47 | Compositing | Operation 9-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.47 | Compositing | Operation 10-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.53 | Compositing | Operation 11-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.53 | Compositing | Operation 12-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.53 | Compositing | Operation 13-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.57 | Compositing | Operation 14-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.65 | Compositing | Operation 15-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.65 | Compositing | Operation 16-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.70 | Compositing | Operation 17-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.74 | Compositing | Operation 18-23
+Fra:1 Mem:5706.33M (Peak 6718.83M) | Time:00:00.79 | Compositing | Operation 19-23
+Fra:1 Mem:5706.33M (Peak 6718.83M) | Time:00:00.79 | Compositing | Operation 20-23
+Fra:1 Mem:5706.33M (Peak 6718.83M) | Time:00:00.79 | Compositing | Operation 21-23
+Fra:1 Mem:6086.02M (Peak 6718.83M) | Time:00:00.86 | Compositing | Operation 22-23
+Fra:1 Mem:7098.52M (Peak 7098.52M) | Time:00:01.13 | Compositing | Operation 23-23
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\depth_outliner__20260413_105430__trending\_discard_render.png0001.png'
+Time: 00:05.03 (Saving: 00:03.88)
+
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_depth_outliner.py", line 46, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_depth_outliner.py", line 42, in main
+    run_fast_render(config)
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\_fast_runner_core.py", line 225, in run_fast_render
+    raise RuntimeError(
+RuntimeError: render_current_depth_outliner: 1 slots missing after render: ['depth_outliner']
+[render_current_depth_outliner] repathed 'DepthOutliner::EXR Input' -> parade_timeline__trending_state__8k.exr
+[render_current_depth_outliner] resolution 7680x4320 from parade_timeline__trending_state__8k.exr
+[render_current_depth_outliner] rendering animation (frame 1, 1 slots)...
+[render_current_depth_outliner] render done
+[render_current_depth_outliner] 0/1 slots present
+[render_current_depth_outliner] MISSING: ['depth_outliner']
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\compositor_depth_outliner.blend"
+Fra:1 Mem:5579.69M (Peak 5579.69M) | Time:00:00.00 | Compositing
+Fra:1 Mem:5579.70M (Peak 5579.70M) | Time:00:00.00 | Compositing | Initializing execution
+Fra:1 Mem:5706.33M (Peak 5706.33M) | Time:00:00.02 | Compositing | Operation 2-23
+Fra:1 Mem:5706.33M (Peak 5832.89M) | Time:00:00.09 | Compositing | Operation 3-23
+Fra:1 Mem:5706.33M (Peak 5832.89M) | Time:00:00.09 | Compositing | Operation 4-23
+Fra:1 Mem:6086.02M (Peak 6212.58M) | Time:00:00.17 | Compositing | Operation 5-23
+Fra:1 Mem:6212.58M (Peak 6212.58M) | Time:00:00.23 | Compositing | Operation 6-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.38 | Compositing | Operation 7-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.38 | Compositing | Operation 8-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.43 | Compositing | Operation 9-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.43 | Compositing | Operation 10-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.48 | Compositing | Operation 11-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.48 | Compositing | Operation 12-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.48 | Compositing | Operation 13-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.52 | Compositing | Operation 14-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.59 | Compositing | Operation 15-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.59 | Compositing | Operation 16-23
+Fra:1 Mem:6212.58M (Peak 6718.83M) | Time:00:00.62 | Compositing | Operation 17-23
+Fra:1 Mem:5832.89M (Peak 6718.83M) | Time:00:00.66 | Compositing | Operation 18-23
+Fra:1 Mem:5706.33M (Peak 6718.83M) | Time:00:00.70 | Compositing | Operation 19-23
+Fra:1 Mem:5706.33M (Peak 6718.83M) | Time:00:00.70 | Compositing | Operation 20-23
+Fra:1 Mem:5706.33M (Peak 6718.83M) | Time:00:00.70 | Compositing | Operation 21-23
+Fra:1 Mem:6086.02M (Peak 6718.83M) | Time:00:00.78 | Compositing | Operation 22-23
+Fra:1 Mem:7098.52M (Peak 7098.52M) | Time:00:01.15 | Compositing | Operation 23-23
+Saved: 'D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\depth_outliner__20260413_105430__priority\_discard_render.png0001.png'
+Time: 00:04.89 (Saving: 00:03.71)
+
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_depth_outliner.py", line 46, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_depth_outliner.py", line 42, in main
+    run_fast_render(config)
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\_fast_runner_core.py", line 225, in run_fast_render
+    raise RuntimeError(
+RuntimeError: render_current_depth_outliner: 1 slots missing after render: ['depth_outliner']
+[render_current_depth_outliner] repathed 'DepthOutliner::EXR Input' -> parade_timeline__positive_priority_state__8k.exr
+[render_current_depth_outliner] resolution 7680x4320 from parade_timeline__positive_priority_state__8k.exr
+[render_current_depth_outliner] rendering animation (frame 1, 1 slots)...
+[render_current_depth_outliner] render done
+[render_current_depth_outliner] 0/1 slots present
+[render_current_depth_outliner] MISSING: ['depth_outliner']
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\proposal_and_interventions.blend"
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_and_interventions.py", line 46, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_and_interventions.py", line 42, in main
+    run_fast_render(config)
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\_fast_runner_core.py", line 208, in run_fast_render
+    bpy.ops.render.render(animation=True, scene=scene.name)
+  File "C:\Program Files\Blender Foundation\Blender 4.2\4.2\scripts\modules\bpy\ops.py", line 109, in __call__
+    ret = _op_call(self.idname_py(), kw)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Error: Cannot render, no camera
+
+[render_current_proposal_and_interventions] repathed 'EXR' -> parade_timeline__positive_state__8k.exr
+[render_current_proposal_and_interventions] resolution 7680x4320 from parade_timeline__positive_state__8k.exr
+[render_current_proposal_and_interventions] rendering animation (frame 1, 13 slots)...
+Error: Cannot render, no camera
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Read blend: "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\canonical_templates\proposal_and_interventions.blend"
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_and_interventions.py", line 46, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_and_interventions.py", line 42, in main
+    run_fast_render(config)
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\_fast_runner_core.py", line 208, in run_fast_render
+    bpy.ops.render.render(animation=True, scene=scene.name)
+  File "C:\Program Files\Blender Foundation\Blender 4.2\4.2\scripts\modules\bpy\ops.py", line 109, in __call__
+    ret = _op_call(self.idname_py(), kw)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Error: Cannot render, no camera
+
+[render_current_proposal_and_interventions] repathed 'EXR' -> parade_timeline__trending_state__8k.exr
+[render_current_proposal_and_interventions] resolution 7680x4320 from parade_timeline__trending_state__8k.exr
+[render_current_proposal_and_interventions] rendering animation (frame 1, 13 slots)...
+Error: Cannot render, no camera
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_only.py", line 48, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_only.py", line 29, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_PROPOSAL_ONLY_EXR, COMPOSITOR_PROPOSAL_ONLY_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_only.py", line 48, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_only.py", line 29, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_PROPOSAL_ONLY_EXR, COMPOSITOR_PROPOSAL_ONLY_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_outline.py", line 48, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_outline.py", line 29, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_PROPOSAL_OUTLINE_EXR, COMPOSITOR_PROPOSAL_OUTLINE_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_outline.py", line 48, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_outline.py", line 29, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_PROPOSAL_OUTLINE_EXR, COMPOSITOR_PROPOSAL_OUTLINE_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_colored_depth_outlines.py", line 51, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_colored_depth_outlines.py", line 32, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_PROPOSAL_COLORED_DEPTH_EXR, COMPOSITOR_PROPOSAL_COLORED_DEPTH_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_colored_depth_outlines.py", line 51, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_proposal_colored_depth_outlines.py", line 32, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_PROPOSAL_COLORED_DEPTH_EXR, COMPOSITOR_PROPOSAL_COLORED_DEPTH_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_size_outline.py", line 48, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_size_outline.py", line 29, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_SIZE_OUTLINE_EXR, COMPOSITOR_SIZE_OUTLINE_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_size_outline.py", line 48, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_size_outline.py", line 29, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_SIZE_OUTLINE_EXR, COMPOSITOR_SIZE_OUTLINE_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_size_outline.py", line 48, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_size_outline.py", line 29, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_SIZE_OUTLINE_EXR, COMPOSITOR_SIZE_OUTLINE_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_sizes_single_input.py", line 49, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_sizes_single_input.py", line 30, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_SIZES_SINGLE_INPUT_EXR, COMPOSITOR_SIZES_SINGLE_INPUT_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_sizes_single_input.py", line 49, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_sizes_single_input.py", line 30, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_SIZES_SINGLE_INPUT_EXR, COMPOSITOR_SIZES_SINGLE_INPUT_OUTPUT_DIR
+
+Blender quit
+Blender 4.2.19 LTS (hash 12a2dfa84963 built 2026-03-17 01:34:28)
+Traceback (most recent call last):
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_sizes_single_input.py", line 49, in <module>
+    main()
+  File "D:\2026 Arboreal Futures\urban-futures\_futureSim_refactored\blender\compositor\scripts\render_current_sizes_single_input.py", line 30, in main
+    raise ValueError(
+ValueError: Required env vars: COMPOSITOR_SIZES_SINGLE_INPUT_EXR, COMPOSITOR_SIZES_SINGLE_INPUT_OUTPUT_DIR
+
+Blender quit
+Batch: sim_root=4.10 exr_family=parade_timeline res=8k ts=20260413_105430
+Output root: D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline
+27 runs planned
+
+=== [ao] -> ao__20260413_105430
+    runner : render_current_ao.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\ao__20260413_105430
+    COMPOSITOR_EXISTING_EXR                  parade_timeline__existing_condition_positive__8k.exr
+    COMPOSITOR_PATHWAY_EXR                   parade_timeline__positive_state__8k.exr
+    COMPOSITOR_PRIORITY_EXR                  parade_timeline__positive_priority_state__8k.exr
+    OK in 33.1s
+
+=== [normals] -> normals__20260413_105430
+    runner : render_current_normals.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\normals__20260413_105430
+    COMPOSITOR_EXISTING_EXR                  parade_timeline__existing_condition_positive__8k.exr
+    COMPOSITOR_PATHWAY_EXR                   parade_timeline__positive_state__8k.exr
+    COMPOSITOR_PRIORITY_EXR                  parade_timeline__positive_priority_state__8k.exr
+    OK in 33.2s
+
+=== [resources] -> resources__20260413_105430
+    runner : render_current_resources.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\resources__20260413_105430
+    COMPOSITOR_PATHWAY_EXR                   parade_timeline__positive_state__8k.exr
+    COMPOSITOR_PRIORITY_EXR                  parade_timeline__positive_priority_state__8k.exr
+    COMPOSITOR_TRENDING_EXR                  parade_timeline__trending_state__8k.exr
+    OK in 104.7s
+
+=== [bioenvelope] -> bioenvelope__20260413_105430
+    runner : render_current_bioenvelope.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\bioenvelope__20260413_105430
+    COMPOSITOR_BIOENVELOPE_EXR               parade_timeline__bioenvelope_positive__8k.exr
+    COMPOSITOR_BIOENVELOPE_TRENDING_EXR      parade_timeline__bioenvelope_trending__8k.exr
+    COMPOSITOR_EXISTING_EXR                  parade_timeline__existing_condition_positive__8k.exr
+    OK in 118.2s
+
+=== [shading] -> shading__20260413_105430
+    runner : render_current_shading.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\shading__20260413_105430
+    COMPOSITOR_BIOENVELOPE_EXR               parade_timeline__bioenvelope_positive__8k.exr
+    COMPOSITOR_BIOENVELOPE_TRENDING_EXR      parade_timeline__bioenvelope_trending__8k.exr
+    COMPOSITOR_EXISTING_EXR                  parade_timeline__existing_condition_positive__8k.exr
+    COMPOSITOR_EXISTING_TRENDING_EXR         parade_timeline__existing_condition_trending__8k.exr
+    COMPOSITOR_PATHWAY_EXR                   parade_timeline__positive_state__8k.exr
+    COMPOSITOR_PRIORITY_EXR                  parade_timeline__positive_priority_state__8k.exr
+    OK in 139.4s
+
+=== [base] -> base__20260413_105430
+    runner : render_current_base.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\base__20260413_105430
+    COMPOSITOR_EXISTING_EXR                  parade_timeline__existing_condition_positive__8k.exr
+    OK in 68.6s
+
+=== [intervention_int/positive] -> intervention_int__20260413_105430__positive
+    runner : render_current_intervention_int.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__positive
+    COMPOSITOR_EXR                           parade_timeline__bioenvelope_positive__8k.exr
+    OK in 37.0s
+
+=== [intervention_int/trending] -> intervention_int__20260413_105430__trending
+    runner : render_current_intervention_int.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\intervention_int__20260413_105430__trending
+    COMPOSITOR_EXR                           parade_timeline__bioenvelope_trending__8k.exr
+    OK in 36.0s
+
+=== [mist/positive] -> mist__20260413_105430__positive
+    runner : render_current_mist.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\mist__20260413_105430__positive
+    COMPOSITOR_EXR                           parade_timeline__positive_state__8k.exr
+    OK in 12.9s
+
+=== [mist/trending] -> mist__20260413_105430__trending
+    runner : render_current_mist.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\mist__20260413_105430__trending
+    COMPOSITOR_EXR                           parade_timeline__trending_state__8k.exr
+    OK in 11.7s
+
+=== [depth_outliner/positive] -> depth_outliner__20260413_105430__positive
+    runner : render_current_depth_outliner.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\depth_outliner__20260413_105430__positive
+    COMPOSITOR_EXR                           parade_timeline__positive_state__8k.exr
+    OK in 10.9s
+
+=== [depth_outliner/trending] -> depth_outliner__20260413_105430__trending
+    runner : render_current_depth_outliner.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\depth_outliner__20260413_105430__trending
+    COMPOSITOR_EXR                           parade_timeline__trending_state__8k.exr
+    OK in 11.1s
+
+=== [depth_outliner/priority] -> depth_outliner__20260413_105430__priority
+    runner : render_current_depth_outliner.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\depth_outliner__20260413_105430__priority
+    COMPOSITOR_EXR                           parade_timeline__positive_priority_state__8k.exr
+    OK in 11.7s
+
+=== [proposal_and_interventions/positive] -> proposal_and_interventions__20260413_105430__positive
+    runner : render_current_proposal_and_interventions.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\proposal_and_interventions__20260413_105430__positive
+    COMPOSITOR_EXR                           parade_timeline__positive_state__8k.exr
+    FAIL(rc=1) in 7.2s
+
+=== [proposal_and_interventions/trending] -> proposal_and_interventions__20260413_105430__trending
+    runner : render_current_proposal_and_interventions.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\proposal_and_interventions__20260413_105430__trending
+    COMPOSITOR_EXR                           parade_timeline__trending_state__8k.exr
+    FAIL(rc=1) in 7.2s
+
+=== [proposal_only/positive] -> proposal_only__20260413_105430__positive
+    runner : render_current_proposal_only.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\proposal_only__20260413_105430__positive
+    COMPOSITOR_PROPOSAL_ONLY_EXR             parade_timeline__positive_state__8k.exr
+    OK in 0.9s
+
+=== [proposal_only/trending] -> proposal_only__20260413_105430__trending
+    runner : render_current_proposal_only.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\proposal_only__20260413_105430__trending
+    COMPOSITOR_PROPOSAL_ONLY_EXR             parade_timeline__trending_state__8k.exr
+    OK in 1.2s
+
+=== [proposal_outline/positive] -> proposal_outline__20260413_105430__positive
+    runner : render_current_proposal_outline.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\proposal_outline__20260413_105430__positive
+    COMPOSITOR_PROPOSAL_OUTLINE_EXR          parade_timeline__positive_state__8k.exr
+    OK in 1.0s
+
+=== [proposal_outline/trending] -> proposal_outline__20260413_105430__trending
+    runner : render_current_proposal_outline.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\proposal_outline__20260413_105430__trending
+    COMPOSITOR_PROPOSAL_OUTLINE_EXR          parade_timeline__trending_state__8k.exr
+    OK in 0.9s
+
+=== [proposal_colored_depth_outlines/positive] -> proposal_colored_depth_outlines__20260413_105430__positive
+    runner : render_current_proposal_colored_depth_outlines.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\proposal_colored_depth_outlines__20260413_105430__positive
+    COMPOSITOR_PROPOSAL_COLORED_DEPTH_EXR    parade_timeline__positive_state__8k.exr
+    OK in 0.9s
+
+=== [proposal_colored_depth_outlines/trending] -> proposal_colored_depth_outlines__20260413_105430__trending
+    runner : render_current_proposal_colored_depth_outlines.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\proposal_colored_depth_outlines__20260413_105430__trending
+    COMPOSITOR_PROPOSAL_COLORED_DEPTH_EXR    parade_timeline__trending_state__8k.exr
+    OK in 0.9s
+
+=== [size_outline/positive] -> size_outline__20260413_105430__positive
+    runner : render_current_size_outline.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\size_outline__20260413_105430__positive
+    COMPOSITOR_SIZE_OUTLINE_EXR              parade_timeline__positive_state__8k.exr
+    OK in 1.1s
+
+=== [size_outline/trending] -> size_outline__20260413_105430__trending
+    runner : render_current_size_outline.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\size_outline__20260413_105430__trending
+    COMPOSITOR_SIZE_OUTLINE_EXR              parade_timeline__trending_state__8k.exr
+    OK in 1.1s
+
+=== [size_outline/priority] -> size_outline__20260413_105430__priority
+    runner : render_current_size_outline.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\size_outline__20260413_105430__priority
+    COMPOSITOR_SIZE_OUTLINE_EXR              parade_timeline__positive_priority_state__8k.exr
+    OK in 1.2s
+
+=== [sizes_single_input/positive] -> sizes_single_input__20260413_105430__positive
+    runner : render_current_sizes_single_input.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\sizes_single_input__20260413_105430__positive
+    COMPOSITOR_SIZES_SINGLE_INPUT_EXR        parade_timeline__positive_state__8k.exr
+    OK in 1.0s
+
+=== [sizes_single_input/trending] -> sizes_single_input__20260413_105430__trending
+    runner : render_current_sizes_single_input.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\sizes_single_input__20260413_105430__trending
+    COMPOSITOR_SIZES_SINGLE_INPUT_EXR        parade_timeline__trending_state__8k.exr
+    OK in 1.0s
+
+=== [sizes_single_input/priority] -> sizes_single_input__20260413_105430__priority
+    runner : render_current_sizes_single_input.py
+    out    : D:\2026 Arboreal Futures\urban-futures\_data-refactored\compositor\outputs\4.10\parade_timeline\sizes_single_input__20260413_105430__priority
+    COMPOSITOR_SIZES_SINGLE_INPUT_EXR        parade_timeline__positive_priority_state__8k.exr
+    OK in 0.9s
+
+=== SUMMARY ===
+  OK   ao
+  OK   normals
+  OK   resources
+  OK   bioenvelope
+  OK   shading
+  OK   base
+  OK   intervention_int/positive
+  OK   intervention_int/trending
+  OK   mist/positive
+  OK   mist/trending
+  OK   depth_outliner/positive
+  OK   depth_outliner/trending
+  OK   depth_outliner/priority
+  FAIL  proposal_and_interventions/positive
+  FAIL  proposal_and_interventions/trending
+  OK   proposal_only/positive
+  OK   proposal_only/trending
+  OK   proposal_outline/positive
+  OK   proposal_outline/trending
+  OK   proposal_colored_depth_outlines/positive
+  OK   proposal_colored_depth_outlines/trending
+  OK   size_outline/positive
+  OK   size_outline/trending
+  OK   size_outline/priority
+  OK   sizes_single_input/positive
+  OK   sizes_single_input/trending
+  OK   sizes_single_input/priority

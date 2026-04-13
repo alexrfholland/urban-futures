@@ -451,6 +451,21 @@ def rename_temp_exr_output(output_path: Path) -> None:
     rendered_path.replace(output_path)
 
 
+def remove_blend_backup_versions(blend_path: Path) -> None:
+    # Blender may leave numbered backup siblings like `foo.blend1`.
+    for backup_path in blend_path.parent.glob(f"{blend_path.name}[0-9]*"):
+        if backup_path.is_file():
+            backup_path.unlink()
+
+
+def save_mainfile(filepath: Path, *, copy: bool) -> Path:
+    filepath = Path(filepath).resolve()
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=str(filepath), copy=copy)
+    remove_blend_backup_versions(filepath)
+    return filepath
+
+
 def render_isolated_exr(
     scene: bpy.types.Scene,
     view_layer_name: str,
@@ -516,8 +531,7 @@ def render_all_isolated_exrs(
 
 def save_scene_copy(scene: bpy.types.Scene, output_root: Path, basename: str) -> Path:
     blend_path = output_root / f"{basename}__full_pipeline.blend"
-    bpy.ops.wm.save_as_mainfile(filepath=str(blend_path), copy=True)
-    return blend_path
+    return save_mainfile(blend_path, copy=True)
 
 
 def write_manifest(

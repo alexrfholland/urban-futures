@@ -150,17 +150,18 @@ it writes these AOVs:
 `bV2_build_world_attributes.py` currently transfers these key attrs onto
 buildings, hires roads, and lores roads:
 
-**Road split architecture:** Road PLYs have a `scale` attribute (0.5 = hires,
-1.0 = lores). Each site's roads are split into two source objects:
+**Current world-source architecture:** Each site now uses two point-cloud source
+objects:
 
-- `<site>_roads_source_hires` — 0.5m spacing, rendered as point cloud via
-  `v2WorldPoints` geometry nodes (same as buildings)
-- `<site>_roads_source_lores` — 1.0m spacing, rendered as 1x1x0.25m cube
-  instances via `v2WorldCubes`-style geometry nodes
+- `<site>_buildings_source`
+- `<site>_roads_source`
 
-Both use the `v2WorldAOV` material so all AOVs transfer correctly. The split is
-defined in `bV2_scene_contract.py` (`SITE_CONTRACTS`) and the cube instancer
-path is controlled by `LORES_SOURCE_KINDS` in `bV2_build_world_attributes.py`.
+Both use the `v2WorldAOV` material and `v2WorldPoints` geometry nodes so the
+world AOV contract transfers consistently through the rebuilt world objects.
+
+Cube mode is currently disabled because it carries a large render cost. If it is
+ever revived, it must be reintroduced as an explicit template refresh path
+rather than a runtime toggle.
 
 Source PLYs live at `_data-refactored/model_inputs/world/`. Use
 `bV2_setup_template.py --reset <sites>` to reimport from PLY into the
@@ -312,3 +313,33 @@ Optional geometry flags can also be enabled for that path when needed:
 See
 [EXR_INPUT_GUIDE.md](../compositor/EXR_INPUT_GUIDE.md)
 for the compositor-side lookup of which view layers feed which blends.
+
+### intervention_int compositor family
+
+The `intervention_bioenvelope_ply-int` AOV encodes intervention categories as
+integers 0–8. The `compositor_intervention_int.blend` template reads this AOV
+from a single bioenvelope EXR (`bioenvelope_positive` or `bioenvelope_trending`)
+and produces:
+
+- 1 combined RGBA PNG (`interventions_bioenvelope.png`) — all categories
+  coloured, int 0 transparent
+- 8 per-category RGBA PNGs (`interventions_bioenvelope_<category>.png`) — each
+  showing only that category's colour with alpha mask
+
+Integer-to-colour mapping (sRGB hex):
+
+| Int | Category | Hex |
+| --- | --- | --- |
+| 0 | none | transparent |
+| 1 | deploy-any | #DCC090 |
+| 2 | decay | #F0DC90 |
+| 3 | colonise-ground | #8ED8C8 |
+| 4 | colonise-partial | #D0A040 |
+| 5 | colonise-full | #B8E86C |
+| 6 | recruit-partial | #F0DC90 |
+| 7 | recruit-full | #8ED8C8 |
+| 8 | depaved | #DC78A0 |
+
+Runner: `render_edge_lab_current_intervention_int.py`
+
+Rebuild: `rebuild_intervention_int_template_20260412.py`

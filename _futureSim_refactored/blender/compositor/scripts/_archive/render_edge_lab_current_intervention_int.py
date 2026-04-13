@@ -79,7 +79,7 @@ def set_standard_view(scene: bpy.types.Scene) -> None:
     except Exception:
         pass
     try:
-        scene.view_settings.view_transform = "Raw"
+        scene.view_settings.view_transform = "Standard"
     except Exception:
         pass
     try:
@@ -150,6 +150,31 @@ def repath_and_wire(
     return img
 
 
+def render_socket_to_png(
+    scene: bpy.types.Scene,
+    node_tree: bpy.types.NodeTree,
+    image_socket,
+    output_path: Path,
+) -> None:
+    """Render a single compositor socket to a PNG via the Composite node.
+
+    Blender 4.2 intermittently skips File Output slots when no Render Layers
+    node is present.  This renders each slot individually through the Composite
+    node as the established workaround (same pattern as the mist runner).
+    """
+    composite = require_node_by_type(node_tree, "CompositorNodeComposite")
+    viewer = require_node_by_type(node_tree, "CompositorNodeViewer")
+    for link in list(composite.inputs[0].links):
+        node_tree.links.remove(link)
+    for link in list(viewer.inputs[0].links):
+        node_tree.links.remove(link)
+    node_tree.links.new(image_socket, composite.inputs[0])
+    node_tree.links.new(image_socket, viewer.inputs[0])
+    scene.render.filepath = str(output_path)
+    bpy.ops.render.render(write_still=True, scene=scene.name)
+    log(f"Wrote {output_path}")
+
+
 def rename_family_outputs(output_dir: Path) -> None:
     for rendered_path in sorted(output_dir.glob("*_0001.png")):
         final_path = rendered_path.with_name(rendered_path.name.replace("_0001", ""))
@@ -193,12 +218,10 @@ def main() -> None:
     scene.render.resolution_percentage = 100
     log(f"resolution {width}x{height} from {exr_path.name}")
 
-    # File Output node writes via its slot path.
+    # File Output node — only set the base path and unmute.
+    # Format and color management are owned by the canonical template.
     workflow_output = require_node(node_tree, FILE_OUTPUT_NAME)
     workflow_output.base_path = str(OUTPUT_DIR)
-    workflow_output.format.file_format = "PNG"
-    workflow_output.format.color_mode = "RGBA"
-    workflow_output.format.color_depth = "8"
     workflow_output.mute = False
 
     # Mute all other file output nodes.
@@ -210,31 +233,35 @@ def main() -> None:
     bpy.ops.render.render(write_still=True, scene=scene.name)
     rename_family_outputs(OUTPUT_DIR)
 
-    # Check the slot output landed, fall back to direct Composite render if not.
-    slot_stem = workflow_output.file_slots[0].path.rstrip("_")  # interventions_bioenvelope
-    slot_path = OUTPUT_DIR / f"{slot_stem}.png"
-    if not slot_path.exists():
-        log(f"slot output not found at {slot_path}, rendering via Composite")
-        workflow_output.mute = True
-        ramp_node = require_node(node_tree, "InterventionInt::ColorMap")
-        composite = require_node_by_type(node_tree, "CompositorNodeComposite")
-        viewer = require_node_by_type(node_tree, "CompositorNodeViewer")
-        for link in list(composite.inputs[0].links):
-            node_tree.links.remove(link)
-        for link in list(viewer.inputs[0].links):
-            node_tree.links.remove(link)
-        node_tree.links.new(ramp_node.outputs["Image"], composite.inputs[0])
-        node_tree.links.new(ramp_node.outputs["Image"], viewer.inputs[0])
-        scene.render.filepath = str(slot_path)
-        bpy.ops.render.render(write_still=True, scene=scene.name)
+    # Blender 4.2 intermittently skips File Output slots when no Render
+    # Layers node is present.  Re-render missing slots individually through
+    # the Composite node (same workaround as the mist runner).
+    workflow_output.mute = True
+    for index, slot in enumerate(workflow_output.file_slots):
+        stem = slot.path.rstrip("_")
+        out_path = OUTPUT_DIR / f"{stem}.png"
+        if not out_path.exists() and workflow_output.inputs[index].links:
+            render_socket_to_png(
+                scene,
+                node_tree,
+                workflow_output.inputs[index].links[0].from_socket,
+                out_path,
+            )
+    rename_family_outputs(OUTPUT_DIR)
 
     # Clean up discard.
     discard = OUTPUT_DIR / "_discard_render.png"
     if discard.exists():
         discard.unlink()
 
-    if slot_path.exists():
-        log(f"Wrote {slot_path}")
+    # Report what was written.
+    for slot in workflow_output.file_slots:
+        stem = slot.path.rstrip("_")
+        out_path = OUTPUT_DIR / f"{stem}.png"
+        if out_path.exists():
+            log(f"Wrote {out_path}")
+        else:
+            log(f"MISSING {out_path}")
     log("done")
 
 

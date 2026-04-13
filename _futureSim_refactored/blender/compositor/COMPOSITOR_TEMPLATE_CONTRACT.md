@@ -175,6 +175,46 @@ The rule:
 This rule applies to every runner that repaths an EXR input and then
 renders.
 
+## Render Execution Rule
+
+Runners must render a single frame as a one-frame animation, not as a still.
+
+```python
+scene.frame_start = 1
+scene.frame_end = 1
+scene.frame_current = 1
+bpy.ops.render.render(animation=True, scene=scene.name)
+```
+
+Blender 4.2's `write_still=True` path intermittently skips File Output nodes in
+compositor-only scenes (no Render Layers node), producing partial or zero-slot
+renders. The `animation=True` path is the real File Output execution path: every
+linked File Output slot writes reliably in one render.
+
+Required runner shape:
+
+- set `frame_start = frame_end = frame_current = 1`
+- set the File Output node's `base_path` to the output dir (leave it unmuted)
+- set `scene.render.filepath` to a discard PNG inside the output dir
+- render with `animation=True`
+- strip the `_0001` / `0001.png` frame suffix from the resulting filenames
+- clean up the discard render
+
+Forbidden workarounds:
+
+- per-slot Composite re-rendering loops (one render per output slot)
+- mute/unmute File Output dances with an initial `write_still` "fast path"
+- inline rebuilding of File Output nodes at runtime to "fix" missing slots
+
+If a specific blend still drops slots under `animation=True`, that is a
+template-edit problem (fix the blend, e.g. adding a Render Layers node to the
+scene), not a runner problem. Do not silently swap back to `write_still` or
+add per-slot loops.
+
+Reference: confirmed on 2026-04-13 with `compositor_intervention_int.blend` —
+9/9 slots wrote in a single render at 8K, no blend edits needed, 38s total
+including EXR load and save.
+
 ## Hidden Fallback Rule
 
 Runners and migration scripts must not contain silent fallbacks that mask

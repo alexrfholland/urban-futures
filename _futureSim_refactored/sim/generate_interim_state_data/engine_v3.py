@@ -1579,6 +1579,8 @@ def apply_recruit(
     pulse_factor = step_years / RECRUIT_INTERVAL
     planting_density_sqm = params["plantingDensity"] / 10000
     density_this_pulse = planting_density_sqm * pulse_factor
+    recruit_multiplier_full = params.get("recruit_multiplier_full", 1.0)
+    recruit_multiplier_partial = params.get("recruit_multiplier_partial", 1.0)
     df_template = _new_tree_template(df)
     voxel_points, _ = _build_voxel_tree(ds)
     n_voxels = ds.sizes["voxel"]
@@ -1629,7 +1631,8 @@ def apply_recruit(
         zone_indices = voxel_indices_all[zone_voxel_mask]
         zone_voxel_count = int(zone_voxel_mask.sum())
         total_area = float(zone_voxel_count * voxel_area_sqm)
-        quota = int(np.round(total_area * density_this_pulse))
+        multiplier = recruit_multiplier_full if recruit_intervention == RECRUIT_FULL else recruit_multiplier_partial
+        quota = int(np.round(total_area * density_this_pulse * multiplier))
         to_place = max(0, quota - occupancy[mechanism_key])
 
         tel = {

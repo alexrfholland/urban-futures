@@ -451,6 +451,14 @@ Each EXR family should record:
 - render tag/settings
 - the EXR files present
 
+Default sync rule for bV2 EXR families:
+
+- transfers should default to the EXR set only
+- `__full_pipeline.blend`, `__manifest.txt`, and similar metadata sidecars are
+  optional and should only be transferred when explicitly requested
+- repository helpers may expose an explicit opt-in flag such as
+  `--include-metadata` for those sidecars
+
 Each compositor run should record:
 
 - `sim_root`

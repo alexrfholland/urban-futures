@@ -155,6 +155,26 @@ def compositor_run_dir(sim_root: str, exr_family: str, compositor_run: str) -> P
     return COMPOSITOR_OUTPUTS_ROOT / sim_root / exr_family / compositor_run
 
 
+# Underscore-prefixed sim roots are exceptions to the versioned sim_root
+# convention (e.g. `4.10/`, `4.9/`). Library renders (per-tree assets) and
+# site-only renders live under these roots but still follow the same
+# `<sim_root>/<exr_family>/<compositor_run>` layout downstream; the sim_root
+# is just underscored. Keeping them as named constants so every producer uses
+# the same string.
+LIBRARY_SIM_ROOT = "_library"
+SITE_SIM_ROOT = "_site"
+
+
+def library_blenderv2_exr_dir(batch_name: str) -> Path:
+    """Library EXR inputs: `blenderv2/output/_library/<batch>/exr/`."""
+    return BLENDERV2_OUTPUT_ROOT / LIBRARY_SIM_ROOT / batch_name / "exr"
+
+
+def library_compositor_run_dir(batch_name: str, compositor_run: str) -> Path:
+    """Compositor output dir for a library compositor run."""
+    return compositor_run_dir(LIBRARY_SIM_ROOT, batch_name, compositor_run)
+
+
 def mediaflux_sim_root_subpath(sim_root: str) -> Path:
     return Path("pipeline") / sim_root / "simulation_outputs"
 

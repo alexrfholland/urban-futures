@@ -61,18 +61,30 @@ EXR_NODE_NAME = "InterventionInt::EXR Input"
 RAW_HUB_NODE_NAME = "InterventionInt::Raw"
 FILE_OUTPUT_NAME = "InterventionInt::Outputs"
 
+
+# sRGB-to-linear conversion.  The compositor works in scene-linear; the
+# Standard view transform encodes back to sRGB on output.  Feeding linear
+# values here ensures the output PNGs contain the exact sRGB hex values from
+# constants.BIOENVELOPE_PLY_COLORS.
+def _s2l(v: int) -> float:
+    """Convert an sRGB byte value (0-255) to scene-linear float."""
+    s = v / 255.0
+    if s <= 0.04045:
+        return s / 12.92
+    return ((s + 0.055) / 1.055) ** 2.4
+
+
 # Per-category layers: (int_code, slot_suffix, label, R, G, B)
-# Values are sRGB 0-255 divided to 0-1. View transform is Raw so these
-# pass through to the PNG unchanged.
+# Colours from constants.BIOENVELOPE_PLY_COLORS, converted to linear.
 CATEGORY_LAYERS: list[tuple[int, str, str, float, float, float]] = [
-    (1, "deploy-any",        "deploy-any",        220 / 255, 192 / 255, 144 / 255),
-    (2, "decay",             "decay",             240 / 255, 220 / 255, 144 / 255),
-    (3, "colonise-ground",   "colonise ground",   142 / 255, 216 / 255, 200 / 255),
-    (4, "colonise-partial",  "colonise partial",  208 / 255, 160 / 255,  64 / 255),
-    (5, "colonise-full",     "colonise full",     184 / 255, 232 / 255, 108 / 255),
-    (6, "recruit-partial",   "recruit partial",   240 / 255, 220 / 255, 144 / 255),
-    (7, "recruit-full",      "recruit full",      142 / 255, 216 / 255, 200 / 255),
-    (8, "depaved",           "depaved",           220 / 255, 120 / 255, 160 / 255),
+    (1, "deploy-any",        "deploy-any",        _s2l(220), _s2l(192), _s2l(144)),
+    (2, "decay",             "decay",             _s2l(240), _s2l(220), _s2l(144)),
+    (3, "colonise-ground",   "colonise ground",   _s2l(142), _s2l(216), _s2l(200)),
+    (4, "colonise-partial",  "colonise partial",  _s2l(208), _s2l(160), _s2l( 64)),
+    (5, "colonise-full",     "colonise full",     _s2l(184), _s2l(232), _s2l(108)),
+    (6, "recruit-partial",   "recruit partial",   _s2l(240), _s2l(220), _s2l(144)),
+    (7, "recruit-full",      "recruit full",      _s2l(142), _s2l(216), _s2l(200)),
+    (8, "depaved",           "depaved",           _s2l(220), _s2l(120), _s2l(160)),
 ]
 
 
@@ -207,24 +219,65 @@ def build_compositor(tree: bpy.types.NodeTree) -> None:
         tree.links.new(cmp.outputs[0], sa.inputs["Alpha"])
         set_alpha_outputs.append(sa.outputs["Image"])
 
-    # -- Alpha-over chain to produce the combined image -----------------------
-    # Layer all 8 categories on top of each other (order doesn't matter since
-    # they don't overlap — each pixel has exactly one int code).
+    # -- Mix chain to produce the combined image --------------------------------
+    # Each pixel has exactly one int code, so we use MixRGB(Mix) with
+    # Fac=category_mask to select the matching category's colour+alpha.
+    # This avoids the AlphaOver node which doesn't compose correctly through
+    # the Composite-node rendering path in Blender 4.2.
+    #
+    # Chain: start from category 1's SetAlpha output, then for each subsequent
+    # category mix in with Fac=its mask.  Where mask=1 the new category
+    # replaces; where mask=0 the accumulator passes through unchanged.
+    compare_outputs: list[bpy.types.NodeSocket] = []
+    for idx, (int_code, suffix, label, r, g, b) in enumerate(CATEGORY_LAYERS):
+        cmp_node = tree.nodes.get(f"Compare::{suffix}")
+        compare_outputs.append(cmp_node.outputs[0])
+
     prev_output = set_alpha_outputs[0]
-    for idx, sa_out in enumerate(set_alpha_outputs[1:], start=1):
-        ao = new_node(
+    for idx in range(1, len(CATEGORY_LAYERS)):
+        mix = new_node(
             tree,
-            "CompositorNodeAlphaOver",
-            f"AlphaOver::{idx}",
-            f"combine {idx}",
+            "CompositorNodeMixRGB",
+            f"MixSelect::{idx}",
+            f"select {idx}",
             (350.0, 200.0 - idx * 80.0),
             parent=combine_frame,
         )
-        tree.links.new(prev_output, ao.inputs[1])
-        tree.links.new(sa_out, ao.inputs[2])
-        prev_output = ao.outputs["Image"]
+        mix.blend_type = "MIX"
+        mix.use_alpha = False
+        tree.links.new(compare_outputs[idx], mix.inputs[0])   # Fac = mask
+        tree.links.new(prev_output, mix.inputs[1])             # Image 1 (bg)
+        tree.links.new(set_alpha_outputs[idx], mix.inputs[2])  # Image 2 (fg)
+        prev_output = mix.outputs[0]
 
-    combined_output = prev_output
+    combined_rgb = prev_output
+
+    # MixRGB always outputs Image1's alpha — replace with "any intervention"
+    # mask so the combined PNG is transparent where int_code == 0.
+    any_mask = new_node(
+        tree,
+        "CompositorNodeMath",
+        "AnyIntervention::Mask",
+        "any intervention > 0",
+        (500.0, -200.0),
+        parent=combine_frame,
+    )
+    any_mask.operation = "GREATER_THAN"
+    any_mask.inputs[1].default_value = 0.5
+    tree.links.new(raw_hub.outputs[0], any_mask.inputs[0])
+
+    combined_sa = new_node(
+        tree,
+        "CompositorNodeSetAlpha",
+        "Combined::SetAlpha",
+        "combined + mask",
+        (650.0, -200.0),
+        parent=combine_frame,
+    )
+    combined_sa.mode = "REPLACE_ALPHA"
+    tree.links.new(combined_rgb, combined_sa.inputs["Image"])
+    tree.links.new(any_mask.outputs[0], combined_sa.inputs["Alpha"])
+    combined_output = combined_sa.outputs["Image"]
 
     # -- File Output ----------------------------------------------------------
     fout = new_node(
@@ -315,7 +368,7 @@ def rebuild(src: Path, dst: Path) -> None:
     except Exception:
         pass
     try:
-        scene.view_settings.view_transform = "Raw"
+        scene.view_settings.view_transform = "Standard"
     except Exception:
         pass
     try:

@@ -7,6 +7,7 @@
   - `uv run python ...` for project Python commands
   - `./.venv/bin/python` if invoking the interpreter directly
   - Do not use system `python` / `python3`
+- If `uv` is not discoverable yet, use the repo wrapper. Windows: `uv.cmd`. macOS/Linux: `./uv`. Full setup: [FIRST_MACHINE_SETUP.md](FIRST_MACHINE_SETUP.md)
 - All commands run from repo root (the directory containing `_futureSim_refactored/`)
 
 ### Stale documentation warning
@@ -31,6 +32,14 @@ Full specification: [v4-input-contract.md](_futureSim_refactored/sim/run/v4-inpu
 Outputs go to `_data-refactored/model-outputs/generated-states/<root>/` via `REFACTOR_RUN_OUTPUT_ROOT`.
 
 Output lineage (simulation -> EXR families -> compositor runs) and Mediaflux sync rules: [MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md)
+
+Mediaflux overview:
+
+- Use the shared `mediafluxsync` package from this repo's `.venv` for all transfers.
+- Do not rely on a Codex-only skill or on raw `unimelb-mf-*` commands.
+- Use [MEDIAFLUX.md](MEDIAFLUX.md) for machine setup, bootstrap, and command examples.
+- Use [MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md) for the path contract under `pipeline/<sim_root>/...`.
+- Use `mediaflux_browse` for fast mounted discovery and `mediafluxsync` for actual upload/download work.
 
 ### Environment Variables
 
@@ -207,147 +216,56 @@ done
 
 ---
 
-## 2. Generate EXRs via Blender v2
+## 2. Generate EXRs (bV2 pipeline)
 
 Headless Blender pipeline that imports simulation VTKs/PLYs and renders multi-layer EXR image sets per camera/view-layer.
 
-**Current code**: `_futureSim_refactored/blender/blenderv2/bV2_*.py` — these are the only current scripts. Anything prefixed `b2026_unified_*`, `b2026_timeline_*`, or under `timeline/` is **stale**. The `blenderv2/AGENTS.md` is also partially outdated.
 
-**This code works.** If you get wrong paths, missing files, or Blender errors, you are doing something wrong — do not assume the code is broken.
+Single entry point:
+[_futureSim_refactored/blender/blenderv2/bV2_build_scene.py](/_futureSim_refactored/blender/blenderv2/bV2_build_scene.py).
+Runs end-to-end: opens the template, builds the scene, validates against
+the contract, saves a pipeline `.blend`, renders one EXR per view layer.
 
-### Contract
+Minimum four inputs:
 
-`bV2_scene_contract.py` is the single source of truth for naming conventions, valid values, and scene structure. Read it before making any changes. It defines:
+- `BV2_SITE` — `city` | `trimmed-parade` | `uni`
+- `BV2_MODE` — `single_state` (needs `BV2_YEAR`) | `timeline` | `baseline`
+- `BV2_SIM_ROOT` — e.g. `4.10`
+- `BV2_DATA_BUNDLE_ROOT` — absolute path to the sim's `output/` folder
+  (VTKs / PLYs / nodeDFs). **Must be set or bioenvelopes come out empty.**
 
-- **Sites**: `city`, `trimmed-parade`, `uni` (never use `street`)
-- **Modes**: `single_state`, `timeline`, `baseline`
-- **View layers**: `existing_condition_positive`, `positive_state`, `positive_priority_state`, `existing_condition_trending`, `trending_state`, `bioenvelope_positive`, `bioenvelope_trending` (baseline uses only the first three)
-- **Collection tree**: `cameras`, `world`, `instancers`, `bioenvelopes`, `build`
-- All canonical naming functions: `make_scene_name()`, `make_position_object_name()`, `make_bioenvelope_object_name()`, etc.
+The checked-in launcher invokes Blender directly — `uv run python` still cannot load `bpy`.
+Do **not** pass `--factory-startup` (strips pandas/vtk from USER_SITE).
+Do **not** pass the template `.blend` on the CLI (script opens it itself).
 
-### Entry point
+Outputs (flat, no timestamp subdir):
 
-There is **one entry point**: `bV2_build_scene.py`. It orchestrates everything. Do not call the sub-modules directly.
+- blend: `_data-refactored/blenderv2/blends/<sim_root>/<exr_family>__full_pipeline.blend`
+- EXRs: `_data-refactored/blenderv2/output/<sim_root>/<exr_family>/<exr_family>__<view_layer>__<tag>.exr`
 
-```bash
-BV2_SITE=city BV2_MODE=single_state BV2_YEAR=180 BV2_SIM_ROOT=<sim_root> BV2_RENDER_EXRS=1 \
-  blender --background _data-refactored/blenderv2/bV2_template.blend \
-  --python _futureSim_refactored/blender/blenderv2/bV2_build_scene.py
-```
+Re-runs with the same `BV2_RENDER_TAG` overwrite the EXRs in place; bump the tag (e.g. `8k64s` → `8k64s-v2`) to keep old and new side-by-side.
 
-### What it does (in order)
+`<exr_family>` is computed by `get_runtime_exr_family(scene)` — don't guess
+it (e.g. `trimmed-parade` timeline resolves to `parade_timeline`, not
+`trimmed-parade_timeline`).
 
-1. Opens the template blend
-2. `init_scene` — creates scene, collection shells, view layers, AOVs from contract
-3. `build_instancers` — builds tree/log/pole point clouds with framebuffer positioning
-4. `build_bioenvelopes` — imports bioenvelope PLYs (skipped for baseline)
-5. `build_world_attributes` — rebuilds world geometry with source-year attributes
-6. `validate_scene` — structural validation (collections, AOVs, cameras)
-7. Saves .blend (if `BV2_SAVE_BLEND=1`, default)
-8. `setup_render_outputs` + render EXRs (if `BV2_RENDER_EXRS=1`)
-9. Upload to Mediaflux (if `BV2_UPLOAD_TO_MEDIAFLUX=1`)
+Full guide and mistakes-to-avoid list:
+[_documentation-refactored/blenderv2/bV2_run-instructions.md](/_documentation-refactored/blenderv2/bV2_run-instructions.md).
 
-### Required env vars
-
-```bash
-BV2_SITE=city                    # city | trimmed-parade | uni
-BV2_MODE=single_state            # single_state | timeline | baseline
-BV2_YEAR=180                     # required for single_state mode
-BV2_SIM_ROOT=<sim_root>          # simulation output root name
-```
-
-### Optional env vars
-
-```bash
-BV2_RENDER_EXRS=1                # trigger EXR render after build (default: off)
-BV2_SAVE_BLEND=1                 # save the built .blend file (default: on)
-BV2_UPLOAD_TO_MEDIAFLUX=1        # upload EXRs after render
-BV2_RES_X=7680                   # render resolution (default: 7680 = 8K)
-BV2_RES_Y=4320                   # (default: 4320)
-BV2_RES_PERCENT=100              # resolution percentage
-BV2_SAMPLES=64                   # Cycles samples (default: 64)
-BV2_RENDER_TAG=8k                # output subfolder tag (default: "8k")
-BV2_CAMERA_NAME=<name>           # override camera (defaults per contract)
-BV2_LOG_PATH=<path>              # write build log to file
-```
-
-### Inputs
-
-- Template blend: `_data-refactored/blenderv2/bV2_template.blend`
-- State VTKs from Step 1b: `_data-refactored/model-outputs/generated-states/<root>/output/vtks/{site}/`
-- Bioenvelope PLYs from Step 1b: `_data-refactored/model-outputs/generated-states/<root>/output/bioenvelopes/{site}/`
-- NodeDF CSVs from Step 1b: `_data-refactored/model-outputs/generated-states/<root>/output/feature-locations/{site}/`
-
-### Outputs
-
-- Scene blend: `_data-refactored/blenderv2/blends/` (or sim-root-derived path when `BV2_SIM_ROOT` is set)
-- Multi-layer EXRs: `_data-refactored/blenderv2/output/<sim_root>/<exr_family>/`
-
----
 
 ## 3. Generate PNGs via Compositor
 
-Blender compositor pipeline that takes EXR families and produces final PNG outputs per compositor template.
+Blender compositor pipeline: consumes EXR families, produces PNG outputs per compositor family.
 
-**This code works.** If you get wrong paths, missing files, or Blender errors, you are doing something wrong — do not assume the code is broken.
+**Authoritative doc**: [COMPOSITOR_RUN-INSTRUCTIONS.md](_futureSim_refactored/blender/compositor/COMPOSITOR_RUN-INSTRUCTIONS.md) — family→runner→blend table, batch driver usage (`batch_parade_timeline_4_10.py --parallel N`), known Blender-4.2 workarounds (`animation=True`, `rebuild_file_output`), living-doc policy (canonical vs `_archive/` vs `temp_blends/`).
 
-**Start here**: [COMPOSITOR_RUN.md](_futureSim_refactored/blender/compositor/COMPOSITOR_RUN.md) — quick-start with family→script→blend mapping.
-**Directory structure + workflow**: [README.md](_futureSim_refactored/blender/compositor/README.md)
-**Template contract**: [COMPOSITOR_TEMPLATE_CONTRACT.md](_futureSim_refactored/blender/compositor/COMPOSITOR_TEMPLATE_CONTRACT.md)
+**Family registry**: [compositor_families.json](_futureSim_refactored/blender/compositor/compositor_families.json) — per-family schema (EXR inputs, required passes, per-branch, arboreal mark). Update when you add a compositor.
 
-### Family → script → blend
+**Other contracts**:
+- [COMPOSITOR_TEMPLATE_CONTRACT.md](_futureSim_refactored/blender/compositor/COMPOSITOR_TEMPLATE_CONTRACT.md) — what blends own vs what runners own.
+- [COMPOSITOR_SYNC_CONTRACT.md](_futureSim_refactored/blender/compositor/COMPOSITOR_SYNC_CONTRACT.md) — `sim_root`/`exr_family`/`compositor_run` path lineage.
 
-| Family | Runner | Canonical blend |
-|---|---|---|
-| `ao` | `render_edge_lab_current_core_outputs.py` | `compositor_ao.blend` |
-| `normals` | `render_edge_lab_current_core_outputs.py` | `compositor_normals.blend` |
-| `resources` | `render_edge_lab_current_core_outputs.py` | `compositor_resources.blend` |
-| `base` | `render_edge_lab_current_base.py` | `compositor_base.blend` |
-| `shading` | `render_edge_lab_current_shading.py` | `compositor_shading.blend` |
-| `bioenvelope` | `render_edge_lab_current_bioenvelopes.py` | `compositor_bioenvelope.blend` |
-| `sizes` | `render_edge_lab_current_sizes.py` | `compositor_sizes.blend` |
-| `mist` | `render_edge_lab_current_mist.py` | `compositor_mist.blend` |
-| `depth_outliner` | `render_edge_lab_current_depth_outliner.py` | `compositor_depth_outliner.blend` |
-| `proposals` | `render_edge_lab_current_proposals.py` | `compositor_proposal_masks.blend` |
-
-Scripts live in: `_futureSim_refactored/blender/compositor/scripts/`
-Canonical blends live in: `_futureSim_refactored/blender/compositor/canonical_templates/`
-
-### Inputs and outputs
-
-- **Input EXRs**: `_data-refactored/blenderv2/output/<sim_root>/<exr_family>/`
-- **Output PNGs**: `_data-refactored/compositor/outputs/<sim_root>/<exr_family>/<compositor_run>/`
-- `<compositor_run>` = `<family>__<timestamp>` (optional `__<note>`)
-
-### Env var pattern
-
-Runners read env vars — set these, don't edit paths in code:
-
-```bash
-COMPOSITOR_BLEND_PATH=<path to working copy of canonical blend>
-COMPOSITOR_OUTPUT_DIR=<full output dir for this run>
-COMPOSITOR_SCENE_NAME=Current
-COMPOSITOR_PATHWAY_EXR=<path>       # positive_state
-COMPOSITOR_PRIORITY_EXR=<path>      # positive_priority_state
-COMPOSITOR_EXISTING_EXR=<path>      # existing_condition_positive
-COMPOSITOR_TRENDING_EXR=<path>      # trending_state (omit for baseline)
-COMPOSITOR_BIOENVELOPE_EXR=<path>   # bioenvelope_positive (omit for baseline)
-```
-
-### Typical flow
-
-1. Copy canonical blend → working copy in `_data-refactored/compositor/temp_blends/template_instantiations/`
-2. Set env vars (above)
-3. Run: `blender --background --factory-startup --python scripts/render_edge_lab_current_<family>.py`
-4. Verify PNGs landed in `COMPOSITOR_OUTPUT_DIR`
-
-### Key rules
-
-- **Canonical blend owns the graph.** Runners only repath inputs and render — never rebuild graph logic in a runner.
-- **No hidden fallbacks.** If a resolution, EXR, or node is missing, raise — don't hardcode.
-- **Positive and trending are separate branches.** Never combine them in one run.
-- **Working copies go in `temp_blends/`** — never save over the canonical blend.
-- **Read EXR dimensions from the header** (`_exr_header.py`) — `image.size` returns `(0, 0)` in Blender 4.x.
+Canonical runners are `render_current_<family>.py` under `_futureSim_refactored/blender/compositor/scripts/`. Anything under `scripts/_archive/` or `canonical_templates/_archive/` is legacy — do not use. `COMPOSITOR_RUN.md` and `scripts/README.md` at that path are also superseded by the run-instructions doc above.
 
 ---
 
@@ -386,6 +304,8 @@ uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync upload <sim_ro
 - **Remote subpath always starts with `pipeline/`** — never upload to a bare path.
 - **Append `--dry-run`** to preview any transfer without executing it.
 - Browse remote contents via the mounted-volume browser: `uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --last 5`
+- For bV2 EXR families, default to EXR-only sync. Do not transfer `__full_pipeline.blend`, `__manifest.txt`, or other metadata sidecars unless the user explicitly asks for them.
+- For default bV2 family sync, use `uv run python -m _futureSim_refactored.blender.blenderv2.bV2_mediaflux_sync <upload|download> <sim_root> <exr_family>`. Add `--include-metadata` only when you intentionally want the `.blend` / manifest sidecars too.
 
 ## Utilities
 
