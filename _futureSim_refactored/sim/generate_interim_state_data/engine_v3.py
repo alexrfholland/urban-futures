@@ -146,11 +146,14 @@ def remap_values(values, old_min, old_max, new_min, new_max):
     return (values - old_min) / (old_max - old_min) * (new_max - new_min) + new_min
 
 
-def _sample_triangular_years(spec: dict, size: int) -> np.ndarray:
+def _sample_triangular_years(spec: dict, size: int, rng: np.random.Generator | None = None) -> np.ndarray:
     minimum = float(spec["min"])
     mode = float(spec["mode"])
     maximum = float(spec["max"])
-    samples = np.random.triangular(minimum, mode, maximum, size=size)
+    if rng is None:
+        samples = np.random.triangular(minimum, mode, maximum, size=size)
+    else:
+        samples = rng.triangular(minimum, mode, maximum, size=size)
     return np.rint(samples).astype(int)
 
 
@@ -159,6 +162,70 @@ def _as_object_series(values, length, default):
         return pd.Series([default] * length, dtype="object")
     series = pd.Series(values)
     return series.fillna(default).astype(str)
+
+
+def _initialize_missing_presenscent_duration_years(
+    df: pd.DataFrame,
+    params: dict,
+    *,
+    rng: np.random.Generator | None = None,
+) -> pd.DataFrame:
+    df = df.copy()
+    living_mask = df["size"].isin(["small", "medium", "large"])
+    missing_mask = living_mask & pd.to_numeric(
+        df["presenscent_duration_years"], errors="coerce"
+    ).isna()
+    if not missing_mask.any():
+        return df
+
+    draws = _sample_triangular_years(
+        params["presenscent_duration_years"],
+        int(missing_mask.sum()),
+        rng=rng,
+    )
+    base_ule = pd.to_numeric(
+        df.loc[missing_mask, "useful_life_expectancy"],
+        errors="coerce",
+    ).fillna(120.0)
+    df.loc[missing_mask, "presenscent_duration_years"] = (
+        base_ule.to_numpy(dtype=float) + draws
+    )
+    return df
+
+
+def _assign_senescing_durations_on_entry(
+    df: pd.DataFrame,
+    new_senescing_mask: pd.Series,
+    params: dict,
+) -> pd.DataFrame:
+    df = df.copy()
+    if not new_senescing_mask.any():
+        return df
+
+    precolonial_mask = new_senescing_mask & df["precolonial"].fillna(False).astype(bool)
+    non_precolonial_mask = new_senescing_mask & ~df["precolonial"].fillna(False).astype(bool)
+
+    if precolonial_mask.any():
+        df.loc[precolonial_mask, "senescing_duration_years"] = _sample_triangular_years(
+            params["senescing_duration_years_precolonial_true"],
+            int(precolonial_mask.sum()),
+        )
+
+    if non_precolonial_mask.any():
+        df.loc[non_precolonial_mask, "senescing_duration_years"] = _sample_triangular_years(
+            params["senescing_duration_years_precolonial_false"],
+            int(non_precolonial_mask.sum()),
+        )
+        sudden_draws = np.random.uniform(0.0, 1.0, size=int(non_precolonial_mask.sum()))
+        sudden_death_mask = sudden_draws < float(params["proportion_sudden_death"])
+        if sudden_death_mask.any():
+            sudden_indices = df.index[non_precolonial_mask][sudden_death_mask]
+            df.loc[sudden_indices, "senescing_duration_years_sudden_death"] = _sample_triangular_years(
+                params["senescing_duration_years_sudden_death"],
+                int(sudden_death_mask.sum()),
+            )
+
+    return df
 
 
 def _blank_like(series: pd.Series, extra_tokens: set[str] | None = None) -> pd.Series:
@@ -327,7 +394,9 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
         "became_large_at_year": np.nan,
         "became_senescing_at_year": np.nan,
         "became_snag_at_year": np.nan,
+        "presenscent_duration_years": np.nan,
         "senescing_duration_years": np.nan,
+        "senescing_duration_years_sudden_death": np.nan,
         "snag_duration_years": np.nan,
         "became_fallen_at_year": np.nan,
         "became_decayed_at_year": np.nan,
@@ -463,7 +532,11 @@ def _refresh_schema(df: pd.DataFrame) -> pd.DataFrame:
     df["became_large_at_year"] = pd.to_numeric(df["became_large_at_year"], errors="coerce")
     df["became_senescing_at_year"] = pd.to_numeric(df["became_senescing_at_year"], errors="coerce")
     df["became_snag_at_year"] = pd.to_numeric(df["became_snag_at_year"], errors="coerce")
+    df["presenscent_duration_years"] = pd.to_numeric(df["presenscent_duration_years"], errors="coerce")
     df["senescing_duration_years"] = pd.to_numeric(df["senescing_duration_years"], errors="coerce")
+    df["senescing_duration_years_sudden_death"] = pd.to_numeric(
+        df["senescing_duration_years_sudden_death"], errors="coerce"
+    )
     df["snag_duration_years"] = pd.to_numeric(df["snag_duration_years"], errors="coerce")
     df["became_fallen_at_year"] = pd.to_numeric(df["became_fallen_at_year"], errors="coerce")
     df["became_decayed_at_year"] = pd.to_numeric(df["became_decayed_at_year"], errors="coerce")
@@ -565,6 +638,9 @@ GROWTH_MODELS = {
 def age_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     df = df.copy()
     step_years = params["step_years"]
+    seed = int(params.get("seed", 42))
+    lifecycle_rng = np.random.default_rng(seed + 6100 + int(params["absolute_year"]))
+    df = _initialize_missing_presenscent_duration_years(df, params, rng=lifecycle_rng)
     if step_years <= 0:
         return df
 
@@ -575,7 +651,6 @@ def age_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
 
     # Per-tree growth noise: each tree experiences ±15% variation in effective
     # growing time, representing natural variation in site conditions.
-    seed = int(params.get("seed", 42))
     growth_rng = np.random.default_rng(seed + 6000 + int(params["absolute_year"]))
     n_living = int(living_mask.sum())
     effective_step = step_years * growth_rng.uniform(0.85, 1.15, size=n_living)
@@ -605,6 +680,9 @@ def age_trees(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     df.loc[newly_large_mask & df["became_large_at_year"].isna(), "became_large_at_year"] = int(params["absolute_year"])
 
     df["useful_life_expectancy"] = df["useful_life_expectancy"] - step_years
+    df.loc[living_mask, "presenscent_duration_years"] = (
+        df.loc[living_mask, "presenscent_duration_years"].to_numpy(dtype=float) - step_years
+    )
     df.loc[df["size"].isin(["small", "medium", "large"]), "lifecycle_state"] = "standing"
     return df
 
@@ -723,6 +801,7 @@ def apply_annual_tree_mortality(df: pd.DataFrame, params: dict, seed: int = 42) 
 def determine_proposal_decay(df: pd.DataFrame, params: dict, seed: int = 42) -> pd.DataFrame:
     df = df.copy()
     np.random.seed(seed + int(params["absolute_year"]))
+    df = df.drop(columns=["proposal_decay_chance", "proposal_decay_roll"], errors="ignore")
 
     living_mask = df["size"].isin(["small", "medium", "large"])
     preexisting_replace_mask = living_mask & df["action"].eq("REPLACE")
@@ -735,21 +814,16 @@ def determine_proposal_decay(df: pd.DataFrame, params: dict, seed: int = 42) -> 
     if not lifecycle_living_mask.any():
         return df
 
-    senescing_ramp_start = params["lifecycle_senescing_ramp_start"]
-    df["proposal_decay_chance"] = remap_values(
-        df["useful_life_expectancy"].to_numpy(dtype=float),
-        old_min=senescing_ramp_start,
-        old_max=0,
-        new_min=100,
-        new_max=0,
-    ).clip(0, 100)
-    df["proposal_decay_roll"] = np.random.uniform(0, 100, len(df))
-
-    proposal_decay_mask = lifecycle_living_mask & (df["proposal_decay_roll"] < df["proposal_decay_chance"])
-    age_in_place_mask = proposal_decay_mask & (
+    df = _initialize_missing_presenscent_duration_years(df, params)
+    # A tree proposes decay when presenscent_duration_years <= 0.
+    trees_proposing_decay_mask = (
+        lifecycle_living_mask
+        & pd.to_numeric(df["presenscent_duration_years"], errors="coerce").fillna(np.inf).le(0)
+    )
+    age_in_place_mask = trees_proposing_decay_mask & (
         df["CanopyResistance"] < params["minimal-tree-support-threshold"]
     )
-    replace_mask = proposal_decay_mask & ~age_in_place_mask
+    replace_mask = trees_proposing_decay_mask & ~age_in_place_mask
 
     df.loc[age_in_place_mask, "action"] = "AGE-IN-PLACE"
     df.loc[age_in_place_mask, "proposal-decay_decision"] = "proposal-decay_accepted"
@@ -776,19 +850,23 @@ def apply_proposal_decay_accepted_lifecycle_changes(
     new_senescing_mask = age_in_place_mask & df["size"].isin(["small", "medium", "large"])
     df.loc[new_senescing_mask, "size"] = "senescing"
     df.loc[new_senescing_mask & df["became_senescing_at_year"].isna(), "became_senescing_at_year"] = current_year
-    missing_senescing_duration_mask = df["size"].eq("senescing") & df["senescing_duration_years"].isna()
-    if missing_senescing_duration_mask.any():
-        df.loc[missing_senescing_duration_mask, "senescing_duration_years"] = _sample_triangular_years(
-            params["senescing_duration_years"],
-            int(missing_senescing_duration_mask.sum()),
-        )
+    df = _assign_senescing_durations_on_entry(df, new_senescing_mask, params)
 
-    senescing_to_snag_mask = (
+    years_in_senescence = current_year - df["became_senescing_at_year"]
+    regular_senescence_complete_mask = (
         df["size"].eq("senescing")
         & df["became_senescing_at_year"].notna()
         & df["senescing_duration_years"].notna()
-        & ((current_year - df["became_senescing_at_year"]) >= df["senescing_duration_years"])
+        & (years_in_senescence >= df["senescing_duration_years"])
     )
+    sudden_death_complete_mask = (
+        df["size"].eq("senescing")
+        & df["became_senescing_at_year"].notna()
+        & df["senescing_duration_years_sudden_death"].notna()
+        & (years_in_senescence >= df["senescing_duration_years_sudden_death"])
+    )
+
+    senescing_to_snag_mask = regular_senescence_complete_mask | sudden_death_complete_mask
     df.loc[senescing_to_snag_mask, "size"] = "snag"
     df.loc[senescing_to_snag_mask & df["became_snag_at_year"].isna(), "became_snag_at_year"] = current_year
 
@@ -843,6 +921,15 @@ def apply_proposal_decay_rejected_changes(df: pd.DataFrame, params: dict) -> pd.
     df.loc[replace_mask, "action"] = "None"
     df.loc[replace_mask, "precolonial"] = True
     df.loc[replace_mask, "useful_life_expectancy"] = 120 - replacement_growth_years
+    if replace_mask.any():
+        presenscent_draws = _sample_triangular_years(
+            params["presenscent_duration_years"],
+            int(replace_mask.sum()),
+            rng=replant_rng,
+        )
+        df.loc[replace_mask, "presenscent_duration_years"] = (
+            df.loc[replace_mask, "useful_life_expectancy"].to_numpy(dtype=float) + presenscent_draws
+        )
     df.loc[replace_mask, "hasbeenReplanted"] = True
     df.loc[replace_mask, "size"] = pd.cut(
         df.loc[replace_mask, "diameter_breast_height"],
@@ -872,6 +959,7 @@ def apply_proposal_decay_rejected_changes(df: pd.DataFrame, params: dict) -> pd.
     df.loc[replace_mask, "became_senescing_at_year"] = np.nan
     df.loc[replace_mask, "became_snag_at_year"] = np.nan
     df.loc[replace_mask, "senescing_duration_years"] = np.nan
+    df.loc[replace_mask, "senescing_duration_years_sudden_death"] = np.nan
     df.loc[replace_mask, "snag_duration_years"] = np.nan
     df.loc[replace_mask, "became_fallen_at_year"] = np.nan
     df.loc[replace_mask, "became_decayed_at_year"] = np.nan
@@ -1428,6 +1516,8 @@ def _new_tree_template(df: pd.DataFrame):
 def _make_new_tree_record(
     df_template: dict,
     ds: xr.Dataset,
+    params: dict,
+    rng: np.random.Generator,
     voxel_index: int,
     position: tuple[float, float, float],
     recruit_intervention: str,
@@ -1439,6 +1529,11 @@ def _make_new_tree_record(
 ) -> dict:
     record = dict(df_template)
     x, y, z = position
+    presenscent_offset = _sample_triangular_years(
+        params["presenscent_duration_years"],
+        1,
+        rng=rng,
+    )[0]
     record.update(
         {
             "x": x,
@@ -1448,6 +1543,7 @@ def _make_new_tree_record(
             "diameter_breast_height": 2.0,
             "precolonial": True,
             "useful_life_expectancy": 120.0,
+            "presenscent_duration_years": 120.0 + presenscent_offset,
             "CanopyArea": 1.0,
             "sim_NodesArea": 1.0,
             "sim_NodesVoxels": 1.0,
@@ -1487,6 +1583,7 @@ def _make_new_tree_record(
             "became_senescing_at_year": np.nan,
             "became_snag_at_year": np.nan,
             "senescing_duration_years": np.nan,
+            "senescing_duration_years_sudden_death": np.nan,
             "snag_duration_years": np.nan,
             "became_fallen_at_year": np.nan,
             "fallen_decay_after_years": np.nan,
@@ -1707,7 +1804,7 @@ def apply_recruit(
                     )
                 new_tree_records.append(
                     _make_new_tree_record(
-                        df_template=df_template, ds=ds,
+                        df_template=df_template, ds=ds, params=params, rng=rng,
                         voxel_index=int(voxel_index), position=candidate_position,
                         recruit_intervention=recruit_intervention,
                         recruit_intervention_type=recruit_intervention,
@@ -1776,7 +1873,7 @@ def apply_recruit(
                         continue
                     new_tree_records.append(
                         _make_new_tree_record(
-                            df_template=df_template, ds=ds,
+                            df_template=df_template, ds=ds, params=params, rng=rng,
                             voxel_index=voxel_index, position=candidate_position,
                             recruit_intervention=recruit_intervention,
                             recruit_intervention_type=recruit_intervention,
@@ -1990,6 +2087,7 @@ def deploy_ground_deadwood(
             "diameter_breast_height": rng.uniform(30.0, 80.0),
             "precolonial": False,
             "useful_life_expectancy": 0.0,
+            "presenscent_duration_years": np.nan,
             "CanopyArea": 1.0,
             "sim_NodesArea": 1.0,
             "sim_NodesVoxels": 1.0,
@@ -2029,6 +2127,7 @@ def deploy_ground_deadwood(
             "became_senescing_at_year": np.nan,
             "became_snag_at_year": np.nan,
             "senescing_duration_years": np.nan,
+            "senescing_duration_years_sudden_death": np.nan,
             "snag_duration_years": np.nan,
             "became_fallen_at_year": float(absolute_year) if is_fallen else np.nan,
             "fallen_decay_after_years": rng.triangular(
@@ -2215,7 +2314,30 @@ def _find_baseline(site: str, site_dir: Path) -> pd.DataFrame | None:
         fb = site_dir.parents[1] / fallback_name / "temp" / "interim-data" / site / f"{site}_baseline_1_nodeDF_-180.csv"
         if fb.exists():
             return pd.read_csv(fb)
+    # Last-resort discovery: use any baseline already present under generated-states.
+    generated_states_root = site_dir.parents[3]
+    discovered = sorted(
+        generated_states_root.glob(f"*/temp/interim-data/{site}/{site}_baseline_1_nodeDF_-180.csv"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    for fb in discovered:
+        if fb.exists():
+            return pd.read_csv(fb)
     return None
+
+
+def _available_scenario_years(site_dir: Path, site: str, scenario: str, voxel_size: int) -> list[int]:
+    """Return all assessed years currently present for a site/scenario in this root."""
+    prefix = f"{site}_{scenario}_{voxel_size}_treeDF_"
+    years: list[int] = []
+    for path in site_dir.glob(f"{prefix}*.csv"):
+        suffix = path.stem.removeprefix(prefix)
+        try:
+            years.append(int(suffix))
+        except ValueError:
+            continue
+    return sorted(set(years))
 
 
 def log_run_stats(
@@ -2235,6 +2357,8 @@ def log_run_stats(
     root = scenario_output_root(output_mode)
     site_dir = root / site
     baseline_df = _find_baseline(site, site_dir)
+    available_years = _available_scenario_years(site_dir, site, scenario, voxel_size)
+    years_to_process = available_years or sorted(set(years))
 
     size_order = ["small", "medium", "large", "senescing", "snag", "fallen", "decayed"]
 
@@ -2255,9 +2379,10 @@ def log_run_stats(
     size_rows: list[dict] = []
 
     print(f"\n===== Stats: {site} / {scenario} =====")
+    print(f"Using assessed years for interim stats: {years_to_process}")
 
     prev_year = 0
-    for yr in years:
+    for yr in years_to_process:
         tree_path = site_dir / f"{site}_{scenario}_{voxel_size}_treeDF_{yr}.csv"
         if not tree_path.exists():
             prev_year = yr
@@ -2430,7 +2555,7 @@ def log_run_stats(
         print(f"  Size stats → {path}")
 
     # --- Write yr180 size comparison to {root}/comparison/interim-size-assessment.csv ---
-    max_year = max(years) if years else 180
+    max_year = max(years_to_process) if years_to_process else 180
     yr180_rows = [r for r in size_rows if r["year"] == max_year]
     if yr180_rows:
         comparison_dir = root.parents[1] / "comparison"
@@ -2438,9 +2563,21 @@ def log_run_stats(
         comparison_path = comparison_dir / "interim-size-assessment.csv"
 
         yr180_df = pd.DataFrame(yr180_rows)
+        comparison_columns = ["site", "scenario", "year", "size", "count", "baseline", "delta"]
+        yr180_df = yr180_df.reindex(columns=comparison_columns)
         # Append to existing file if it exists (for multi-site/scenario runs)
         if comparison_path.exists():
-            existing = pd.read_csv(comparison_path)
+            try:
+                existing = pd.read_csv(comparison_path)
+            except Exception:
+                existing = pd.DataFrame(columns=comparison_columns)
+            existing = existing.reindex(columns=comparison_columns)
+            existing = existing[
+                existing["site"].notna()
+                & existing["scenario"].notna()
+                & existing["size"].notna()
+                & pd.to_numeric(existing["year"], errors="coerce").notna()
+            ]
             # Remove any existing rows for this site/scenario to avoid duplicates
             mask = ~((existing["site"] == site) & (existing["scenario"] == scenario))
             existing = existing[mask]

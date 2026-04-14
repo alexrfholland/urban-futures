@@ -81,7 +81,11 @@ def get_params_for_year(site, scenario, year):
 
 def get_scenario_parameters():
     """Return raw parameter dictionaries keyed by (site, scenario)."""
-    senescing_duration_years = triangular_duration(10, 90, 200)
+    presenscent_duration_years = triangular_duration(-10, 0, 10)
+    senescing_duration_years_precolonial_true = triangular_duration(10, 90, 200)
+    senescing_duration_years_precolonial_false = triangular_duration(10, 70, 110)
+    senescing_duration_years_sudden_death = triangular_duration(0, 25, 40)
+    proportion_sudden_death = 0.3
     snag_duration_years = triangular_duration(0, 40, 100)
     fallen_duration_years = triangular_duration(10, 40, 100)
     decayed_duration_years = triangular_duration(30, 40, 75)
@@ -101,7 +105,11 @@ def get_scenario_parameters():
         "moderate-tree-support-threshold": 50,
         "maximum-tree-support-threshold": 15,
         "lifecycle_senescing_ramp_start": -25,
-        "senescing_duration_years": senescing_duration_years.copy(),
+        "presenscent_duration_years": presenscent_duration_years.copy(),
+        "senescing_duration_years_precolonial_true": senescing_duration_years_precolonial_true.copy(),
+        "senescing_duration_years_precolonial_false": senescing_duration_years_precolonial_false.copy(),
+        "senescing_duration_years_sudden_death": senescing_duration_years_sudden_death.copy(),
+        "proportion_sudden_death": proportion_sudden_death,  # only for precolonial == False to simulate heat stress and other factors
         "snag_duration_years": snag_duration_years.copy(),
         "fallen_duration_years": fallen_duration_years.copy(),
         "decayed_duration_years": decayed_duration_years.copy(),
@@ -131,7 +139,11 @@ def get_scenario_parameters():
         "moderate-tree-support-threshold": 3,
         "maximum-tree-support-threshold": 1,
         "lifecycle_senescing_ramp_start": -5,
-        "senescing_duration_years": senescing_duration_years.copy(),
+        "presenscent_duration_years": presenscent_duration_years.copy(),
+        "senescing_duration_years_precolonial_true": senescing_duration_years_precolonial_true.copy(),
+        "senescing_duration_years_precolonial_false": senescing_duration_years_precolonial_false.copy(),
+        "senescing_duration_years_sudden_death": senescing_duration_years_sudden_death.copy(),
+        "proportion_sudden_death": proportion_sudden_death,  # only for precolonial == False to simulate heat stress and other factors
         "snag_duration_years": snag_duration_years.copy(),
         "fallen_duration_years": fallen_duration_years.copy(),
         "decayed_duration_years": decayed_duration_years.copy(),
@@ -161,7 +173,11 @@ def get_scenario_parameters():
         "moderate-tree-support-threshold": 50,
         "maximum-tree-support-threshold": 15,
         "lifecycle_senescing_ramp_start": -25,
-        "senescing_duration_years": senescing_duration_years.copy(),
+        "presenscent_duration_years": presenscent_duration_years.copy(),
+        "senescing_duration_years_precolonial_true": senescing_duration_years_precolonial_true.copy(),
+        "senescing_duration_years_precolonial_false": senescing_duration_years_precolonial_false.copy(),
+        "senescing_duration_years_sudden_death": senescing_duration_years_sudden_death.copy(),
+        "proportion_sudden_death": proportion_sudden_death,  # only for precolonial == False to simulate heat stress and other factors
         "snag_duration_years": snag_duration_years.copy(),
         "fallen_duration_years": fallen_duration_years.copy(),
         "decayed_duration_years": decayed_duration_years.copy(),
@@ -198,7 +214,11 @@ def get_scenario_parameters():
         "moderate-tree-support-threshold": 3,
         "maximum-tree-support-threshold": 1,
         "lifecycle_senescing_ramp_start": -5,
-        "senescing_duration_years": senescing_duration_years.copy(),
+        "presenscent_duration_years": presenscent_duration_years.copy(),
+        "senescing_duration_years_precolonial_true": senescing_duration_years_precolonial_true.copy(),
+        "senescing_duration_years_precolonial_false": senescing_duration_years_precolonial_false.copy(),
+        "senescing_duration_years_sudden_death": senescing_duration_years_sudden_death.copy(),
+        "proportion_sudden_death": proportion_sudden_death,  # only for precolonial == False to simulate heat stress and other factors
         "snag_duration_years": snag_duration_years.copy(),
         "fallen_duration_years": fallen_duration_years.copy(),
         "decayed_duration_years": decayed_duration_years.copy(),
@@ -235,7 +255,11 @@ def get_scenario_parameters():
         "moderate-tree-support-threshold": 70,
         "maximum-tree-support-threshold": 20,
         "lifecycle_senescing_ramp_start": -25,
-        "senescing_duration_years": senescing_duration_years.copy(),
+        "presenscent_duration_years": presenscent_duration_years.copy(),
+        "senescing_duration_years_precolonial_true": senescing_duration_years_precolonial_true.copy(),
+        "senescing_duration_years_precolonial_false": senescing_duration_years_precolonial_false.copy(),
+        "senescing_duration_years_sudden_death": senescing_duration_years_sudden_death.copy(),
+        "proportion_sudden_death": proportion_sudden_death,  # only for precolonial == False to simulate heat stress and other factors
         "snag_duration_years": snag_duration_years.copy(),
         "fallen_duration_years": fallen_duration_years.copy(),
         "decayed_duration_years": decayed_duration_years.copy(),
@@ -279,7 +303,11 @@ def get_scenario_parameters():
         "moderate-tree-support-threshold": 3,
         "maximum-tree-support-threshold": 1,
         "lifecycle_senescing_ramp_start": -5,
-        "senescing_duration_years": senescing_duration_years.copy(),
+        "presenscent_duration_years": presenscent_duration_years.copy(),
+        "senescing_duration_years_precolonial_true": senescing_duration_years_precolonial_true.copy(),
+        "senescing_duration_years_precolonial_false": senescing_duration_years_precolonial_false.copy(),
+        "senescing_duration_years_sudden_death": senescing_duration_years_sudden_death.copy(),
+        "proportion_sudden_death": proportion_sudden_death,  # only for precolonial == False to simulate heat stress and other factors
         "snag_duration_years": snag_duration_years.copy(),
         "fallen_duration_years": fallen_duration_years.copy(),
         "decayed_duration_years": decayed_duration_years.copy(),

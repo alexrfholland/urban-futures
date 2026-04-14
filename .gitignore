@@ -57,6 +57,7 @@ RhinoCompute.cs
 data/
 data-refactored/
 _data-refactored/
+_archive/
 _tmp_unified_validation/
 _tmp_mediaflux/
 _tmp_mediaflux_check/

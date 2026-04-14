@@ -44,6 +44,13 @@ uv run python -m mediafluxsync project-path pipeline --project-dir .
 
 If the shared package is already installed in this environment, you do not need to reinstall it.
 
+## macOS Notes
+
+- `uv` should work as a bare command on `PATH`.
+- Mediaflux credentials live at `~/.Arcitecta/mflux.cfg`.
+- If the official Mediaflux clients are installed normally on the machine, you do not need the Windows-only `MEDIAFLUX_CLIENT_BIN_DIR` setup.
+- The default mounted discovery root is typically `/Volumes/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures`.
+
 ## Credentials And Config
 
 - credentials:
@@ -93,6 +100,8 @@ uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --last 5
 uv run python -m _futureSim_refactored.sim.run.mediaflux_browse <sim_root> --map
 uv run python -m _futureSim_refactored.sim.run.mediaflux_browse <sim_root> --section compositor_pngs --map
 ```
+
+On macOS, this usually resolves under `/Volumes/proj-7020_research_archive-1128.4.442/MF 2026 Arboreal Futures`.
 
 This helper is for discovery only. It does not replace `upload-project` / `download-project`.
 

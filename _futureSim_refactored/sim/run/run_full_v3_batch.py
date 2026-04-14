@@ -323,8 +323,10 @@ def run_site_scenario(
         current_tree_df = treeDF_scenario.copy()
         previous_year = year
 
-    # Log recruit and size stats after all years complete
-    log_run_stats(site, scenario, years, voxel_size=voxel_size, output_mode="validation")
+    # Interim stats belong to the scenario CSV stage. Skip them for VTK-only slices
+    # so parallel Step 2 runs do not clobber or race on the same CSV outputs.
+    if not vtk_only:
+        log_run_stats(site, scenario, years, voxel_size=voxel_size, output_mode="validation")
 
 
 def run_baselines(sites: list[str], *, voxel_size: int = 1) -> None:
