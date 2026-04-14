@@ -199,34 +199,26 @@ def resolve_feature_csv_path(site: str, scenario: str, year: int) -> Path:
 
 
 def resolve_tree_ply_folder() -> Path:
+    canonical = REPO_ROOT / "_data-refactored" / "model-inputs" / "tree_library_exports" / "treeMeshesPly"
+    if canonical.exists():
+        return canonical
     for root in iter_blender_input_roots():
         candidate = root / "treeMeshesPly"
         if candidate.exists():
             return candidate
-    for candidate in (
-        Path(r"D:\2026 Arboreal Futures\data\treeMeshesPly"),
-        REPO_DATA_ROOT / "treeMeshesPly",
-    ):
-        if candidate.exists():
-            return candidate
-    raise FileNotFoundError("Could not resolve treeMeshesPly folder")
+    raise FileNotFoundError(f"Could not resolve treeMeshesPly folder (expected at {canonical})")
 
 
 def resolve_log_ply_folder() -> Path:
+    canonical = REPO_ROOT / "_data-refactored" / "model-inputs" / "tree_library_exports" / "logMeshesPly"
+    if canonical.exists():
+        return canonical
     for root in iter_blender_input_roots():
         for folder_name in ("logMeshesPly", "logMeshesPLY"):
             candidate = root / folder_name
             if candidate.exists():
                 return candidate
-    for candidate in (
-        Path(r"D:\2026 Arboreal Futures\data\logMeshesPly"),
-        Path(r"D:\2026 Arboreal Futures\data\logMeshesPLY"),
-        REPO_DATA_ROOT / "logMeshesPly",
-        REPO_DATA_ROOT / "logMeshesPLY",
-    ):
-        if candidate.exists():
-            return candidate
-    raise FileNotFoundError("Could not resolve logMeshesPly folder")
+    raise FileNotFoundError(f"Could not resolve logMeshesPly folder (expected at {canonical})")
 
 
 def get_active_scene() -> bpy.types.Scene:

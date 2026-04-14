@@ -1,5 +1,7 @@
 # Mediaflux Sync Contract
 
+Execution rule: run Mediaflux sync commands from the repo root with standard `uv` — `uv run python ...`.
+
 ## Temporary Download Workaround
 
 Until the shared `mediafluxsync` package supports `--exclude-parent` for

@@ -30,8 +30,8 @@ Do not use it as a replacement for the shared `mediafluxsync` setup workflow.
 
 For generic Mediaflux bootstrap and verification, use:
 
-- [MEDIAFLUX.md](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/MEDIAFLUX.md)
-- the shared `mediafluxsync` skill/workflow
+- [MEDIAFLUX.md](../MEDIAFLUX.md)
+- the shared `mediafluxsync` repo README
 
 This file only records what this repo expects locally once the generic
 `mediafluxsync` setup is already working.
@@ -60,7 +60,7 @@ Rule:
 
 ## Required Project Config
 
-This repo expects the repo-local [.env.mediaflux](/Users/alexholland/Coding/volumetric-scenarios-rhino-bim-gia/.env.mediaflux)
+This repo expects the repo-local [.env.mediaflux](../.env.mediaflux)
 to resolve to:
 
 - project root:
@@ -71,8 +71,8 @@ The canonical sync contract now uses the project root only.
 Verify from repo root with:
 
 ```bash
-./.venv/bin/python -m mediafluxsync project-config --project-dir .
-./.venv/bin/python -m mediafluxsync project-path pipeline --project-dir .
+uv run python -m mediafluxsync project-config --project-dir .
+uv run python -m mediafluxsync project-path pipeline --project-dir .
 ```
 
 Expected shape:

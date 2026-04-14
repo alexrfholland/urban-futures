@@ -3,10 +3,9 @@
 ## 0. Runtime Setup
 
 - Branch: `engine-v4`
-- Always use `uv` and the repo-local `.venv`
-  - `.\uv.cmd run python ...` on Windows or `./uv run python ...` on macOS/Linux for project Python commands
-  - `./.venv/bin/python` if invoking the interpreter directly
-  - Do not use system `python` / `python3`
+- For Python repo work, use the standard `uv` project model: `uv sync`, `uv run python ...`, `uv add ...`
+- For Blender work in bV2 and compositor, run Blender directly per the relevant pipeline contract
+- Do not use system `python` / `python3` or direct `.venv` interpreter paths as the normal workflow
 - All commands run from repo root (the directory containing `_futureSim_refactored/`)
 
 ### Stale documentation warning
@@ -32,13 +31,10 @@ Outputs go to `_data-refactored/model-outputs/generated-states/<root>/` via `REF
 
 Output lineage (simulation -> EXR families -> compositor runs) and Mediaflux sync rules: [MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md)
 
-Mediaflux overview:
+Mediaflux:
 
-- Use the shared `mediafluxsync` package from this repo's `.venv` for all transfers.
-- Do not rely on a Codex-only skill or on raw `unimelb-mf-*` commands.
-- Use [MEDIAFLUX.md](MEDIAFLUX.md) for machine setup, bootstrap, and command examples.
-- Use [MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md) for the path contract under `pipeline/<sim_root>/...`.
-- Use `mediaflux_browse` for fast mounted discovery and `mediafluxsync` for actual upload/download work.
+- Use `mediafluxsync` for actual upload/download work. Do not use raw `unimelb-mf-*` commands.
+- Use [MEDIAFLUX.md](MEDIAFLUX.md) for operational guidance and [_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md) for the sync/path contract.
 
 ### Environment Variables
 
@@ -266,39 +262,11 @@ Canonical runners are `render_current_<family>.py` under `_futureSim_refactored/
 
 Upload/download simulation outputs, EXR families, and compositor runs to the University of Melbourne Mediaflux research archive.
 
-**Contract**: [MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md)
-**Full rules**: see `CLAUDE.md` Mediaflux section — this is the authoritative reference for all sync commands.
+**Operational guide**: [MEDIAFLUX.md](MEDIAFLUX.md)
+**Contract**: [_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md)
 
-### Remote path mapping
-
-| Local path under `_data-refactored/` | Remote subpath |
-|---|---|
-| `model-outputs/generated-states/<sim_root>/output/` | `pipeline/<sim_root>/simulation_outputs/output` |
-| `blenderv2/output/<sim_root>/<exr_family>/` | `pipeline/<sim_root>/blender_exrs/<exr_family>` |
-| `compositor/outputs/<sim_root>/<exr_family>/<compositor_run>/` | `pipeline/<sim_root>/compositor_pngs/<exr_family>/<compositor_run>` |
-
-### Simulation-specific helper
-
-```bash
-# Upload a full sim run
-uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync upload <sim_root>
-
-# Download a full sim run
-uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync download <sim_root>
-
-# Include temp/ and comparison/ debug artifacts
-uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync upload <sim_root> --include-debug
-```
-
-### Key rules
-
-- **Always use `mediafluxsync`** — never `rsync`, `cp`, or raw `unimelb-mf-download`, even when Mediaflux is mounted locally.
-- **`--out` is the parent directory** — the client creates a subfolder inside it.
-- **Remote subpath always starts with `pipeline/`** — never upload to a bare path.
-- **Append `--dry-run`** to preview any transfer without executing it.
-- Browse remote contents via the mounted-volume browser: `uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --last 5`
-- For bV2 EXR families, default to EXR-only sync. Do not transfer `__full_pipeline.blend`, `__manifest.txt`, or other metadata sidecars unless the user explicitly asks for them.
-- For default bV2 family sync, use `uv run python -m _futureSim_refactored.blender.blenderv2.bV2_mediaflux_sync <upload|download> <sim_root> <exr_family>`. Add `--include-metadata` only when you intentionally want the `.blend` / manifest sidecars too.
+- Use `uv run python -m mediafluxsync ...` from the repo root for sync commands.
+- Use `uv run python -m _futureSim_refactored.sim.run.mediaflux_browse ...` for mounted discovery when needed.
 
 ## Utilities
 
@@ -313,112 +281,3 @@ uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync upload <sim_ro
 
 `urban-futures` is the simulation engine and data pipeline for the 2026 Arboreal Futures project. Source lives in `_code-refactored/`. The canonical local pipeline data now lives repo-locally under `_data-refactored/`. Legacy source/reference material still exists under `data/`.
 
-
-## Mediaflux
-
-This project uses the shared `mediafluxsync` package (sibling repo at `../mediafluxsync/`) to upload/download data to the University of Melbourne Mediaflux research archive.
-
-### Hard rules
-
-1. **Always transfer data via `mediafluxsync`.** Never use `rsync`, `cp`, or raw `unimelb-mf-download` — even when the Mediaflux project is mounted locally. The mount is for discovery only.
-2. **Discovery uses the mounted-volume browser** (see [_futureSim_refactored/sim/run/mediaflux_browse.py](_futureSim_refactored/sim/run/mediaflux_browse.py)), not `check-project`:
-
-   ```bash
-   uv run python -m _futureSim_refactored.sim.run.mediaflux_browse --last 5
-   uv run python -m _futureSim_refactored.sim.run.mediaflux_browse <sim_root> --map
-   uv run python -m _futureSim_refactored.sim.run.mediaflux_browse <sim_root> --section compositor_pngs --map
-   ```
-
-3. **Use `uv run python -m mediafluxsync ...`** — this works on both macOS and Windows. Do not hard-code `.venv/Scripts/python.exe` (Windows) or `.venv/bin/python` (macOS).
-4. **Run from the repo root with `--project-dir .`**. Mediaflux paths are always relative to the project root (e.g. `pipeline/<sim_root>/...`).
-5. **`download-project --out` is the PARENT directory**, not the final target. `unimelb-mf-download` creates a folder named after the remote path's basename inside `--out`. So to download `pipeline/4.10/compositor_pngs/city_single-state_yr180` into `_data-refactored/compositor/outputs/4.10/city_single-state_yr180/`, pass `--out ./_data-refactored/compositor/outputs/4.10` (one level up). Passing the full target path double-nests.
-6. **Canonical sync layouts** are defined in [_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md) and [_documentation-refactored/MACHINE_SETUP_MEDIAFLUX.md](_documentation-refactored/MACHINE_SETUP_MEDIAFLUX.md). Mirror them locally — only the base root differs between local and remote.
-
-### Project paths
-
-- Allocation: `/projects/proj-7020_research_archive-1128.4.442`
-- Project root: `MF 2026 Arboreal Futures`
-- Remote tree: `pipeline/<sim_root>/{simulation_outputs,blender_exrs,compositor_pngs}/...`
-- Local mirror: `_data-refactored/{model-outputs/generated-states,blenderv2,compositor/outputs}/<sim_root>/...`
-
-Verify project config any time:
-
-```bash
-uv run python -m mediafluxsync project-config --project-dir .
-uv run python -m mediafluxsync project-path pipeline --project-dir .
-```
-
-### Client binary (per-platform)
-
-- **macOS**: `/opt/homebrew/bin/unimelb-mf-download` (installed via homebrew). No `MEDIAFLUX_CLIENT_BIN_DIR` needed.
-- **Windows**: bundled under `.tools/mediaflux-bin/unimelb-mf-clients-0.8.5/bin/windows/`. Set `MEDIAFLUX_CLIENT_BIN_DIR` to that path before running mediafluxsync.
-
-### Config files
-
-- Credentials: `~/.Arcitecta/mflux.cfg` (macOS/Linux) or `%USERPROFILE%\.Arcitecta\mflux.cfg` (Windows)
-- Shared defaults: `../mediafluxsync/.env.mediaflux`
-- Project paths: `.env.mediaflux` (this repo)
-- Secrets: `../mediafluxsync/.env` (gitignored)
-
-### Allowed subcommands
-
-Only these `mediafluxsync` subcommands exist:
-
-- `upload-project`
-- `download-project`
-- `check-project`
-- `project-config`
-- `project-path`
-
-`ls-project` and `exists-project` were removed. Do not use them.
-
-### Environment setup (Windows only)
-
-Both env vars must be set before any mediafluxsync command on Windows:
-
-```bash
-export PATH="/d/2026 Arboreal Futures/urban-futures/.tools/mediaflux-bin/unimelb-mf-clients-0.8.5/jre/bin:$PATH"
-export MEDIAFLUX_CLIENT_BIN_DIR="D:/2026 Arboreal Futures/urban-futures/.tools/mediaflux-bin/unimelb-mf-clients-0.8.5/bin/windows"
-```
-
-Without the JRE on PATH, every client command fails with `cannot find java`.
-
-### Remote path contract
-
-The Mediaflux remote tree lives under `pipeline/`. The local-to-remote mapping is:
-
-| Local path under `_data-refactored/` | Remote subpath |
-|---|---|
-| `model-outputs/generated-states/<sim_root>/output/` | `pipeline/<sim_root>/simulation_outputs/output` |
-| `blenderv2/output/<sim_root>/<exr_family>/` | `pipeline/<sim_root>/blender_exrs/<exr_family>` |
-| `compositor/outputs/<sim_root>/<exr_family>/<compositor_run>/` | `pipeline/<sim_root>/compositor_pngs/<exr_family>/<compositor_run>` |
-
-Non-simulation assets go under `pipeline/_library/` or `pipeline/_site/` (underscore prefix).
-
-**Critical rule:** the remote subpath always starts with `pipeline/`. Never upload to a bare `compositor/...` or `blenderv2/...` path.
-
-### Common commands
-
-Always run from this repo root. Append `--dry-run` to any transfer to preview the underlying `unimelb-mf-*` invocation without executing it.
-
-```bash
-# Upload from a local dir into pipeline/<subpath> (exclude the local parent folder name)
-uv run python -m mediafluxsync upload-project --create-parents --exclude-parent --project-dir . <local-source> <subpath>
-
-# Upload into project data/ (includes the local parent folder)
-uv run python -m mediafluxsync upload-project --create-parents --project-dir . <local-source> <subpath>
-
-# Download a remote subpath into a local PARENT dir
-# (the binary creates <basename-of-subpath>/ inside --out)
-uv run python -m mediafluxsync download-project --project-dir . --out <local-parent-dir> <subpath>
-```
-
-Simulation-specific helper (wraps the run-root contract):
-
-```bash
-uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync upload <sim_root>
-uv run python -m _futureSim_refactored.sim.run.sim_mediaflux_sync download <sim_root>
-# add --include-debug to additionally sync temp/ and comparison/
-```
-
-See [MEDIAFLUX.md](MEDIAFLUX.md) for full details and [MEDIAFLUX_SYNC_CONTRACT.md](_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md) for the authoritative path lineage contract.

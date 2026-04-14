@@ -1,5 +1,7 @@
 # bV2 Run Instructions
 
+Execution rule: run bV2 from the repo root in Blender directly. Do not use `uv run python` for the Blender step.
+
 Entry point for Step 2 (generate EXRs):
 [bV2_build_scene.py](../../_futureSim_refactored/blender/blenderv2/bV2_build_scene.py).
 
@@ -17,7 +19,7 @@ Windows PowerShell:
 
 ```powershell
 $repoRoot = "D:\2026 Arboreal Futures\urban-futures"
-$venvSitePackages = & "$repoRoot\uv.cmd" run python -c "import site; print(site.getsitepackages()[0])"
+$venvSitePackages = uv run python -c "import site; print(site.getsitepackages()[0])"
 $env:PYTHONPATH = "$repoRoot;$venvSitePackages"
 $env:BV2_SITE = "trimmed-parade"
 $env:BV2_MODE = "timeline"
@@ -35,7 +37,7 @@ macOS / Linux:
 
 ```bash
 export REPO_ROOT="/path/to/urban-futures"
-export VENV_SITE_PACKAGES="$("$REPO_ROOT/uv" run python -c 'import site; print(site.getsitepackages()[0])')"
+export VENV_SITE_PACKAGES="$(uv run python -c 'import site; print(site.getsitepackages()[0])')"
 export PYTHONPATH="$REPO_ROOT:$VENV_SITE_PACKAGES"
 export BV2_SITE="trimmed-parade"
 export BV2_MODE="timeline"

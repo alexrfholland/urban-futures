@@ -1,5 +1,7 @@
 # V4 Run Instructions
 
+Execution rule: run simulation pipeline commands from the repo root with standard `uv` — `uv run python ...`.
+
 These instructions are for agents and humans running the v4 simulation pipeline. Follow them in order. Do not skip steps. Do not run steps in parallel unless explicitly stated.
 
 See also:

@@ -33,6 +33,9 @@ TREE_MESH_PLY_ROOT = TREE_LIBRARY_EXPORT_ROOT / "treeMeshesPly"
 LOG_MESH_VTK_ROOT = TREE_LIBRARY_EXPORT_ROOT / "logMeshes"
 LOG_MESH_PLY_ROOT = TREE_LIBRARY_EXPORT_ROOT / "logMeshesPly"
 TREE_VARIANTS_ROOT = MODEL_INPUTS_ROOT / "tree_variants"
+WORLD_INPUTS_ROOT = MODEL_INPUTS_ROOT / "world"
+WORLD_ORIGINALS_ROOT = WORLD_INPUTS_ROOT / "originals"
+WORLD_HIGHRES_ROOT = WORLD_INPUTS_ROOT / "highres"
 APPROVED_TREE_TEMPLATE_ROOT = (
     TREE_VARIANTS_ROOT
     / "template-edits__fallens-nonpre-direct__snags-elm-snags-old__decayed-small-fallen"

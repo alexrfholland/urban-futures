@@ -36,10 +36,13 @@ Simulation data:
 - `D:\2026 Arboreal Futures\urban-futures\_data-refactored\v3engine_outputs\bioenvelopes\{site}`
 - `D:\2026 Arboreal Futures\urban-futures\_data-refactored\v3engine_outputs\vtks\{site}`
 
-Model libraries:
+Model libraries (canonical, under `_data-refactored/model-inputs/tree_library_exports/`):
 
-- trees: `Z:\MF 2026 Arboreal Futures\data\treeMeshesPly`
-- logs: `D:\2026 Arboreal Futures\data\logMeshesPly`
+- trees: `_data-refactored/model-inputs/tree_library_exports/treeMeshesPly`
+- logs: `_data-refactored/model-inputs/tree_library_exports/logMeshesPly`
+
+Resolved at runtime by `resolve_tree_ply_folder()` / `resolve_log_ply_folder()` in
+`bV2_build_instancers.py`.
 
 ## Build Mode
 

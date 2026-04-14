@@ -1,7 +1,7 @@
 """Interpolate low-res road PLY voxels into high-res point clouds.
 
-Reads PLY files from  _data-refactored/model_inputs/world/originals/
-and writes interpolated results to  _data-refactored/model_inputs/world/highres/
+Reads PLY files from  _data-refactored/model-inputs/world/originals/
+and writes interpolated results to  _data-refactored/model-inputs/world/highres/
 
 Same logic as the legacy extract_scene.interpolate_road_voxels but operates
 directly on PLY files and preserves ALL vertex properties.
@@ -16,9 +16,10 @@ import numpy as np
 from pathlib import Path
 from plyfile import PlyData, PlyElement
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-ORIGINALS_DIR = REPO_ROOT / "_data-refactored" / "model_inputs" / "world" / "originals"
-HIGHRES_DIR = REPO_ROOT / "_data-refactored" / "model_inputs" / "world" / "highres"
+from _futureSim_refactored.paths import WORLD_ORIGINALS_ROOT, WORLD_HIGHRES_ROOT
+
+ORIGINALS_DIR = WORLD_ORIGINALS_ROOT
+HIGHRES_DIR = WORLD_HIGHRES_ROOT
 
 SITES = ["city", "trimmed-parade", "uni"]
 

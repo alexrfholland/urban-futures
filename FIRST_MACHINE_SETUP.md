@@ -2,49 +2,34 @@
 
 Run these steps once after cloning the repo onto a new machine.
 
-## 1. Verify `uv`
+## 1. Install and verify `uv`
 
-Windows:
-
-```powershell
-.\uv.cmd --version
-```
-
-macOS / Linux:
+Install `uv` on the machine and ensure it is on `PATH`.
 
 ```bash
-./uv --version
+uv --version
 ```
-
-If `uv` is still missing:
-
-- Windows: the repo expects `.tools/uv/uv.exe`
-- macOS / Linux: install `uv` on the machine or set `UV_BIN` before using the repo wrapper
 
 ## 2. Create or refresh the repo environment
 
 Core environment:
 
 ```bash
-./uv sync
+uv sync
 ```
 
 Full environment used across this repo:
 
 ```bash
-./uv sync --extra world-construction --extra visuals --extra blender --extra rhino-legacy
+uv sync --extra world-construction --extra visuals --extra blender --extra rhino-legacy
 ```
-
-On Windows PowerShell, use `.\uv.cmd` in place of `./uv`.
 
 ## 3. Verify the repo interpreter
 
 ```bash
-./uv run python -V
-./uv run python -c "import sys; print(sys.executable)"
+uv run python -V
+uv run python -c "import sys; print(sys.executable)"
 ```
-
-On Windows PowerShell, use `.\uv.cmd` in place of `./uv`.
 
 ## 4. Windows-only Mediaflux bootstrap
 
@@ -61,8 +46,8 @@ $env:MEDIAFLUX_CLIENT_BIN_DIR = "D:\2026 Arboreal Futures\urban-futures\.tools\m
 Then verify:
 
 ```powershell
-.\uv.cmd run python -m mediafluxsync project-config --project-dir .
-.\uv.cmd run python -m mediafluxsync project-path pipeline --project-dir .
+uv run python -m mediafluxsync project-config --project-dir .
+uv run python -m mediafluxsync project-path pipeline --project-dir .
 ```
 
 ## 5. bV2 runs

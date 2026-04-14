@@ -1,5 +1,7 @@
 # Compositor Run — Quick Direction
 
+Execution rule: run compositor renders from the repo root in Blender directly. Do not use `uv run python` for the Blender step.
+
 Short note for the agent. **Don't overthink it.** When the user says "render X for Y EXRs",
 this file is the first thing to read.
 

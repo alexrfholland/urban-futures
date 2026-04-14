@@ -35,8 +35,8 @@ REPO_ROOT = Path(__file__).resolve()
 while REPO_ROOT.name != "urban-futures":
     REPO_ROOT = REPO_ROOT.parent
 
-PLY_DIR = REPO_ROOT / "_data-refactored" / "model_inputs" / "world" / "originals"
-HIGHRES_PLY_DIR = REPO_ROOT / "_data-refactored" / "model_inputs" / "world" / "highres"
+PLY_DIR = REPO_ROOT / "_data-refactored" / "model-inputs" / "world" / "originals"
+HIGHRES_PLY_DIR = REPO_ROOT / "_data-refactored" / "model-inputs" / "world" / "highres"
 INPUT_TEMPLATE_PATH = REPO_ROOT / "_data-refactored" / "blenderv2" / "bV2_template.blend"
 DEFAULT_OUTPUT_BLEND = INPUT_TEMPLATE_PATH
 
