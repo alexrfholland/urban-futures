@@ -814,6 +814,17 @@ def integrate_resource_df_into_voxels(ds, resource_df, voxel_size=1.0):
     Returns:
         tuple: Updated xarray.Dataset and voxelised_resource_df DataFrame.
     """
+    # Voxel provenance flags: voxel_site=1 for possibility-space voxels,
+    # voxel_template=1 for voxels touched by template stamping. Overlap = both.
+    if 'voxel_site' not in ds.data_vars:
+        ds['voxel_site'] = xr.DataArray(
+            np.ones(ds.sizes['voxel'], dtype=np.int8), dims='voxel'
+        )
+    if 'voxel_template' not in ds.data_vars:
+        ds['voxel_template'] = xr.DataArray(
+            np.zeros(ds.sizes['voxel'], dtype=np.int8), dims='voxel'
+        )
+
     # Step 1: Filter resources within voxel grid bounds
     resource_df_within = filter_resources_within_bounds(ds, resource_df)
 
@@ -831,6 +842,13 @@ def integrate_resource_df_into_voxels(ds, resource_df, voxel_size=1.0):
 
     # Step 6: Split into existing and new voxels
     dfExisting, dfSparse = split_existing_and_new_voxels(voxelised_resource_df, ds)
+
+    # Tag provenance: existing voxels become site+template; new voxels are template-only.
+    if not dfExisting.empty:
+        dfExisting['voxel_template'] = np.int8(1)
+    if not dfSparse.empty:
+        dfSparse['voxel_site'] = np.int8(0)
+        dfSparse['voxel_template'] = np.int8(1)
 
     # Step 7: Update existing voxels in the Dataset
     ds_final = update_existing_voxels(ds, dfExisting)

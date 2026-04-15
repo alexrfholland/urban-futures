@@ -48,7 +48,7 @@ from _exr_header import read_exr_dimensions  # noqa: E402
 # The compositor palette below follows that contract directly.
 SIZE_PALETTE: dict[str, tuple[float, float, float]] = {
     "small":      (0.401978, 0.708376, 0.111932),
-    "medium":     (0.323143, 0.485150, 0.730461),
+    "medium":     (0.258183, 0.610496, 0.283149),
     "large":      (0.947307, 0.346704, 0.181164),
     "senescing":  (0.830770, 0.327778, 0.558340),
     "snag":       (0.973445, 0.768151, 0.097587),

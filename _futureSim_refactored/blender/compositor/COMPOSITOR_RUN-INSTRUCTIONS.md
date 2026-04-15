@@ -96,12 +96,21 @@ Then:
 
 ```bash
 ".venv/Scripts/python.exe" -m ...    # no — compositor runs IN Blender, not venv
+
+# Windows
 "C:/Program Files/Blender Foundation/Blender 4.2/blender.exe" \
+  --background --factory-startup \
+  --python _futureSim_refactored/blender/compositor/scripts/render_current_mist.py
+
+# macOS
+/Applications/Blender.app/Contents/MacOS/Blender \
   --background --factory-startup \
   --python _futureSim_refactored/blender/compositor/scripts/render_current_mist.py
 ```
 
 Windows gotcha: spaces in the project path are fine, but wrap in double quotes.
+
+macOS gotcha: the `.app` bundle's CLI is not on `$PATH` by default — this is normal. Always call the full `/Applications/Blender.app/Contents/MacOS/Blender` path; do not try to resolve `blender` as a bare command.
 
 ---
 
@@ -263,6 +272,7 @@ This rebuilds the File Output node fresh in-memory (same slot paths, same links,
 - `render_current_mist_complex_outlines.py`
 - `render_current_depth_outliner.py`
 - `render_current_proposal_and_interventions.py`
+- `render_current_base.py` (reroutes fed from a CompositorNodeGroup output trip the same bug)
 
 If you add a new single-input runner and it returns 0/N slots despite a clean log, add `rebuild_file_output=True` to its config.
 

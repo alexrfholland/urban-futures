@@ -1,5 +1,9 @@
 # AGENTS
 
+## NEVER quick-fix, hack, or add a failsafe without explicit instruction
+
+When something fails, investigate the root cause and report back — do not patch symptoms (timeouts, try/excepts, fallbacks, bypass flags, workarounds) on your own initiative.
+
 ## 0. Runtime Setup
 
 - Branch: `engine-v4`

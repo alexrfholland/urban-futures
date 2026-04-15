@@ -12,6 +12,7 @@ Per COMPOSITOR_RUN.md / template contract:
 Runs (15 total):
   ao, normals, resources, bioenvelope, shading, base  (6 state-agnostic)
   mist x (positive, trending)                         (2)
+  mist_complex_outlines x (positive, trending, priority) (3)
   depth_outliner x (positive, trending, priority)     (3)
   proposal_and_interventions x (positive, trending)   (2)
   proposal_only x (positive, trending)                (2) [future-ready]
@@ -161,6 +162,15 @@ def plan_runs(res: str) -> list[Run]:
         runs.append(Run("mist", "render_current_mist.py", {
             "COMPOSITOR_EXR": state_exr,
         }, tag=tag))
+
+    # mist_complex_outlines x (positive, trending, priority)
+    for tag, state_exr in state_branches_with_priority:
+        runs.append(Run(
+            "mist_complex_outlines",
+            "render_current_mist_complex_outlines.py",
+            {"COMPOSITOR_EXR": state_exr},
+            tag=tag,
+        ))
 
     # depth_outliner x (positive, trending, priority)
     for tag, state_exr in state_branches_with_priority:
