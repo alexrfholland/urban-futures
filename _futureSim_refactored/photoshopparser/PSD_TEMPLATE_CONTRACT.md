@@ -154,6 +154,22 @@ All scripts live in `_futureSim_refactored/photoshopparser/`.
   (e.g. raster-mask → clipping-mask conversions). Idempotent, but hardcoded
   to specific target layers — read the script before running.
 
+### 4h. Update a PSB from the site manifest
+
+- **[update_psd_from_yaml.py](update_psd_from_yaml.py)** — the inverse of §4g.
+  Given a `--psd-path` selector (leaf or group), resolves the yaml rule,
+  finds the corresponding compositor PNG(s), copies into
+  `linked_pngs/<site>/`, and ensures the PSB has a matching linked smart
+  object at that path. Creates missing parent groups. Idempotent: SOs
+  already linked to the right file are skipped; SOs pointing at the wrong
+  file are relinked. Leaf selector creates one SO; group selector (must
+  match a `key_folder` key exactly) creates one SO per PNG the rule's
+  compositor run produces. `--update-comps` refreshes every layer comp so
+  new SOs become part of each comp's recorded state (see §8c for the
+  mechanics and the naming convention it depends on).
+
+See §8 for when to use this vs the yaml-side tools.
+
 ### 4g. Update the site manifest from a PSD
 
 - **[update_yaml_from_psd.py](update_yaml_from_psd.py)** — add a routing rule to
@@ -467,6 +483,76 @@ Flags:
 Nested folders work — each segment in `--psd-path` is walked in turn. If the
 exact PSD path already exists under the matching section the tool logs the
 current rule and exits 0 without touching the file.
+
+### 8c. `update_psd_from_yaml` — PSB-side inverse
+
+The yaml-update tools (8a, 8b) only write routing rules; they never touch a
+PSB. To *apply* a rule — create the SO in the PSB — use
+[update_psd_from_yaml.py](update_psd_from_yaml.py) (§4h). Common flow for
+adding a new SO from scratch:
+
+1. If needed, register the rule with §8a or §8b. For a leaf that falls under
+   an existing `key_folder` prefix the default-slot convention already
+   resolves the PNG name, so no yaml edit is required.
+2. Run `update_psd_from_yaml` with a leaf or folder selector.
+
+```bash
+# Leaf: one SO (layer name = --psd-path tail, PNG resolved via yaml rule)
+uv run python -m _futureSim_refactored.photoshopparser.update_psd_from_yaml \
+  --psb         _data-refactored/_psds/psd-live/uni_timeline.psb \
+  --psd-path    "Positive/arboreal/positive/sizes/size_artificial" \
+  --exr-family  uni_timeline
+
+# Folder: every PNG the rule's compositor run produces becomes a leaf SO
+uv run python -m _futureSim_refactored.photoshopparser.update_psd_from_yaml \
+  --psb         _data-refactored/_psds/psd-live/uni_timeline.psb \
+  --psd-path    "Positive/arboreal/positive/sizes" \
+  --exr-family  uni_timeline
+```
+
+The tool is additive: it creates missing groups + SOs, relinks SOs with
+wrong link targets, and skips SOs already pointing at the right file. It
+never deletes SOs. Sibling order inside a group is "end of group" — the
+yaml has no order information, so re-sequence manually in Photoshop if it
+matters.
+
+### 8d. Keeping layer comps in sync (`--update-comps`)
+
+Layer comps record per-layer visibility at comp-creation time. A new SO
+added later is invisible to every existing comp — applying a comp does
+**not** touch layers it doesn't know about. Running `--update-comps`
+refreshes every comp so the new SOs become part of their recorded state.
+
+**Naming convention it relies on**: comp names are prefixed with the
+top-level folder the comp is framed around (`Positive`, `Positive - shading`,
+`Trending`, ...). The tool treats that prefix as the comp's "owner" folder.
+
+**Visibility rule** for a new SO whose path is `<top>/.../<leaf>`:
+
+- `<top>` is `Trending` or `Positive` (owner-gated): `visible = (<top> == owner)`.
+- `<top>` starts with `hidden_` (e.g. `hidden_shading`): always `false` in every comp.
+- `<top>` is anything else (`BASE WORLD`, `shading`, …): always `true` in every comp.
+
+Trending and Positive are the only owner-gated top-levels because they
+represent alternative framings of the same site — an SO belongs to at most
+one. Every other top-level is shared scene infrastructure that should show
+in every comp. The `hidden_` prefix parks a top-level folder in the file
+without ever rendering it; as of 2026-04-15 the legacy `shading` top-level
+was renamed `hidden_shading` across every outer PSB using this convention.
+
+If you add a new owner-gated top-level (analogous to Trending/Positive),
+extend the `OWNER_GATED` list in the JSX inside `update_psd_from_yaml.py`.
+
+Per comp the tool:
+
+1. Applies the comp (restoring its recorded state for layers it knows about).
+2. Sets each new SO's visibility according to the rule above.
+3. Recaptures — folding the new SOs into the comp's record without losing
+   any of the comp's existing per-layer state.
+
+A naïve `recapture()` loop without the apply step would overwrite every
+comp with whatever visibility happened to be active at script run-time —
+do not use it.
 
 ---
 

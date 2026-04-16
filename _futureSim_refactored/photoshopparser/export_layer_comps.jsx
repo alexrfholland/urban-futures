@@ -1,8 +1,10 @@
 /*
- * export_layer_comps.jsx — run on an outer variant PSB (e.g. parade_timeline.psb).
+ * export_layer_comps.jsx — run on an outer variant PSB (e.g. parade_timeline.psb
+ * or parade_library.psb).
  *
- * For each of the layer comps "Positive" and "Trending", duplicates the doc,
- * applies the comp, and saves a canvas-sized TIFF to
+ * For every layer comp in the active document (skipping names prefixed
+ * "hidden_"), duplicates the doc, applies the comp, and saves a canvas-sized
+ * TIFF to
  *   _data-refactored/_psds/exports/<variant>_<comp>.tiff
  * where <variant> is the active doc's name minus the .psb/.psd extension.
  *
@@ -23,8 +25,45 @@
     var OUT_DIR = new Folder(REPO_ROOT + "/_data-refactored/_psds/exports");
     if (!OUT_DIR.exists) OUT_DIR.create();
 
-    var COMPS = ["Positive", "Trending"];
+    var COMPS = [];
+    for (var ci = 0; ci < src.layerComps.length; ci++) {
+        var n = src.layerComps[ci].name;
+        if (n.indexOf("hidden_") === 0) continue;
+        COMPS.push(n);
+    }
     var report = [];
+    if (COMPS.length === 0) {
+        report.push("NO COMPS — exporting current state as single TIFF");
+        var dup = src.duplicate(variant + "_exp", false);
+        app.activeDocument = dup;
+        try {
+            for (var li = 0; li < dup.layers.length; li++) {
+                if (dup.layers[li].isBackgroundLayer) {
+                    dup.layers[li].isBackgroundLayer = false;
+                    break;
+                }
+            }
+            var tifTmp = new File(OUT_DIR.fsName + "/" + variant + ".tif");
+            var tifOpts = new TiffSaveOptions();
+            tifOpts.imageCompression = TIFFEncoding.TIFFLZW;
+            tifOpts.layers = false;
+            tifOpts.alphaChannels = true;
+            tifOpts.transparency = true;
+            tifOpts.embedColorProfile = true;
+            dup.saveAs(tifTmp, tifOpts, true, Extension.LOWERCASE);
+            var tifFinal = new File(OUT_DIR.fsName + "/" + variant + ".tiff");
+            if (tifFinal.exists) tifFinal.remove();
+            tifTmp.rename(variant + ".tiff");
+            report.push("WROTE: " + tifFinal.fsName);
+        } catch (e) {
+            report.push("ERROR: " + e);
+        }
+        dup.close(SaveOptions.DONOTSAVECHANGES);
+        app.activeDocument = src;
+        return report.join("\n");
+    }
+
+    report.push("COMPS: " + COMPS.join(", "));
 
     for (var c = 0; c < COMPS.length; c++) {
         var compName = COMPS[c];

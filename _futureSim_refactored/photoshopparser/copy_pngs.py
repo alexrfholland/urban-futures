@@ -27,7 +27,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-RUN_RE = re.compile(r"^(?P<family>[a-z_]+)__(?P<ts>\d{8}_\d{6})(?:__(?P<tail>.+))?$")
+RUN_RE = re.compile(r"^(?P<family>[a-z_]+)__(?P<ts>\d{8}_\d{4,6})(?:__(?P<tail>.+))?$")
 
 
 def resolve_rule(path: str, key_folder: dict, key_layer: dict) -> dict | None:
