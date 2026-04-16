@@ -617,7 +617,15 @@ Never use `PLACEAFTER` on a last-child anchor; always use the swap.
 
 ---
 
-## 10. Open items
+## 10. Mediaflux sync
+
+Remote: `pipeline/_psds/<bucket>/`. Tool: [psd_mediaflux_sync.py](psd_mediaflux_sync.py)
+(`upload | download | list-remote <bucket> <files...>`). Bucket rules in
+[MEDIAFLUX_SYNC_CONTRACT.md](../../_documentation-refactored/MEDIAFLUX_SYNC_CONTRACT.md).
+
+---
+
+## 11. Open items
 
 - Whether to keep `base_depth_windowed_internal_refined` hidden-by-default at
   the variant level or pull that visibility toggle up into the outer template.

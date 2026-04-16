@@ -375,6 +375,12 @@ Examples:
   `precolonial.True_size.large_control.park-tree_id.11`)
 - `pipeline/_site/` — site-level reference material that is not produced by
   a sim run
+- `pipeline/_psds/` — Photoshop PSDs/PSBs, grouped by bucket (flat inside
+  each): `_templates/` = `base_template.psd` + `template.psb` + every
+  `base_<variant>.psb`; `_working/` = outer `<variant>.psb`; `_archive/` =
+  pinned historical. Tool:
+  `_futureSim_refactored.photoshopparser.psd_mediaflux_sync` (`upload |
+  download | list-remote <bucket> <files...>`).
 
 Rules for `_`-prefixed roots under `pipeline/`:
 

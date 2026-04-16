@@ -192,6 +192,20 @@ def mediaflux_compositor_run_subpath(sim_root: str, exr_family: str, compositor_
     return Path("pipeline") / sim_root / "compositor_pngs" / exr_family / compositor_run
 
 
+# PSDs live outside the sim → exr_family → compositor_run lineage. They are
+# grouped by bucket (templates / working / archive / ...) under a shared
+# `pipeline/_psds/` non-sim-state root.
+PSDS_ROOT = REFACTORED_DATA_ROOT / "_psds"
+PSDS_LIVE_ROOT = PSDS_ROOT / "psd-live"
+PSD_BUCKETS = ("_templates", "_working", "_archive")
+
+
+def mediaflux_psd_bucket_subpath(bucket: str) -> Path:
+    if bucket not in PSD_BUCKETS:
+        raise ValueError(f"Unknown PSD bucket: {bucket!r}. Expected one of {PSD_BUCKETS}.")
+    return Path("pipeline") / "_psds" / bucket
+
+
 def refactor_run_output_root(output_mode: str | None = None) -> Path | None:
     override = os.environ.get("REFACTOR_RUN_OUTPUT_ROOT")
     if override:
